@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dice Throne - Legacy Suite</title>
+    <title>Dice Throne - Discovery Suite</title>
     <style>
         :root {
             --bg: #1a1a2e;
@@ -19,13 +19,11 @@
         .container { max-width: 550px; width: 100%; }
         h1 { text-align: center; color: var(--accent); letter-spacing: 2px; margin-bottom: 20px; text-transform: uppercase; }
 
-        /* Setup Zone */
         .player-tag { display: inline-block; padding: 4px 8px; border-radius: 4px; font-weight: bold; color: #1a1a2e; font-size: 0.75rem; text-transform: uppercase; text-align: center; min-width: 70px; }
         .player-toggle-zone { background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; border: 1px solid var(--secondary); }
         .p-chk { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
         .p-chk input { width: 22px; height: 22px; accent-color: var(--accent); }
 
-        /* Roll Results */
         .results { background: var(--card-bg); padding: 15px; border-radius: 15px; margin-bottom: 10px; border: 2px solid var(--secondary); }
         .player-row { display: flex; align-items: flex-start; background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 10px; gap: 12px; margin-bottom: 8px; }
         .char-img-roll { width: 65px; height: 65px; border-radius: 8px; object-fit: cover; border: 1px solid var(--accent); }
@@ -35,10 +33,8 @@
 
         #rollBtn { background: var(--accent); width: 100%; padding: 15px; font-size: 1.1rem; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; }
         .btn-confirm { background: #28a745; display: none; width: 100%; padding: 15px; border: none; border-radius: 8px; color: white; font-weight: bold; margin-top: 10px; cursor: pointer; }
-        .btn-confirm.disabled { background: #444 !important; opacity: 0.5; cursor: not-allowed; }
         #error-msg { color: var(--danger); font-size: 0.8rem; font-weight: bold; text-align: center; margin: 10px 0; display: none; }
 
-        /* Toggle & Stats Section */
         .db-toggle-btn { background: var(--secondary); color: white; width: 100%; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin: 25px 0 15px 0; text-transform: uppercase; font-size: 0.8rem; }
         #dbSection { display: none; width: 100%; }
 
@@ -58,6 +54,10 @@
 
         .sort-controls { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 15px; justify-content: center; }
         .btn-sort { border: none; padding: 6px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
+
+        .danger-zone { margin-top: 30px; display: flex; flex-direction: column; gap: 10px; border-top: 1px solid #ffffff22; padding-top: 20px; }
+        .btn-danger { background: var(--danger); color: white; border: none; padding: 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; opacity: 0.8; }
+        .btn-danger:hover { opacity: 1; }
     </style>
 </head>
 <body>
@@ -73,9 +73,7 @@
         <label class="p-chk"><span class="player-tag" style="background:var(--p5)">Invitee</span> <input type="checkbox" id="use4"></label>
     </div>
 
-    <div id="results" class="results">
-        <p style="text-align: center; opacity: 0.6;">Select players and roll.</p>
-    </div>
+    <div id="results" class="results"><p style="text-align: center; opacity: 0.6;">Select players and roll.</p></div>
 
     <div id="error-msg">⚠ Duplicate character selected!</div>
     <button id="rollBtn" onclick="pickCharacters()">ROLL RANDOMIZER</button>
@@ -93,6 +91,11 @@
             <button class="btn-sort" style="background:var(--p4)" onclick="setSort('w3')">M %</button>
         </div>
         <div id="heroContainer"></div>
+
+        <div class="danger-zone">
+            <button class="btn-danger" onclick="resetAllWeights()">RESET PROBABILITIES TO 100</button>
+            <button class="btn-danger" onclick="resetAllStats()">RESET PLAY COUNTS & DATES</button>
+        </div>
     </div>
 </div>
 
@@ -123,13 +126,9 @@
     function toggleDatabase() {
         const section = document.getElementById('dbSection');
         const btn = document.querySelector('.db-toggle-btn');
-        if (section.style.display === "block") {
-            section.style.display = "none";
-            btn.innerText = "📂 Show Hero Database & Stats";
-        } else {
-            section.style.display = "block";
-            btn.innerText = "📁 Hide Hero Database";
-        }
+        const isHidden = section.style.display !== "block";
+        section.style.display = isHidden ? "block" : "none";
+        btn.innerText = isHidden ? "📁 Hide Hero Database" : "📂 Show Hero Database & Stats";
     }
 
     function pickCharacters() {
@@ -138,28 +137,33 @@
         if(activeIndices.length === 0) return alert("Select players!");
         
         activeIndices = activeIndices.sort(() => Math.random() - 0.5);
-
         const resultsDiv = document.getElementById('results');
         resultsDiv.innerHTML = '';
         let pool = JSON.parse(JSON.stringify(characters));
 
         activeIndices.forEach(pIdx => {
             let selectedName = "";
-            if (pIdx === 4) {
+            if (pIdx === 4) { // Invitee (Pure Random)
                 if (pool.length > 0) {
                     const r = Math.floor(Math.random() * pool.length);
                     selectedName = pool[r].name;
                     pool.splice(r, 1);
                 }
-            } else {
+            } else { // Play-Count Scaled Random
                 const activePool = pool.filter(c => c.weights[pIdx] > 0);
                 if(activePool.length > 0) {
-                    let total = activePool.reduce((sum, c) => sum + c.weights[pIdx], 0);
-                    let rand = Math.random() * total;
-                    let sum = 0;
+                    // APPLY SCALING LOGIC: Weight / (Plays + 1)
+                    let totalScaled = activePool.reduce((sum, c) => {
+                        const plays = (c.playCount && c.playCount[pIdx]) || 0;
+                        return sum + (c.weights[pIdx] / (plays + 1));
+                    }, 0);
+
+                    let rand = Math.random() * totalScaled;
+                    let runningSum = 0;
                     for(let c of activePool) {
-                        sum += c.weights[pIdx];
-                        if(rand <= sum) { 
+                        const plays = (c.playCount && c.playCount[pIdx]) || 0;
+                        runningSum += (c.weights[pIdx] / (plays + 1));
+                        if(rand <= runningSum) { 
                             selectedName = c.name; 
                             pool.splice(pool.findIndex(p => p.name === selectedName), 1);
                             break; 
@@ -167,7 +171,6 @@
                     }
                 }
             }
-
             renderPlayerRow(pIdx, selectedName);
         });
         validateSelection();
@@ -177,8 +180,6 @@
     function renderPlayerRow(pIdx, selectedName) {
         const charData = characters.find(c => c.name === selectedName);
         const resultsDiv = document.getElementById('results');
-        
-        // Data for current player
         const plays = (charData?.playCount && charData.playCount[pIdx]) || 0;
         const last = (charData?.lastPlayed && charData.lastPlayed[pIdx]) || "Never";
 
@@ -190,10 +191,7 @@
                 <div style="flex:1">
                     <div style="margin-bottom:5px; display:flex; justify-content:space-between; align-items:center;">
                         <span class="player-tag" style="background:var(--p${pIdx+1})">${NAMES[pIdx]}</span>
-                        ${pIdx < 4 ? `<div class="roll-stats">
-                            <span>Plays: <b>${plays}</b></span>
-                            <span>Last: <b>${last}</b></span>
-                        </div>` : ''}
+                        ${pIdx < 4 ? `<div class="roll-stats"><span>Plays: <b>${plays}</b></span><span>Last: <b>${last}</b></span></div>` : ''}
                     </div>
                     <select class="char-select" data-player="${pIdx}" onchange="handleDropdownChange(this)">
                         ${characters.map(c => `<option value="${c.name}" ${c.name === selectedName ? 'selected' : ''}>${c.name}</option>`).join('')}
@@ -205,20 +203,12 @@
     function handleDropdownChange(el) {
         const pIdx = parseInt(el.dataset.player);
         const char = characters.find(c => c.name === el.value);
-        
-        // Update Image & Link
         document.getElementById(`img-${pIdx}`).src = getImgUrl(char.slug);
         document.getElementById(`link-${pIdx}`).href = getHeroLink(char.slug);
-        
-        // Update Stats displayed in roll
-        const row = el.closest('.player-row');
-        const statsDiv = row.querySelector('.roll-stats');
+        const statsDiv = el.closest('.player-row').querySelector('.roll-stats');
         if (statsDiv && pIdx < 4) {
-            const plays = (char.playCount && char.playCount[pIdx]) || 0;
-            const last = (char.lastPlayed && char.lastPlayed[pIdx]) || "Never";
-            statsDiv.innerHTML = `<span>Plays: <b>${plays}</b></span><span>Last: <b>${last}</b></span>`;
+            statsDiv.innerHTML = `<span>Plays: <b>${(char.playCount?.[pIdx] || 0)}</b></span><span>Last: <b>${(char.lastPlayed?.[pIdx] || 'Never')}</b></span>`;
         }
-        
         validateSelection();
     }
 
@@ -242,9 +232,7 @@
             [0,1,2,3].forEach(pIdx => {
                 const pick = sessionPicks.find(s => s.pIdx === pIdx);
                 const wasPicked = pick && pick.charName === char.name;
-                const playerIsPlaying = sessionPicks.some(s => s.pIdx === pIdx);
-
-                if (playerIsPlaying) {
+                if (sessionPicks.some(s => s.pIdx === pIdx)) {
                     char.weights[pIdx] = wasPicked ? Math.max(30, char.weights[pIdx] * 0.33) : Math.min(300, char.weights[pIdx] * 1.20);
                 }
                 if (wasPicked) {
@@ -255,10 +243,26 @@
                 }
             });
         });
-
         db.ref('characters_v4').set(characters);
         document.getElementById('confirmBtn').style.display = 'none';
         document.getElementById('results').innerHTML = `<p style="color:#28a745; text-align:center; font-weight:bold;">Legacy Stats Updated!</p>`;
+    }
+
+    function resetAllWeights() {
+        if(confirm("Reset all probabilities to 100? History will be kept.")) {
+            characters.forEach(c => c.weights = [100, 100, 100, 100]);
+            db.ref('characters_v4').set(characters);
+        }
+    }
+
+    function resetAllStats() {
+        if(confirm("Reset all play counts and dates? Probabilities will be kept.")) {
+            characters.forEach(c => {
+                c.playCount = [0, 0, 0, 0];
+                c.lastPlayed = ["", "", "", ""];
+            });
+            db.ref('characters_v4').set(characters);
+        }
     }
 
     function setSort(key) {
@@ -270,7 +274,6 @@
     function renderList() {
         const container = document.getElementById('heroContainer');
         const totals = [0, 1, 2, 3].map(i => characters.reduce((sum, c) => sum + c.weights[i], 0));
-
         const sorted = [...characters].sort((a, b) => {
             let valA, valB;
             if (currentSort.startsWith('w')) {
@@ -285,28 +288,16 @@
         container.innerHTML = sorted.map(c => {
             const counts = c.playCount || [0,0,0,0];
             const dates = c.lastPlayed || ["Never", "Never", "Never", "Never"];
-
             return `
             <div class="char-item">
-                <div class="hero-main-info">
-                    <a href="${getHeroLink(c.slug)}" target="_blank"><img src="${getImgUrl(c.slug)}" class="list-thumb"></a>
-                </div>
+                <div class="hero-main-info"><a href="${getHeroLink(c.slug)}" target="_blank"><img src="${getImgUrl(c.slug)}" class="list-thumb"></a></div>
                 <div class="hero-details">
-                    <div class="hero-header">
-                        <span class="group-label">${c.group || 'Season ?'}</span>
-                        <span class="hero-name">${c.name}</span>
-                    </div>
+                    <div class="hero-header"><span class="group-label">${c.group || 'Season ?'}</span><span class="hero-name">${c.name}</span></div>
                     <div class="stats-grid">
                         ${[0,1,2,3].map(i => `
                             <div class="player-stat-box" style="border-left-color: ${PLAYER_COLORS[i]}">
-                                <div class="stat-row">
-                                    <span class="stat-label">${NAMES[i].charAt(0)} %</span>
-                                    <span class="stat-value">${totals[i] > 0 ? ((c.weights[i]/totals[i])*100).toFixed(2) : '0.00'}%</span>
-                                </div>
-                                <div class="stat-row">
-                                    <span class="stat-label">Plays</span>
-                                    <span class="stat-value">${counts[i]}</span>
-                                </div>
+                                <div class="stat-row"><span class="stat-label">${NAMES[i].charAt(0)} %</span><span class="stat-value">${totals[i] > 0 ? ((c.weights[i]/totals[i])*100).toFixed(2) : '0.00'}%</span></div>
+                                <div class="stat-row"><span class="stat-label">Plays</span><span class="stat-value">${counts[i]}</span></div>
                                 <span class="stat-date">${dates[i] || 'Never'}</span>
                             </div>
                         `).join('')}
