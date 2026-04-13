@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dice Throne - Color-Synced Sync</title>
+    <title>Dice Throne - Fair Turn Sync</title>
     <style>
         :root {
             --bg: #1a1a2e;
@@ -13,7 +13,6 @@
             --secondary: #0f3460;
             --danger: #941b2d;
             --edit: #f39c12;
-            /* Core Player Colors */
             --p1: #4ecca3; --p2: #45b7d1; --p3: #9b59b6; --p4: #f1c40f; --p5: #a2a2a2;
         }
 
@@ -21,62 +20,40 @@
         .container { max-width: 500px; width: 100%; }
         h1 { text-align: center; color: var(--accent); letter-spacing: 2px; margin-bottom: 20px; text-transform: uppercase; }
 
-        /* Unified Player Badge Style */
-        .player-tag {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-            color: #1a1a2e;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            text-align: center;
-            min-width: 70px;
-        }
+        .player-tag { display: inline-block; padding: 4px 8px; border-radius: 4px; font-weight: bold; color: #1a1a2e; font-size: 0.75rem; text-transform: uppercase; text-align: center; min-width: 70px; }
 
-        .player-toggle-zone {
-            background: var(--card-bg);
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            border: 1px solid var(--secondary);
-        }
+        .player-toggle-zone { background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; border: 1px solid var(--secondary); }
         .p-chk { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
         .p-chk input { width: 22px; height: 22px; accent-color: var(--accent); cursor: pointer; }
 
         .results { background: var(--card-bg); padding: 15px; border-radius: 15px; margin-bottom: 10px; border: 2px solid var(--secondary); display: flex; flex-direction: column; gap: 10px; }
         .player-row { display: flex; align-items: center; background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 10px; gap: 12px; }
         
-        .char-img { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; border: 1px solid var(--accent); }
+        /* Image Link Styling */
+        .char-link { display: block; line-height: 0; }
+        .char-img { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; border: 1px solid var(--accent); transition: opacity 0.2s; }
+        .char-img:hover { opacity: 0.8; }
+        
         .char-select { flex: 1; background: #1a1a2e; color: white; border: 1px solid var(--secondary); padding: 10px; border-radius: 5px; font-size: 0.9rem; outline: none; }
         .char-select.error { border-color: var(--danger); background: #301014; }
 
         #error-msg { color: #ff4d4d; font-size: 0.8rem; font-weight: bold; text-align: center; margin-bottom: 10px; display: none; }
 
-        #rollBtn { background: var(--accent); width: 100%; padding: 15px; font-size: 1.1rem; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; margin-bottom: 10px; transition: transform 0.1s; }
-        #rollBtn:active { transform: scale(0.98); }
+        #rollBtn { background: var(--accent); width: 100%; padding: 15px; font-size: 1.1rem; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
         .btn-confirm { background: #28a745; display: none; width: 100%; padding: 15px; font-size: 1.1rem; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; }
-        .btn-confirm.disabled { background: #444 !important; cursor: not-allowed; opacity: 0.5; }
+        .btn-confirm.disabled { background: #444 !important; opacity: 0.5; cursor: not-allowed; }
 
         .manage-section { background: #0f346055; padding: 15px; border-radius: 10px; margin-top: 30px; }
         .weight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; }
-        .weight-grid div { display: flex; align-items: center; gap: 8px; }
-        .weight-grid input { font-size: 0.9rem; padding: 6px; }
-        
         input { padding: 10px; border-radius: 5px; border: none; background: #1a1a2e; color: white; width: 100%; box-sizing: border-box; }
         
         .char-list { max-height: 400px; overflow-y: auto; margin-top: 15px; border-top: 1px solid #ffffff11; }
         .char-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #ffffff11; }
         .list-thumb { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; margin-right: 12px; }
-        .w-badges { display: flex; gap: 5px; margin-top: 6px; }
         .badge { font-size: 0.65rem; padding: 3px 6px; border-radius: 4px; font-weight: bold; color: #1a1a2e; min-width: 40px; text-align: center; }
         
         .danger-zone { margin-top: 25px; border-top: 1px solid #ffffff22; padding-top: 15px; }
         .btn-reset { background: var(--danger); color: white; border: none; padding: 12px; border-radius: 6px; font-size: 0.8rem; width: 100%; cursor: pointer; font-weight: bold; opacity: 0.8; }
-        .btn-reset:hover { opacity: 1; }
     </style>
 </head>
 <body>
@@ -104,9 +81,9 @@
     <div class="manage-section">
         <h3 id="formTitle" style="margin-top:0;">Hero Management</h3>
         <div style="display:flex; flex-direction:column; gap:10px;">
-            <input type="text" id="newName" placeholder="Hero Name">
-            <input type="text" id="newGroup" placeholder="Season / Group">
-            <input type="text" id="newUrl" placeholder="Image URL">
+            <input type="text" id="newName" placeholder="Hero Name (e.g. Ninja)">
+            <input type="text" id="newGroup" placeholder="Season (e.g. Season 1)">
+            <input type="text" id="newSlug" placeholder="Database Slug (e.g. ninja)">
             <div class="weight-grid">
                 <div><span class="player-tag" style="background:var(--p1); min-width:60px;">Claudine</span><input type="number" id="w0"></div>
                 <div><span class="player-tag" style="background:var(--p2); min-width:60px;">Joel</span><input type="number" id="w1"></div>
@@ -138,7 +115,10 @@
     const BOOST = 1.20;
     const MIN_W = 30;
     const MAX_W = 300;
-    const DEFAULT_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e94560'%3E%3Cpath d='M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z'/%3E%3C/svg%3E";
+    
+    // URL Generator Helpers
+    const getImgUrl = (slug) => slug ? `https://dice-throne.rulepop.com/heroes/${slug}.webp` : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e94560'%3E%3Cpath d='M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z'/%3E%3C/svg%3E";
+    const getHeroLink = (slug) => `https://dice-throne.rulepop.com/#hero/${slug}`;
 
     let characters = [];
     let editIndex = -1;
@@ -150,11 +130,15 @@
         });
     }
 
+    // --- SHUFFLED ROLL LOGIC ---
     function pickCharacters() {
-        const activeIndices = [];
+        let activeIndices = [];
         NAMES.forEach((_, i) => { if(document.getElementById(`use${i}`).checked) activeIndices.push(i); });
 
         if(activeIndices.length === 0) return alert("Select players!");
+
+        // SHUFFLE the turn order
+        activeIndices = activeIndices.sort(() => Math.random() - 0.5);
 
         const resultsDiv = document.getElementById('results');
         resultsDiv.innerHTML = '';
@@ -169,7 +153,7 @@
                     selectedCharName = pool[randIdx].name;
                     pool.splice(randIdx, 1);
                 }
-            } else { // Core
+            } else { // Core Weighted
                 const activePool = pool.filter(c => c.weights[pIdx] > 0);
                 if(activePool.length > 0) {
                     let total = activePool.reduce((sum, c) => sum + c.weights[pIdx], 0);
@@ -191,7 +175,9 @@
             const row = document.createElement('div');
             row.className = 'player-row';
             row.innerHTML = `
-                <img src="${charData?.url || DEFAULT_IMG}" class="char-img" id="img-${pIdx}" onerror="this.src='${DEFAULT_IMG}'">
+                <a href="${getHeroLink(charData?.slug)}" target="_blank" class="char-link" id="link-${pIdx}">
+                    <img src="${getImgUrl(charData?.slug)}" class="char-img" id="img-${pIdx}">
+                </a>
                 <div style="flex:1">
                     <div style="margin-bottom:5px;"><span class="player-tag" style="background:var(--p${pIdx+1})">${NAMES[pIdx]}</span></div>
                     <select class="char-select" data-player="${pIdx}" onchange="handleDropdownChange(this)">
@@ -209,7 +195,8 @@
     function handleDropdownChange(el) {
         const pIdx = el.dataset.player;
         const char = characters.find(c => c.name === el.value);
-        document.getElementById(`img-${pIdx}`).src = char.url || DEFAULT_IMG;
+        document.getElementById(`img-${pIdx}`).src = getImgUrl(char.slug);
+        document.getElementById(`link-${pIdx}`).href = getHeroLink(char.slug);
         validateSelection();
     }
 
@@ -217,21 +204,15 @@
         const dropdowns = document.querySelectorAll('.char-select');
         const names = Array.from(dropdowns).map(d => d.value);
         const hasDupes = names.some((name, idx) => names.indexOf(name) !== idx);
-        
         const confirmBtn = document.getElementById('confirmBtn');
         const errorMsg = document.getElementById('error-msg');
 
         if (hasDupes) {
-            confirmBtn.classList.add('disabled');
-            confirmBtn.disabled = true;
+            confirmBtn.classList.add('disabled'); confirmBtn.disabled = true;
             errorMsg.style.display = 'block';
-            dropdowns.forEach(d => {
-                const isDupe = names.filter(n => n === d.value).length > 1;
-                d.classList.toggle('error', isDupe);
-            });
+            dropdowns.forEach(d => d.classList.toggle('error', names.filter(n => n === d.value).length > 1));
         } else {
-            confirmBtn.classList.remove('disabled');
-            confirmBtn.disabled = false;
+            confirmBtn.classList.remove('disabled'); confirmBtn.disabled = false;
             errorMsg.style.display = 'none';
             dropdowns.forEach(d => d.classList.remove('error'));
         }
@@ -239,11 +220,7 @@
 
     function applyResults() {
         const dropdowns = document.querySelectorAll('.char-select');
-        const sessionPicks = Array.from(dropdowns).map(sel => ({ 
-            pIdx: parseInt(sel.dataset.player), 
-            charName: sel.value 
-        }));
-
+        const sessionPicks = Array.from(dropdowns).map(sel => ({ pIdx: parseInt(sel.dataset.player), charName: sel.value }));
         const corePicks = sessionPicks.filter(s => s.pIdx < 4);
         const corePlayingIndices = corePicks.map(s => s.pIdx);
 
@@ -251,17 +228,13 @@
             corePlayingIndices.forEach(pIdx => {
                 if (char.weights[pIdx] === 0) return;
                 const wasPicked = corePicks.some(s => s.pIdx === pIdx && s.charName === char.name);
-                if (wasPicked) {
-                    char.weights[pIdx] = Math.max(MIN_W, char.weights[pIdx] * DECAY);
-                } else {
-                    char.weights[pIdx] = Math.min(MAX_W, char.weights[pIdx] * BOOST);
-                }
+                char.weights[pIdx] = wasPicked ? Math.max(MIN_W, char.weights[pIdx] * DECAY) : Math.min(MAX_W, char.weights[pIdx] * BOOST);
             });
         });
 
         db.ref('characters_v4').set(characters);
         document.getElementById('confirmBtn').style.display = 'none';
-        document.getElementById('results').innerHTML = `<p style="color:#28a745; text-align:center; font-weight:bold;">Weights Adjusted!</p>`;
+        document.getElementById('results').innerHTML = `<p style="color:#28a745; text-align:center; font-weight:bold;">Weights Updated!</p>`;
     }
 
     function resetAllWeights() {
@@ -274,12 +247,12 @@
     function handleFormSubmit() {
         const name = document.getElementById('newName').value.trim();
         const group = document.getElementById('newGroup').value.trim();
-        const url = document.getElementById('newUrl').value.trim();
-        if (!name) return;
+        const slug = document.getElementById('newSlug').value.trim();
+        if (!name || !slug) return alert("Name and Slug required!");
         const weights = [0,1,2,3].map(i => parseFloat(document.getElementById(`w${i}`).value) || 100);
 
-        if (editIndex > -1) characters[editIndex] = { name, group, url, weights };
-        else characters.push({ name, group, url, weights });
+        if (editIndex > -1) characters[editIndex] = { name, group, slug, weights };
+        else characters.push({ name, group, slug, weights });
         
         db.ref('characters_v4').set(characters);
         resetForm();
@@ -290,7 +263,7 @@
         const c = characters[editIndex];
         document.getElementById('newName').value = c.name;
         document.getElementById('newGroup').value = c.group || '';
-        document.getElementById('newUrl').value = c.url || '';
+        document.getElementById('newSlug').value = c.slug || '';
         c.weights.forEach((w, i) => document.getElementById(`w${i}`).value = Math.round(w));
         document.getElementById('formTitle').innerText = "Edit " + c.name;
         document.getElementById('cancelEdit').style.display = "block";
@@ -311,7 +284,7 @@
         listDiv.innerHTML = sorted.map(c => `
             <div class="char-item">
                 <div style="display:flex; align-items:center;">
-                    <img src="${c.url || DEFAULT_IMG}" class="list-thumb">
+                    <a href="${getHeroLink(c.slug)}" target="_blank"><img src="${getImgUrl(c.slug)}" class="list-thumb"></a>
                     <div>
                         <span style="font-weight:bold; color:var(--accent); font-size:0.9rem;">${c.name}</span>
                         <div class="w-badges">
@@ -320,7 +293,7 @@
                     </div>
                 </div>
                 <div class="action-btns">
-                    <button class="btn-edit" onclick="startEdit('${c.name.replace(/'/g, "\\'")}')" style="background:none; border:none; color:var(--edit); cursor:pointer; font-size:1.2rem;">✎</button>
+                    <button onclick="startEdit('${c.name.replace(/'/g, "\\'")}')" style="background:none; border:none; color:var(--edit); cursor:pointer; font-size:1.2rem;">✎</button>
                 </div>
             </div>
         `).join('');
