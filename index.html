@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dice Throne - Fair Turn Sync</title>
+    <title>Dice Throne - Pro-Sort Sync</title>
     <style>
         :root {
             --bg: #1a1a2e;
@@ -29,10 +29,8 @@
         .results { background: var(--card-bg); padding: 15px; border-radius: 15px; margin-bottom: 10px; border: 2px solid var(--secondary); display: flex; flex-direction: column; gap: 10px; }
         .player-row { display: flex; align-items: center; background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 10px; gap: 12px; }
         
-        /* Image Link Styling */
         .char-link { display: block; line-height: 0; }
-        .char-img { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; border: 1px solid var(--accent); transition: opacity 0.2s; }
-        .char-img:hover { opacity: 0.8; }
+        .char-img { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; border: 1px solid var(--accent); }
         
         .char-select { flex: 1; background: #1a1a2e; color: white; border: 1px solid var(--secondary); padding: 10px; border-radius: 5px; font-size: 0.9rem; outline: none; }
         .char-select.error { border-color: var(--danger); background: #301014; }
@@ -47,10 +45,16 @@
         .weight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; }
         input { padding: 10px; border-radius: 5px; border: none; background: #1a1a2e; color: white; width: 100%; box-sizing: border-box; }
         
-        .char-list { max-height: 400px; overflow-y: auto; margin-top: 15px; border-top: 1px solid #ffffff11; }
+        /* Sorting Controls */
+        .sort-controls { display: flex; flex-wrap: wrap; gap: 6px; margin: 15px 0; justify-content: center; }
+        .btn-sort { border: none; padding: 6px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; cursor: pointer; text-transform: uppercase; color: #1a1a2e; background: #ddd; }
+        .btn-sort.active::after { content: ' ↕'; }
+
+        .char-list { max-height: 400px; overflow-y: auto; margin-top: 5px; border-top: 1px solid #ffffff11; }
         .char-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #ffffff11; }
-        .list-thumb { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; margin-right: 12px; }
+        .list-thumb { width: 42px; height: 42px; border-radius: 4px; object-fit: cover; margin-right: 12px; }
         .badge { font-size: 0.65rem; padding: 3px 6px; border-radius: 4px; font-weight: bold; color: #1a1a2e; min-width: 40px; text-align: center; }
+        .group-label { font-size: 0.65rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
         
         .danger-zone { margin-top: 25px; border-top: 1px solid #ffffff22; padding-top: 15px; }
         .btn-reset { background: var(--danger); color: white; border: none; padding: 12px; border-radius: 6px; font-size: 0.8rem; width: 100%; cursor: pointer; font-weight: bold; opacity: 0.8; }
@@ -82,7 +86,7 @@
         <h3 id="formTitle" style="margin-top:0;">Hero Management</h3>
         <div style="display:flex; flex-direction:column; gap:10px;">
             <input type="text" id="newName" placeholder="Hero Name (e.g. Ninja)">
-            <input type="text" id="newGroup" placeholder="Season (e.g. Season 1)">
+            <input type="text" id="newGroup" placeholder="Group (e.g. Season 1)">
             <input type="text" id="newSlug" placeholder="Database Slug (e.g. ninja)">
             <div class="weight-grid">
                 <div><span class="player-tag" style="background:var(--p1); min-width:60px;">Claudine</span><input type="number" id="w0"></div>
@@ -92,6 +96,15 @@
             </div>
             <button style="background:var(--accent); color:white; padding:12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="handleFormSubmit()">Save Hero</button>
             <button id="cancelEdit" onclick="resetForm()" style="display:none; background:#444; color:white; padding:10px; border:none; border-radius:6px; cursor:pointer;">Cancel</button>
+        </div>
+
+        <div class="sort-controls">
+            <button class="btn-sort" onclick="setSort('name')">Name</button>
+            <button class="btn-sort" onclick="setSort('group')">Group</button>
+            <button class="btn-sort" style="background:var(--p1)" onclick="setSort('w0')">C %</button>
+            <button class="btn-sort" style="background:var(--p2)" onclick="setSort('w1')">J %</button>
+            <button class="btn-sort" style="background:var(--p3)" onclick="setSort('w2')">Ju %</button>
+            <button class="btn-sort" style="background:var(--p4)" onclick="setSort('w3')">M %</button>
         </div>
 
         <div class="char-list" id="charList"></div>
@@ -116,12 +129,13 @@
     const MIN_W = 30;
     const MAX_W = 300;
     
-    // URL Generator Helpers
     const getImgUrl = (slug) => slug ? `https://dice-throne.rulepop.com/heroes/${slug}.webp` : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e94560'%3E%3Cpath d='M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z'/%3E%3C/svg%3E";
     const getHeroLink = (slug) => `https://dice-throne.rulepop.com/#hero/${slug}`;
 
     let characters = [];
     let editIndex = -1;
+    let currentSort = 'group'; // default
+    let sortAsc = true;
 
     function init() {
         db.ref('characters_v4').on('value', snap => {
@@ -130,14 +144,10 @@
         });
     }
 
-    // --- SHUFFLED ROLL LOGIC ---
     function pickCharacters() {
         let activeIndices = [];
         NAMES.forEach((_, i) => { if(document.getElementById(`use${i}`).checked) activeIndices.push(i); });
-
         if(activeIndices.length === 0) return alert("Select players!");
-
-        // SHUFFLE the turn order
         activeIndices = activeIndices.sort(() => Math.random() - 0.5);
 
         const resultsDiv = document.getElementById('results');
@@ -146,14 +156,13 @@
 
         activeIndices.forEach(pIdx => {
             let selectedCharName = "";
-            
-            if (pIdx === 4) { // Invitee
+            if (pIdx === 4) {
                 if (pool.length > 0) {
                     const randIdx = Math.floor(Math.random() * pool.length);
                     selectedCharName = pool[randIdx].name;
                     pool.splice(randIdx, 1);
                 }
-            } else { // Core Weighted
+            } else {
                 const activePool = pool.filter(c => c.weights[pIdx] > 0);
                 if(activePool.length > 0) {
                     let total = activePool.reduce((sum, c) => sum + c.weights[pIdx], 0);
@@ -163,8 +172,7 @@
                         sum += c.weights[pIdx];
                         if(rand <= sum) { 
                             selectedCharName = c.name; 
-                            const poolIdx = pool.findIndex(p => p.name === selectedCharName);
-                            pool.splice(poolIdx, 1);
+                            pool.splice(pool.findIndex(p => p.name === selectedCharName), 1);
                             break; 
                         }
                     }
@@ -187,14 +195,13 @@
             `;
             resultsDiv.appendChild(row);
         });
-
         validateSelection();
         document.getElementById('confirmBtn').style.display = 'block';
     }
 
     function handleDropdownChange(el) {
-        const pIdx = el.dataset.player;
         const char = characters.find(c => c.name === el.value);
+        const pIdx = el.dataset.player;
         document.getElementById(`img-${pIdx}`).src = getImgUrl(char.slug);
         document.getElementById(`link-${pIdx}`).href = getHeroLink(char.slug);
         validateSelection();
@@ -206,16 +213,10 @@
         const hasDupes = names.some((name, idx) => names.indexOf(name) !== idx);
         const confirmBtn = document.getElementById('confirmBtn');
         const errorMsg = document.getElementById('error-msg');
-
-        if (hasDupes) {
-            confirmBtn.classList.add('disabled'); confirmBtn.disabled = true;
-            errorMsg.style.display = 'block';
-            dropdowns.forEach(d => d.classList.toggle('error', names.filter(n => n === d.value).length > 1));
-        } else {
-            confirmBtn.classList.remove('disabled'); confirmBtn.disabled = false;
-            errorMsg.style.display = 'none';
-            dropdowns.forEach(d => d.classList.remove('error'));
-        }
+        confirmBtn.classList.toggle('disabled', hasDupes);
+        confirmBtn.disabled = hasDupes;
+        errorMsg.style.display = hasDupes ? 'block' : 'none';
+        dropdowns.forEach(d => d.classList.toggle('error', names.filter(n => n === d.value).length > 1));
     }
 
     function applyResults() {
@@ -234,21 +235,65 @@
 
         db.ref('characters_v4').set(characters);
         document.getElementById('confirmBtn').style.display = 'none';
-        document.getElementById('results').innerHTML = `<p style="color:#28a745; text-align:center; font-weight:bold;">Weights Updated!</p>`;
+        document.getElementById('results').innerHTML = `<p style="color:#28a745; text-align:center; font-weight:bold;">Session Saved!</p>`;
     }
 
     function resetAllWeights() {
-        if(confirm("Are you sure? This resets all core player odds back to 100.")) {
+        if(confirm("Reset all core player weights to 100?")) {
             characters.forEach(c => { c.weights = [100, 100, 100, 100]; });
             db.ref('characters_v4').set(characters);
         }
+    }
+
+    function setSort(key) {
+        if (currentSort === key) sortAsc = !sortAsc;
+        else { currentSort = key; sortAsc = true; }
+        renderList();
+    }
+
+    function renderList() {
+        const listDiv = document.getElementById('charList');
+        const totals = [0, 1, 2, 3].map(i => characters.reduce((sum, c) => sum + c.weights[i], 0));
+
+        const sorted = [...characters].sort((a, b) => {
+            let valA, valB;
+            if (currentSort.startsWith('w')) {
+                const idx = parseInt(currentSort[1]);
+                valA = a.weights[idx];
+                valB = b.weights[idx];
+            } else {
+                valA = (a[currentSort] || "").toLowerCase();
+                valB = (b[currentSort] || "").toLowerCase();
+            }
+            if (valA < valB) return sortAsc ? -1 : 1;
+            if (valA > valB) return sortAsc ? 1 : -1;
+            return 0;
+        });
+
+        listDiv.innerHTML = sorted.map(c => `
+            <div class="char-item">
+                <div style="display:flex; align-items:center;">
+                    <a href="${getHeroLink(c.slug)}" target="_blank"><img src="${getImgUrl(c.slug)}" class="list-thumb"></a>
+                    <div>
+                        <div class="group-label">${c.group || 'Season ?'}</div>
+                        <span style="font-weight:bold; color:var(--accent); font-size:0.9rem;">${c.name}</span>
+                        <div class="w-badges">
+                            ${c.weights.map((w, i) => `<span class="badge" style="background:var(--p${i+1})">${totals[i] > 0 ? ((w/totals[i])*100).toFixed(1) : 0}%</span>`).join('')}
+                        </div>
+                    </div>
+                </div>
+                <div class="action-btns">
+                    <button onclick="startEdit('${c.name.replace(/'/g, "\\'")}')" style="background:none; border:none; color:var(--edit); cursor:pointer; font-size:1.2rem;">✎</button>
+                </div>
+            </div>
+        `).join('');
     }
 
     function handleFormSubmit() {
         const name = document.getElementById('newName').value.trim();
         const group = document.getElementById('newGroup').value.trim();
         const slug = document.getElementById('newSlug').value.trim();
-        if (!name || !slug) return alert("Name and Slug required!");
+        if (!name || !slug) return alert("Required fields missing!");
         const weights = [0,1,2,3].map(i => parseFloat(document.getElementById(`w${i}`).value) || 100);
 
         if (editIndex > -1) characters[editIndex] = { name, group, slug, weights };
@@ -274,29 +319,6 @@
         document.querySelectorAll('.manage-section input').forEach(i => i.value = '');
         document.getElementById('formTitle').innerText = "Hero Management";
         document.getElementById('cancelEdit').style.display = "none";
-    }
-
-    function renderList() {
-        const listDiv = document.getElementById('charList');
-        const sorted = [...characters].sort((a,b) => (a.group || '').localeCompare(b.group || '') || a.name.localeCompare(b.name));
-        const totals = [0, 1, 2, 3].map(i => characters.reduce((sum, c) => sum + c.weights[i], 0));
-
-        listDiv.innerHTML = sorted.map(c => `
-            <div class="char-item">
-                <div style="display:flex; align-items:center;">
-                    <a href="${getHeroLink(c.slug)}" target="_blank"><img src="${getImgUrl(c.slug)}" class="list-thumb"></a>
-                    <div>
-                        <span style="font-weight:bold; color:var(--accent); font-size:0.9rem;">${c.name}</span>
-                        <div class="w-badges">
-                            ${c.weights.map((w, i) => `<span class="badge" style="background:var(--p${i+1})">${totals[i] > 0 ? ((w/totals[i])*100).toFixed(1) : 0}%</span>`).join('')}
-                        </div>
-                    </div>
-                </div>
-                <div class="action-btns">
-                    <button onclick="startEdit('${c.name.replace(/'/g, "\\'")}')" style="background:none; border:none; color:var(--edit); cursor:pointer; font-size:1.2rem;">✎</button>
-                </div>
-            </div>
-        `).join('');
     }
 
     init();
