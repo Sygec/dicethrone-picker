@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dice Throne Randomizer</title>
+    <style>
+        :root {
+            --bg: #1a1a2e;
+            --card-bg: #16213e;
+            --accent: #e94560;
+            --text: #ffffff;
+            --secondary: #0f3460;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 { text-align: center; color: var(--accent); }
+
+        .results {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 15px;
+            min-height: 100px;
+            margin-bottom: 20px;
+            border: 2px solid var(--secondary);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .character-pill {
+            background: var(--accent);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:active { transform: scale(0.95); opacity: 0.8; }
+        .btn-confirm { background: #28a745; grid-column: span 3; margin-top: 10px; display: none; }
+
+        .manage-section {
+            background: #0f346055;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+
+        input {
+            width: 70%;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            margin-right: 5px;
+        }
+
+        .char-list {
+            margin-top: 20px;
+            font-size: 0.8rem;
+            max-height: 200px;
+            overflow-y: auto;
+            opacity: 0.7;
+        }
+
+        .char-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #ffffff11;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Dice Throne</h1>
+    
+    <div id="results" class="results">
+        <p>Choose number of players to start...</p>
+    </div>
+
+    <div class="controls">
+        <button onclick="pickCharacters(2)">Pick 2</button>
+        <button onclick="pickCharacters(3)">Pick 3</button>
+        <button onclick="pickCharacters(4)">Pick 4</button>
+        <button id="confirmBtn" class="btn-confirm" onclick="applyResults()">Confirm & Save Session</button>
+    </div>
+
+    <div class="manage-section">
+        <h3>Add New Character</h3>
+        <input type="text" id="newName" placeholder="Character Name...">
+        <button onclick="addNewCharacter()" style="padding: 10px; width: 25%;">Add</button>
+        
+        <div class="char-list" id="charList">
+            </div>
+        <button onclick="resetWeights()" style="margin-top:20px; background: #444; font-size: 0.7rem; padding: 5px;">Reset All Weights</button>
+    </div>
+</div>
+
+<script>
+    // Configuration
+    const WEIGHT_DECAY = 0.25;
+    const WEIGHT_BOOST = 1.10;
+    
+    let characters = [];
+    let currentSelection = [];
+
+    // Initial Load
+    function init() {
+        const saved = localStorage.getItem('dt_characters');
+        if (saved) {
+            characters = JSON.parse(saved);
+        } else {
+            // Default 28 starter placeholders
+            const defaults = ["Barbarian", "Moon Elf", "Monk", "Paladin", "Ninja", "Seraph", "Pyromancer", "Shadow Thief", "Cursed Pirate", "Artificer", "Huntress", "Tactician", "Vampire Lord", "Gunslinger", "Samurai", "Gunslinger", "Spider-Ham", "Black Widow", "Black Panther", "Captain Marvel", "Thor", "Loki", "Scarlet Witch", "Dr. Strange", "Santa", "Krampus", "Treant", "Shadow Thief"];
+            characters = defaults.map(name => ({ name, weight: 100 }));
+        }
+        renderList();
+    }
+
+    function pickCharacters(count) {
+        currentSelection = [];
+        let tempPool = [...characters];
+        
+        for (let i = 0; i < count; i++) {
+            let totalWeight = tempPool.reduce((sum, c) => sum + c.weight, 0);
+            let random = Math.random() * totalWeight;
+            let currentSum = 0;
+            
+            for (let j = 0; j < tempPool.length; j++) {
+                currentSum += tempPool[j].weight;
+                if (random <= currentSum) {
+                    currentSelection.push(tempPool[j].name);
+                    tempPool.splice(j, 1); // Remove to avoid duplicates in one roll
+                    break;
+                }
+            }
+        }
+        
+        displayResults();
+    }
+
+    function displayResults() {
+        const resDiv = document.getElementById('results');
+        resDiv.innerHTML = currentSelection.map(name => `<div class="character-pill">${name}</div>`).join('');
+        document.getElementById('confirmBtn').style.display = 'block';
+    }
+
+    function applyResults() {
+        characters.forEach(char => {
+            if (currentSelection.includes(char.name)) {
+                char.weight *= WEIGHT_DECAY;
+            } else {
+                char.weight *= WEIGHT_BOOST;
+            }
+        });
+        
+        saveAndRefresh();
+        document.getElementById('confirmBtn').style.display = 'none';
+        document.getElementById('results').innerHTML = `<p style="color: #28a745;">Session Saved!</p>`;
+    }
+
+    function addNewCharacter() {
+        const name = document.getElementById('newName').value;
+        if (!name) return;
+
+        // Calculate Median Weight
+        const weights = characters.map(c => c.weight).sort((a, b) => a - b);
+        const mid = Math.floor(weights.length / 2);
+        const median = weights.length % 2 !== 0 ? weights[mid] : (weights[mid - 1] + weights[mid]) / 2;
+
+        characters.push({ name, weight: median || 100 });
+        document.getElementById('newName').value = '';
+        saveAndRefresh();
+    }
+
+    function resetWeights() {
+        if (confirm("Reset everyone to 100 weight?")) {
+            characters.forEach(c => c.weight = 100);
+            saveAndRefresh();
+        }
+    }
+
+    function saveAndRefresh() {
+        localStorage.setItem('dt_characters', JSON.stringify(characters));
+        renderList();
+    }
+
+    function renderList() {
+        const listDiv = document.getElementById('charList');
+        const sorted = [...characters].sort((a, b) => b.weight - a.weight);
+        listDiv.innerHTML = sorted.map(c => `
+            <div class="char-item">
+                <span>${c.name}</span>
+                <span>${Math.round(c.weight)}</span>
+            </div>
+        `).join('');
+    }
+
+    init();
+</script>
+
+</body>
+</html>
