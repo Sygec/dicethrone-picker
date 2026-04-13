@@ -13,7 +13,7 @@
             --secondary: #0f3460;
             --danger: #941b2d;
             --edit: #f39c12;
-            --sort-active: #28a745;
+            --disabled: #555;
         }
 
         body {
@@ -86,6 +86,9 @@
         }
 
         .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
+        .input-row { display: flex; gap: 8px; }
+        .input-row input { flex: 1; }
+        
         input {
             padding: 12px;
             border-radius: 5px;
@@ -96,7 +99,6 @@
 
         #addBtn { background: var(--accent); margin-top: 5px; }
 
-        /* Sorting Styles */
         .sort-bar {
             display: flex;
             gap: 5px;
@@ -125,11 +127,13 @@
             padding: 10px 0;
             border-bottom: 1px solid #ffffff11;
         }
+        .char-item.disabled { opacity: 0.4; background: rgba(0,0,0,0.1); }
 
         .list-meta { display: flex; align-items: center; gap: 10px; }
         .list-thumb { width: 35px; height: 35px; border-radius: 4px; object-fit: cover; }
         .list-details { display: flex; flex-direction: column; }
         .list-weight { font-size: 0.7rem; color: #28a745; font-weight: bold; }
+        .list-weight.zero { color: var(--danger); }
         .list-group { font-size: 0.6rem; opacity: 0.5; }
 
         .action-btns { display: flex; gap: 5px; }
@@ -161,7 +165,10 @@
         <h3 id="formTitle">Add Character</h3>
         <div class="input-group">
             <input type="text" id="newName" placeholder="Hero Name">
-            <input type="text" id="newGroup" placeholder="Season / Group">
+            <div class="input-row">
+                <input type="text" id="newGroup" placeholder="Season / Group">
+                <input type="number" id="newWeight" placeholder="Weight" min="0">
+            </div>
             <input type="text" id="newUrl" placeholder="Image URL">
             <button id="addBtn" onclick="handleFormSubmit()">Add Hero</button>
             <button id="cancelEdit" onclick="resetForm()" style="display:none; background:#444;">Cancel Edit</button>
@@ -186,6 +193,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <script>
+    // --- 1. CONFIGURATION ---
     const firebaseConfig = {
       apiKey: "AIzaSyDxBCHqFOr3K-Vh4-KeTAUt2UM03DJ60nE",
       authDomain: "dicethrone-ba1f1.firebaseapp.com",
@@ -206,7 +214,7 @@
     let characters = [];
     let currentSelection = [];
     let editIndex = -1;
-    let currentSort = 'group'; // Default sort
+    let currentSort = 'group';
 
     function init() {
         db.ref('characters').on('value', (snapshot) => {
@@ -223,62 +231,19 @@
         db.ref('characters').set(characters);
     }
 
-    function setSort(type) {
-        currentSort = type;
-        // Update button UI
-        document.querySelectorAll('.btn-sort').forEach(btn => btn.classList.remove('active'));
-        document.getElementById(`sort-${type}`).classList.add('active');
-        renderList();
-    }
+    // --- 2. UPDATED PICK LOGIC (Skips Weight 0) ---
+    function pickCharacters(count) {
+        // Filter out characters with 0 weight
+        const activePool = characters.filter(c => c.weight > 0);
 
-    function renderList() {
-        const listDiv = document.getElementById('charList');
-        
-        // Sorting Logic
-        const sorted = [...characters].sort((a, b) => {
-            if (currentSort === 'weight') {
-                return b.weight - a.weight; // High to low
-            } else if (currentSort === 'name') {
-                return a.name.localeCompare(b.name);
-            } else {
-                // Default: Group then Name
-                const grpA = (a.group || '').toLowerCase();
-                const grpB = (b.group || '').toLowerCase();
-                if (grpA < grpB) return -1;
-                if (grpA > grpB) return 1;
-                return a.name.localeCompare(b.name);
-            }
-        });
-        
-        if (characters.length === 0) {
-            listDiv.innerHTML = `<p style="text-align:center; padding:20px;">No heroes in cloud.</p>`;
-            return;
+        if (activePool.length < count) { 
+            alert(`Not enough active heroes! You only have ${activePool.length} with weight > 0.`); 
+            return; 
         }
 
-        listDiv.innerHTML = sorted.map(c => `
-            <div class="char-item">
-                <div class="list-meta">
-                    <img src="${c.url || DEFAULT_IMG}" class="list-thumb" onerror="this.src='${DEFAULT_IMG}'">
-                    <div class="list-details">
-                        <span>${c.name}</span>
-                        <span class="list-group">${c.group || 'General'}</span>
-                        <span class="list-weight">Weight: ${Math.round(c.weight)}</span>
-                    </div>
-                </div>
-                <div class="action-btns">
-                    <button class="btn-edit" onclick="startEdit('${c.name.replace(/'/g, "\\'")}')">✎</button>
-                    <button class="btn-del" onclick="deleteChar('${c.name.replace(/'/g, "\\'")}')">×</button>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    // --- GAME & FORM LOGIC (Unchanged but included for completeness) ---
-
-    function pickCharacters(count) {
-        if (characters.length < count) { alert(`Need ${count} heroes!`); return; }
         currentSelection = [];
-        let tempPool = JSON.parse(JSON.stringify(characters));
+        let tempPool = JSON.parse(JSON.stringify(activePool));
+        
         for (let i = 0; i < count; i++) {
             let totalWeight = tempPool.reduce((sum, c) => sum + c.weight, 0);
             let random = Math.random() * totalWeight;
@@ -313,27 +278,37 @@
     function applyResults() {
         const selectedNames = currentSelection.map(s => s.name);
         characters.forEach(char => {
-            char.weight = selectedNames.includes(char.name) ? char.weight * WEIGHT_DECAY : char.weight * WEIGHT_BOOST;
+            if (char.weight > 0) { // Only adjust if they aren't disabled
+                char.weight = selectedNames.includes(char.name) ? char.weight * WEIGHT_DECAY : char.weight * WEIGHT_BOOST;
+            }
         });
         saveToCloud();
         document.getElementById('confirmBtn').style.display = 'none';
-        document.getElementById('results').innerHTML = `<p style="color: #28a745; text-align:center;">Cloud Updated!</p>`;
+        document.getElementById('results').innerHTML = `<p style="color: #28a745; text-align:center;">Weights Adjusted!</p>`;
     }
 
+    // --- 3. MANAGEMENT LOGIC ---
     function handleFormSubmit() {
         const name = document.getElementById('newName').value.trim();
         const group = document.getElementById('newGroup').value.trim();
         const url = document.getElementById('newUrl').value.trim();
+        const weightInput = document.getElementById('newWeight').value;
+        
         if (!name) return;
+
+        let manualWeight = parseFloat(weightInput);
 
         if (editIndex > -1) {
             characters[editIndex].name = name;
             characters[editIndex].group = group;
             characters[editIndex].url = url;
+            // Use manual weight if provided, else keep current
+            characters[editIndex].weight = isNaN(manualWeight) ? characters[editIndex].weight : manualWeight;
         } else {
-            const weights = characters.map(c => c.weight).sort((a, b) => a - b);
-            let startingWeight = 100;
-            if (weights.length > 0) {
+            // New hero logic
+            let startingWeight = isNaN(manualWeight) ? 100 : manualWeight;
+            if (isNaN(manualWeight) && characters.length > 0) {
+                const weights = characters.map(c => c.weight).filter(w => w > 0).sort((a, b) => a - b);
                 const mid = Math.floor(weights.length / 2);
                 startingWeight = weights[mid] || 100;
             }
@@ -349,8 +324,10 @@
         document.getElementById('newName').value = char.name;
         document.getElementById('newGroup').value = char.group || '';
         document.getElementById('newUrl').value = char.url || '';
+        document.getElementById('newWeight').value = Math.round(char.weight);
+        
         document.getElementById('formTitle').innerText = "Edit Character";
-        document.getElementById('addBtn').innerText = "Save to Cloud";
+        document.getElementById('addBtn').innerText = "Update Hero";
         document.getElementById('cancelEdit').style.display = "block";
         window.scrollTo(0, document.body.scrollHeight);
     }
@@ -360,6 +337,7 @@
         document.getElementById('newName').value = '';
         document.getElementById('newGroup').value = '';
         document.getElementById('newUrl').value = '';
+        document.getElementById('newWeight').value = '';
         document.getElementById('formTitle').innerText = "Add Character";
         document.getElementById('addBtn').innerText = "Add Hero";
         document.getElementById('cancelEdit').style.display = "none";
@@ -373,14 +351,53 @@
     }
 
     function resetWeights() {
-        if (confirm("Reset weights to 100?")) {
-            characters.forEach(c => c.weight = 100);
+        if (confirm("Reset all active weights to 100? (0 weight stays 0)")) {
+            characters.forEach(c => { if(c.weight > 0) c.weight = 100; });
             saveToCloud();
         }
     }
 
     function clearCharacterList() {
         if (confirm("Delete ALL?")) { characters = []; saveToCloud(); }
+    }
+
+    function setSort(type) {
+        currentSort = type;
+        document.querySelectorAll('.btn-sort').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`sort-${type}`).classList.add('active');
+        renderList();
+    }
+
+    function renderList() {
+        const listDiv = document.getElementById('charList');
+        const sorted = [...characters].sort((a, b) => {
+            if (currentSort === 'weight') return b.weight - a.weight;
+            if (currentSort === 'name') return a.name.localeCompare(b.name);
+            const grpA = (a.group || '').toLowerCase();
+            const grpB = (b.group || '').toLowerCase();
+            if (grpA < grpB) return -1;
+            if (grpA > grpB) return 1;
+            return a.name.localeCompare(b.name);
+        });
+        
+        listDiv.innerHTML = sorted.map(c => `
+            <div class="char-item ${c.weight === 0 ? 'disabled' : ''}">
+                <div class="list-meta">
+                    <img src="${c.url || DEFAULT_IMG}" class="list-thumb" onerror="this.src='${DEFAULT_IMG}'">
+                    <div class="list-details">
+                        <span>${c.name}</span>
+                        <span class="list-group">${c.group || 'General'}</span>
+                        <span class="list-weight ${c.weight === 0 ? 'zero' : ''}">
+                            ${c.weight === 0 ? 'DISABLED (0)' : 'Weight: ' + Math.round(c.weight)}
+                        </span>
+                    </div>
+                </div>
+                <div class="action-btns">
+                    <button class="btn-edit" onclick="startEdit('${c.name.replace(/'/g, "\\'")}')">✎</button>
+                    <button class="btn-del" onclick="deleteChar('${c.name.replace(/'/g, "\\'")}')">×</button>
+                </div>
+            </div>
+        `).join('');
     }
 
     init();
