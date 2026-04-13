@@ -11,6 +11,7 @@
             --accent: #e94560;
             --text: #ffffff;
             --secondary: #0f3460;
+            --danger: #941b2d;
         }
 
         body {
@@ -42,6 +43,7 @@
             flex-wrap: wrap;
             gap: 10px;
             justify-content: center;
+            align-items: center;
         }
 
         .character-pill {
@@ -88,6 +90,8 @@
             border-radius: 5px;
             border: none;
             margin-right: 5px;
+            background: #1a1a2e;
+            color: white;
         }
 
         .char-list {
@@ -104,6 +108,26 @@
             padding: 5px 0;
             border-bottom: 1px solid #ffffff11;
         }
+
+        .danger-zone {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            font-size: 0.7rem;
+            padding: 8px;
+            flex: 1;
+        }
+
+        .btn-neutral {
+            background: #444;
+            font-size: 0.7rem;
+            padding: 8px;
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -112,7 +136,7 @@
     <h1>Dice Throne</h1>
     
     <div id="results" class="results">
-        <p>Choose number of players to start...</p>
+        <p id="statusMsg">Choose number of players to start...</p>
     </div>
 
     <div class="controls">
@@ -124,39 +148,49 @@
 
     <div class="manage-section">
         <h3>Add New Character</h3>
-        <input type="text" id="newName" placeholder="Character Name...">
-        <button onclick="addNewCharacter()" style="padding: 10px; width: 25%;">Add</button>
+        <div style="display:flex;">
+            <input type="text" id="newName" placeholder="Character Name...">
+            <button onclick="addNewCharacter()" style="padding: 10px; width: 25%;">Add</button>
+        </div>
         
         <div class="char-list" id="charList">
             </div>
-        <button onclick="resetWeights()" style="margin-top:20px; background: #444; font-size: 0.7rem; padding: 5px;">Reset All Weights</button>
+
+        <div class="danger-zone">
+            <button class="btn-neutral" onclick="resetWeights()">Reset All Weights</button>
+            <button class="btn-danger" onclick="clearCharacterList()">Clear Entire List</button>
+        </div>
     </div>
 </div>
 
 <script>
-    // Configuration
     const WEIGHT_DECAY = 0.25;
     const WEIGHT_BOOST = 1.10;
     
     let characters = [];
     let currentSelection = [];
 
-    // Initial Load
     function init() {
         const saved = localStorage.getItem('dt_characters');
         if (saved) {
             characters = JSON.parse(saved);
         } else {
-            // Default 28 starter placeholders
-            const defaults = ["Barbarian", "Moon Elf", "Monk", "Paladin", "Ninja", "Seraph", "Pyromancer", "Shadow Thief", "Cursed Pirate", "Artificer", "Huntress", "Tactician", "Vampire Lord", "Gunslinger", "Samurai", "Gunslinger", "Spider-Ham", "Black Widow", "Black Panther", "Captain Marvel", "Thor", "Loki", "Scarlet Witch", "Dr. Strange", "Santa", "Krampus", "Treant", "Shadow Thief"];
+            // Initial default load only if LocalStorage is totally empty
+            const defaults = ["Barbarian", "Moon Elf", "Monk", "Paladin", "Ninja", "Seraph", "Pyromancer", "Shadow Thief", "Cursed Pirate", "Artificer", "Huntress", "Tactician", "Vampire Lord", "Gunslinger", "Samurai", "Spider-Ham", "Black Widow", "Black Panther", "Captain Marvel", "Thor", "Loki", "Scarlet Witch", "Dr. Strange", "Santa", "Krampus", "Treant"];
             characters = defaults.map(name => ({ name, weight: 100 }));
+            saveToStorage();
         }
         renderList();
     }
 
     function pickCharacters(count) {
+        if (characters.length < count) {
+            alert(`You only have ${characters.length} characters. Add more to pick ${count}.`);
+            return;
+        }
+
         currentSelection = [];
-        let tempPool = [...characters];
+        let tempPool = JSON.parse(JSON.stringify(characters)); // Deep copy to keep weights intact during roll
         
         for (let i = 0; i < count; i++) {
             let totalWeight = tempPool.reduce((sum, c) => sum + c.weight, 0);
@@ -167,7 +201,7 @@
                 currentSum += tempPool[j].weight;
                 if (random <= currentSum) {
                     currentSelection.push(tempPool[j].name);
-                    tempPool.splice(j, 1); // Remove to avoid duplicates in one roll
+                    tempPool.splice(j, 1); 
                     break;
                 }
             }
@@ -197,34 +231,56 @@
     }
 
     function addNewCharacter() {
-        const name = document.getElementById('newName').value;
+        const input = document.getElementById('newName');
+        const name = input.value.trim();
         if (!name) return;
 
-        // Calculate Median Weight
         const weights = characters.map(c => c.weight).sort((a, b) => a - b);
-        const mid = Math.floor(weights.length / 2);
-        const median = weights.length % 2 !== 0 ? weights[mid] : (weights[mid - 1] + weights[mid]) / 2;
+        let startingWeight = 100;
 
-        characters.push({ name, weight: median || 100 });
-        document.getElementById('newName').value = '';
+        if (weights.length > 0) {
+            const mid = Math.floor(weights.length / 2);
+            startingWeight = weights.length % 2 !== 0 ? weights[mid] : (weights[mid - 1] + weights[mid]) / 2;
+        }
+
+        characters.push({ name, weight: startingWeight });
+        input.value = '';
         saveAndRefresh();
     }
 
     function resetWeights() {
-        if (confirm("Reset everyone to 100 weight?")) {
+        if (confirm("Reset everyone to 100 weight? This balances the odds for everyone.")) {
             characters.forEach(c => c.weight = 100);
             saveAndRefresh();
         }
     }
 
-    function saveAndRefresh() {
+    function clearCharacterList() {
+        if (confirm("🚨 DANGER: This will delete ALL characters from your list. This cannot be undone. Are you sure?")) {
+            characters = [];
+            saveAndRefresh();
+            document.getElementById('results').innerHTML = `<p>List cleared. Add new characters below.</p>`;
+        }
+    }
+
+    function saveToStorage() {
         localStorage.setItem('dt_characters', JSON.stringify(characters));
+    }
+
+    function saveAndRefresh() {
+        saveToStorage();
         renderList();
     }
 
     function renderList() {
         const listDiv = document.getElementById('charList');
         const sorted = [...characters].sort((a, b) => b.weight - a.weight);
+        
+        if (characters.length === 0) {
+            listDiv.innerHTML = `<p style="text-align:center; font-style:italic;">Collection is empty</p>`;
+            return;
+        }
+
         listDiv.innerHTML = sorted.map(c => `
             <div class="char-item">
                 <span>${c.name}</span>
