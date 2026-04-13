@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dice Throne - Multi-Player</title>
+    <title>Dice Throne - Group Sync</title>
     <style>
         :root {
             --bg: #1a1a2e;
@@ -16,11 +16,11 @@
             --p1: #4ecca3; --p2: #45b7d1; --p3: #9b59b6; --p4: #f1c40f;
         }
 
-        body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .container { max-width: 500px; width: 100%; }
-        h1 { text-align: center; color: var(--accent); }
+        h1 { text-align: center; color: var(--accent); letter-spacing: 2px; }
 
-        /* Player Presence Toggles */
+        /* Player Toggles */
         .player-toggle-zone {
             background: var(--card-bg);
             padding: 15px;
@@ -30,82 +30,81 @@
             justify-content: space-around;
             border: 1px solid var(--secondary);
         }
-        .p-chk { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 0.8rem; font-weight: bold; }
-        .p-chk input { width: 20px; height: 20px; accent-color: var(--accent); }
+        .p-chk { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
+        .p-chk input { width: 22px; height: 22px; accent-color: var(--accent); }
 
-        .results { background: var(--card-bg); padding: 20px; border-radius: 15px; min-height: 80px; margin-bottom: 20px; border: 2px solid var(--secondary); display: flex; flex-direction: column; gap: 10px; }
-        .player-row { display: flex; align-items: center; background: rgba(255, 255, 255, 0.05); padding: 8px; border-radius: 10px; }
-        .char-thumb { width: 45px; height: 45px; border-radius: 6px; object-fit: cover; margin-right: 12px; border: 1px solid var(--accent); }
-        .player-info { display: flex; flex-direction: column; }
-        .p-num { font-size: 0.65rem; text-transform: uppercase; font-weight: bold; }
-        .p-name { font-weight: bold; color: var(--accent); font-size: 1rem; }
-
-        .controls { display: flex; gap: 10px; margin-bottom: 20px; }
-        button { background: var(--secondary); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; flex: 1; }
-        .btn-confirm { background: #28a745; margin-top: 10px; display: none; width: 100%; height: 45px; }
-
-        .manage-section { background: #0f346055; padding: 15px; border-radius: 10px; }
-        .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
-        .weight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; }
-        .weight-grid div { display: flex; align-items: center; gap: 5px; font-size: 0.8rem; }
-        input { padding: 10px; border-radius: 5px; border: none; background: #1a1a2e; color: white; width: 100%; box-sizing: border-box; }
-
-        .sort-bar { display: flex; gap: 5px; margin: 10px 0; }
-        .btn-sort { font-size: 0.65rem; padding: 6px; background: transparent; border: 1px solid #444; }
-        .btn-sort.active { background: var(--accent); }
-
-        .char-list { max-height: 350px; overflow-y: auto; border-top: 1px solid #ffffff11; }
-        .char-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #ffffff11; }
-        .list-meta { display: flex; align-items: center; gap: 8px; }
-        .list-thumb { width: 30px; height: 30px; border-radius: 4px; object-fit: cover; }
-        .w-badges { display: flex; gap: 3px; margin-top: 2px; }
-        .badge { font-size: 0.6rem; padding: 2px 4px; border-radius: 3px; font-weight: bold; color: #000; }
+        .results { background: var(--card-bg); padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 2px solid var(--secondary); display: flex; flex-direction: column; gap: 10px; }
+        .player-row { display: flex; align-items: center; background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 10px; gap: 12px; }
         
-        .action-btns { display: flex; gap: 5px; }
-        .btn-edit { color: var(--edit); background: transparent; font-size: 1rem; }
-        .btn-del { color: var(--danger); background: transparent; font-size: 1rem; }
+        /* Character Dropdown Styling */
+        .char-select {
+            flex: 1;
+            background: #1a1a2e;
+            color: white;
+            border: 1px solid var(--secondary);
+            padding: 8px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .char-select:focus { border-color: var(--accent); }
+
+        .player-label { font-size: 0.65rem; text-transform: uppercase; font-weight: bold; min-width: 60px; }
+
+        #rollBtn { background: var(--accent); width: 100%; padding: 15px; font-size: 1.1rem; margin-bottom: 10px; }
+        .btn-confirm { background: #28a745; display: none; width: 100%; padding: 15px; font-size: 1.1rem; }
+
+        .manage-section { background: #0f346055; padding: 15px; border-radius: 10px; margin-top: 30px; }
+        .input-group { display: flex; flex-direction: column; gap: 8px; }
+        .weight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; }
+        .weight-grid div { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; }
+        
+        input { padding: 10px; border-radius: 5px; border: none; background: #1a1a2e; color: white; width: 100%; box-sizing: border-box; }
+        
+        .char-list { max-height: 350px; overflow-y: auto; margin-top: 15px; border-top: 1px solid #ffffff11; }
+        .char-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #ffffff11; }
+        .w-badges { display: flex; gap: 4px; margin-top: 4px; }
+        .badge { font-size: 0.6rem; padding: 2px 5px; border-radius: 3px; font-weight: bold; color: #000; min-width: 25px; text-align: center; }
+        
+        .action-btns { display: flex; gap: 8px; }
+        .btn-edit { color: var(--edit); background: transparent; font-size: 1.2rem; }
+        .btn-del { color: var(--danger); background: transparent; font-size: 1.2rem; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Dice Throne</h1>
+    <h1>DICE THRONE</h1>
     
     <div class="player-toggle-zone">
-        <label class="p-chk">Claudine <input type="checkbox" id="useP1" checked></label>
-        <label class="p-chk">Joel <input type="checkbox" id="useP2" checked></label>
-        <label class="p-chk">Julie <input type="checkbox" id="useP3" checked></label>
-        <label class="p-chk">Martin <input type="checkbox" id="useP4" checked></label>
+        <label class="p-chk">Claudine <input type="checkbox" id="use0" checked></label>
+        <label class="p-chk">Joel <input type="checkbox" id="use1" checked></label>
+        <label class="p-chk">Julie <input type="checkbox" id="use2" checked></label>
+        <label class="p-chk">Martin <input type="checkbox" id="use3" checked></label>
     </div>
 
     <div id="results" class="results">
-        <p style="text-align: center; opacity: 0.6;">Select players & Roll</p>
+        <p style="text-align: center; opacity: 0.6;">Select who is playing and roll!</p>
     </div>
 
     <button id="rollBtn" onclick="pickCharacters()">ROLL RANDOMIZER</button>
     <button id="confirmBtn" class="btn-confirm" onclick="applyResults()">LOCK IN SESSION</button>
 
-    <div class="manage-section" style="margin-top:20px;">
+    <div class="manage-section">
         <h3 id="formTitle">Manage Hero</h3>
         <div class="input-group">
             <input type="text" id="newName" placeholder="Hero Name">
             <input type="text" id="newGroup" placeholder="Season / Group">
-            <input type="text" id="newUrl" placeholder="Image URL">
             <div class="weight-grid">
-                <div>P1: <input type="number" id="w1" placeholder="30-300"></div>
-                <div>P2: <input type="number" id="w2" placeholder="30-300"></div>
-                <div>P3: <input type="number" id="w3" placeholder="30-300"></div>
-                <div>P4: <input type="number" id="w4" placeholder="30-300"></div>
+                <div>Claudine: <input type="number" id="w0" placeholder="30-300"></div>
+                <div>Joel: <input type="number" id="w1" placeholder="30-300"></div>
+                <div>Julie: <input type="number" id="w2" placeholder="30-300"></div>
+                <div>Martin: <input type="number" id="w3" placeholder="30-300"></div>
             </div>
             <button id="addBtn" style="background:var(--accent)" onclick="handleFormSubmit()">Save Hero</button>
             <button id="cancelEdit" onclick="resetForm()" style="display:none; background:#444;">Cancel</button>
         </div>
 
-        <div class="sort-bar">
-            <button id="sort-group" class="btn-sort active" onclick="setSort('group')">GROUP</button>
-            <button id="sort-name" class="btn-sort" onclick="setSort('name')">NAME</button>
-        </div>
-        
         <div class="char-list" id="charList"></div>
     </div>
 </div>
@@ -114,28 +113,18 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDxBCHqFOr3K-Vh4-KeTAUt2UM03DJ60nE",
-      authDomain: "dicethrone-ba1f1.firebaseapp.com",
-      databaseURL: "https://dicethrone-ba1f1-default-rtdb.firebaseio.com",
-      projectId: "dicethrone-ba1f1",
-      storageBucket: "dicethrone-ba1f1.firebasestorage.app",
-      messagingSenderId: "580487401452",
-      appId: "1:580487401452:web:94d49e4bff6f3815b63ac9"
-    };
+    const firebaseConfig = { apiKey: "PASTE_HERE", authDomain: "PASTE_HERE", databaseURL: "PASTE_HERE", projectId: "PASTE_HERE", storageBucket: "PASTE_HERE", messagingSenderId: "PASTE_HERE", appId: "PASTE_HERE" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    const NAMES = ["Claudine", "Joel", "Julie", "Martin"];
     const DECAY = 0.33;
     const BOOST = 1.20;
     const MIN_W = 30;
     const MAX_W = 300;
-    const DEFAULT_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e94560'%3E%3Cpath d='M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z'/%3E%3C/svg%3E";
 
     let characters = [];
-    let sessionSelection = []; 
     let editIndex = -1;
-    let currentSort = 'group';
 
     function init() {
         db.ref('characters_v4').on('value', snap => {
@@ -144,72 +133,68 @@
         });
     }
 
+    // --- ROLL LOGIC ---
     function pickCharacters() {
-        const activePlayerIndices = [];
-        if(document.getElementById('useP1').checked) activePlayerIndices.push(0);
-        if(document.getElementById('useP2').checked) activePlayerIndices.push(1);
-        if(document.getElementById('useP3').checked) activePlayerIndices.push(2);
-        if(document.getElementById('useP4').checked) activePlayerIndices.push(3);
+        const activeIndices = [];
+        NAMES.forEach((_, i) => { if(document.getElementById(`use${i}`).checked) activeIndices.push(i); });
 
-        if(activePlayerIndices.length === 0) return alert("Select at least one player!");
+        if(activeIndices.length === 0) return alert("Select players!");
 
-        sessionSelection = [];
-        let pool = JSON.parse(JSON.stringify(characters));
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = '';
 
-        for (let pIdx of activePlayerIndices) {
-            // Filter pool for this player (must have weight > 0 for this specific player)
-            let validForPlayer = pool.filter(c => c.weights[pIdx] > 0);
-            
-            if (validForPlayer.length === 0) {
-                alert(`Player ${pIdx+1} has no characters with weight > 0!`);
-                return;
-            }
+        activeIndices.forEach(pIdx => {
+            const activePool = characters.filter(c => c.weights[pIdx] > 0);
+            let selectedCharName = "";
 
-            let total = validForPlayer.reduce((sum, c) => sum + c.weights[pIdx], 0);
-            let rand = Math.random() * total;
-            let sum = 0;
-
-            for (let i = 0; i < pool.length; i++) {
-                // We must use the original pool index but check validity
-                if (pool[i].weights[pIdx] <= 0) continue; 
-
-                sum += pool[i].weights[pIdx];
-                if (rand <= sum) {
-                    sessionSelection.push({ charIndex: characters.findIndex(orig => orig.name === pool[i].name), playerIndex: pIdx });
-                    pool.splice(i, 1);
-                    break;
+            if(activePool.length > 0) {
+                let total = activePool.reduce((sum, c) => sum + c.weights[pIdx], 0);
+                let rand = Math.random() * total;
+                let sum = 0;
+                for(let c of activePool) {
+                    sum += c.weights[pIdx];
+                    if(rand <= sum) { selectedCharName = c.name; break; }
                 }
             }
-        }
-        renderResults();
-    }
 
-    function renderResults() {
-        const resDiv = document.getElementById('results');
-        resDiv.innerHTML = sessionSelection.map(s => {
-            const char = characters[s.charIndex];
-            return `
-                <div class="player-row">
-                    <img src="${char.url || DEFAULT_IMG}" class="char-thumb" onerror="this.src='${DEFAULT_IMG}'">
-                    <div class="player-info">
-                        <span class="p-num" style="color:var(--p${s.playerIndex+1})">Player ${s.playerIndex+1}</span>
-                        <span class="p-name">${char.name}</span>
-                    </div>
-                </div>
+            // Render row with dropdown
+            const row = document.createElement('div');
+            row.className = 'player-row';
+            row.innerHTML = `
+                <div class="player-label" style="color:var(--p${pIdx+1})">${NAMES[pIdx]}</div>
+                <select class="char-select" data-player="${pIdx}">
+                    ${characters.map(c => `
+                        <option value="${c.name}" ${c.name === selectedCharName ? 'selected' : ''} ${c.weights[pIdx] === 0 ? 'disabled' : ''}>
+                            ${c.name} ${c.weights[pIdx] === 0 ? '(Locked)' : ''}
+                        </option>
+                    `).join('')}
+                </select>
             `;
-        }).join('');
+            resultsDiv.appendChild(row);
+        });
+
         document.getElementById('confirmBtn').style.display = 'block';
     }
 
+    // --- LOCK IN LOGIC ---
     function applyResults() {
-        const playingIndices = sessionSelection.map(s => s.playerIndex);
-        
-        characters.forEach((char, cIdx) => {
-            playingIndices.forEach(pIdx => {
-                // Only adjust weights for players who actually participated in this roll
-                if (char.weights[pIdx] === 0) return; // Skip disabled
+        const dropdowns = document.querySelectorAll('.char-select');
+        const sessionPicks = []; // Array of { playerIndex, charName }
 
-                const wasPickedForThisPlayer = sessionSelection.some(s => s.charIndex === cIdx && s.playerIndex === pIdx);
+        dropdowns.forEach(sel => {
+            sessionPicks.push({
+                pIdx: parseInt(sel.dataset.player),
+                charName: sel.value
+            });
+        });
+
+        const playingIndices = sessionPicks.map(s => s.pIdx);
+
+        characters.forEach(char => {
+            playingIndices.forEach(pIdx => {
+                if (char.weights[pIdx] === 0) return; // Ignore permanently disabled
+
+                const wasPickedForThisPlayer = sessionPicks.some(s => s.pIdx === pIdx && s.charName === char.name);
                 
                 if (wasPickedForThisPlayer) {
                     char.weights[pIdx] = Math.max(MIN_W, char.weights[pIdx] * DECAY);
@@ -221,28 +206,26 @@
 
         db.ref('characters_v4').set(characters);
         document.getElementById('confirmBtn').style.display = 'none';
-        document.getElementById('results').innerHTML = `<p style="color:#28a745; text-align:center;">Weights Updated!</p>`;
+        document.getElementById('results').innerHTML = `<p style="color:#28a745; text-align:center; font-weight:bold;">Weights Updated for the Group!</p>`;
     }
 
+    // --- MANAGEMENT LOGIC ---
     function handleFormSubmit() {
         const name = document.getElementById('newName').value.trim();
         const group = document.getElementById('newGroup').value.trim();
-        const url = document.getElementById('newUrl').value.trim();
-        const wInputs = [
-            parseFloat(document.getElementById('w1').value),
-            parseFloat(document.getElementById('w2').value),
-            parseFloat(document.getElementById('w3').value),
-            parseFloat(document.getElementById('w4').value)
-        ];
-
         if (!name) return;
 
-        const finalWeights = wInputs.map(w => isNaN(w) ? 100 : w);
+        const weights = [
+            parseFloat(document.getElementById('w0').value) || 100,
+            parseFloat(document.getElementById('w1').value) || 100,
+            parseFloat(document.getElementById('w2').value) || 100,
+            parseFloat(document.getElementById('w3').value) || 100
+        ];
 
         if (editIndex > -1) {
-            characters[editIndex] = { name, group, url, weights: finalWeights };
+            characters[editIndex] = { name, group, weights };
         } else {
-            characters.push({ name, group, url, weights: finalWeights });
+            characters.push({ name, group, weights });
         }
         
         db.ref('characters_v4').set(characters);
@@ -254,12 +237,8 @@
         const c = characters[editIndex];
         document.getElementById('newName').value = c.name;
         document.getElementById('newGroup').value = c.group || '';
-        document.getElementById('newUrl').value = c.url || '';
-        document.getElementById('w1').value = c.weights[0];
-        document.getElementById('w2').value = c.weights[1];
-        document.getElementById('w3').value = c.weights[2];
-        document.getElementById('w4').value = c.weights[3];
-        document.getElementById('formTitle').innerText = "Edit Hero";
+        c.weights.forEach((w, i) => document.getElementById(`w${i}`).value = Math.round(w));
+        document.getElementById('formTitle').innerText = "Edit " + c.name;
         document.getElementById('cancelEdit').style.display = "block";
     }
 
@@ -277,27 +256,19 @@
         }
     }
 
-    function setSort(s) { currentSort = s; renderList(); }
-
     function renderList() {
         const listDiv = document.getElementById('charList');
-        const sorted = [...characters].sort((a,b) => {
-            if(currentSort === 'name') return a.name.localeCompare(b.name);
-            return (a.group || '').localeCompare(b.group || '') || a.name.localeCompare(b.name);
-        });
+        const sorted = [...characters].sort((a,b) => (a.group || '').localeCompare(b.group || '') || a.name.localeCompare(b.name));
 
         listDiv.innerHTML = sorted.map(c => `
             <div class="char-item">
-                <div class="list-meta">
-                    <img src="${c.url || DEFAULT_IMG}" class="list-thumb">
-                    <div class="list-details">
-                        <span style="font-size:0.9rem">${c.name}</span>
-                        <div class="w-badges">
-                            <span class="badge" style="background:var(--p1)">${Math.round(c.weights[0])}</span>
-                            <span class="badge" style="background:var(--p2)">${Math.round(c.weights[1])}</span>
-                            <span class="badge" style="background:var(--p3)">${Math.round(c.weights[2])}</span>
-                            <span class="badge" style="background:var(--p4)">${Math.round(c.weights[3])}</span>
-                        </div>
+                <div class="list-details">
+                    <span style="font-weight:bold; color:var(--accent)">${c.name}</span>
+                    <div class="w-badges">
+                        <span class="badge" title="Claudine" style="background:var(--p1)">${Math.round(c.weights[0])}</span>
+                        <span class="badge" title="Joel" style="background:var(--p2)">${Math.round(c.weights[1])}</span>
+                        <span class="badge" title="Julie" style="background:var(--p3)">${Math.round(c.weights[2])}</span>
+                        <span class="badge" title="Martin" style="background:var(--p4)">${Math.round(c.weights[3])}</span>
                     </div>
                 </div>
                 <div class="action-btns">
