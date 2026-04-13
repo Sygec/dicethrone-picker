@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dice Throne - Pro-Sort Sync</title>
+    <title>Dice Throne - Legacy Sync</title>
     <style>
         :root {
             --bg: #1a1a2e;
@@ -21,43 +21,41 @@
         h1 { text-align: center; color: var(--accent); letter-spacing: 2px; margin-bottom: 20px; text-transform: uppercase; }
 
         .player-tag { display: inline-block; padding: 4px 8px; border-radius: 4px; font-weight: bold; color: #1a1a2e; font-size: 0.75rem; text-transform: uppercase; text-align: center; min-width: 70px; }
-
         .player-toggle-zone { background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; border: 1px solid var(--secondary); }
         .p-chk { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
         .p-chk input { width: 22px; height: 22px; accent-color: var(--accent); cursor: pointer; }
 
         .results { background: var(--card-bg); padding: 15px; border-radius: 15px; margin-bottom: 10px; border: 2px solid var(--secondary); display: flex; flex-direction: column; gap: 10px; }
         .player-row { display: flex; align-items: center; background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 10px; gap: 12px; }
-        
-        .char-link { display: block; line-height: 0; }
         .char-img { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; border: 1px solid var(--accent); }
-        
         .char-select { flex: 1; background: #1a1a2e; color: white; border: 1px solid var(--secondary); padding: 10px; border-radius: 5px; font-size: 0.9rem; outline: none; }
         .char-select.error { border-color: var(--danger); background: #301014; }
 
         #error-msg { color: #ff4d4d; font-size: 0.8rem; font-weight: bold; text-align: center; margin-bottom: 10px; display: none; }
-
         #rollBtn { background: var(--accent); width: 100%; padding: 15px; font-size: 1.1rem; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
         .btn-confirm { background: #28a745; display: none; width: 100%; padding: 15px; font-size: 1.1rem; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; }
         .btn-confirm.disabled { background: #444 !important; opacity: 0.5; cursor: not-allowed; }
 
         .manage-section { background: #0f346055; padding: 15px; border-radius: 10px; margin-top: 30px; }
-        .weight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; }
-        input { padding: 10px; border-radius: 5px; border: none; background: #1a1a2e; color: white; width: 100%; box-sizing: border-box; }
-        
-        /* Sorting Controls */
         .sort-controls { display: flex; flex-wrap: wrap; gap: 6px; margin: 15px 0; justify-content: center; }
         .btn-sort { border: none; padding: 6px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; cursor: pointer; text-transform: uppercase; color: #1a1a2e; background: #ddd; }
         .btn-sort.active::after { content: ' ↕'; }
 
-        .char-list { max-height: 400px; overflow-y: auto; margin-top: 5px; border-top: 1px solid #ffffff11; }
-        .char-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #ffffff11; }
-        .list-thumb { width: 42px; height: 42px; border-radius: 4px; object-fit: cover; margin-right: 12px; }
-        .badge { font-size: 0.65rem; padding: 3px 6px; border-radius: 4px; font-weight: bold; color: #1a1a2e; min-width: 40px; text-align: center; }
-        .group-label { font-size: 0.65rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+        .char-list { max-height: 500px; overflow-y: auto; margin-top: 5px; border-top: 1px solid #ffffff11; }
+        .char-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #ffffff11; }
+        .list-thumb { width: 45px; height: 45px; border-radius: 4px; object-fit: cover; margin-right: 12px; }
         
+        /* Stat Layout */
+        .hero-info { flex: 1; }
+        .group-label { font-size: 0.6rem; color: #888; text-transform: uppercase; }
+        .hero-name { font-weight: bold; color: var(--accent); font-size: 0.95rem; }
+        .last-played { font-size: 0.65rem; color: #5c7899; font-style: italic; }
+        .stat-line { display: flex; gap: 6px; margin-top: 5px; align-items: center; }
+        .stat-pill { font-size: 0.6rem; padding: 2px 5px; border-radius: 3px; font-weight: bold; color: #1a1a2e; display: flex; align-items: center; gap: 3px; }
+        .play-count { color: #fff; font-size: 0.6rem; opacity: 0.8; margin-left: 2px; }
+
         .danger-zone { margin-top: 25px; border-top: 1px solid #ffffff22; padding-top: 15px; }
-        .btn-reset { background: var(--danger); color: white; border: none; padding: 12px; border-radius: 6px; font-size: 0.8rem; width: 100%; cursor: pointer; font-weight: bold; opacity: 0.8; }
+        .btn-reset { background: var(--danger); color: white; border: none; padding: 12px; border-radius: 6px; font-size: 0.8rem; width: 100%; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -83,28 +81,15 @@
     <button id="confirmBtn" class="btn-confirm" onclick="applyResults()">LOCK IN SESSION</button>
 
     <div class="manage-section">
-        <h3 id="formTitle" style="margin-top:0;">Hero Management</h3>
-        <div style="display:flex; flex-direction:column; gap:10px;">
-            <input type="text" id="newName" placeholder="Hero Name (e.g. Ninja)">
-            <input type="text" id="newGroup" placeholder="Group (e.g. Season 1)">
-            <input type="text" id="newSlug" placeholder="Database Slug (e.g. ninja)">
-            <div class="weight-grid">
-                <div><span class="player-tag" style="background:var(--p1); min-width:60px;">Claudine</span><input type="number" id="w0"></div>
-                <div><span class="player-tag" style="background:var(--p2); min-width:60px;">Joel</span><input type="number" id="w1"></div>
-                <div><span class="player-tag" style="background:var(--p3); min-width:60px;">Julie</span><input type="number" id="w2"></div>
-                <div><span class="player-tag" style="background:var(--p4); min-width:60px;">Martin</span><input type="number" id="w3"></div>
-            </div>
-            <button style="background:var(--accent); color:white; padding:12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="handleFormSubmit()">Save Hero</button>
-            <button id="cancelEdit" onclick="resetForm()" style="display:none; background:#444; color:white; padding:10px; border:none; border-radius:6px; cursor:pointer;">Cancel</button>
-        </div>
+        <h3 id="formTitle" style="margin:0 0 10px 0;">Hero Stats & Management</h3>
 
         <div class="sort-controls">
             <button class="btn-sort" onclick="setSort('name')">Name</button>
             <button class="btn-sort" onclick="setSort('group')">Group</button>
-            <button class="btn-sort" style="background:var(--p1)" onclick="setSort('w0')">C %</button>
-            <button class="btn-sort" style="background:var(--p2)" onclick="setSort('w1')">J %</button>
-            <button class="btn-sort" style="background:var(--p3)" onclick="setSort('w2')">Ju %</button>
-            <button class="btn-sort" style="background:var(--p4)" onclick="setSort('w3')">M %</button>
+            <button class="btn-sort" style="background:var(--p1)" onclick="setSort('w0')">C</button>
+            <button class="btn-sort" style="background:var(--p2)" onclick="setSort('w1')">J</button>
+            <button class="btn-sort" style="background:var(--p3)" onclick="setSort('w2')">Ju</button>
+            <button class="btn-sort" style="background:var(--p4)" onclick="setSort('w3')">M</button>
         </div>
 
         <div class="char-list" id="charList"></div>
@@ -133,8 +118,7 @@
     const getHeroLink = (slug) => `https://dice-throne.rulepop.com/#hero/${slug}`;
 
     let characters = [];
-    let editIndex = -1;
-    let currentSort = 'group'; // default
+    let currentSort = 'group';
     let sortAsc = true;
 
     function init() {
@@ -180,20 +164,18 @@
             }
 
             const charData = characters.find(c => c.name === selectedCharName);
-            const row = document.createElement('div');
-            row.className = 'player-row';
-            row.innerHTML = `
-                <a href="${getHeroLink(charData?.slug)}" target="_blank" class="char-link" id="link-${pIdx}">
-                    <img src="${getImgUrl(charData?.slug)}" class="char-img" id="img-${pIdx}">
-                </a>
-                <div style="flex:1">
-                    <div style="margin-bottom:5px;"><span class="player-tag" style="background:var(--p${pIdx+1})">${NAMES[pIdx]}</span></div>
-                    <select class="char-select" data-player="${pIdx}" onchange="handleDropdownChange(this)">
-                        ${characters.map(c => `<option value="${c.name}" ${c.name === selectedCharName ? 'selected' : ''}>${c.name}</option>`).join('')}
-                    </select>
-                </div>
-            `;
-            resultsDiv.appendChild(row);
+            resultsDiv.innerHTML += `
+                <div class="player-row">
+                    <a href="${getHeroLink(charData?.slug)}" target="_blank" class="char-link" id="link-${pIdx}">
+                        <img src="${getImgUrl(charData?.slug)}" class="char-img" id="img-${pIdx}">
+                    </a>
+                    <div style="flex:1">
+                        <div style="margin-bottom:5px;"><span class="player-tag" style="background:var(--p${pIdx+1})">${NAMES[pIdx]}</span></div>
+                        <select class="char-select" data-player="${pIdx}" onchange="handleDropdownChange(this)">
+                            ${characters.map(c => `<option value="${c.name}" ${c.name === selectedCharName ? 'selected' : ''}>${c.name}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>`;
         });
         validateSelection();
         document.getElementById('confirmBtn').style.display = 'block';
@@ -212,37 +194,48 @@
         const names = Array.from(dropdowns).map(d => d.value);
         const hasDupes = names.some((name, idx) => names.indexOf(name) !== idx);
         const confirmBtn = document.getElementById('confirmBtn');
-        const errorMsg = document.getElementById('error-msg');
         confirmBtn.classList.toggle('disabled', hasDupes);
         confirmBtn.disabled = hasDupes;
-        errorMsg.style.display = hasDupes ? 'block' : 'none';
+        document.getElementById('error-msg').style.display = hasDupes ? 'block' : 'none';
         dropdowns.forEach(d => d.classList.toggle('error', names.filter(n => n === d.value).length > 1));
     }
 
+    // --- LEGACY UPDATE LOGIC ---
     function applyResults() {
         const dropdowns = document.querySelectorAll('.char-select');
-        const sessionPicks = Array.from(dropdowns).map(sel => ({ pIdx: parseInt(sel.dataset.player), charName: sel.value }));
-        const corePicks = sessionPicks.filter(s => s.pIdx < 4);
-        const corePlayingIndices = corePicks.map(s => s.pIdx);
+        const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+        
+        const sessionPicks = Array.from(dropdowns).map(sel => ({ 
+            pIdx: parseInt(sel.dataset.player), 
+            charName: sel.value 
+        }));
+
+        const corePlayingIndices = sessionPicks.filter(s => s.pIdx < 4).map(s => s.pIdx);
 
         characters.forEach(char => {
+            // Update Weights for core players
             corePlayingIndices.forEach(pIdx => {
-                if (char.weights[pIdx] === 0) return;
-                const wasPicked = corePicks.some(s => s.pIdx === pIdx && s.charName === char.name);
-                char.weights[pIdx] = wasPicked ? Math.max(MIN_W, char.weights[pIdx] * DECAY) : Math.min(MAX_W, char.weights[pIdx] * BOOST);
+                const wasPicked = sessionPicks.some(s => s.pIdx === pIdx && s.charName === char.name);
+                
+                // Weight Logic
+                if (char.weights[pIdx] > 0) {
+                    char.weights[pIdx] = wasPicked ? Math.max(MIN_W, char.weights[pIdx] * DECAY) : Math.min(MAX_W, char.weights[pIdx] * BOOST);
+                }
+
+                // Play Count & Date Logic
+                if (wasPicked) {
+                    if (!char.playCount) char.playCount = [0, 0, 0, 0];
+                    if (!char.lastPlayed) char.lastPlayed = ["", "", "", ""];
+                    
+                    char.playCount[pIdx] = (char.playCount[pIdx] || 0) + 1;
+                    char.lastPlayed[pIdx] = today;
+                }
             });
         });
 
         db.ref('characters_v4').set(characters);
         document.getElementById('confirmBtn').style.display = 'none';
-        document.getElementById('results').innerHTML = `<p style="color:#28a745; text-align:center; font-weight:bold;">Session Saved!</p>`;
-    }
-
-    function resetAllWeights() {
-        if(confirm("Reset all core player weights to 100?")) {
-            characters.forEach(c => { c.weights = [100, 100, 100, 100]; });
-            db.ref('characters_v4').set(characters);
-        }
+        document.getElementById('results').innerHTML = `<p style="color:#28a745; text-align:center; font-weight:bold;">Legacy Updated!</p>`;
     }
 
     function setSort(key) {
@@ -259,66 +252,341 @@
             let valA, valB;
             if (currentSort.startsWith('w')) {
                 const idx = parseInt(currentSort[1]);
-                valA = a.weights[idx];
-                valB = b.weights[idx];
+                valA = a.weights[idx]; valB = b.weights[idx];
             } else {
-                valA = (a[currentSort] || "").toLowerCase();
-                valB = (b[currentSort] || "").toLowerCase();
+                valA = (a[currentSort] || "").toLowerCase(); valB = (b[currentSort] || "").toLowerCase();
             }
-            if (valA < valB) return sortAsc ? -1 : 1;
-            if (valA > valB) return sortAsc ? 1 : -1;
-            return 0;
+            return (valA < valB ? -1 : 1) * (sortAsc ? 1 : -1);
         });
 
-        listDiv.innerHTML = sorted.map(c => `
+        listDiv.innerHTML = sorted.map(c => {
+            const lastDates = (c.lastPlayed || ["", "", "", ""]).filter(d => d !== "");
+            const mostRecent = lastDates.length > 0 ? lastDates.sort().reverse()[0] : "Never";
+
+            return `
             <div class="char-item">
-                <div style="display:flex; align-items:center;">
+                <div style="display:flex; align-items:center; flex:1;">
                     <a href="${getHeroLink(c.slug)}" target="_blank"><img src="${getImgUrl(c.slug)}" class="list-thumb"></a>
-                    <div>
+                    <div class="hero-info">
                         <div class="group-label">${c.group || 'Season ?'}</div>
-                        <span style="font-weight:bold; color:var(--accent); font-size:0.9rem;">${c.name}</span>
-                        <div class="w-badges">
-                            ${c.weights.map((w, i) => `<span class="badge" style="background:var(--p${i+1})">${totals[i] > 0 ? ((w/totals[i])*100).toFixed(1) : 0}%</span>`).join('')}
+                        <div class="hero-name">${c.name}</div>
+                        <div class="last-played">Last played: ${mostRecent}</div>
+                        <div class="stat-line">
+                            ${c.weights.slice(0,4).map((w, i) => `
+                                <div class="stat-pill" style="background:var(--p${i+1})">
+                                    ${totals[i] > 0 ? ((w/totals[i])*100).toFixed(0) : 0}%
+                                    <span class="play-count">(${c.playCount ? c.playCount[i] : 0})</span>
+                                </div>
+                            `).join('')}
                         </div>
                     </div>
                 </div>
-                <div class="action-btns">
-                    <button onclick="startEdit('${c.name.replace(/'/g, "\\'")}')" style="background:none; border:none; color:var(--edit); cursor:pointer; font-size:1.2rem;">✎</button>
-                </div>
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
     }
 
-    function handleFormSubmit() {
-        const name = document.getElementById('newName').value.trim();
-        const group = document.getElementById('newGroup').value.trim();
-        const slug = document.getElementById('newSlug').value.trim();
-        if (!name || !slug) return alert("Required fields missing!");
-        const weights = [0,1,2,3].map(i => parseFloat(document.getElementById(`w${i}`).value) || 100);
+    function resetAllWeights() {
+        if(confirm("Reset all weights to 100? Play counts will remain.")) {
+            characters.forEach(c => { c.weights = [100, 100, 100, 100]; });
+            db.ref('characters_v4').set(characters);
+        }
+    }
 
-        if (editIndex > -1) characters[editIndex] = { name, group, slug, weights };
-        else characters.push({ name, group, slug, weights });
+    init();
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dice Throne - Legacy Sync</title>
+    <style>
+        :root {
+            --bg: #1a1a2e;
+            --card-bg: #16213e;
+            --accent: #e94560;
+            --text: #ffffff;
+            --secondary: #0f3460;
+            --danger: #941b2d;
+            --edit: #f39c12;
+            --p1: #4ecca3; --p2: #45b7d1; --p3: #9b59b6; --p4: #f1c40f; --p5: #a2a2a2;
+        }
+
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { max-width: 500px; width: 100%; }
+        h1 { text-align: center; color: var(--accent); letter-spacing: 2px; margin-bottom: 20px; text-transform: uppercase; }
+
+        .player-tag { display: inline-block; padding: 4px 8px; border-radius: 4px; font-weight: bold; color: #1a1a2e; font-size: 0.75rem; text-transform: uppercase; text-align: center; min-width: 70px; }
+        .player-toggle-zone { background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; border: 1px solid var(--secondary); }
+        .p-chk { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+        .p-chk input { width: 22px; height: 22px; accent-color: var(--accent); cursor: pointer; }
+
+        .results { background: var(--card-bg); padding: 15px; border-radius: 15px; margin-bottom: 10px; border: 2px solid var(--secondary); display: flex; flex-direction: column; gap: 10px; }
+        .player-row { display: flex; align-items: center; background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 10px; gap: 12px; }
+        .char-img { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; border: 1px solid var(--accent); }
+        .char-select { flex: 1; background: #1a1a2e; color: white; border: 1px solid var(--secondary); padding: 10px; border-radius: 5px; font-size: 0.9rem; outline: none; }
+        .char-select.error { border-color: var(--danger); background: #301014; }
+
+        #error-msg { color: #ff4d4d; font-size: 0.8rem; font-weight: bold; text-align: center; margin-bottom: 10px; display: none; }
+        #rollBtn { background: var(--accent); width: 100%; padding: 15px; font-size: 1.1rem; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        .btn-confirm { background: #28a745; display: none; width: 100%; padding: 15px; font-size: 1.1rem; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; }
+        .btn-confirm.disabled { background: #444 !important; opacity: 0.5; cursor: not-allowed; }
+
+        .manage-section { background: #0f346055; padding: 15px; border-radius: 10px; margin-top: 30px; }
+        .sort-controls { display: flex; flex-wrap: wrap; gap: 6px; margin: 15px 0; justify-content: center; }
+        .btn-sort { border: none; padding: 6px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; cursor: pointer; text-transform: uppercase; color: #1a1a2e; background: #ddd; }
+        .btn-sort.active::after { content: ' ↕'; }
+
+        .char-list { max-height: 500px; overflow-y: auto; margin-top: 5px; border-top: 1px solid #ffffff11; }
+        .char-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #ffffff11; }
+        .list-thumb { width: 45px; height: 45px; border-radius: 4px; object-fit: cover; margin-right: 12px; }
         
+        /* Stat Layout */
+        .hero-info { flex: 1; }
+        .group-label { font-size: 0.6rem; color: #888; text-transform: uppercase; }
+        .hero-name { font-weight: bold; color: var(--accent); font-size: 0.95rem; }
+        .last-played { font-size: 0.65rem; color: #5c7899; font-style: italic; }
+        .stat-line { display: flex; gap: 6px; margin-top: 5px; align-items: center; }
+        .stat-pill { font-size: 0.6rem; padding: 2px 5px; border-radius: 3px; font-weight: bold; color: #1a1a2e; display: flex; align-items: center; gap: 3px; }
+        .play-count { color: #fff; font-size: 0.6rem; opacity: 0.8; margin-left: 2px; }
+
+        .danger-zone { margin-top: 25px; border-top: 1px solid #ffffff22; padding-top: 15px; }
+        .btn-reset { background: var(--danger); color: white; border: none; padding: 12px; border-radius: 6px; font-size: 0.8rem; width: 100%; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Dice Throne</h1>
+    
+    <div class="player-toggle-zone">
+        <label class="p-chk"><span class="player-tag" style="background:var(--p1)">Claudine</span> <input type="checkbox" id="use0" checked></label>
+        <label class="p-chk"><span class="player-tag" style="background:var(--p2)">Joel</span> <input type="checkbox" id="use1" checked></label>
+        <label class="p-chk"><span class="player-tag" style="background:var(--p3)">Julie</span> <input type="checkbox" id="use2" checked></label>
+        <label class="p-chk"><span class="player-tag" style="background:var(--p4)">Martin</span> <input type="checkbox" id="use3" checked></label>
+        <label class="p-chk"><span class="player-tag" style="background:var(--p5)">Invitee</span> <input type="checkbox" id="use4"></label>
+    </div>
+
+    <div id="results" class="results">
+        <p style="text-align: center; opacity: 0.6;">Select players and roll.</p>
+    </div>
+
+    <div id="error-msg">⚠ Duplicate character selected!</div>
+
+    <button id="rollBtn" onclick="pickCharacters()">ROLL RANDOMIZER</button>
+    <button id="confirmBtn" class="btn-confirm" onclick="applyResults()">LOCK IN SESSION</button>
+
+    <div class="manage-section">
+        <h3 id="formTitle" style="margin:0 0 10px 0;">Hero Stats & Management</h3>
+
+        <div class="sort-controls">
+            <button class="btn-sort" onclick="setSort('name')">Name</button>
+            <button class="btn-sort" onclick="setSort('group')">Group</button>
+            <button class="btn-sort" style="background:var(--p1)" onclick="setSort('w0')">C</button>
+            <button class="btn-sort" style="background:var(--p2)" onclick="setSort('w1')">J</button>
+            <button class="btn-sort" style="background:var(--p3)" onclick="setSort('w2')">Ju</button>
+            <button class="btn-sort" style="background:var(--p4)" onclick="setSort('w3')">M</button>
+        </div>
+
+        <div class="char-list" id="charList"></div>
+
+        <div class="danger-zone">
+            <button class="btn-reset" onclick="resetAllWeights()">RESET CORE WEIGHTS TO 100</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+<script>
+    const firebaseConfig = { apiKey: "PASTE_HERE", authDomain: "PASTE_HERE", databaseURL: "PASTE_HERE", projectId: "PASTE_HERE", storageBucket: "PASTE_HERE", messagingSenderId: "PASTE_HERE", appId: "PASTE_HERE" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const NAMES = ["Claudine", "Joel", "Julie", "Martin", "Invitee"];
+    const DECAY = 0.33;
+    const BOOST = 1.20;
+    const MIN_W = 30;
+    const MAX_W = 300;
+    
+    const getImgUrl = (slug) => slug ? `https://dice-throne.rulepop.com/heroes/${slug}.webp` : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e94560'%3E%3Cpath d='M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z'/%3E%3C/svg%3E";
+    const getHeroLink = (slug) => `https://dice-throne.rulepop.com/#hero/${slug}`;
+
+    let characters = [];
+    let currentSort = 'group';
+    let sortAsc = true;
+
+    function init() {
+        db.ref('characters_v4').on('value', snap => {
+            characters = snap.val() || [];
+            renderList();
+        });
+    }
+
+    function pickCharacters() {
+        let activeIndices = [];
+        NAMES.forEach((_, i) => { if(document.getElementById(`use${i}`).checked) activeIndices.push(i); });
+        if(activeIndices.length === 0) return alert("Select players!");
+        activeIndices = activeIndices.sort(() => Math.random() - 0.5);
+
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = '';
+        let pool = JSON.parse(JSON.stringify(characters));
+
+        activeIndices.forEach(pIdx => {
+            let selectedCharName = "";
+            if (pIdx === 4) {
+                if (pool.length > 0) {
+                    const randIdx = Math.floor(Math.random() * pool.length);
+                    selectedCharName = pool[randIdx].name;
+                    pool.splice(randIdx, 1);
+                }
+            } else {
+                const activePool = pool.filter(c => c.weights[pIdx] > 0);
+                if(activePool.length > 0) {
+                    let total = activePool.reduce((sum, c) => sum + c.weights[pIdx], 0);
+                    let rand = Math.random() * total;
+                    let sum = 0;
+                    for(let c of activePool) {
+                        sum += c.weights[pIdx];
+                        if(rand <= sum) { 
+                            selectedCharName = c.name; 
+                            pool.splice(pool.findIndex(p => p.name === selectedCharName), 1);
+                            break; 
+                        }
+                    }
+                }
+            }
+
+            const charData = characters.find(c => c.name === selectedCharName);
+            resultsDiv.innerHTML += `
+                <div class="player-row">
+                    <a href="${getHeroLink(charData?.slug)}" target="_blank" class="char-link" id="link-${pIdx}">
+                        <img src="${getImgUrl(charData?.slug)}" class="char-img" id="img-${pIdx}">
+                    </a>
+                    <div style="flex:1">
+                        <div style="margin-bottom:5px;"><span class="player-tag" style="background:var(--p${pIdx+1})">${NAMES[pIdx]}</span></div>
+                        <select class="char-select" data-player="${pIdx}" onchange="handleDropdownChange(this)">
+                            ${characters.map(c => `<option value="${c.name}" ${c.name === selectedCharName ? 'selected' : ''}>${c.name}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>`;
+        });
+        validateSelection();
+        document.getElementById('confirmBtn').style.display = 'block';
+    }
+
+    function handleDropdownChange(el) {
+        const char = characters.find(c => c.name === el.value);
+        const pIdx = el.dataset.player;
+        document.getElementById(`img-${pIdx}`).src = getImgUrl(char.slug);
+        document.getElementById(`link-${pIdx}`).href = getHeroLink(char.slug);
+        validateSelection();
+    }
+
+    function validateSelection() {
+        const dropdowns = document.querySelectorAll('.char-select');
+        const names = Array.from(dropdowns).map(d => d.value);
+        const hasDupes = names.some((name, idx) => names.indexOf(name) !== idx);
+        const confirmBtn = document.getElementById('confirmBtn');
+        confirmBtn.classList.toggle('disabled', hasDupes);
+        confirmBtn.disabled = hasDupes;
+        document.getElementById('error-msg').style.display = hasDupes ? 'block' : 'none';
+        dropdowns.forEach(d => d.classList.toggle('error', names.filter(n => n === d.value).length > 1));
+    }
+
+    // --- LEGACY UPDATE LOGIC ---
+    function applyResults() {
+        const dropdowns = document.querySelectorAll('.char-select');
+        const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+        
+        const sessionPicks = Array.from(dropdowns).map(sel => ({ 
+            pIdx: parseInt(sel.dataset.player), 
+            charName: sel.value 
+        }));
+
+        const corePlayingIndices = sessionPicks.filter(s => s.pIdx < 4).map(s => s.pIdx);
+
+        characters.forEach(char => {
+            // Update Weights for core players
+            corePlayingIndices.forEach(pIdx => {
+                const wasPicked = sessionPicks.some(s => s.pIdx === pIdx && s.charName === char.name);
+                
+                // Weight Logic
+                if (char.weights[pIdx] > 0) {
+                    char.weights[pIdx] = wasPicked ? Math.max(MIN_W, char.weights[pIdx] * DECAY) : Math.min(MAX_W, char.weights[pIdx] * BOOST);
+                }
+
+                // Play Count & Date Logic
+                if (wasPicked) {
+                    if (!char.playCount) char.playCount = [0, 0, 0, 0];
+                    if (!char.lastPlayed) char.lastPlayed = ["", "", "", ""];
+                    
+                    char.playCount[pIdx] = (char.playCount[pIdx] || 0) + 1;
+                    char.lastPlayed[pIdx] = today;
+                }
+            });
+        });
+
         db.ref('characters_v4').set(characters);
-        resetForm();
+        document.getElementById('confirmBtn').style.display = 'none';
+        document.getElementById('results').innerHTML = `<p style="color:#28a745; text-align:center; font-weight:bold;">Legacy Updated!</p>`;
     }
 
-    function startEdit(name) {
-        editIndex = characters.findIndex(c => c.name === name);
-        const c = characters[editIndex];
-        document.getElementById('newName').value = c.name;
-        document.getElementById('newGroup').value = c.group || '';
-        document.getElementById('newSlug').value = c.slug || '';
-        c.weights.forEach((w, i) => document.getElementById(`w${i}`).value = Math.round(w));
-        document.getElementById('formTitle').innerText = "Edit " + c.name;
-        document.getElementById('cancelEdit').style.display = "block";
+    function setSort(key) {
+        if (currentSort === key) sortAsc = !sortAsc;
+        else { currentSort = key; sortAsc = true; }
+        renderList();
     }
 
-    function resetForm() {
-        editIndex = -1;
-        document.querySelectorAll('.manage-section input').forEach(i => i.value = '');
-        document.getElementById('formTitle').innerText = "Hero Management";
-        document.getElementById('cancelEdit').style.display = "none";
+    function renderList() {
+        const listDiv = document.getElementById('charList');
+        const totals = [0, 1, 2, 3].map(i => characters.reduce((sum, c) => sum + c.weights[i], 0));
+
+        const sorted = [...characters].sort((a, b) => {
+            let valA, valB;
+            if (currentSort.startsWith('w')) {
+                const idx = parseInt(currentSort[1]);
+                valA = a.weights[idx]; valB = b.weights[idx];
+            } else {
+                valA = (a[currentSort] || "").toLowerCase(); valB = (b[currentSort] || "").toLowerCase();
+            }
+            return (valA < valB ? -1 : 1) * (sortAsc ? 1 : -1);
+        });
+
+        listDiv.innerHTML = sorted.map(c => {
+            const lastDates = (c.lastPlayed || ["", "", "", ""]).filter(d => d !== "");
+            const mostRecent = lastDates.length > 0 ? lastDates.sort().reverse()[0] : "Never";
+
+            return `
+            <div class="char-item">
+                <div style="display:flex; align-items:center; flex:1;">
+                    <a href="${getHeroLink(c.slug)}" target="_blank"><img src="${getImgUrl(c.slug)}" class="list-thumb"></a>
+                    <div class="hero-info">
+                        <div class="group-label">${c.group || 'Season ?'}</div>
+                        <div class="hero-name">${c.name}</div>
+                        <div class="last-played">Last played: ${mostRecent}</div>
+                        <div class="stat-line">
+                            ${c.weights.slice(0,4).map((w, i) => `
+                                <div class="stat-pill" style="background:var(--p${i+1})">
+                                    ${totals[i] > 0 ? ((w/totals[i])*100).toFixed(0) : 0}%
+                                    <span class="play-count">(${c.playCount ? c.playCount[i] : 0})</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function resetAllWeights() {
+        if(confirm("Reset all weights to 100? Play counts will remain.")) {
+            characters.forEach(c => { c.weights = [100, 100, 100, 100]; });
+            db.ref('characters_v4').set(characters);
+        }
     }
 
     init();
