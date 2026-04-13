@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dice Throne - Discovery Suite</title>
+    <title>Dice Throne - Discovery & Management</title>
     <style>
         :root {
             --bg: #1a1a2e;
@@ -12,6 +12,7 @@
             --text: #ffffff;
             --secondary: #0f3460;
             --danger: #941b2d;
+            --edit: #f39c12;
             --p1: #4ecca3; --p2: #45b7d1; --p3: #9b59b6; --p4: #f1c40f; --p5: #a2a2a2;
         }
 
@@ -19,30 +20,37 @@
         .container { max-width: 550px; width: 100%; }
         h1 { text-align: center; color: var(--accent); letter-spacing: 2px; margin-bottom: 20px; text-transform: uppercase; }
 
+        /* Setup Zone */
         .player-tag { display: inline-block; padding: 4px 8px; border-radius: 4px; font-weight: bold; color: #1a1a2e; font-size: 0.75rem; text-transform: uppercase; text-align: center; min-width: 70px; }
         .player-toggle-zone { background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; border: 1px solid var(--secondary); }
         .p-chk { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
         .p-chk input { width: 22px; height: 22px; accent-color: var(--accent); }
 
+        /* Roll Results */
         .results { background: var(--card-bg); padding: 15px; border-radius: 15px; margin-bottom: 10px; border: 2px solid var(--secondary); }
         .player-row { display: flex; align-items: flex-start; background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 10px; gap: 12px; margin-bottom: 8px; }
         .char-img-roll { width: 65px; height: 65px; border-radius: 8px; object-fit: cover; border: 1px solid var(--accent); }
         .roll-stats { font-size: 0.65rem; color: #aaa; margin-top: 4px; display: flex; flex-direction: column; gap: 2px; }
         .char-select { flex: 1; background: #1a1a2e; color: white; border: 1px solid var(--secondary); padding: 10px; border-radius: 5px; outline: none; width: 100%; }
-        .char-select.error { border-color: var(--danger); background: #301014; }
 
         #rollBtn { background: var(--accent); width: 100%; padding: 15px; font-size: 1.1rem; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; }
         .btn-confirm { background: #28a745; display: none; width: 100%; padding: 15px; border: none; border-radius: 8px; color: white; font-weight: bold; margin-top: 10px; cursor: pointer; }
-        #error-msg { color: var(--danger); font-size: 0.8rem; font-weight: bold; text-align: center; margin: 10px 0; display: none; }
 
+        /* Management Form */
+        .manage-form { background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--secondary); }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        input[type="text"] { background: #1a1a2e; color: white; border: 1px solid var(--secondary); padding: 10px; border-radius: 5px; font-size: 0.9rem; }
+        .btn-save { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 6px; width: 100%; cursor: pointer; font-weight: bold; }
+        .btn-cancel { background: #444; color: white; border: none; padding: 8px; border-radius: 6px; width: 100%; cursor: pointer; margin-top: 5px; font-size: 0.8rem; }
+
+        /* Toggle & Stats Section */
         .db-toggle-btn { background: var(--secondary); color: white; width: 100%; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin: 25px 0 15px 0; text-transform: uppercase; font-size: 0.8rem; }
         #dbSection { display: none; width: 100%; }
 
-        .char-item { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--secondary); display: flex; gap: 15px; }
-        .hero-main-info { flex: 0 0 75px; text-align: center; }
+        .char-item { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--secondary); display: flex; gap: 15px; position: relative; }
+        .btn-edit-small { position: absolute; top: 10px; right: 10px; background: var(--edit); border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.6rem; font-weight: bold; cursor: pointer; color: #1a1a2e; }
         .list-thumb { width: 70px; height: 70px; border-radius: 8px; object-fit: cover; border: 2px solid var(--accent); }
         .hero-details { flex: 1; }
-        .group-label { font-size: 0.65rem; color: #888; text-transform: uppercase; display: block; }
         .hero-name { font-size: 1.1rem; font-weight: bold; color: var(--accent); margin-bottom: 8px; display: block; }
 
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
@@ -54,10 +62,7 @@
 
         .sort-controls { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 15px; justify-content: center; }
         .btn-sort { border: none; padding: 6px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
-
-        .danger-zone { margin-top: 30px; display: flex; flex-direction: column; gap: 10px; border-top: 1px solid #ffffff22; padding-top: 20px; }
-        .btn-danger { background: var(--danger); color: white; border: none; padding: 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; opacity: 0.8; }
-        .btn-danger:hover { opacity: 1; }
+        .btn-danger { background: var(--danger); color: white; border: none; padding: 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -75,13 +80,23 @@
 
     <div id="results" class="results"><p style="text-align: center; opacity: 0.6;">Select players and roll.</p></div>
 
-    <div id="error-msg">⚠ Duplicate character selected!</div>
     <button id="rollBtn" onclick="pickCharacters()">ROLL RANDOMIZER</button>
     <button id="confirmBtn" class="btn-confirm" onclick="applyResults()">LOCK IN SESSION</button>
 
     <button class="db-toggle-btn" onclick="toggleDatabase()">📂 Show Hero Database & Stats</button>
 
     <div id="dbSection">
+        <div class="manage-form">
+            <h3 id="formTitle" style="margin-top:0; font-size: 1rem; color: var(--accent);">Add New Hero</h3>
+            <div class="form-grid">
+                <input type="text" id="charName" placeholder="Hero Name">
+                <input type="text" id="charGroup" placeholder="Group (e.g. Season 1)">
+                <input type="text" id="charSlug" placeholder="Slug (for image)">
+            </div>
+            <button class="btn-save" id="saveBtn" onclick="saveCharacter()">Save Hero</button>
+            <button class="btn-cancel" id="cancelBtn" onclick="resetForm()" style="display:none;">Cancel Edit</button>
+        </div>
+
         <div class="sort-controls">
             <button class="btn-sort" onclick="setSort('name')">Name</button>
             <button class="btn-sort" onclick="setSort('group')">Group</button>
@@ -90,9 +105,10 @@
             <button class="btn-sort" style="background:var(--p3)" onclick="setSort('w2')">Ju %</button>
             <button class="btn-sort" style="background:var(--p4)" onclick="setSort('w3')">M %</button>
         </div>
+
         <div id="heroContainer"></div>
 
-        <div class="danger-zone">
+        <div style="margin-top:20px; border-top: 1px solid #ffffff22; padding-top:15px;">
             <button class="btn-danger" onclick="resetAllWeights()">RESET PROBABILITIES TO 100</button>
             <button class="btn-danger" onclick="resetAllStats()">RESET PLAY COUNTS & DATES</button>
         </div>
@@ -112,6 +128,7 @@
     let characters = [];
     let currentSort = 'group';
     let sortAsc = true;
+    let editIndex = -1;
 
     const getImgUrl = (slug) => slug ? `https://dice-throne.rulepop.com/heroes/${slug}.webp` : "";
     const getHeroLink = (slug) => `https://dice-throne.rulepop.com/#hero/${slug}`;
@@ -124,56 +141,87 @@
     }
 
     function toggleDatabase() {
-        const section = document.getElementById('dbSection');
-        const btn = document.querySelector('.db-toggle-btn');
-        const isHidden = section.style.display !== "block";
-        section.style.display = isHidden ? "block" : "none";
-        btn.innerText = isHidden ? "📁 Hide Hero Database" : "📂 Show Hero Database & Stats";
+        const s = document.getElementById('dbSection');
+        const b = document.querySelector('.db-toggle-btn');
+        const isHidden = s.style.display !== "block";
+        s.style.display = isHidden ? "block" : "none";
+        b.innerText = isHidden ? "📁 Hide Hero Database" : "📂 Show Hero Database & Stats";
     }
 
+    /* --- MANAGEMENT LOGIC --- */
+    function saveCharacter() {
+        const name = document.getElementById('charName').value.trim();
+        const group = document.getElementById('charGroup').value.trim();
+        const slug = document.getElementById('charSlug').value.trim();
+        if(!name) return alert("Name is required");
+
+        if (editIndex > -1) {
+            characters[editIndex] = { ...characters[editIndex], name, group, slug };
+        } else {
+            characters.push({
+                name, group, slug,
+                weights: [100, 100, 100, 100],
+                playCount: [0, 0, 0, 0],
+                lastPlayed: ["", "", "", ""]
+            });
+        }
+        db.ref('characters_v4').set(characters);
+        resetForm();
+    }
+
+    function editChar(idx) {
+        editIndex = idx;
+        const c = characters[idx];
+        document.getElementById('charName').value = c.name;
+        document.getElementById('charGroup').value = c.group || "";
+        document.getElementById('charSlug').value = c.slug || "";
+        document.getElementById('formTitle').innerText = "Edit Hero: " + c.name;
+        document.getElementById('cancelBtn').style.display = "block";
+        document.getElementById('dbSection').scrollIntoView();
+    }
+
+    function resetForm() {
+        editIndex = -1;
+        document.getElementById('charName').value = "";
+        document.getElementById('charGroup').value = "";
+        document.getElementById('charSlug').value = "";
+        document.getElementById('formTitle').innerText = "Add New Hero";
+        document.getElementById('cancelBtn').style.display = "none";
+    }
+
+    /* --- ROLLING LOGIC --- */
     function pickCharacters() {
-        let activeIndices = [];
-        NAMES.forEach((_, i) => { if(document.getElementById(`use${i}`).checked) activeIndices.push(i); });
-        if(activeIndices.length === 0) return alert("Select players!");
+        let active = [];
+        NAMES.forEach((_, i) => { if(document.getElementById(`use${i}`).checked) active.push(i); });
+        if(active.length === 0) return alert("Select players!");
         
-        activeIndices = activeIndices.sort(() => Math.random() - 0.5);
+        active = active.sort(() => Math.random() - 0.5);
         const resultsDiv = document.getElementById('results');
         resultsDiv.innerHTML = '';
         let pool = JSON.parse(JSON.stringify(characters));
 
-        activeIndices.forEach(pIdx => {
+        active.forEach(pIdx => {
             let selectedName = "";
-            if (pIdx === 4) { // Invitee (Pure Random)
-                if (pool.length > 0) {
-                    const r = Math.floor(Math.random() * pool.length);
-                    selectedName = pool[r].name;
-                    pool.splice(r, 1);
-                }
-            } else { // Play-Count Scaled Random
+            if (pIdx === 4) { // Invitee
+                const r = Math.floor(Math.random() * pool.length);
+                selectedName = pool[r]?.name;
+                pool.splice(r, 1);
+            } else { // Scaled Random
                 const activePool = pool.filter(c => c.weights[pIdx] > 0);
-                if(activePool.length > 0) {
-                    // APPLY SCALING LOGIC: Weight / (Plays + 1)
-                    let totalScaled = activePool.reduce((sum, c) => {
-                        const plays = (c.playCount && c.playCount[pIdx]) || 0;
-                        return sum + (c.weights[pIdx] / (plays + 1));
-                    }, 0);
-
-                    let rand = Math.random() * totalScaled;
-                    let runningSum = 0;
-                    for(let c of activePool) {
-                        const plays = (c.playCount && c.playCount[pIdx]) || 0;
-                        runningSum += (c.weights[pIdx] / (plays + 1));
-                        if(rand <= runningSum) { 
-                            selectedName = c.name; 
-                            pool.splice(pool.findIndex(p => p.name === selectedName), 1);
-                            break; 
-                        }
+                let totalScaled = activePool.reduce((sum, c) => sum + (c.weights[pIdx] / (((c.playCount?.[pIdx]) || 0) + 1)), 0);
+                let rand = Math.random() * totalScaled;
+                let runningSum = 0;
+                for(let c of activePool) {
+                    runningSum += (c.weights[pIdx] / (((c.playCount?.[pIdx]) || 0) + 1));
+                    if(rand <= runningSum) { 
+                        selectedName = c.name; 
+                        pool.splice(pool.findIndex(p => p.name === selectedName), 1);
+                        break; 
                     }
                 }
             }
             renderPlayerRow(pIdx, selectedName);
         });
-        validateSelection();
         document.getElementById('confirmBtn').style.display = 'block';
     }
 
@@ -209,30 +257,18 @@
         if (statsDiv && pIdx < 4) {
             statsDiv.innerHTML = `<span>Plays: <b>${(char.playCount?.[pIdx] || 0)}</b></span><span>Last: <b>${(char.lastPlayed?.[pIdx] || 'Never')}</b></span>`;
         }
-        validateSelection();
-    }
-
-    function validateSelection() {
-        const dropdowns = document.querySelectorAll('.char-select');
-        const names = Array.from(dropdowns).map(d => d.value);
-        const hasDupes = names.some((name, idx) => names.indexOf(name) !== idx);
-        const confirmBtn = document.getElementById('confirmBtn');
-        confirmBtn.classList.toggle('disabled', hasDupes);
-        confirmBtn.disabled = hasDupes;
-        document.getElementById('error-msg').style.display = hasDupes ? 'block' : 'none';
-        dropdowns.forEach(d => d.classList.toggle('error', names.filter(n => n === d.value).length > 1));
     }
 
     function applyResults() {
         const dropdowns = document.querySelectorAll('.char-select');
         const today = new Date().toLocaleDateString('en-CA');
-        const sessionPicks = Array.from(dropdowns).map(sel => ({ pIdx: parseInt(sel.dataset.player), charName: sel.value }));
+        const picks = Array.from(dropdowns).map(sel => ({ pIdx: parseInt(sel.dataset.player), charName: sel.value }));
 
         characters.forEach(char => {
             [0,1,2,3].forEach(pIdx => {
-                const pick = sessionPicks.find(s => s.pIdx === pIdx);
+                const pick = picks.find(s => s.pIdx === pIdx);
                 const wasPicked = pick && pick.charName === char.name;
-                if (sessionPicks.some(s => s.pIdx === pIdx)) {
+                if (picks.some(s => s.pIdx === pIdx)) {
                     char.weights[pIdx] = wasPicked ? Math.max(30, char.weights[pIdx] * 0.33) : Math.min(300, char.weights[pIdx] * 1.20);
                 }
                 if (wasPicked) {
@@ -248,28 +284,10 @@
         document.getElementById('results').innerHTML = `<p style="color:#28a745; text-align:center; font-weight:bold;">Legacy Stats Updated!</p>`;
     }
 
-    function resetAllWeights() {
-        if(confirm("Reset all probabilities to 100? History will be kept.")) {
-            characters.forEach(c => c.weights = [100, 100, 100, 100]);
-            db.ref('characters_v4').set(characters);
-        }
-    }
-
-    function resetAllStats() {
-        if(confirm("Reset all play counts and dates? Probabilities will be kept.")) {
-            characters.forEach(c => {
-                c.playCount = [0, 0, 0, 0];
-                c.lastPlayed = ["", "", "", ""];
-            });
-            db.ref('characters_v4').set(characters);
-        }
-    }
-
-    function setSort(key) {
-        if (currentSort === key) sortAsc = !sortAsc;
-        else { currentSort = key; sortAsc = true; }
-        renderList();
-    }
+    /* --- LIST & HELPERS --- */
+    function resetAllWeights() { if(confirm("Reset all probabilities to 100?")) { characters.forEach(c => c.weights = [100, 100, 100, 100]); db.ref('characters_v4').set(characters); } }
+    function resetAllStats() { if(confirm("Reset all play history?")) { characters.forEach(c => { c.playCount = [0,0,0,0]; c.lastPlayed = ["","","",""]; }); db.ref('characters_v4').set(characters); } }
+    function setSort(key) { if (currentSort === key) sortAsc = !sortAsc; else { currentSort = key; sortAsc = true; } renderList(); }
 
     function renderList() {
         const container = document.getElementById('heroContainer');
@@ -288,8 +306,10 @@
         container.innerHTML = sorted.map(c => {
             const counts = c.playCount || [0,0,0,0];
             const dates = c.lastPlayed || ["Never", "Never", "Never", "Never"];
+            const realIdx = characters.findIndex(orig => orig.name === c.name);
             return `
             <div class="char-item">
+                <button class="btn-edit-small" onclick="editChar(${realIdx})">EDIT</button>
                 <div class="hero-main-info"><a href="${getHeroLink(c.slug)}" target="_blank"><img src="${getImgUrl(c.slug)}" class="list-thumb"></a></div>
                 <div class="hero-details">
                     <div class="hero-header"><span class="group-label">${c.group || 'Season ?'}</span><span class="hero-name">${c.name}</span></div>
