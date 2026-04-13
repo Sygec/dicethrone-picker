@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dice Throne - Master Stats</title>
+    <title>Dice Throne - Legacy Suite</title>
     <style>
         :root {
             --bg: #1a1a2e;
@@ -12,7 +12,6 @@
             --text: #ffffff;
             --secondary: #0f3460;
             --danger: #941b2d;
-            --edit: #f39c12;
             --p1: #4ecca3; --p2: #45b7d1; --p3: #9b59b6; --p4: #f1c40f; --p5: #a2a2a2;
         }
 
@@ -20,57 +19,41 @@
         .container { max-width: 550px; width: 100%; }
         h1 { text-align: center; color: var(--accent); letter-spacing: 2px; margin-bottom: 20px; text-transform: uppercase; }
 
+        /* Setup Zone */
         .player-tag { display: inline-block; padding: 4px 8px; border-radius: 4px; font-weight: bold; color: #1a1a2e; font-size: 0.75rem; text-transform: uppercase; text-align: center; min-width: 70px; }
-        
-        /* Main Layout */
-        .results { background: var(--card-bg); padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 2px solid var(--secondary); }
+        .player-toggle-zone { background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; border: 1px solid var(--secondary); }
+        .p-chk { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+        .p-chk input { width: 22px; height: 22px; accent-color: var(--accent); }
+
+        /* Roll Results */
+        .results { background: var(--card-bg); padding: 15px; border-radius: 15px; margin-bottom: 10px; border: 2px solid var(--secondary); }
         .player-row { display: flex; align-items: center; background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 10px; gap: 12px; margin-bottom: 8px; }
-        .char-img { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; border: 1px solid var(--accent); }
-        .char-select { flex: 1; background: #1a1a2e; color: white; border: 1px solid var(--secondary); padding: 10px; border-radius: 5px; }
-
-        /* Hero List Styling */
-        .char-list { margin-top: 20px; }
-        .char-item { 
-            background: var(--card-bg); 
-            border-radius: 12px; 
-            padding: 15px; 
-            margin-bottom: 15px; 
-            border: 1px solid var(--secondary);
-            display: flex;
-            gap: 15px;
-        }
-        .hero-main-info { flex: 0 0 80px; text-align: center; }
-        .list-thumb { width: 70px; height: 70px; border-radius: 8px; object-fit: cover; border: 2px solid var(--accent); }
-        .hero-details { flex: 1; }
-        
-        .hero-header { margin-bottom: 10px; }
-        .group-label { font-size: 0.65rem; color: #888; text-transform: uppercase; display: block; }
-        .hero-name { font-size: 1.1rem; font-weight: bold; color: var(--accent); }
-
-        /* Player Stats Grid */
-        .stats-grid { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 10px; 
-            border-top: 1px solid rgba(255,255,255,0.1);
-            padding-top: 10px;
-        }
-        .player-stat-box {
-            background: rgba(0,0,0,0.2);
-            padding: 8px;
-            border-radius: 6px;
-            border-left: 4px solid transparent;
-        }
-        .stat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
-        .stat-label { font-size: 0.65rem; color: #aaa; }
-        .stat-value { font-size: 0.75rem; font-weight: bold; }
-        .stat-date { font-size: 0.6rem; color: #666; display: block; margin-top: 2px; text-align: right; }
+        .char-img-roll { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; border: 1px solid var(--accent); }
+        .char-select { flex: 1; background: #1a1a2e; color: white; border: 1px solid var(--secondary); padding: 10px; border-radius: 5px; outline: none; }
+        .char-select.error { border-color: var(--danger); background: #301014; }
 
         #rollBtn { background: var(--accent); width: 100%; padding: 15px; font-size: 1.1rem; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; }
-        .btn-confirm { background: #28a745; display: none; width: 100%; padding: 15px; border-radius: 8px; color: white; font-weight: bold; margin-top: 10px; cursor: pointer; }
-        
-        .sort-controls { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 15px; justify-content: center; }
-        .btn-sort { border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
+        .btn-confirm { background: #28a745; display: none; width: 100%; padding: 15px; border: none; border-radius: 8px; color: white; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        .btn-confirm.disabled { background: #444 !important; opacity: 0.5; cursor: not-allowed; }
+        #error-msg { color: var(--danger); font-size: 0.8rem; font-weight: bold; text-align: center; margin: 10px 0; display: none; }
+
+        /* Hero List Redesign */
+        .char-item { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--secondary); display: flex; gap: 15px; }
+        .hero-main-info { flex: 0 0 75px; text-align: center; }
+        .list-thumb { width: 70px; height: 70px; border-radius: 8px; object-fit: cover; border: 2px solid var(--accent); }
+        .hero-details { flex: 1; }
+        .group-label { font-size: 0.65rem; color: #888; text-transform: uppercase; display: block; }
+        .hero-name { font-size: 1.1rem; font-weight: bold; color: var(--accent); margin-bottom: 8px; display: block; }
+
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
+        .player-stat-box { background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px; border-left: 3px solid transparent; }
+        .stat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+        .stat-label { font-size: 0.6rem; color: #aaa; text-transform: uppercase; }
+        .stat-value { font-size: 0.7rem; font-weight: bold; }
+        .stat-date { font-size: 0.55rem; color: #666; display: block; text-align: right; margin-top: 2px; }
+
+        .sort-controls { display: flex; flex-wrap: wrap; gap: 6px; margin: 20px 0; justify-content: center; }
+        .btn-sort { border: none; padding: 6px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -78,24 +61,32 @@
 <div class="container">
     <h1>Dice Throne</h1>
     
+    <div class="player-toggle-zone">
+        <label class="p-chk"><span class="player-tag" style="background:var(--p1)">Claudine</span> <input type="checkbox" id="use0" checked></label>
+        <label class="p-chk"><span class="player-tag" style="background:var(--p2)">Joel</span> <input type="checkbox" id="use1" checked></label>
+        <label class="p-chk"><span class="player-tag" style="background:var(--p3)">Julie</span> <input type="checkbox" id="use2" checked></label>
+        <label class="p-chk"><span class="player-tag" style="background:var(--p4)">Martin</span> <input type="checkbox" id="use3" checked></label>
+        <label class="p-chk"><span class="player-tag" style="background:var(--p5)">Invitee</span> <input type="checkbox" id="use4"></label>
+    </div>
+
     <div id="results" class="results">
         <p style="text-align: center; opacity: 0.6;">Select players and roll.</p>
     </div>
 
+    <div id="error-msg">⚠ Duplicate character selected!</div>
     <button id="rollBtn" onclick="pickCharacters()">ROLL RANDOMIZER</button>
     <button id="confirmBtn" class="btn-confirm" onclick="applyResults()">LOCK IN SESSION</button>
 
-    <div class="char-list">
-        <div class="sort-controls">
-            <button class="btn-sort" onclick="setSort('name')">Name</button>
-            <button class="btn-sort" onclick="setSort('group')">Group</button>
-            <button class="btn-sort" style="background:var(--p1)" onclick="setSort('w0')">C %</button>
-            <button class="btn-sort" style="background:var(--p2)" onclick="setSort('w1')">J %</button>
-            <button class="btn-sort" style="background:var(--p3)" onclick="setSort('w2')">Ju %</button>
-            <button class="btn-sort" style="background:var(--p4)" onclick="setSort('w3')">M %</button>
-        </div>
-        <div id="heroContainer"></div>
+    <div class="sort-controls">
+        <button class="btn-sort" onclick="setSort('name')">Name</button>
+        <button class="btn-sort" onclick="setSort('group')">Group</button>
+        <button class="btn-sort" style="background:var(--p1)" onclick="setSort('w0')">C %</button>
+        <button class="btn-sort" style="background:var(--p2)" onclick="setSort('w1')">J %</button>
+        <button class="btn-sort" style="background:var(--p3)" onclick="setSort('w2')">Ju %</button>
+        <button class="btn-sort" style="background:var(--p4)" onclick="setSort('w3')">M %</button>
     </div>
+
+    <div id="heroContainer"></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
@@ -122,31 +113,98 @@
         });
     }
 
-    function applyResults() {
-        const today = new Date().toLocaleDateString('en-CA');
-        const dropdowns = document.querySelectorAll('.char-select');
+    function pickCharacters() {
+        let activeIndices = [];
+        NAMES.forEach((_, i) => { if(document.getElementById(`use${i}`).checked) activeIndices.push(i); });
+        if(activeIndices.length === 0) return alert("Select players!");
         
-        const sessionPicks = Array.from(dropdowns).map(sel => ({ 
-            pIdx: parseInt(sel.dataset.player), 
-            charName: sel.value 
-        }));
+        // Shuffle rolling order
+        activeIndices = activeIndices.sort(() => Math.random() - 0.5);
+
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = '';
+        let pool = JSON.parse(JSON.stringify(characters));
+
+        activeIndices.forEach(pIdx => {
+            let selectedName = "";
+            if (pIdx === 4) { // Invitee
+                if (pool.length > 0) {
+                    const r = Math.floor(Math.random() * pool.length);
+                    selectedName = pool[r].name;
+                    pool.splice(r, 1);
+                }
+            } else { // Weighted Core
+                const activePool = pool.filter(c => c.weights[pIdx] > 0);
+                if(activePool.length > 0) {
+                    let total = activePool.reduce((sum, c) => sum + c.weights[pIdx], 0);
+                    let rand = Math.random() * total;
+                    let sum = 0;
+                    for(let c of activePool) {
+                        sum += c.weights[pIdx];
+                        if(rand <= sum) { 
+                            selectedName = c.name; 
+                            pool.splice(pool.findIndex(p => p.name === selectedName), 1);
+                            break; 
+                        }
+                    }
+                }
+            }
+
+            const charData = characters.find(c => c.name === selectedName);
+            resultsDiv.innerHTML += `
+                <div class="player-row">
+                    <a href="${getHeroLink(charData?.slug)}" target="_blank" id="link-${pIdx}">
+                        <img src="${getImgUrl(charData?.slug)}" class="char-img-roll" id="img-${pIdx}">
+                    </a>
+                    <div style="flex:1">
+                        <div style="margin-bottom:5px;"><span class="player-tag" style="background:var(--p${pIdx+1})">${NAMES[pIdx]}</span></div>
+                        <select class="char-select" data-player="${pIdx}" onchange="handleDropdownChange(this)">
+                            ${characters.map(c => `<option value="${c.name}" ${c.name === selectedName ? 'selected' : ''}>${c.name}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>`;
+        });
+        validateSelection();
+        document.getElementById('confirmBtn').style.display = 'block';
+    }
+
+    function handleDropdownChange(el) {
+        const char = characters.find(c => c.name === el.value);
+        const pIdx = el.dataset.player;
+        document.getElementById(`img-${pIdx}`).src = getImgUrl(char.slug);
+        document.getElementById(`link-${pIdx}`).href = getHeroLink(char.slug);
+        validateSelection();
+    }
+
+    function validateSelection() {
+        const dropdowns = document.querySelectorAll('.char-select');
+        const names = Array.from(dropdowns).map(d => d.value);
+        const hasDupes = names.some((name, idx) => names.indexOf(name) !== idx);
+        const confirmBtn = document.getElementById('confirmBtn');
+        confirmBtn.classList.toggle('disabled', hasDupes);
+        confirmBtn.disabled = hasDupes;
+        document.getElementById('error-msg').style.display = hasDupes ? 'block' : 'none';
+        dropdowns.forEach(d => d.classList.toggle('error', names.filter(n => n === d.value).length > 1));
+    }
+
+    function applyResults() {
+        const dropdowns = document.querySelectorAll('.char-select');
+        const today = new Date().toLocaleDateString('en-CA');
+        const sessionPicks = Array.from(dropdowns).map(sel => ({ pIdx: parseInt(sel.dataset.player), charName: sel.value }));
 
         characters.forEach(char => {
             [0,1,2,3].forEach(pIdx => {
-                const wasPicked = sessionPicks.some(s => s.pIdx === pIdx && s.charName === char.name);
-                
-                // Existing Weight Logic
-                if (char.weights[pIdx] > 0) {
+                const pick = sessionPicks.find(s => s.pIdx === pIdx);
+                const wasPicked = pick && pick.charName === char.name;
+                const playerIsPlaying = sessionPicks.some(s => s.pIdx === pIdx);
+
+                if (playerIsPlaying) {
                     char.weights[pIdx] = wasPicked ? Math.max(30, char.weights[pIdx] * 0.33) : Math.min(300, char.weights[pIdx] * 1.20);
                 }
-
                 if (wasPicked) {
-                    // Update Counts
                     if (!char.playCount) char.playCount = [0,0,0,0];
-                    char.playCount[pIdx] = (char.playCount[pIdx] || 0) + 1;
-                    
-                    // Update Date
                     if (!char.lastPlayed) char.lastPlayed = ["","","",""];
+                    char.playCount[pIdx] = (char.playCount[pIdx] || 0) + 1;
                     char.lastPlayed[pIdx] = today;
                 }
             });
@@ -154,7 +212,7 @@
 
         db.ref('characters_v4').set(characters);
         document.getElementById('confirmBtn').style.display = 'none';
-        document.getElementById('results').innerHTML = `<p style="color:#28a745; text-align:center;">Data Synced!</p>`;
+        document.getElementById('results').innerHTML = `<p style="color:#28a745; text-align:center;">Legacy Stats Updated!</p>`;
     }
 
     function setSort(key) {
@@ -185,16 +243,13 @@
             return `
             <div class="char-item">
                 <div class="hero-main-info">
-                    <a href="${getHeroLink(c.slug)}" target="_blank">
-                        <img src="${getImgUrl(c.slug)}" class="list-thumb">
-                    </a>
+                    <a href="${getHeroLink(c.slug)}" target="_blank"><img src="${getImgUrl(c.slug)}" class="list-thumb"></a>
                 </div>
                 <div class="hero-details">
                     <div class="hero-header">
                         <span class="group-label">${c.group || 'Season ?'}</span>
                         <span class="hero-name">${c.name}</span>
                     </div>
-                    
                     <div class="stats-grid">
                         ${[0,1,2,3].map(i => `
                             <div class="player-stat-box" style="border-left-color: ${PLAYER_COLORS[i]}">
@@ -215,7 +270,6 @@
         }).join('');
     }
 
-    // Reuse your pickCharacters and validateSelection functions here...
     init();
 </script>
 </body>
