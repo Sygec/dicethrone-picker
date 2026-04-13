@@ -27,9 +27,10 @@
 
         /* Roll Results */
         .results { background: var(--card-bg); padding: 15px; border-radius: 15px; margin-bottom: 10px; border: 2px solid var(--secondary); }
-        .player-row { display: flex; align-items: center; background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 10px; gap: 12px; margin-bottom: 8px; }
-        .char-img-roll { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; border: 1px solid var(--accent); }
-        .char-select { flex: 1; background: #1a1a2e; color: white; border: 1px solid var(--secondary); padding: 10px; border-radius: 5px; outline: none; }
+        .player-row { display: flex; align-items: flex-start; background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 10px; gap: 12px; margin-bottom: 8px; }
+        .char-img-roll { width: 65px; height: 65px; border-radius: 8px; object-fit: cover; border: 1px solid var(--accent); }
+        .roll-stats { font-size: 0.65rem; color: #aaa; margin-top: 4px; display: flex; flex-direction: column; gap: 2px; }
+        .char-select { flex: 1; background: #1a1a2e; color: white; border: 1px solid var(--secondary); padding: 10px; border-radius: 5px; outline: none; width: 100%; }
         .char-select.error { border-color: var(--danger); background: #301014; }
 
         #rollBtn { background: var(--accent); width: 100%; padding: 15px; font-size: 1.1rem; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; }
@@ -37,7 +38,10 @@
         .btn-confirm.disabled { background: #444 !important; opacity: 0.5; cursor: not-allowed; }
         #error-msg { color: var(--danger); font-size: 0.8rem; font-weight: bold; text-align: center; margin: 10px 0; display: none; }
 
-        /* Hero List Redesign */
+        /* Toggle & Stats Section */
+        .db-toggle-btn { background: var(--secondary); color: white; width: 100%; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin: 25px 0 15px 0; text-transform: uppercase; font-size: 0.8rem; }
+        #dbSection { display: none; width: 100%; }
+
         .char-item { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--secondary); display: flex; gap: 15px; }
         .hero-main-info { flex: 0 0 75px; text-align: center; }
         .list-thumb { width: 70px; height: 70px; border-radius: 8px; object-fit: cover; border: 2px solid var(--accent); }
@@ -52,7 +56,7 @@
         .stat-value { font-size: 0.7rem; font-weight: bold; }
         .stat-date { font-size: 0.55rem; color: #666; display: block; text-align: right; margin-top: 2px; }
 
-        .sort-controls { display: flex; flex-wrap: wrap; gap: 6px; margin: 20px 0; justify-content: center; }
+        .sort-controls { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 15px; justify-content: center; }
         .btn-sort { border: none; padding: 6px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
     </style>
 </head>
@@ -77,16 +81,19 @@
     <button id="rollBtn" onclick="pickCharacters()">ROLL RANDOMIZER</button>
     <button id="confirmBtn" class="btn-confirm" onclick="applyResults()">LOCK IN SESSION</button>
 
-    <div class="sort-controls">
-        <button class="btn-sort" onclick="setSort('name')">Name</button>
-        <button class="btn-sort" onclick="setSort('group')">Group</button>
-        <button class="btn-sort" style="background:var(--p1)" onclick="setSort('w0')">C %</button>
-        <button class="btn-sort" style="background:var(--p2)" onclick="setSort('w1')">J %</button>
-        <button class="btn-sort" style="background:var(--p3)" onclick="setSort('w2')">Ju %</button>
-        <button class="btn-sort" style="background:var(--p4)" onclick="setSort('w3')">M %</button>
-    </div>
+    <button class="db-toggle-btn" onclick="toggleDatabase()">📂 Show Hero Database & Stats</button>
 
-    <div id="heroContainer"></div>
+    <div id="dbSection">
+        <div class="sort-controls">
+            <button class="btn-sort" onclick="setSort('name')">Name</button>
+            <button class="btn-sort" onclick="setSort('group')">Group</button>
+            <button class="btn-sort" style="background:var(--p1)" onclick="setSort('w0')">C %</button>
+            <button class="btn-sort" style="background:var(--p2)" onclick="setSort('w1')">J %</button>
+            <button class="btn-sort" style="background:var(--p3)" onclick="setSort('w2')">Ju %</button>
+            <button class="btn-sort" style="background:var(--p4)" onclick="setSort('w3')">M %</button>
+        </div>
+        <div id="heroContainer"></div>
+    </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
@@ -113,12 +120,23 @@
         });
     }
 
+    function toggleDatabase() {
+        const section = document.getElementById('dbSection');
+        const btn = document.querySelector('.db-toggle-btn');
+        if (section.style.display === "block") {
+            section.style.display = "none";
+            btn.innerText = "📂 Show Hero Database & Stats";
+        } else {
+            section.style.display = "block";
+            btn.innerText = "📁 Hide Hero Database";
+        }
+    }
+
     function pickCharacters() {
         let activeIndices = [];
         NAMES.forEach((_, i) => { if(document.getElementById(`use${i}`).checked) activeIndices.push(i); });
         if(activeIndices.length === 0) return alert("Select players!");
         
-        // Shuffle rolling order
         activeIndices = activeIndices.sort(() => Math.random() - 0.5);
 
         const resultsDiv = document.getElementById('results');
@@ -127,13 +145,13 @@
 
         activeIndices.forEach(pIdx => {
             let selectedName = "";
-            if (pIdx === 4) { // Invitee
+            if (pIdx === 4) {
                 if (pool.length > 0) {
                     const r = Math.floor(Math.random() * pool.length);
                     selectedName = pool[r].name;
                     pool.splice(r, 1);
                 }
-            } else { // Weighted Core
+            } else {
                 const activePool = pool.filter(c => c.weights[pIdx] > 0);
                 if(activePool.length > 0) {
                     let total = activePool.reduce((sum, c) => sum + c.weights[pIdx], 0);
@@ -150,29 +168,57 @@
                 }
             }
 
-            const charData = characters.find(c => c.name === selectedName);
-            resultsDiv.innerHTML += `
-                <div class="player-row">
-                    <a href="${getHeroLink(charData?.slug)}" target="_blank" id="link-${pIdx}">
-                        <img src="${getImgUrl(charData?.slug)}" class="char-img-roll" id="img-${pIdx}">
-                    </a>
-                    <div style="flex:1">
-                        <div style="margin-bottom:5px;"><span class="player-tag" style="background:var(--p${pIdx+1})">${NAMES[pIdx]}</span></div>
-                        <select class="char-select" data-player="${pIdx}" onchange="handleDropdownChange(this)">
-                            ${characters.map(c => `<option value="${c.name}" ${c.name === selectedName ? 'selected' : ''}>${c.name}</option>`).join('')}
-                        </select>
-                    </div>
-                </div>`;
+            renderPlayerRow(pIdx, selectedName);
         });
         validateSelection();
         document.getElementById('confirmBtn').style.display = 'block';
     }
 
+    function renderPlayerRow(pIdx, selectedName) {
+        const charData = characters.find(c => c.name === selectedName);
+        const resultsDiv = document.getElementById('results');
+        
+        // Data for current player
+        const plays = (charData?.playCount && charData.playCount[pIdx]) || 0;
+        const last = (charData?.lastPlayed && charData.lastPlayed[pIdx]) || "Never";
+
+        resultsDiv.innerHTML += `
+            <div class="player-row">
+                <a href="${getHeroLink(charData?.slug)}" target="_blank" id="link-${pIdx}">
+                    <img src="${getImgUrl(charData?.slug)}" class="char-img-roll" id="img-${pIdx}">
+                </a>
+                <div style="flex:1">
+                    <div style="margin-bottom:5px; display:flex; justify-content:space-between; align-items:center;">
+                        <span class="player-tag" style="background:var(--p${pIdx+1})">${NAMES[pIdx]}</span>
+                        ${pIdx < 4 ? `<div class="roll-stats">
+                            <span>Plays: <b>${plays}</b></span>
+                            <span>Last: <b>${last}</b></span>
+                        </div>` : ''}
+                    </div>
+                    <select class="char-select" data-player="${pIdx}" onchange="handleDropdownChange(this)">
+                        ${characters.map(c => `<option value="${c.name}" ${c.name === selectedName ? 'selected' : ''}>${c.name}</option>`).join('')}
+                    </select>
+                </div>
+            </div>`;
+    }
+
     function handleDropdownChange(el) {
+        const pIdx = parseInt(el.dataset.player);
         const char = characters.find(c => c.name === el.value);
-        const pIdx = el.dataset.player;
+        
+        // Update Image & Link
         document.getElementById(`img-${pIdx}`).src = getImgUrl(char.slug);
         document.getElementById(`link-${pIdx}`).href = getHeroLink(char.slug);
+        
+        // Update Stats displayed in roll
+        const row = el.closest('.player-row');
+        const statsDiv = row.querySelector('.roll-stats');
+        if (statsDiv && pIdx < 4) {
+            const plays = (char.playCount && char.playCount[pIdx]) || 0;
+            const last = (char.lastPlayed && char.lastPlayed[pIdx]) || "Never";
+            statsDiv.innerHTML = `<span>Plays: <b>${plays}</b></span><span>Last: <b>${last}</b></span>`;
+        }
+        
         validateSelection();
     }
 
@@ -212,7 +258,7 @@
 
         db.ref('characters_v4').set(characters);
         document.getElementById('confirmBtn').style.display = 'none';
-        document.getElementById('results').innerHTML = `<p style="color:#28a745; text-align:center;">Legacy Stats Updated!</p>`;
+        document.getElementById('results').innerHTML = `<p style="color:#28a745; text-align:center; font-weight:bold;">Legacy Stats Updated!</p>`;
     }
 
     function setSort(key) {
