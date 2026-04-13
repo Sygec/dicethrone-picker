@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dice Throne Cloud</title>
+    <title>Dice Throne - Multi-Player</title>
     <style>
         :root {
             --bg: #1a1a2e;
@@ -13,179 +13,100 @@
             --secondary: #0f3460;
             --danger: #941b2d;
             --edit: #f39c12;
-            --disabled: #555;
+            --p1: #4ecca3; --p2: #45b7d1; --p3: #9b59b6; --p4: #f1c40f;
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .container { max-width: 500px; width: 100%; }
-        h1 { text-align: center; color: var(--accent); margin-bottom: 10px; }
+        h1 { text-align: center; color: var(--accent); }
 
-        .results {
+        /* Player Presence Toggles */
+        .player-toggle-zone {
             background: var(--card-bg);
-            padding: 20px;
-            border-radius: 15px;
-            min-height: 120px;
-            margin-bottom: 20px;
-            border: 2px solid var(--secondary);
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .player-row {
-            display: flex;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 10px;
-            border-radius: 10px;
-        }
-
-        .char-thumb {
-            width: 50px;
-            height: 50px;
-            border-radius: 8px;
-            object-fit: cover;
-            margin-right: 15px;
-            border: 1px solid var(--accent);
-            background: var(--bg);
-        }
-
-        .player-info { display: flex; flex-direction: column; }
-        .player-label { font-size: 0.7rem; text-transform: uppercase; opacity: 0.6; }
-        .character-name { font-weight: bold; color: var(--accent); font-size: 1.1rem; }
-        .character-group { font-size: 0.7rem; color: #aaa; }
-
-        .controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        button {
-            background: var(--secondary);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .btn-confirm { background: #28a745; grid-column: span 3; margin-top: 10px; display: none; height: 50px; }
-
-        .manage-section {
-            background: #0f346055;
             padding: 15px;
-            border-radius: 10px;
-            margin-top: 30px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-around;
+            border: 1px solid var(--secondary);
         }
+        .p-chk { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 0.8rem; font-weight: bold; }
+        .p-chk input { width: 20px; height: 20px; accent-color: var(--accent); }
 
+        .results { background: var(--card-bg); padding: 20px; border-radius: 15px; min-height: 80px; margin-bottom: 20px; border: 2px solid var(--secondary); display: flex; flex-direction: column; gap: 10px; }
+        .player-row { display: flex; align-items: center; background: rgba(255, 255, 255, 0.05); padding: 8px; border-radius: 10px; }
+        .char-thumb { width: 45px; height: 45px; border-radius: 6px; object-fit: cover; margin-right: 12px; border: 1px solid var(--accent); }
+        .player-info { display: flex; flex-direction: column; }
+        .p-num { font-size: 0.65rem; text-transform: uppercase; font-weight: bold; }
+        .p-name { font-weight: bold; color: var(--accent); font-size: 1rem; }
+
+        .controls { display: flex; gap: 10px; margin-bottom: 20px; }
+        button { background: var(--secondary); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; flex: 1; }
+        .btn-confirm { background: #28a745; margin-top: 10px; display: none; width: 100%; height: 45px; }
+
+        .manage-section { background: #0f346055; padding: 15px; border-radius: 10px; }
         .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
-        .input-row { display: flex; gap: 8px; }
-        .input-row input { flex: 1; }
+        .weight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; }
+        .weight-grid div { display: flex; align-items: center; gap: 5px; font-size: 0.8rem; }
+        input { padding: 10px; border-radius: 5px; border: none; background: #1a1a2e; color: white; width: 100%; box-sizing: border-box; }
+
+        .sort-bar { display: flex; gap: 5px; margin: 10px 0; }
+        .btn-sort { font-size: 0.65rem; padding: 6px; background: transparent; border: 1px solid #444; }
+        .btn-sort.active { background: var(--accent); }
+
+        .char-list { max-height: 350px; overflow-y: auto; border-top: 1px solid #ffffff11; }
+        .char-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #ffffff11; }
+        .list-meta { display: flex; align-items: center; gap: 8px; }
+        .list-thumb { width: 30px; height: 30px; border-radius: 4px; object-fit: cover; }
+        .w-badges { display: flex; gap: 3px; margin-top: 2px; }
+        .badge { font-size: 0.6rem; padding: 2px 4px; border-radius: 3px; font-weight: bold; color: #000; }
         
-        input {
-            padding: 12px;
-            border-radius: 5px;
-            border: none;
-            background: #1a1a2e;
-            color: white;
-        }
-
-        #addBtn { background: var(--accent); margin-top: 5px; }
-
-        .sort-bar {
-            display: flex;
-            gap: 5px;
-            margin: 15px 0 10px 0;
-            background: rgba(0,0,0,0.2);
-            padding: 5px;
-            border-radius: 8px;
-        }
-        .btn-sort {
-            flex: 1;
-            font-size: 0.7rem;
-            padding: 8px;
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .btn-sort.active {
-            background: var(--accent);
-            border-color: var(--accent);
-        }
-
-        .char-list { max-height: 400px; overflow-y: auto; border-top: 1px solid #ffffff11; }
-        .char-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #ffffff11;
-        }
-        .char-item.disabled { opacity: 0.4; background: rgba(0,0,0,0.1); }
-
-        .list-meta { display: flex; align-items: center; gap: 10px; }
-        .list-thumb { width: 35px; height: 35px; border-radius: 4px; object-fit: cover; }
-        .list-details { display: flex; flex-direction: column; }
-        .list-weight { font-size: 0.7rem; color: #28a745; font-weight: bold; }
-        .list-weight.zero { color: var(--danger); }
-        .list-group { font-size: 0.6rem; opacity: 0.5; }
-
         .action-btns { display: flex; gap: 5px; }
-        .btn-edit { color: var(--edit); background: transparent; font-size: 1.1rem; padding: 5px; }
-        .btn-del { color: var(--danger); background: transparent; font-size: 1.1rem; padding: 5px; }
-
-        .danger-zone { margin-top: 25px; display: flex; gap: 10px; }
-        .btn-danger { background: var(--danger); font-size: 0.7rem; flex: 1; }
-        .btn-neutral { background: #444; font-size: 0.7rem; flex: 1; }
+        .btn-edit { color: var(--edit); background: transparent; font-size: 1rem; }
+        .btn-del { color: var(--danger); background: transparent; font-size: 1rem; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Dice Throne Cloud</h1>
+    <h1>Dice Throne</h1>
     
+    <div class="player-toggle-zone">
+        <label class="p-chk">P1 <input type="checkbox" id="useP1" checked></label>
+        <label class="p-chk">P2 <input type="checkbox" id="useP2" checked></label>
+        <label class="p-chk">P3 <input type="checkbox" id="useP3" checked></label>
+        <label class="p-chk">P4 <input type="checkbox" id="useP4" checked></label>
+    </div>
+
     <div id="results" class="results">
-        <p style="text-align: center; opacity: 0.6;">Syncing with Cloud...</p>
+        <p style="text-align: center; opacity: 0.6;">Select players & Roll</p>
     </div>
 
-    <div class="controls">
-        <button onclick="pickCharacters(2)">2P</button>
-        <button onclick="pickCharacters(3)">3P</button>
-        <button onclick="pickCharacters(4)">4P</button>
-        <button id="confirmBtn" class="btn-confirm" onclick="applyResults()">Lock in Selection</button>
-    </div>
+    <button id="rollBtn" onclick="pickCharacters()">ROLL RANDOMIZER</button>
+    <button id="confirmBtn" class="btn-confirm" onclick="applyResults()">LOCK IN SESSION</button>
 
-    <div class="manage-section">
-        <h3 id="formTitle">Add Character</h3>
+    <div class="manage-section" style="margin-top:20px;">
+        <h3 id="formTitle">Manage Hero</h3>
         <div class="input-group">
             <input type="text" id="newName" placeholder="Hero Name">
-            <div class="input-row">
-                <input type="text" id="newGroup" placeholder="Season / Group">
-                <input type="number" id="newWeight" placeholder="Weight" min="0">
-            </div>
+            <input type="text" id="newGroup" placeholder="Season / Group">
             <input type="text" id="newUrl" placeholder="Image URL">
-            <button id="addBtn" onclick="handleFormSubmit()">Add Hero</button>
-            <button id="cancelEdit" onclick="resetForm()" style="display:none; background:#444;">Cancel Edit</button>
+            <div class="weight-grid">
+                <div>P1: <input type="number" id="w1" placeholder="30-300"></div>
+                <div>P2: <input type="number" id="w2" placeholder="30-300"></div>
+                <div>P3: <input type="number" id="w3" placeholder="30-300"></div>
+                <div>P4: <input type="number" id="w4" placeholder="30-300"></div>
+            </div>
+            <button id="addBtn" style="background:var(--accent)" onclick="handleFormSubmit()">Save Hero</button>
+            <button id="cancelEdit" onclick="resetForm()" style="display:none; background:#444;">Cancel</button>
         </div>
 
         <div class="sort-bar">
-            <button id="sort-group" class="btn-sort active" onclick="setSort('group')">By Group</button>
-            <button id="sort-name" class="btn-sort" onclick="setSort('name')">By Name</button>
-            <button id="sort-weight" class="btn-sort" onclick="setSort('weight')">By Weight</button>
+            <button id="sort-group" class="btn-sort active" onclick="setSort('group')">GROUP</button>
+            <button id="sort-name" class="btn-sort" onclick="setSort('name')">NAME</button>
         </div>
         
         <div class="char-list" id="charList"></div>
-
-        <div class="danger-zone">
-            <button class="btn-neutral" onclick="resetWeights()">Reset Odds</button>
-            <button class="btn-danger" onclick="clearCharacterList()">Clear All</button>
-        </div>
     </div>
 </div>
 
@@ -193,7 +114,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <script>
-    // --- 1. CONFIGURATION ---
     const firebaseConfig = {
       apiKey: "AIzaSyDxBCHqFOr3K-Vh4-KeTAUt2UM03DJ60nE",
       authDomain: "dicethrone-ba1f1.firebaseapp.com",
@@ -203,193 +123,181 @@
       messagingSenderId: "580487401452",
       appId: "1:580487401452:web:94d49e4bff6f3815b63ac9"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    const WEIGHT_DECAY = 0.25;
-    const WEIGHT_BOOST = 1.10;
+    const DECAY = 0.33;
+    const BOOST = 1.20;
+    const MIN_W = 30;
+    const MAX_W = 300;
     const DEFAULT_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e94560'%3E%3Cpath d='M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z'/%3E%3C/svg%3E";
-    
+
     let characters = [];
-    let currentSelection = [];
+    let sessionSelection = []; 
     let editIndex = -1;
     let currentSort = 'group';
 
     function init() {
-        db.ref('characters').on('value', (snapshot) => {
-            const data = snapshot.val();
-            characters = data || [];
+        db.ref('characters_v4').on('value', snap => {
+            characters = snap.val() || [];
             renderList();
-            if (currentSelection.length === 0) {
-                document.getElementById('results').innerHTML = `<p style="text-align: center; opacity: 0.6;">Ready. Select players.</p>`;
-            }
         });
     }
 
-    function saveToCloud() {
-        db.ref('characters').set(characters);
-    }
+    function pickCharacters() {
+        const activePlayerIndices = [];
+        if(document.getElementById('useP1').checked) activePlayerIndices.push(0);
+        if(document.getElementById('useP2').checked) activePlayerIndices.push(1);
+        if(document.getElementById('useP3').checked) activePlayerIndices.push(2);
+        if(document.getElementById('useP4').checked) activePlayerIndices.push(3);
 
-    // --- 2. UPDATED PICK LOGIC (Skips Weight 0) ---
-    function pickCharacters(count) {
-        // Filter out characters with 0 weight
-        const activePool = characters.filter(c => c.weight > 0);
+        if(activePlayerIndices.length === 0) return alert("Select at least one player!");
 
-        if (activePool.length < count) { 
-            alert(`Not enough active heroes! You only have ${activePool.length} with weight > 0.`); 
-            return; 
-        }
+        sessionSelection = [];
+        let pool = JSON.parse(JSON.stringify(characters));
 
-        currentSelection = [];
-        let tempPool = JSON.parse(JSON.stringify(activePool));
-        
-        for (let i = 0; i < count; i++) {
-            let totalWeight = tempPool.reduce((sum, c) => sum + c.weight, 0);
-            let random = Math.random() * totalWeight;
-            let currentSum = 0;
-            for (let j = 0; j < tempPool.length; j++) {
-                currentSum += tempPool[j].weight;
-                if (random <= currentSum) {
-                    currentSelection.push(tempPool[j]);
-                    tempPool.splice(j, 1); 
+        for (let pIdx of activePlayerIndices) {
+            // Filter pool for this player (must have weight > 0 for this specific player)
+            let validForPlayer = pool.filter(c => c.weights[pIdx] > 0);
+            
+            if (validForPlayer.length === 0) {
+                alert(`Player ${pIdx+1} has no characters with weight > 0!`);
+                return;
+            }
+
+            let total = validForPlayer.reduce((sum, c) => sum + c.weights[pIdx], 0);
+            let rand = Math.random() * total;
+            let sum = 0;
+
+            for (let i = 0; i < pool.length; i++) {
+                // We must use the original pool index but check validity
+                if (pool[i].weights[pIdx] <= 0) continue; 
+
+                sum += pool[i].weights[pIdx];
+                if (rand <= sum) {
+                    sessionSelection.push({ charIndex: characters.findIndex(orig => orig.name === pool[i].name), playerIndex: pIdx });
+                    pool.splice(i, 1);
                     break;
                 }
             }
         }
-        displayResults();
+        renderResults();
     }
 
-    function displayResults() {
+    function renderResults() {
         const resDiv = document.getElementById('results');
-        resDiv.innerHTML = currentSelection.map((char, index) => `
-            <div class="player-row">
-                <img src="${char.url || DEFAULT_IMG}" class="char-thumb" onerror="this.src='${DEFAULT_IMG}'">
-                <div class="player-info">
-                    <span class="player-label">Player ${index + 1}</span>
-                    <span class="character-name">${char.name}</span>
-                    <span class="character-group">${char.group || 'General'}</span>
+        resDiv.innerHTML = sessionSelection.map(s => {
+            const char = characters[s.charIndex];
+            return `
+                <div class="player-row">
+                    <img src="${char.url || DEFAULT_IMG}" class="char-thumb" onerror="this.src='${DEFAULT_IMG}'">
+                    <div class="player-info">
+                        <span class="p-num" style="color:var(--p${s.playerIndex+1})">Player ${s.playerIndex+1}</span>
+                        <span class="p-name">${char.name}</span>
+                    </div>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
         document.getElementById('confirmBtn').style.display = 'block';
     }
 
     function applyResults() {
-        const selectedNames = currentSelection.map(s => s.name);
-        characters.forEach(char => {
-            if (char.weight > 0) { // Only adjust if they aren't disabled
-                char.weight = selectedNames.includes(char.name) ? char.weight * WEIGHT_DECAY : char.weight * WEIGHT_BOOST;
-            }
+        const playingIndices = sessionSelection.map(s => s.playerIndex);
+        
+        characters.forEach((char, cIdx) => {
+            playingIndices.forEach(pIdx => {
+                // Only adjust weights for players who actually participated in this roll
+                if (char.weights[pIdx] === 0) return; // Skip disabled
+
+                const wasPickedForThisPlayer = sessionSelection.some(s => s.charIndex === cIdx && s.playerIndex === pIdx);
+                
+                if (wasPickedForThisPlayer) {
+                    char.weights[pIdx] = Math.max(MIN_W, char.weights[pIdx] * DECAY);
+                } else {
+                    char.weights[pIdx] = Math.min(MAX_W, char.weights[pIdx] * BOOST);
+                }
+            });
         });
-        saveToCloud();
+
+        db.ref('characters_v4').set(characters);
         document.getElementById('confirmBtn').style.display = 'none';
-        document.getElementById('results').innerHTML = `<p style="color: #28a745; text-align:center;">Weights Adjusted!</p>`;
+        document.getElementById('results').innerHTML = `<p style="color:#28a745; text-align:center;">Weights Updated!</p>`;
     }
 
-    // --- 3. MANAGEMENT LOGIC ---
     function handleFormSubmit() {
         const name = document.getElementById('newName').value.trim();
         const group = document.getElementById('newGroup').value.trim();
         const url = document.getElementById('newUrl').value.trim();
-        const weightInput = document.getElementById('newWeight').value;
-        
+        const wInputs = [
+            parseFloat(document.getElementById('w1').value),
+            parseFloat(document.getElementById('w2').value),
+            parseFloat(document.getElementById('w3').value),
+            parseFloat(document.getElementById('w4').value)
+        ];
+
         if (!name) return;
 
-        let manualWeight = parseFloat(weightInput);
+        const finalWeights = wInputs.map(w => isNaN(w) ? 100 : w);
 
         if (editIndex > -1) {
-            characters[editIndex].name = name;
-            characters[editIndex].group = group;
-            characters[editIndex].url = url;
-            // Use manual weight if provided, else keep current
-            characters[editIndex].weight = isNaN(manualWeight) ? characters[editIndex].weight : manualWeight;
+            characters[editIndex] = { name, group, url, weights: finalWeights };
         } else {
-            // New hero logic
-            let startingWeight = isNaN(manualWeight) ? 100 : manualWeight;
-            if (isNaN(manualWeight) && characters.length > 0) {
-                const weights = characters.map(c => c.weight).filter(w => w > 0).sort((a, b) => a - b);
-                const mid = Math.floor(weights.length / 2);
-                startingWeight = weights[mid] || 100;
-            }
-            characters.push({ name, group, url, weight: startingWeight });
+            characters.push({ name, group, url, weights: finalWeights });
         }
+        
+        db.ref('characters_v4').set(characters);
         resetForm();
-        saveToCloud();
     }
 
     function startEdit(name) {
         editIndex = characters.findIndex(c => c.name === name);
-        const char = characters[editIndex];
-        document.getElementById('newName').value = char.name;
-        document.getElementById('newGroup').value = char.group || '';
-        document.getElementById('newUrl').value = char.url || '';
-        document.getElementById('newWeight').value = Math.round(char.weight);
-        
-        document.getElementById('formTitle').innerText = "Edit Character";
-        document.getElementById('addBtn').innerText = "Update Hero";
+        const c = characters[editIndex];
+        document.getElementById('newName').value = c.name;
+        document.getElementById('newGroup').value = c.group || '';
+        document.getElementById('newUrl').value = c.url || '';
+        document.getElementById('w1').value = c.weights[0];
+        document.getElementById('w2').value = c.weights[1];
+        document.getElementById('w3').value = c.weights[2];
+        document.getElementById('w4').value = c.weights[3];
+        document.getElementById('formTitle').innerText = "Edit Hero";
         document.getElementById('cancelEdit').style.display = "block";
-        window.scrollTo(0, document.body.scrollHeight);
     }
 
     function resetForm() {
         editIndex = -1;
-        document.getElementById('newName').value = '';
-        document.getElementById('newGroup').value = '';
-        document.getElementById('newUrl').value = '';
-        document.getElementById('newWeight').value = '';
-        document.getElementById('formTitle').innerText = "Add Character";
-        document.getElementById('addBtn').innerText = "Add Hero";
+        document.querySelectorAll('.manage-section input').forEach(i => i.value = '');
+        document.getElementById('formTitle').innerText = "Manage Hero";
         document.getElementById('cancelEdit').style.display = "none";
     }
 
     function deleteChar(name) {
-        if (confirm(`Remove ${name}?`)) {
+        if(confirm(`Delete ${name}?`)) {
             characters = characters.filter(c => c.name !== name);
-            saveToCloud();
+            db.ref('characters_v4').set(characters);
         }
     }
 
-    function resetWeights() {
-        if (confirm("Reset all active weights to 100? (0 weight stays 0)")) {
-            characters.forEach(c => { if(c.weight > 0) c.weight = 100; });
-            saveToCloud();
-        }
-    }
-
-    function clearCharacterList() {
-        if (confirm("Delete ALL?")) { characters = []; saveToCloud(); }
-    }
-
-    function setSort(type) {
-        currentSort = type;
-        document.querySelectorAll('.btn-sort').forEach(btn => btn.classList.remove('active'));
-        document.getElementById(`sort-${type}`).classList.add('active');
-        renderList();
-    }
+    function setSort(s) { currentSort = s; renderList(); }
 
     function renderList() {
         const listDiv = document.getElementById('charList');
-        const sorted = [...characters].sort((a, b) => {
-            if (currentSort === 'weight') return b.weight - a.weight;
-            if (currentSort === 'name') return a.name.localeCompare(b.name);
-            const grpA = (a.group || '').toLowerCase();
-            const grpB = (b.group || '').toLowerCase();
-            if (grpA < grpB) return -1;
-            if (grpA > grpB) return 1;
-            return a.name.localeCompare(b.name);
+        const sorted = [...characters].sort((a,b) => {
+            if(currentSort === 'name') return a.name.localeCompare(b.name);
+            return (a.group || '').localeCompare(b.group || '') || a.name.localeCompare(b.name);
         });
-        
+
         listDiv.innerHTML = sorted.map(c => `
-            <div class="char-item ${c.weight === 0 ? 'disabled' : ''}">
+            <div class="char-item">
                 <div class="list-meta">
-                    <img src="${c.url || DEFAULT_IMG}" class="list-thumb" onerror="this.src='${DEFAULT_IMG}'">
+                    <img src="${c.url || DEFAULT_IMG}" class="list-thumb">
                     <div class="list-details">
-                        <span>${c.name}</span>
-                        <span class="list-group">${c.group || 'General'}</span>
-                        <span class="list-weight ${c.weight === 0 ? 'zero' : ''}">
-                            ${c.weight === 0 ? 'DISABLED (0)' : 'Weight: ' + Math.round(c.weight)}
-                        </span>
+                        <span style="font-size:0.9rem">${c.name}</span>
+                        <div class="w-badges">
+                            <span class="badge" style="background:var(--p1)">${Math.round(c.weights[0])}</span>
+                            <span class="badge" style="background:var(--p2)">${Math.round(c.weights[1])}</span>
+                            <span class="badge" style="background:var(--p3)">${Math.round(c.weights[2])}</span>
+                            <span class="badge" style="background:var(--p4)">${Math.round(c.weights[3])}</span>
+                        </div>
                     </div>
                 </div>
                 <div class="action-btns">
