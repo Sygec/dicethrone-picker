@@ -25,11 +25,7 @@
             align-items: center;
         }
 
-        .container {
-            max-width: 500px;
-            width: 100%;
-        }
-
+        .container { max-width: 500px; width: 100%; }
         h1 { text-align: center; color: var(--accent); margin-bottom: 10px; }
 
         .results {
@@ -41,32 +37,35 @@
             border: 2px solid var(--secondary);
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            justify-content: center;
+            gap: 12px;
         }
 
         .player-row {
             display: flex;
-            justify-content: space-between;
             align-items: center;
             background: rgba(255, 255, 255, 0.05);
-            padding: 10px 15px;
-            border-radius: 8px;
+            padding: 10px;
+            border-radius: 10px;
             animation: fadeIn 0.3s ease-in;
         }
 
-        .player-label { font-size: 0.8rem; text-transform: uppercase; opacity: 0.7; }
+        .char-thumb {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-right: 15px;
+            border: 1px solid var(--accent);
+            background: var(--bg);
+        }
+
+        .player-info { display: flex; flex-direction: column; }
+        .player-label { font-size: 0.7rem; text-transform: uppercase; opacity: 0.6; letter-spacing: 1px; }
         .character-name { font-weight: bold; color: var(--accent); font-size: 1.1rem; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
 
-        .controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
+        .controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         button {
             background: var(--secondary);
             color: white;
@@ -76,13 +75,10 @@
             font-size: 1rem;
             cursor: pointer;
             transition: 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
         button:active { transform: scale(0.95); opacity: 0.8; }
-        .btn-confirm { background: #28a745; grid-column: span 3; margin-top: 10px; display: none; }
+        .btn-confirm { background: #28a745; grid-column: span 3; margin-top: 10px; display: none; font-weight: bold; }
 
         .manage-section {
             background: #0f346055;
@@ -91,51 +87,30 @@
             margin-top: 30px;
         }
 
-        .input-group { display: flex; gap: 5px; margin-bottom: 15px; }
-
+        .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
         input {
-            flex-grow: 1;
             padding: 12px;
             border-radius: 5px;
             border: none;
             background: #1a1a2e;
             color: white;
-            font-size: 1rem;
-        }
-
-        .char-list {
-            margin-top: 10px;
             font-size: 0.9rem;
-            max-height: 300px;
-            overflow-y: auto;
-            border-top: 1px solid #ffffff11;
         }
 
+        .char-list { margin-top: 10px; max-height: 300px; overflow-y: auto; border-top: 1px solid #ffffff11; }
         .char-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
+            padding: 8px 0;
             border-bottom: 1px solid #ffffff11;
         }
 
-        .char-info { display: flex; flex-direction: column; }
-        .char-weight { font-size: 0.7rem; opacity: 0.5; }
+        .list-thumb { width: 30px; height: 30px; border-radius: 4px; object-fit: cover; margin-right: 10px; }
+        .char-meta { display: flex; align-items: center; }
+        .btn-del-single { background: transparent; color: #ff4444; font-size: 1.2rem; padding: 5px 10px; }
 
-        .btn-del-single {
-            background: transparent;
-            color: #ff4444;
-            padding: 5px 10px;
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-
-        .danger-zone {
-            margin-top: 25px;
-            display: flex;
-            gap: 10px;
-        }
-
+        .danger-zone { margin-top: 25px; display: flex; gap: 10px; }
         .btn-danger { background: var(--danger); font-size: 0.75rem; padding: 10px; flex: 1; }
         .btn-neutral { background: #444; font-size: 0.75rem; padding: 10px; flex: 1; }
     </style>
@@ -146,25 +121,25 @@
     <h1>Dice Throne</h1>
     
     <div id="results" class="results">
-        <p style="text-align: center; opacity: 0.6;">Select player count...</p>
+        <p style="text-align: center; opacity: 0.6;">Choose players...</p>
     </div>
 
     <div class="controls">
         <button onclick="pickCharacters(2)">2P</button>
         <button onclick="pickCharacters(3)">3P</button>
         <button onclick="pickCharacters(4)">4P</button>
-        <button id="confirmBtn" class="btn-confirm" onclick="applyResults()">Lock in Selection</button>
+        <button id="confirmBtn" class="btn-confirm" onclick="applyResults()">Confirm Session</button>
     </div>
 
     <div class="manage-section">
-        <h3>My Collection</h3>
+        <h3>Add to Collection</h3>
         <div class="input-group">
-            <input type="text" id="newName" placeholder="Hero Name...">
-            <button onclick="addNewCharacter()" style="padding: 0 20px;">Add</button>
+            <input type="text" id="newName" placeholder="Hero Name (e.g. Monk)">
+            <input type="text" id="newUrl" placeholder="Image URL (Optional)">
+            <button onclick="addNewCharacter()" style="width: 100%; font-weight: bold;">Add Character</button>
         </div>
         
-        <div class="char-list" id="charList">
-            </div>
+        <div class="char-list" id="charList"></div>
 
         <div class="danger-zone">
             <button class="btn-neutral" onclick="resetWeights()">Reset Odds</button>
@@ -176,18 +151,19 @@
 <script>
     const WEIGHT_DECAY = 0.25;
     const WEIGHT_BOOST = 1.10;
+    const DEFAULT_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e94560'%3E%3Cpath d='M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z'/%3E%3C/svg%3E";
     
     let characters = [];
     let currentSelection = [];
 
     function init() {
-        const saved = localStorage.getItem('dt_characters');
+        const saved = localStorage.getItem('dt_characters_v2');
         if (saved) {
             characters = JSON.parse(saved);
         } else {
-            // Default load
-            const defaults = ["Barbarian", "Moon Elf", "Monk", "Paladin", "Ninja", "Seraph", "Pyromancer", "Shadow Thief", "Cursed Pirate", "Artificer", "Huntress", "Tactician", "Vampire Lord", "Gunslinger", "Samurai", "Spider-Ham", "Black Widow", "Black Panther", "Captain Marvel", "Thor", "Loki", "Scarlet Witch", "Dr. Strange", "Santa", "Krampus", "Treant"];
-            characters = defaults.map(name => ({ name, weight: 100 }));
+            // Sample data to start
+            const starters = ["Barbarian", "Moon Elf", "Monk", "Paladin"];
+            characters = starters.map(name => ({ name, weight: 100, url: "" }));
             saveToStorage();
         }
         renderList();
@@ -195,7 +171,7 @@
 
     function pickCharacters(count) {
         if (characters.length < count) {
-            alert(`Not enough characters! You need at least ${count}.`);
+            alert(`Need ${count} characters!`);
             return;
         }
 
@@ -210,7 +186,7 @@
             for (let j = 0; j < tempPool.length; j++) {
                 currentSum += tempPool[j].weight;
                 if (random <= currentSum) {
-                    currentSelection.push(tempPool[j].name);
+                    currentSelection.push(tempPool[j]);
                     tempPool.splice(j, 1); 
                     break;
                 }
@@ -221,31 +197,34 @@
 
     function displayResults() {
         const resDiv = document.getElementById('results');
-        resDiv.innerHTML = currentSelection.map((name, index) => `
+        resDiv.innerHTML = currentSelection.map((char, index) => `
             <div class="player-row">
-                <span class="player-label">Player ${index + 1}</span>
-                <span class="character-name">${name}</span>
+                <img src="${char.url || DEFAULT_IMG}" class="char-thumb" onerror="this.src='${DEFAULT_IMG}'">
+                <div class="player-info">
+                    <span class="player-label">Player ${index + 1}</span>
+                    <span class="character-name">${char.name}</span>
+                </div>
             </div>
         `).join('');
         document.getElementById('confirmBtn').style.display = 'block';
     }
 
     function applyResults() {
+        const selectedNames = currentSelection.map(s => s.name);
         characters.forEach(char => {
-            if (currentSelection.includes(char.name)) {
-                char.weight *= WEIGHT_DECAY;
-            } else {
-                char.weight *= WEIGHT_BOOST;
-            }
+            char.weight = selectedNames.includes(char.name) ? char.weight * WEIGHT_DECAY : char.weight * WEIGHT_BOOST;
         });
         saveAndRefresh();
         document.getElementById('confirmBtn').style.display = 'none';
-        document.getElementById('results').innerHTML = `<p style="color: #28a745; text-align:center; font-weight:bold;">Session Saved! Weights Adjusted.</p>`;
+        document.getElementById('results').innerHTML = `<p style="color: #28a745; text-align:center; font-weight:bold;">Session Saved!</p>`;
     }
 
     function addNewCharacter() {
-        const input = document.getElementById('newName');
-        const name = input.value.trim();
+        const nameInput = document.getElementById('newName');
+        const urlInput = document.getElementById('newUrl');
+        const name = nameInput.value.trim();
+        const url = urlInput.value.trim();
+        
         if (!name) return;
 
         const weights = characters.map(c => c.weight).sort((a, b) => a - b);
@@ -255,35 +234,35 @@
             startingWeight = weights.length % 2 !== 0 ? weights[mid] : (weights[mid - 1] + weights[mid]) / 2;
         }
 
-        characters.push({ name, weight: startingWeight });
-        input.value = '';
+        characters.push({ name, weight: startingWeight, url });
+        nameInput.value = '';
+        urlInput.value = '';
         saveAndRefresh();
     }
 
     function deleteCharacter(name) {
-        if (confirm(`Remove ${name} from your collection?`)) {
+        if (confirm(`Remove ${name}?`)) {
             characters = characters.filter(c => c.name !== name);
             saveAndRefresh();
         }
     }
 
     function resetWeights() {
-        if (confirm("Reset everyone to 100 weight?")) {
+        if (confirm("Reset all odds?")) {
             characters.forEach(c => c.weight = 100);
             saveAndRefresh();
         }
     }
 
     function clearCharacterList() {
-        if (confirm("Delete ALL characters? This cannot be undone.")) {
+        if (confirm("Delete everything?")) {
             characters = [];
             saveAndRefresh();
-            document.getElementById('results').innerHTML = `<p style="text-align:center;">Collection empty.</p>`;
         }
     }
 
     function saveToStorage() {
-        localStorage.setItem('dt_characters', JSON.stringify(characters));
+        localStorage.setItem('dt_characters_v2', JSON.stringify(characters));
     }
 
     function saveAndRefresh() {
@@ -296,15 +275,15 @@
         const sorted = [...characters].sort((a, b) => a.name.localeCompare(b.name));
         
         if (characters.length === 0) {
-            listDiv.innerHTML = `<p style="text-align:center; font-style:italic; padding: 20px;">No heroes added.</p>`;
+            listDiv.innerHTML = `<p style="text-align:center; font-style:italic; padding: 20px;">Empty</p>`;
             return;
         }
 
         listDiv.innerHTML = sorted.map(c => `
             <div class="char-item">
-                <div class="char-info">
+                <div class="char-meta">
+                    <img src="${c.url || DEFAULT_IMG}" class="list-thumb" onerror="this.src='${DEFAULT_IMG}'">
                     <span>${c.name}</span>
-                    <span class="char-weight">Weight: ${Math.round(c.weight)}</span>
                 </div>
                 <button class="btn-del-single" onclick="deleteCharacter('${c.name.replace(/'/g, "\\'")}')">×</button>
             </div>
