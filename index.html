@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dice Throne - Probability Sync</title>
+    <title>Dice Throne - Color-Synced Sync</title>
     <style>
         :root {
             --bg: #1a1a2e;
@@ -13,12 +13,26 @@
             --secondary: #0f3460;
             --danger: #941b2d;
             --edit: #f39c12;
+            /* Core Player Colors */
             --p1: #4ecca3; --p2: #45b7d1; --p3: #9b59b6; --p4: #f1c40f; --p5: #a2a2a2;
         }
 
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .container { max-width: 500px; width: 100%; }
-        h1 { text-align: center; color: var(--accent); letter-spacing: 2px; margin-bottom: 20px; }
+        h1 { text-align: center; color: var(--accent); letter-spacing: 2px; margin-bottom: 20px; text-transform: uppercase; }
+
+        /* Unified Player Badge Style */
+        .player-tag {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #1a1a2e;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            text-align: center;
+            min-width: 70px;
+        }
 
         .player-toggle-zone {
             background: var(--card-bg);
@@ -27,54 +41,55 @@
             margin-bottom: 15px;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
+            gap: 12px;
             border: 1px solid var(--secondary);
         }
-        .p-chk { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
-        .p-chk input { width: 22px; height: 22px; accent-color: var(--accent); }
+        .p-chk { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+        .p-chk input { width: 22px; height: 22px; accent-color: var(--accent); cursor: pointer; }
 
         .results { background: var(--card-bg); padding: 15px; border-radius: 15px; margin-bottom: 10px; border: 2px solid var(--secondary); display: flex; flex-direction: column; gap: 10px; }
         .player-row { display: flex; align-items: center; background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 10px; gap: 12px; }
         
-        .char-img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; border: 1px solid var(--accent); }
-        .char-select { flex: 1; background: #1a1a2e; color: white; border: 1px solid var(--secondary); padding: 8px; border-radius: 5px; font-size: 0.9rem; outline: none; }
+        .char-img { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; border: 1px solid var(--accent); }
+        .char-select { flex: 1; background: #1a1a2e; color: white; border: 1px solid var(--secondary); padding: 10px; border-radius: 5px; font-size: 0.9rem; outline: none; }
         .char-select.error { border-color: var(--danger); background: #301014; }
-
-        .player-label { font-size: 0.65rem; text-transform: uppercase; font-weight: bold; min-width: 60px; }
 
         #error-msg { color: #ff4d4d; font-size: 0.8rem; font-weight: bold; text-align: center; margin-bottom: 10px; display: none; }
 
-        #rollBtn { background: var(--accent); width: 100%; padding: 15px; font-size: 1.1rem; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        #rollBtn { background: var(--accent); width: 100%; padding: 15px; font-size: 1.1rem; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; margin-bottom: 10px; transition: transform 0.1s; }
+        #rollBtn:active { transform: scale(0.98); }
         .btn-confirm { background: #28a745; display: none; width: 100%; padding: 15px; font-size: 1.1rem; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; }
         .btn-confirm.disabled { background: #444 !important; cursor: not-allowed; opacity: 0.5; }
 
         .manage-section { background: #0f346055; padding: 15px; border-radius: 10px; margin-top: 30px; }
-        .weight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; }
-        .weight-grid div { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; }
+        .weight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; }
+        .weight-grid div { display: flex; align-items: center; gap: 8px; }
+        .weight-grid input { font-size: 0.9rem; padding: 6px; }
         
         input { padding: 10px; border-radius: 5px; border: none; background: #1a1a2e; color: white; width: 100%; box-sizing: border-box; }
         
         .char-list { max-height: 400px; overflow-y: auto; margin-top: 15px; border-top: 1px solid #ffffff11; }
         .char-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #ffffff11; }
-        .list-thumb { width: 35px; height: 35px; border-radius: 4px; object-fit: cover; margin-right: 10px; }
-        .w-badges { display: flex; gap: 4px; margin-top: 4px; }
-        .badge { font-size: 0.6rem; padding: 2px 4px; border-radius: 3px; font-weight: bold; color: #000; min-width: 32px; text-align: center; }
+        .list-thumb { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; margin-right: 12px; }
+        .w-badges { display: flex; gap: 5px; margin-top: 6px; }
+        .badge { font-size: 0.65rem; padding: 3px 6px; border-radius: 4px; font-weight: bold; color: #1a1a2e; min-width: 40px; text-align: center; }
         
-        .danger-zone { margin-top: 20px; border-top: 1px solid #ffffff22; padding-top: 15px; }
-        .btn-reset { background: var(--danger); color: white; border: none; padding: 10px; border-radius: 5px; font-size: 0.75rem; width: 100%; cursor: pointer; opacity: 0.8; }
+        .danger-zone { margin-top: 25px; border-top: 1px solid #ffffff22; padding-top: 15px; }
+        .btn-reset { background: var(--danger); color: white; border: none; padding: 12px; border-radius: 6px; font-size: 0.8rem; width: 100%; cursor: pointer; font-weight: bold; opacity: 0.8; }
+        .btn-reset:hover { opacity: 1; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>DICE THRONE</h1>
+    <h1>Dice Throne</h1>
     
     <div class="player-toggle-zone">
-        <label class="p-chk">Claudine <input type="checkbox" id="use0" checked></label>
-        <label class="p-chk">Joel <input type="checkbox" id="use1" checked></label>
-        <label class="p-chk">Julie <input type="checkbox" id="use2" checked></label>
-        <label class="p-chk">Martin <input type="checkbox" id="use3" checked></label>
-        <label class="p-chk">Invitee <input type="checkbox" id="use4"></label>
+        <label class="p-chk"><span class="player-tag" style="background:var(--p1)">Claudine</span> <input type="checkbox" id="use0" checked></label>
+        <label class="p-chk"><span class="player-tag" style="background:var(--p2)">Joel</span> <input type="checkbox" id="use1" checked></label>
+        <label class="p-chk"><span class="player-tag" style="background:var(--p3)">Julie</span> <input type="checkbox" id="use2" checked></label>
+        <label class="p-chk"><span class="player-tag" style="background:var(--p4)">Martin</span> <input type="checkbox" id="use3" checked></label>
+        <label class="p-chk"><span class="player-tag" style="background:var(--p5)">Invitee</span> <input type="checkbox" id="use4"></label>
     </div>
 
     <div id="results" class="results">
@@ -87,25 +102,25 @@
     <button id="confirmBtn" class="btn-confirm" onclick="applyResults()">LOCK IN SESSION</button>
 
     <div class="manage-section">
-        <h3 id="formTitle">Add/Edit Hero</h3>
-        <div style="display:flex; flex-direction:column; gap:8px;">
+        <h3 id="formTitle" style="margin-top:0;">Hero Management</h3>
+        <div style="display:flex; flex-direction:column; gap:10px;">
             <input type="text" id="newName" placeholder="Hero Name">
             <input type="text" id="newGroup" placeholder="Season / Group">
             <input type="text" id="newUrl" placeholder="Image URL">
             <div class="weight-grid">
-                <div>Claudine: <input type="number" id="w0"></div>
-                <div>Joel: <input type="number" id="w1"></div>
-                <div>Julie: <input type="number" id="w2"></div>
-                <div>Martin: <input type="number" id="w3"></div>
+                <div><span class="player-tag" style="background:var(--p1); min-width:60px;">Claudine</span><input type="number" id="w0"></div>
+                <div><span class="player-tag" style="background:var(--p2); min-width:60px;">Joel</span><input type="number" id="w1"></div>
+                <div><span class="player-tag" style="background:var(--p3); min-width:60px;">Julie</span><input type="number" id="w2"></div>
+                <div><span class="player-tag" style="background:var(--p4); min-width:60px;">Martin</span><input type="number" id="w3"></div>
             </div>
-            <button style="background:var(--accent); color:white; padding:10px; border:none; border-radius:5px; font-weight:bold; cursor:pointer;" onclick="handleFormSubmit()">Save Hero</button>
-            <button id="cancelEdit" onclick="resetForm()" style="display:none; background:#444; color:white; padding:10px; border:none; border-radius:5px; cursor:pointer;">Cancel</button>
+            <button style="background:var(--accent); color:white; padding:12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="handleFormSubmit()">Save Hero</button>
+            <button id="cancelEdit" onclick="resetForm()" style="display:none; background:#444; color:white; padding:10px; border:none; border-radius:6px; cursor:pointer;">Cancel</button>
         </div>
 
         <div class="char-list" id="charList"></div>
 
         <div class="danger-zone">
-            <button class="btn-reset" onclick="resetAllWeights()">Reset Core Weights to 100</button>
+            <button class="btn-reset" onclick="resetAllWeights()">RESET CORE WEIGHTS TO 100</button>
         </div>
     </div>
 </div>
@@ -148,13 +163,13 @@
         activeIndices.forEach(pIdx => {
             let selectedCharName = "";
             
-            if (pIdx === 4) { // Invitee logic: Pure Random
+            if (pIdx === 4) { // Invitee
                 if (pool.length > 0) {
                     const randIdx = Math.floor(Math.random() * pool.length);
                     selectedCharName = pool[randIdx].name;
                     pool.splice(randIdx, 1);
                 }
-            } else { // Core Player logic: Weighted Random
+            } else { // Core
                 const activePool = pool.filter(c => c.weights[pIdx] > 0);
                 if(activePool.length > 0) {
                     let total = activePool.reduce((sum, c) => sum + c.weights[pIdx], 0);
@@ -178,7 +193,7 @@
             row.innerHTML = `
                 <img src="${charData?.url || DEFAULT_IMG}" class="char-img" id="img-${pIdx}" onerror="this.src='${DEFAULT_IMG}'">
                 <div style="flex:1">
-                    <div class="player-label" style="color:var(--p${pIdx+1})">${NAMES[pIdx]}</div>
+                    <div style="margin-bottom:5px;"><span class="player-tag" style="background:var(--p${pIdx+1})">${NAMES[pIdx]}</span></div>
                     <select class="char-select" data-player="${pIdx}" onchange="handleDropdownChange(this)">
                         ${characters.map(c => `<option value="${c.name}" ${c.name === selectedCharName ? 'selected' : ''}>${c.name}</option>`).join('')}
                     </select>
@@ -229,7 +244,6 @@
             charName: sel.value 
         }));
 
-        // Filter core players only (indices 0-3)
         const corePicks = sessionPicks.filter(s => s.pIdx < 4);
         const corePlayingIndices = corePicks.map(s => s.pIdx);
 
@@ -247,20 +261,16 @@
 
         db.ref('characters_v4').set(characters);
         document.getElementById('confirmBtn').style.display = 'none';
-        document.getElementById('results').innerHTML = `<p style="color:#28a745; text-align:center; font-weight:bold;">Weights Adjusted (Invitee Ignored)!</p>`;
+        document.getElementById('results').innerHTML = `<p style="color:#28a745; text-align:center; font-weight:bold;">Weights Adjusted!</p>`;
     }
 
     function resetAllWeights() {
-        if(confirm("Are you sure? This will reset Claudine, Joel, Julie, and Martin back to 100 odds for every character.")) {
-            characters.forEach(c => {
-                c.weights = [100, 100, 100, 100];
-            });
+        if(confirm("Are you sure? This resets all core player odds back to 100.")) {
+            characters.forEach(c => { c.weights = [100, 100, 100, 100]; });
             db.ref('characters_v4').set(characters);
-            alert("Weights Reset!");
         }
     }
 
-    // --- Standard Management Functions ---
     function handleFormSubmit() {
         const name = document.getElementById('newName').value.trim();
         const group = document.getElementById('newGroup').value.trim();
@@ -289,7 +299,7 @@
     function resetForm() {
         editIndex = -1;
         document.querySelectorAll('.manage-section input').forEach(i => i.value = '');
-        document.getElementById('formTitle').innerText = "Add/Edit Hero";
+        document.getElementById('formTitle').innerText = "Hero Management";
         document.getElementById('cancelEdit').style.display = "none";
     }
 
@@ -310,7 +320,7 @@
                     </div>
                 </div>
                 <div class="action-btns">
-                    <button class="btn-edit" onclick="startEdit('${c.name.replace(/'/g, "\\'")}')">✎</button>
+                    <button class="btn-edit" onclick="startEdit('${c.name.replace(/'/g, "\\'")}')" style="background:none; border:none; color:var(--edit); cursor:pointer; font-size:1.2rem;">✎</button>
                 </div>
             </div>
         `).join('');
