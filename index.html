@@ -30,31 +30,35 @@
             width: 100%;
         }
 
-        h1 { text-align: center; color: var(--accent); }
+        h1 { text-align: center; color: var(--accent); margin-bottom: 10px; }
 
         .results {
             background: var(--card-bg);
             padding: 20px;
             border-radius: 15px;
-            min-height: 100px;
+            min-height: 120px;
             margin-bottom: 20px;
             border: 2px solid var(--secondary);
             display: flex;
-            flex-wrap: wrap;
+            flex-direction: column;
             gap: 10px;
             justify-content: center;
-            align-items: center;
         }
 
-        .character-pill {
-            background: var(--accent);
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-weight: bold;
+        .player-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px 15px;
+            border-radius: 8px;
             animation: fadeIn 0.3s ease-in;
         }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .player-label { font-size: 0.8rem; text-transform: uppercase; opacity: 0.7; }
+        .character-name { font-weight: bold; color: var(--accent); font-size: 1.1rem; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
 
         .controls {
             display: grid;
@@ -72,6 +76,9 @@
             font-size: 1rem;
             cursor: pointer;
             transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         button:active { transform: scale(0.95); opacity: 0.8; }
@@ -84,50 +91,53 @@
             margin-top: 30px;
         }
 
+        .input-group { display: flex; gap: 5px; margin-bottom: 15px; }
+
         input {
-            width: 70%;
-            padding: 10px;
+            flex-grow: 1;
+            padding: 12px;
             border-radius: 5px;
             border: none;
-            margin-right: 5px;
             background: #1a1a2e;
             color: white;
+            font-size: 1rem;
         }
 
         .char-list {
-            margin-top: 20px;
-            font-size: 0.8rem;
-            max-height: 200px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            max-height: 300px;
             overflow-y: auto;
-            opacity: 0.7;
+            border-top: 1px solid #ffffff11;
         }
 
         .char-item {
             display: flex;
             justify-content: space-between;
-            padding: 5px 0;
+            align-items: center;
+            padding: 10px 0;
             border-bottom: 1px solid #ffffff11;
         }
 
+        .char-info { display: flex; flex-direction: column; }
+        .char-weight { font-size: 0.7rem; opacity: 0.5; }
+
+        .btn-del-single {
+            background: transparent;
+            color: #ff4444;
+            padding: 5px 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
         .danger-zone {
-            margin-top: 20px;
+            margin-top: 25px;
             display: flex;
             gap: 10px;
         }
 
-        .btn-danger {
-            background: var(--danger);
-            font-size: 0.7rem;
-            padding: 8px;
-            flex: 1;
-        }
-
-        .btn-neutral {
-            background: #444;
-            font-size: 0.7rem;
-            padding: 8px;
-            flex: 1;
-        }
+        .btn-danger { background: var(--danger); font-size: 0.75rem; padding: 10px; flex: 1; }
+        .btn-neutral { background: #444; font-size: 0.75rem; padding: 10px; flex: 1; }
     </style>
 </head>
 <body>
@@ -136,29 +146,29 @@
     <h1>Dice Throne</h1>
     
     <div id="results" class="results">
-        <p id="statusMsg">Choose number of players to start...</p>
+        <p style="text-align: center; opacity: 0.6;">Select player count...</p>
     </div>
 
     <div class="controls">
-        <button onclick="pickCharacters(2)">Pick 2</button>
-        <button onclick="pickCharacters(3)">Pick 3</button>
-        <button onclick="pickCharacters(4)">Pick 4</button>
-        <button id="confirmBtn" class="btn-confirm" onclick="applyResults()">Confirm & Save Session</button>
+        <button onclick="pickCharacters(2)">2P</button>
+        <button onclick="pickCharacters(3)">3P</button>
+        <button onclick="pickCharacters(4)">4P</button>
+        <button id="confirmBtn" class="btn-confirm" onclick="applyResults()">Lock in Selection</button>
     </div>
 
     <div class="manage-section">
-        <h3>Add New Character</h3>
-        <div style="display:flex;">
-            <input type="text" id="newName" placeholder="Character Name...">
-            <button onclick="addNewCharacter()" style="padding: 10px; width: 25%;">Add</button>
+        <h3>My Collection</h3>
+        <div class="input-group">
+            <input type="text" id="newName" placeholder="Hero Name...">
+            <button onclick="addNewCharacter()" style="padding: 0 20px;">Add</button>
         </div>
         
         <div class="char-list" id="charList">
             </div>
 
         <div class="danger-zone">
-            <button class="btn-neutral" onclick="resetWeights()">Reset All Weights</button>
-            <button class="btn-danger" onclick="clearCharacterList()">Clear Entire List</button>
+            <button class="btn-neutral" onclick="resetWeights()">Reset Odds</button>
+            <button class="btn-danger" onclick="clearCharacterList()">Clear All</button>
         </div>
     </div>
 </div>
@@ -175,7 +185,7 @@
         if (saved) {
             characters = JSON.parse(saved);
         } else {
-            // Initial default load only if LocalStorage is totally empty
+            // Default load
             const defaults = ["Barbarian", "Moon Elf", "Monk", "Paladin", "Ninja", "Seraph", "Pyromancer", "Shadow Thief", "Cursed Pirate", "Artificer", "Huntress", "Tactician", "Vampire Lord", "Gunslinger", "Samurai", "Spider-Ham", "Black Widow", "Black Panther", "Captain Marvel", "Thor", "Loki", "Scarlet Witch", "Dr. Strange", "Santa", "Krampus", "Treant"];
             characters = defaults.map(name => ({ name, weight: 100 }));
             saveToStorage();
@@ -185,12 +195,12 @@
 
     function pickCharacters(count) {
         if (characters.length < count) {
-            alert(`You only have ${characters.length} characters. Add more to pick ${count}.`);
+            alert(`Not enough characters! You need at least ${count}.`);
             return;
         }
 
         currentSelection = [];
-        let tempPool = JSON.parse(JSON.stringify(characters)); // Deep copy to keep weights intact during roll
+        let tempPool = JSON.parse(JSON.stringify(characters));
         
         for (let i = 0; i < count; i++) {
             let totalWeight = tempPool.reduce((sum, c) => sum + c.weight, 0);
@@ -206,13 +216,17 @@
                 }
             }
         }
-        
         displayResults();
     }
 
     function displayResults() {
         const resDiv = document.getElementById('results');
-        resDiv.innerHTML = currentSelection.map(name => `<div class="character-pill">${name}</div>`).join('');
+        resDiv.innerHTML = currentSelection.map((name, index) => `
+            <div class="player-row">
+                <span class="player-label">Player ${index + 1}</span>
+                <span class="character-name">${name}</span>
+            </div>
+        `).join('');
         document.getElementById('confirmBtn').style.display = 'block';
     }
 
@@ -224,10 +238,9 @@
                 char.weight *= WEIGHT_BOOST;
             }
         });
-        
         saveAndRefresh();
         document.getElementById('confirmBtn').style.display = 'none';
-        document.getElementById('results').innerHTML = `<p style="color: #28a745;">Session Saved!</p>`;
+        document.getElementById('results').innerHTML = `<p style="color: #28a745; text-align:center; font-weight:bold;">Session Saved! Weights Adjusted.</p>`;
     }
 
     function addNewCharacter() {
@@ -237,7 +250,6 @@
 
         const weights = characters.map(c => c.weight).sort((a, b) => a - b);
         let startingWeight = 100;
-
         if (weights.length > 0) {
             const mid = Math.floor(weights.length / 2);
             startingWeight = weights.length % 2 !== 0 ? weights[mid] : (weights[mid - 1] + weights[mid]) / 2;
@@ -248,18 +260,25 @@
         saveAndRefresh();
     }
 
+    function deleteCharacter(name) {
+        if (confirm(`Remove ${name} from your collection?`)) {
+            characters = characters.filter(c => c.name !== name);
+            saveAndRefresh();
+        }
+    }
+
     function resetWeights() {
-        if (confirm("Reset everyone to 100 weight? This balances the odds for everyone.")) {
+        if (confirm("Reset everyone to 100 weight?")) {
             characters.forEach(c => c.weight = 100);
             saveAndRefresh();
         }
     }
 
     function clearCharacterList() {
-        if (confirm("🚨 DANGER: This will delete ALL characters from your list. This cannot be undone. Are you sure?")) {
+        if (confirm("Delete ALL characters? This cannot be undone.")) {
             characters = [];
             saveAndRefresh();
-            document.getElementById('results').innerHTML = `<p>List cleared. Add new characters below.</p>`;
+            document.getElementById('results').innerHTML = `<p style="text-align:center;">Collection empty.</p>`;
         }
     }
 
@@ -274,17 +293,20 @@
 
     function renderList() {
         const listDiv = document.getElementById('charList');
-        const sorted = [...characters].sort((a, b) => b.weight - a.weight);
+        const sorted = [...characters].sort((a, b) => a.name.localeCompare(b.name));
         
         if (characters.length === 0) {
-            listDiv.innerHTML = `<p style="text-align:center; font-style:italic;">Collection is empty</p>`;
+            listDiv.innerHTML = `<p style="text-align:center; font-style:italic; padding: 20px;">No heroes added.</p>`;
             return;
         }
 
         listDiv.innerHTML = sorted.map(c => `
             <div class="char-item">
-                <span>${c.name}</span>
-                <span>${Math.round(c.weight)}</span>
+                <div class="char-info">
+                    <span>${c.name}</span>
+                    <span class="char-weight">Weight: ${Math.round(c.weight)}</span>
+                </div>
+                <button class="btn-del-single" onclick="deleteCharacter('${c.name.replace(/'/g, "\\'")}')">×</button>
             </div>
         `).join('');
     }
