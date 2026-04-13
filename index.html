@@ -12,6 +12,7 @@
             --text: #ffffff;
             --secondary: #0f3460;
             --danger: #941b2d;
+            --edit: #f39c12;
         }
 
         body {
@@ -46,7 +47,6 @@
             background: rgba(255, 255, 255, 0.05);
             padding: 10px;
             border-radius: 10px;
-            animation: fadeIn 0.3s ease-in;
         }
 
         .char-thumb {
@@ -60,25 +60,21 @@
         }
 
         .player-info { display: flex; flex-direction: column; }
-        .player-label { font-size: 0.7rem; text-transform: uppercase; opacity: 0.6; letter-spacing: 1px; }
+        .player-label { font-size: 0.7rem; text-transform: uppercase; opacity: 0.6; }
         .character-name { font-weight: bold; color: var(--accent); font-size: 1.1rem; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        .character-group { font-size: 0.7rem; color: #aaa; }
 
         .controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         button {
             background: var(--secondary);
             color: white;
             border: none;
-            padding: 15px;
+            padding: 12px;
             border-radius: 8px;
-            font-size: 1rem;
             cursor: pointer;
-            transition: 0.2s;
         }
 
-        button:active { transform: scale(0.95); opacity: 0.8; }
-        .btn-confirm { background: #28a745; grid-column: span 3; margin-top: 10px; display: none; font-weight: bold; }
+        .btn-confirm { background: #28a745; grid-column: span 3; margin-top: 10px; display: none; font-weight: bold; height: 50px; }
 
         .manage-section {
             background: #0f346055;
@@ -94,25 +90,32 @@
             border: none;
             background: #1a1a2e;
             color: white;
-            font-size: 0.9rem;
         }
 
-        .char-list { margin-top: 10px; max-height: 300px; overflow-y: auto; border-top: 1px solid #ffffff11; }
+        #addBtn { background: var(--accent); font-weight: bold; margin-top: 5px; }
+
+        .char-list { margin-top: 10px; max-height: 400px; overflow-y: auto; border-top: 1px solid #ffffff11; }
         .char-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 0;
+            padding: 10px 0;
             border-bottom: 1px solid #ffffff11;
         }
 
-        .list-thumb { width: 30px; height: 30px; border-radius: 4px; object-fit: cover; margin-right: 10px; }
-        .char-meta { display: flex; align-items: center; }
-        .btn-del-single { background: transparent; color: #ff4444; font-size: 1.2rem; padding: 5px 10px; }
+        .list-meta { display: flex; align-items: center; gap: 10px; }
+        .list-thumb { width: 35px; height: 35px; border-radius: 4px; object-fit: cover; }
+        .list-details { display: flex; flex-direction: column; }
+        .list-weight { font-size: 0.7rem; color: #28a745; font-weight: bold; }
+        .list-group { font-size: 0.6rem; opacity: 0.5; }
+
+        .action-btns { display: flex; gap: 5px; }
+        .btn-edit { color: var(--edit); background: transparent; font-size: 1.1rem; padding: 5px; }
+        .btn-del { color: var(--danger); background: transparent; font-size: 1.1rem; padding: 5px; }
 
         .danger-zone { margin-top: 25px; display: flex; gap: 10px; }
-        .btn-danger { background: var(--danger); font-size: 0.75rem; padding: 10px; flex: 1; }
-        .btn-neutral { background: #444; font-size: 0.75rem; padding: 10px; flex: 1; }
+        .btn-danger { background: var(--danger); font-size: 0.7rem; flex: 1; }
+        .btn-neutral { background: #444; font-size: 0.7rem; flex: 1; }
     </style>
 </head>
 <body>
@@ -128,15 +131,17 @@
         <button onclick="pickCharacters(2)">2P</button>
         <button onclick="pickCharacters(3)">3P</button>
         <button onclick="pickCharacters(4)">4P</button>
-        <button id="confirmBtn" class="btn-confirm" onclick="applyResults()">Confirm Session</button>
+        <button id="confirmBtn" class="btn-confirm" onclick="applyResults()">Lock in Selection</button>
     </div>
 
     <div class="manage-section">
-        <h3>Add to Collection</h3>
+        <h3 id="formTitle">Add Character</h3>
         <div class="input-group">
-            <input type="text" id="newName" placeholder="Hero Name (e.g. Monk)">
-            <input type="text" id="newUrl" placeholder="Image URL (Optional)">
-            <button onclick="addNewCharacter()" style="width: 100%; font-weight: bold;">Add Character</button>
+            <input type="text" id="newName" placeholder="Hero Name">
+            <input type="text" id="newGroup" placeholder="Season / Group (e.g. S1, Marvel)">
+            <input type="text" id="newUrl" placeholder="Image URL">
+            <button id="addBtn" onclick="handleFormSubmit()">Add Hero</button>
+            <button id="cancelEdit" onclick="resetForm()" style="display:none; background:#444;">Cancel Edit</button>
         </div>
         
         <div class="char-list" id="charList"></div>
@@ -155,26 +160,18 @@
     
     let characters = [];
     let currentSelection = [];
+    let editIndex = -1;
 
     function init() {
-        const saved = localStorage.getItem('dt_characters_v2');
+        const saved = localStorage.getItem('dt_characters_v3');
         if (saved) {
             characters = JSON.parse(saved);
-        } else {
-            // Sample data to start
-            const starters = ["Barbarian", "Moon Elf", "Monk", "Paladin"];
-            characters = starters.map(name => ({ name, weight: 100, url: "" }));
-            saveToStorage();
         }
         renderList();
     }
 
     function pickCharacters(count) {
-        if (characters.length < count) {
-            alert(`Need ${count} characters!`);
-            return;
-        }
-
+        if (characters.length < count) { alert(`Need ${count} heroes!`); return; }
         currentSelection = [];
         let tempPool = JSON.parse(JSON.stringify(characters));
         
@@ -182,7 +179,6 @@
             let totalWeight = tempPool.reduce((sum, c) => sum + c.weight, 0);
             let random = Math.random() * totalWeight;
             let currentSum = 0;
-            
             for (let j = 0; j < tempPool.length; j++) {
                 currentSum += tempPool[j].weight;
                 if (random <= currentSum) {
@@ -203,6 +199,7 @@
                 <div class="player-info">
                     <span class="player-label">Player ${index + 1}</span>
                     <span class="character-name">${char.name}</span>
+                    <span class="character-group">${char.group || 'General'}</span>
                 </div>
             </div>
         `).join('');
@@ -216,31 +213,61 @@
         });
         saveAndRefresh();
         document.getElementById('confirmBtn').style.display = 'none';
-        document.getElementById('results').innerHTML = `<p style="color: #28a745; text-align:center; font-weight:bold;">Session Saved!</p>`;
+        document.getElementById('results').innerHTML = `<p style="color: #28a745; text-align:center;">Results Saved!</p>`;
     }
 
-    function addNewCharacter() {
-        const nameInput = document.getElementById('newName');
-        const urlInput = document.getElementById('newUrl');
-        const name = nameInput.value.trim();
-        const url = urlInput.value.trim();
-        
+    function handleFormSubmit() {
+        const name = document.getElementById('newName').value.trim();
+        const group = document.getElementById('newGroup').value.trim();
+        const url = document.getElementById('newUrl').value.trim();
         if (!name) return;
 
-        const weights = characters.map(c => c.weight).sort((a, b) => a - b);
-        let startingWeight = 100;
-        if (weights.length > 0) {
-            const mid = Math.floor(weights.length / 2);
-            startingWeight = weights.length % 2 !== 0 ? weights[mid] : (weights[mid - 1] + weights[mid]) / 2;
+        if (editIndex > -1) {
+            // Updating existing character
+            characters[editIndex].name = name;
+            characters[editIndex].group = group;
+            characters[editIndex].url = url;
+        } else {
+            // Adding new character - Calculate starting weight
+            const weights = characters.map(c => c.weight).sort((a, b) => a - b);
+            let startingWeight = 100;
+            if (weights.length > 0) {
+                const mid = Math.floor(weights.length / 2);
+                startingWeight = weights.length % 2 !== 0 ? weights[mid] : (weights[mid - 1] + weights[mid]) / 2;
+            }
+            characters.push({ name, group, url, weight: startingWeight });
         }
-
-        characters.push({ name, weight: startingWeight, url });
-        nameInput.value = '';
-        urlInput.value = '';
+        resetForm();
         saveAndRefresh();
     }
 
-    function deleteCharacter(name) {
+    function startEdit(name) {
+        const index = characters.findIndex(c => c.name === name);
+        if (index === -1) return;
+        editIndex = index;
+        const char = characters[index];
+        
+        document.getElementById('newName').value = char.name;
+        document.getElementById('newGroup').value = char.group || '';
+        document.getElementById('newUrl').value = char.url || '';
+        
+        document.getElementById('formTitle').innerText = "Edit Character";
+        document.getElementById('addBtn').innerText = "Save Changes";
+        document.getElementById('cancelEdit').style.display = "block";
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    function resetForm() {
+        editIndex = -1;
+        document.getElementById('newName').value = '';
+        document.getElementById('newGroup').value = '';
+        document.getElementById('newUrl').value = '';
+        document.getElementById('formTitle').innerText = "Add Character";
+        document.getElementById('addBtn').innerText = "Add Hero";
+        document.getElementById('cancelEdit').style.display = "none";
+    }
+
+    function deleteChar(name) {
         if (confirm(`Remove ${name}?`)) {
             characters = characters.filter(c => c.name !== name);
             saveAndRefresh();
@@ -248,50 +275,56 @@
     }
 
     function resetWeights() {
-        if (confirm("Reset all odds?")) {
+        if (confirm("Reset weights to 100?")) {
             characters.forEach(c => c.weight = 100);
             saveAndRefresh();
         }
     }
 
     function clearCharacterList() {
-        if (confirm("Delete everything?")) {
-            characters = [];
-            saveAndRefresh();
-        }
-    }
-
-    function saveToStorage() {
-        localStorage.setItem('dt_characters_v2', JSON.stringify(characters));
+        if (confirm("Delete ALL?")) { characters = []; saveAndRefresh(); }
     }
 
     function saveAndRefresh() {
-        saveToStorage();
+        localStorage.setItem('dt_characters_v3', JSON.stringify(characters));
         renderList();
     }
 
     function renderList() {
         const listDiv = document.getElementById('charList');
-        const sorted = [...characters].sort((a, b) => a.name.localeCompare(b.name));
+        // Sorting by Group first, then Name
+        const sorted = [...characters].sort((a, b) => {
+            const groupA = (a.group || '').toLowerCase();
+            const groupB = (b.group || '').toLowerCase();
+            if (groupA < groupB) return -1;
+            if (groupA > groupB) return 1;
+            return a.name.localeCompare(b.name);
+        });
         
         if (characters.length === 0) {
-            listDiv.innerHTML = `<p style="text-align:center; font-style:italic; padding: 20px;">Empty</p>`;
+            listDiv.innerHTML = `<p style="text-align:center; padding:20px;">No heroes found.</p>`;
             return;
         }
 
         listDiv.innerHTML = sorted.map(c => `
             <div class="char-item">
-                <div class="char-meta">
+                <div class="list-meta">
                     <img src="${c.url || DEFAULT_IMG}" class="list-thumb" onerror="this.src='${DEFAULT_IMG}'">
-                    <span>${c.name}</span>
+                    <div class="list-details">
+                        <span>${c.name}</span>
+                        <span class="list-group">${c.group || 'General'}</span>
+                        <span class="list-weight">Weight: ${Math.round(c.weight)}</span>
+                    </div>
                 </div>
-                <button class="btn-del-single" onclick="deleteCharacter('${c.name.replace(/'/g, "\\'")}')">×</button>
+                <div class="action-btns">
+                    <button class="btn-edit" onclick="startEdit('${c.name.replace(/'/g, "\\'")}')">✎</button>
+                    <button class="btn-del" onclick="deleteChar('${c.name.replace(/'/g, "\\'")}')">×</button>
+                </div>
             </div>
         `).join('');
     }
 
     init();
 </script>
-
 </body>
 </html>
