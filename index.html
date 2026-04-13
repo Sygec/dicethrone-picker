@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dice Throne - Discovery & Management</title>
+    <title>Dice Throne - Discovery Suite</title>
     <style>
         :root {
             --bg: #1a1a2e;
@@ -20,21 +20,26 @@
         .container { max-width: 550px; width: 100%; }
         h1 { text-align: center; color: var(--accent); letter-spacing: 2px; margin-bottom: 20px; text-transform: uppercase; }
 
-        /* Setup Zone */
         .player-tag { display: inline-block; padding: 4px 8px; border-radius: 4px; font-weight: bold; color: #1a1a2e; font-size: 0.75rem; text-transform: uppercase; text-align: center; min-width: 70px; }
         .player-toggle-zone { background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; border: 1px solid var(--secondary); }
         .p-chk { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
         .p-chk input { width: 22px; height: 22px; accent-color: var(--accent); }
 
-        /* Roll Results */
         .results { background: var(--card-bg); padding: 15px; border-radius: 15px; margin-bottom: 10px; border: 2px solid var(--secondary); }
         .player-row { display: flex; align-items: flex-start; background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 10px; gap: 12px; margin-bottom: 8px; }
         .char-img-roll { width: 65px; height: 65px; border-radius: 8px; object-fit: cover; border: 1px solid var(--accent); }
         .roll-stats { font-size: 0.65rem; color: #aaa; margin-top: 4px; display: flex; flex-direction: column; gap: 2px; }
         .char-select { flex: 1; background: #1a1a2e; color: white; border: 1px solid var(--secondary); padding: 10px; border-radius: 5px; outline: none; width: 100%; }
+        /* Validation Styling */
+        .char-select.error { border-color: var(--danger); background: #301014; }
+        #error-msg { color: var(--danger); font-size: 0.85rem; font-weight: bold; text-align: center; margin: 10px 0; display: none; background: rgba(148, 27, 45, 0.1); padding: 8px; border-radius: 5px; border: 1px solid var(--danger); }
 
         #rollBtn { background: var(--accent); width: 100%; padding: 15px; font-size: 1.1rem; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; }
         .btn-confirm { background: #28a745; display: none; width: 100%; padding: 15px; border: none; border-radius: 8px; color: white; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        .btn-confirm.disabled { background: #444 !important; opacity: 0.5; cursor: not-allowed; }
+
+        .db-toggle-btn { background: var(--secondary); color: white; width: 100%; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin: 25px 0 15px 0; text-transform: uppercase; font-size: 0.8rem; }
+        #dbSection { display: none; width: 100%; }
 
         /* Management Form */
         .manage-form { background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--secondary); }
@@ -42,10 +47,6 @@
         input[type="text"] { background: #1a1a2e; color: white; border: 1px solid var(--secondary); padding: 10px; border-radius: 5px; font-size: 0.9rem; }
         .btn-save { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 6px; width: 100%; cursor: pointer; font-weight: bold; }
         .btn-cancel { background: #444; color: white; border: none; padding: 8px; border-radius: 6px; width: 100%; cursor: pointer; margin-top: 5px; font-size: 0.8rem; }
-
-        /* Toggle & Stats Section */
-        .db-toggle-btn { background: var(--secondary); color: white; width: 100%; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin: 25px 0 15px 0; text-transform: uppercase; font-size: 0.8rem; }
-        #dbSection { display: none; width: 100%; }
 
         .char-item { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--secondary); display: flex; gap: 15px; position: relative; }
         .btn-edit-small { position: absolute; top: 10px; right: 10px; background: var(--edit); border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.6rem; font-weight: bold; cursor: pointer; color: #1a1a2e; }
@@ -80,6 +81,7 @@
 
     <div id="results" class="results"><p style="text-align: center; opacity: 0.6;">Select players and roll.</p></div>
 
+    <div id="error-msg">⚠ Duplicate hero selected! Each player must have a unique character.</div>
     <button id="rollBtn" onclick="pickCharacters()">ROLL RANDOMIZER</button>
     <button id="confirmBtn" class="btn-confirm" onclick="applyResults()">LOCK IN SESSION</button>
 
@@ -105,7 +107,6 @@
             <button class="btn-sort" style="background:var(--p3)" onclick="setSort('w2')">Ju %</button>
             <button class="btn-sort" style="background:var(--p4)" onclick="setSort('w3')">M %</button>
         </div>
-
         <div id="heroContainer"></div>
 
         <div style="margin-top:20px; border-top: 1px solid #ffffff22; padding-top:15px;">
@@ -222,6 +223,7 @@
             }
             renderPlayerRow(pIdx, selectedName);
         });
+        validateSelection(); // Run validation after roll
         document.getElementById('confirmBtn').style.display = 'block';
     }
 
@@ -253,10 +255,31 @@
         const char = characters.find(c => c.name === el.value);
         document.getElementById(`img-${pIdx}`).src = getImgUrl(char.slug);
         document.getElementById(`link-${pIdx}`).href = getHeroLink(char.slug);
+        
         const statsDiv = el.closest('.player-row').querySelector('.roll-stats');
         if (statsDiv && pIdx < 4) {
             statsDiv.innerHTML = `<span>Plays: <b>${(char.playCount?.[pIdx] || 0)}</b></span><span>Last: <b>${(char.lastPlayed?.[pIdx] || 'Never')}</b></span>`;
         }
+        validateSelection(); // Check for duplicates after manual change
+    }
+
+    /* --- VALIDATION LOGIC --- */
+    function validateSelection() {
+        const dropdowns = document.querySelectorAll('.char-select');
+        const names = Array.from(dropdowns).map(d => d.value);
+        const hasDupes = names.some((name, idx) => names.indexOf(name) !== idx);
+        
+        const confirmBtn = document.getElementById('confirmBtn');
+        const errorMsg = document.getElementById('error-msg');
+        
+        confirmBtn.classList.toggle('disabled', hasDupes);
+        confirmBtn.disabled = hasDupes;
+        errorMsg.style.display = hasDupes ? 'block' : 'none';
+        
+        dropdowns.forEach(d => {
+            const isDupe = names.filter(n => n === d.value).length > 1;
+            d.classList.toggle('error', isDupe);
+        });
     }
 
     function applyResults() {
