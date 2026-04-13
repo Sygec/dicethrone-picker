@@ -13,6 +13,7 @@
             --secondary: #0f3460;
             --danger: #941b2d;
             --edit: #f39c12;
+            --sort-active: #28a745;
         }
 
         body {
@@ -95,7 +96,28 @@
 
         #addBtn { background: var(--accent); margin-top: 5px; }
 
-        .char-list { margin-top: 10px; max-height: 400px; overflow-y: auto; border-top: 1px solid #ffffff11; }
+        /* Sorting Styles */
+        .sort-bar {
+            display: flex;
+            gap: 5px;
+            margin: 15px 0 10px 0;
+            background: rgba(0,0,0,0.2);
+            padding: 5px;
+            border-radius: 8px;
+        }
+        .btn-sort {
+            flex: 1;
+            font-size: 0.7rem;
+            padding: 8px;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .btn-sort.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .char-list { max-height: 400px; overflow-y: auto; border-top: 1px solid #ffffff11; }
         .char-item {
             display: flex;
             justify-content: space-between;
@@ -144,6 +166,12 @@
             <button id="addBtn" onclick="handleFormSubmit()">Add Hero</button>
             <button id="cancelEdit" onclick="resetForm()" style="display:none; background:#444;">Cancel Edit</button>
         </div>
+
+        <div class="sort-bar">
+            <button id="sort-group" class="btn-sort active" onclick="setSort('group')">By Group</button>
+            <button id="sort-name" class="btn-sort" onclick="setSort('name')">By Name</button>
+            <button id="sort-weight" class="btn-sort" onclick="setSort('weight')">By Weight</button>
+        </div>
         
         <div class="char-list" id="charList"></div>
 
@@ -158,7 +186,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <script>
-    // --- 1. CONFIGURATION: Paste your Firebase details here ---
     const firebaseConfig = {
       apiKey: "AIzaSyDxBCHqFOr3K-Vh4-KeTAUt2UM03DJ60nE",
       authDomain: "dicethrone-ba1f1.firebaseapp.com",
@@ -168,7 +195,7 @@
       messagingSenderId: "580487401452",
       appId: "1:580487401452:web:94d49e4bff6f3815b63ac9"
     };
-    // --- 2. INITIALIZATION ---
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
@@ -179,8 +206,8 @@
     let characters = [];
     let currentSelection = [];
     let editIndex = -1;
+    let currentSort = 'group'; // Default sort
 
-    // --- 3. CLOUD SYNC LOGIC ---
     function init() {
         db.ref('characters').on('value', (snapshot) => {
             const data = snapshot.val();
@@ -196,12 +223,62 @@
         db.ref('characters').set(characters);
     }
 
-    // --- 4. GAME LOGIC ---
+    function setSort(type) {
+        currentSort = type;
+        // Update button UI
+        document.querySelectorAll('.btn-sort').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`sort-${type}`).classList.add('active');
+        renderList();
+    }
+
+    function renderList() {
+        const listDiv = document.getElementById('charList');
+        
+        // Sorting Logic
+        const sorted = [...characters].sort((a, b) => {
+            if (currentSort === 'weight') {
+                return b.weight - a.weight; // High to low
+            } else if (currentSort === 'name') {
+                return a.name.localeCompare(b.name);
+            } else {
+                // Default: Group then Name
+                const grpA = (a.group || '').toLowerCase();
+                const grpB = (b.group || '').toLowerCase();
+                if (grpA < grpB) return -1;
+                if (grpA > grpB) return 1;
+                return a.name.localeCompare(b.name);
+            }
+        });
+        
+        if (characters.length === 0) {
+            listDiv.innerHTML = `<p style="text-align:center; padding:20px;">No heroes in cloud.</p>`;
+            return;
+        }
+
+        listDiv.innerHTML = sorted.map(c => `
+            <div class="char-item">
+                <div class="list-meta">
+                    <img src="${c.url || DEFAULT_IMG}" class="list-thumb" onerror="this.src='${DEFAULT_IMG}'">
+                    <div class="list-details">
+                        <span>${c.name}</span>
+                        <span class="list-group">${c.group || 'General'}</span>
+                        <span class="list-weight">Weight: ${Math.round(c.weight)}</span>
+                    </div>
+                </div>
+                <div class="action-btns">
+                    <button class="btn-edit" onclick="startEdit('${c.name.replace(/'/g, "\\'")}')">✎</button>
+                    <button class="btn-del" onclick="deleteChar('${c.name.replace(/'/g, "\\'")}')">×</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // --- GAME & FORM LOGIC (Unchanged but included for completeness) ---
+
     function pickCharacters(count) {
         if (characters.length < count) { alert(`Need ${count} heroes!`); return; }
         currentSelection = [];
         let tempPool = JSON.parse(JSON.stringify(characters));
-        
         for (let i = 0; i < count; i++) {
             let totalWeight = tempPool.reduce((sum, c) => sum + c.weight, 0);
             let random = Math.random() * totalWeight;
@@ -243,7 +320,6 @@
         document.getElementById('results').innerHTML = `<p style="color: #28a745; text-align:center;">Cloud Updated!</p>`;
     }
 
-    // --- 5. MANAGEMENT LOGIC ---
     function handleFormSubmit() {
         const name = document.getElementById('newName').value.trim();
         const group = document.getElementById('newGroup').value.trim();
@@ -305,39 +381,6 @@
 
     function clearCharacterList() {
         if (confirm("Delete ALL?")) { characters = []; saveToCloud(); }
-    }
-
-    function renderList() {
-        const listDiv = document.getElementById('charList');
-        const sorted = [...characters].sort((a, b) => {
-            const grpA = (a.group || '').toLowerCase();
-            const grpB = (b.group || '').toLowerCase();
-            if (grpA < grpB) return -1;
-            if (grpA > grpB) return 1;
-            return a.name.localeCompare(b.name);
-        });
-        
-        if (characters.length === 0) {
-            listDiv.innerHTML = `<p style="text-align:center; padding:20px;">No heroes in cloud.</p>`;
-            return;
-        }
-
-        listDiv.innerHTML = sorted.map(c => `
-            <div class="char-item">
-                <div class="list-meta">
-                    <img src="${c.url || DEFAULT_IMG}" class="list-thumb" onerror="this.src='${DEFAULT_IMG}'">
-                    <div class="list-details">
-                        <span>${c.name}</span>
-                        <span class="list-group">${c.group || 'General'}</span>
-                        <span class="list-weight">Weight: ${Math.round(c.weight)}</span>
-                    </div>
-                </div>
-                <div class="action-btns">
-                    <button class="btn-edit" onclick="startEdit('${c.name.replace(/'/g, "\\'")}')">✎</button>
-                    <button class="btn-del" onclick="deleteChar('${c.name.replace(/'/g, "\\'")}')">×</button>
-                </div>
-            </div>
-        `).join('');
     }
 
     init();
