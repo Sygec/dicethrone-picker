@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dice Throne Randomizer</title>
+    <title>Dice Throne Cloud</title>
     <style>
         :root {
             --bg: #1a1a2e;
@@ -72,9 +72,10 @@
             padding: 12px;
             border-radius: 8px;
             cursor: pointer;
+            font-weight: bold;
         }
 
-        .btn-confirm { background: #28a745; grid-column: span 3; margin-top: 10px; display: none; font-weight: bold; height: 50px; }
+        .btn-confirm { background: #28a745; grid-column: span 3; margin-top: 10px; display: none; height: 50px; }
 
         .manage-section {
             background: #0f346055;
@@ -92,7 +93,7 @@
             color: white;
         }
 
-        #addBtn { background: var(--accent); font-weight: bold; margin-top: 5px; }
+        #addBtn { background: var(--accent); margin-top: 5px; }
 
         .char-list { margin-top: 10px; max-height: 400px; overflow-y: auto; border-top: 1px solid #ffffff11; }
         .char-item {
@@ -121,10 +122,10 @@
 <body>
 
 <div class="container">
-    <h1>Dice Throne</h1>
+    <h1>Dice Throne Cloud</h1>
     
     <div id="results" class="results">
-        <p style="text-align: center; opacity: 0.6;">Choose players...</p>
+        <p style="text-align: center; opacity: 0.6;">Syncing with Cloud...</p>
     </div>
 
     <div class="controls">
@@ -138,7 +139,7 @@
         <h3 id="formTitle">Add Character</h3>
         <div class="input-group">
             <input type="text" id="newName" placeholder="Hero Name">
-            <input type="text" id="newGroup" placeholder="Season / Group (e.g. S1, Marvel)">
+            <input type="text" id="newGroup" placeholder="Season / Group">
             <input type="text" id="newUrl" placeholder="Image URL">
             <button id="addBtn" onclick="handleFormSubmit()">Add Hero</button>
             <button id="cancelEdit" onclick="resetForm()" style="display:none; background:#444;">Cancel Edit</button>
@@ -153,7 +154,24 @@
     </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
 <script>
+    // --- 1. CONFIGURATION: Paste your Firebase details here ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyDxBCHqFOr3K-Vh4-KeTAUt2UM03DJ60nE",
+      authDomain: "dicethrone-ba1f1.firebaseapp.com",
+      databaseURL: "https://dicethrone-ba1f1-default-rtdb.firebaseio.com",
+      projectId: "dicethrone-ba1f1",
+      storageBucket: "dicethrone-ba1f1.firebasestorage.app",
+      messagingSenderId: "580487401452",
+      appId: "1:580487401452:web:94d49e4bff6f3815b63ac9"
+    };
+    // --- 2. INITIALIZATION ---
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
     const WEIGHT_DECAY = 0.25;
     const WEIGHT_BOOST = 1.10;
     const DEFAULT_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e94560'%3E%3Cpath d='M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z'/%3E%3C/svg%3E";
@@ -162,14 +180,23 @@
     let currentSelection = [];
     let editIndex = -1;
 
+    // --- 3. CLOUD SYNC LOGIC ---
     function init() {
-        const saved = localStorage.getItem('dt_characters_v3');
-        if (saved) {
-            characters = JSON.parse(saved);
-        }
-        renderList();
+        db.ref('characters').on('value', (snapshot) => {
+            const data = snapshot.val();
+            characters = data || [];
+            renderList();
+            if (currentSelection.length === 0) {
+                document.getElementById('results').innerHTML = `<p style="text-align: center; opacity: 0.6;">Ready. Select players.</p>`;
+            }
+        });
     }
 
+    function saveToCloud() {
+        db.ref('characters').set(characters);
+    }
+
+    // --- 4. GAME LOGIC ---
     function pickCharacters(count) {
         if (characters.length < count) { alert(`Need ${count} heroes!`); return; }
         currentSelection = [];
@@ -211,11 +238,12 @@
         characters.forEach(char => {
             char.weight = selectedNames.includes(char.name) ? char.weight * WEIGHT_DECAY : char.weight * WEIGHT_BOOST;
         });
-        saveAndRefresh();
+        saveToCloud();
         document.getElementById('confirmBtn').style.display = 'none';
-        document.getElementById('results').innerHTML = `<p style="color: #28a745; text-align:center;">Results Saved!</p>`;
+        document.getElementById('results').innerHTML = `<p style="color: #28a745; text-align:center;">Cloud Updated!</p>`;
     }
 
+    // --- 5. MANAGEMENT LOGIC ---
     function handleFormSubmit() {
         const name = document.getElementById('newName').value.trim();
         const group = document.getElementById('newGroup').value.trim();
@@ -223,36 +251,30 @@
         if (!name) return;
 
         if (editIndex > -1) {
-            // Updating existing character
             characters[editIndex].name = name;
             characters[editIndex].group = group;
             characters[editIndex].url = url;
         } else {
-            // Adding new character - Calculate starting weight
             const weights = characters.map(c => c.weight).sort((a, b) => a - b);
             let startingWeight = 100;
             if (weights.length > 0) {
                 const mid = Math.floor(weights.length / 2);
-                startingWeight = weights.length % 2 !== 0 ? weights[mid] : (weights[mid - 1] + weights[mid]) / 2;
+                startingWeight = weights[mid] || 100;
             }
             characters.push({ name, group, url, weight: startingWeight });
         }
         resetForm();
-        saveAndRefresh();
+        saveToCloud();
     }
 
     function startEdit(name) {
-        const index = characters.findIndex(c => c.name === name);
-        if (index === -1) return;
-        editIndex = index;
-        const char = characters[index];
-        
+        editIndex = characters.findIndex(c => c.name === name);
+        const char = characters[editIndex];
         document.getElementById('newName').value = char.name;
         document.getElementById('newGroup').value = char.group || '';
         document.getElementById('newUrl').value = char.url || '';
-        
         document.getElementById('formTitle').innerText = "Edit Character";
-        document.getElementById('addBtn').innerText = "Save Changes";
+        document.getElementById('addBtn').innerText = "Save to Cloud";
         document.getElementById('cancelEdit').style.display = "block";
         window.scrollTo(0, document.body.scrollHeight);
     }
@@ -270,39 +292,33 @@
     function deleteChar(name) {
         if (confirm(`Remove ${name}?`)) {
             characters = characters.filter(c => c.name !== name);
-            saveAndRefresh();
+            saveToCloud();
         }
     }
 
     function resetWeights() {
         if (confirm("Reset weights to 100?")) {
             characters.forEach(c => c.weight = 100);
-            saveAndRefresh();
+            saveToCloud();
         }
     }
 
     function clearCharacterList() {
-        if (confirm("Delete ALL?")) { characters = []; saveAndRefresh(); }
-    }
-
-    function saveAndRefresh() {
-        localStorage.setItem('dt_characters_v3', JSON.stringify(characters));
-        renderList();
+        if (confirm("Delete ALL?")) { characters = []; saveToCloud(); }
     }
 
     function renderList() {
         const listDiv = document.getElementById('charList');
-        // Sorting by Group first, then Name
         const sorted = [...characters].sort((a, b) => {
-            const groupA = (a.group || '').toLowerCase();
-            const groupB = (b.group || '').toLowerCase();
-            if (groupA < groupB) return -1;
-            if (groupA > groupB) return 1;
+            const grpA = (a.group || '').toLowerCase();
+            const grpB = (b.group || '').toLowerCase();
+            if (grpA < grpB) return -1;
+            if (grpA > grpB) return 1;
             return a.name.localeCompare(b.name);
         });
         
         if (characters.length === 0) {
-            listDiv.innerHTML = `<p style="text-align:center; padding:20px;">No heroes found.</p>`;
+            listDiv.innerHTML = `<p style="text-align:center; padding:20px;">No heroes in cloud.</p>`;
             return;
         }
 
