@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dice Throne - Group Sync</title>
+    <title>Dice Throne - Probability Sync</title>
     <style>
         :root {
             --bg: #1a1a2e;
@@ -18,9 +18,8 @@
 
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .container { max-width: 500px; width: 100%; }
-        h1 { text-align: center; color: var(--accent); letter-spacing: 2px; }
+        h1 { text-align: center; color: var(--accent); letter-spacing: 2px; margin-bottom: 20px; }
 
-        /* Player Toggles */
         .player-toggle-zone {
             background: var(--card-bg);
             padding: 15px;
@@ -36,23 +35,13 @@
         .results { background: var(--card-bg); padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 2px solid var(--secondary); display: flex; flex-direction: column; gap: 10px; }
         .player-row { display: flex; align-items: center; background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 10px; gap: 12px; }
         
-        /* Character Dropdown Styling */
-        .char-select {
-            flex: 1;
-            background: #1a1a2e;
-            color: white;
-            border: 1px solid var(--secondary);
-            padding: 8px;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            outline: none;
-        }
-        .char-select:focus { border-color: var(--accent); }
+        .char-img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; border: 1px solid var(--accent); }
+        .char-select { flex: 1; background: #1a1a2e; color: white; border: 1px solid var(--secondary); padding: 8px; border-radius: 5px; font-size: 0.9rem; outline: none; }
 
         .player-label { font-size: 0.65rem; text-transform: uppercase; font-weight: bold; min-width: 60px; }
 
-        #rollBtn { background: var(--accent); width: 100%; padding: 15px; font-size: 1.1rem; margin-bottom: 10px; }
-        .btn-confirm { background: #28a745; display: none; width: 100%; padding: 15px; font-size: 1.1rem; }
+        #rollBtn { background: var(--accent); width: 100%; padding: 15px; font-size: 1.1rem; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        .btn-confirm { background: #28a745; display: none; width: 100%; padding: 15px; font-size: 1.1rem; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; }
 
         .manage-section { background: #0f346055; padding: 15px; border-radius: 10px; margin-top: 30px; }
         .input-group { display: flex; flex-direction: column; gap: 8px; }
@@ -61,14 +50,16 @@
         
         input { padding: 10px; border-radius: 5px; border: none; background: #1a1a2e; color: white; width: 100%; box-sizing: border-box; }
         
-        .char-list { max-height: 350px; overflow-y: auto; margin-top: 15px; border-top: 1px solid #ffffff11; }
+        .char-list { max-height: 400px; overflow-y: auto; margin-top: 15px; border-top: 1px solid #ffffff11; }
         .char-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #ffffff11; }
+        .list-thumb { width: 35px; height: 35px; border-radius: 4px; object-fit: cover; margin-right: 10px; }
         .w-badges { display: flex; gap: 4px; margin-top: 4px; }
-        .badge { font-size: 0.6rem; padding: 2px 5px; border-radius: 3px; font-weight: bold; color: #000; min-width: 25px; text-align: center; }
+        .badge { font-size: 0.65rem; padding: 2px 5px; border-radius: 3px; font-weight: bold; color: #000; min-width: 35px; text-align: center; }
         
         .action-btns { display: flex; gap: 8px; }
-        .btn-edit { color: var(--edit); background: transparent; font-size: 1.2rem; }
-        .btn-del { color: var(--danger); background: transparent; font-size: 1.2rem; }
+        .btn-edit, .btn-del { background: transparent; border: none; cursor: pointer; font-size: 1.2rem; }
+        .btn-edit { color: var(--edit); }
+        .btn-del { color: var(--danger); }
     </style>
 </head>
 <body>
@@ -84,25 +75,26 @@
     </div>
 
     <div id="results" class="results">
-        <p style="text-align: center; opacity: 0.6;">Select who is playing and roll!</p>
+        <p style="text-align: center; opacity: 0.6;">Ready to roll.</p>
     </div>
 
     <button id="rollBtn" onclick="pickCharacters()">ROLL RANDOMIZER</button>
     <button id="confirmBtn" class="btn-confirm" onclick="applyResults()">LOCK IN SESSION</button>
 
     <div class="manage-section">
-        <h3 id="formTitle">Manage Hero</h3>
+        <h3 id="formTitle">Add/Edit Hero</h3>
         <div class="input-group">
             <input type="text" id="newName" placeholder="Hero Name">
             <input type="text" id="newGroup" placeholder="Season / Group">
+            <input type="text" id="newUrl" placeholder="Image URL">
             <div class="weight-grid">
-                <div>Claudine: <input type="number" id="w0" placeholder="30-300"></div>
-                <div>Joel: <input type="number" id="w1" placeholder="30-300"></div>
-                <div>Julie: <input type="number" id="w2" placeholder="30-300"></div>
-                <div>Martin: <input type="number" id="w3" placeholder="30-300"></div>
+                <div>Claudine: <input type="number" id="w0" placeholder="Raw Weight"></div>
+                <div>Joel: <input type="number" id="w1" placeholder="Raw Weight"></div>
+                <div>Julie: <input type="number" id="w2" placeholder="Raw Weight"></div>
+                <div>Martin: <input type="number" id="w3" placeholder="Raw Weight"></div>
             </div>
-            <button id="addBtn" style="background:var(--accent)" onclick="handleFormSubmit()">Save Hero</button>
-            <button id="cancelEdit" onclick="resetForm()" style="display:none; background:#444;">Cancel</button>
+            <button id="addBtn" style="background:var(--accent); color:white; padding:10px; border:none; border-radius:5px; font-weight:bold; margin-top:10px; cursor:pointer;" onclick="handleFormSubmit()">Save Hero</button>
+            <button id="cancelEdit" onclick="resetForm()" style="display:none; background:#444; color:white; padding:10px; border:none; border-radius:5px; margin-top:5px; cursor:pointer;">Cancel</button>
         </div>
 
         <div class="char-list" id="charList"></div>
@@ -113,15 +105,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDxBCHqFOr3K-Vh4-KeTAUt2UM03DJ60nE",
-      authDomain: "dicethrone-ba1f1.firebaseapp.com",
-      databaseURL: "https://dicethrone-ba1f1-default-rtdb.firebaseio.com",
-      projectId: "dicethrone-ba1f1",
-      storageBucket: "dicethrone-ba1f1.firebasestorage.app",
-      messagingSenderId: "580487401452",
-      appId: "1:580487401452:web:94d49e4bff6f3815b63ac9"
-    };
+    const firebaseConfig = {apiKey: "AIzaSyDxBCHqFOr3K-Vh4-KeTAUt2UM03DJ60nE", authDomain: "dicethrone-ba1f1.firebaseapp.com", databaseURL: "https://dicethrone-ba1f1-default-rtdb.firebaseio.com", projectId: "dicethrone-ba1f1", storageBucket: "dicethrone-ba1f1.firebasestorage.app", messagingSenderId: "580487401452", appId: "1:580487401452:web:94d49e4bff6f3815b63ac9"};
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
@@ -130,6 +114,7 @@
     const BOOST = 1.20;
     const MIN_W = 30;
     const MAX_W = 300;
+    const DEFAULT_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e94560'%3E%3Cpath d='M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z'/%3E%3C/svg%3E";
 
     let characters = [];
     let editIndex = -1;
@@ -141,7 +126,7 @@
         });
     }
 
-    // --- ROLL LOGIC ---
+    // --- LOGIC: Unique Rolling ---
     function pickCharacters() {
         const activeIndices = [];
         NAMES.forEach((_, i) => { if(document.getElementById(`use${i}`).checked) activeIndices.push(i); });
@@ -151,32 +136,45 @@
         const resultsDiv = document.getElementById('results');
         resultsDiv.innerHTML = '';
 
+        // We use a temporary pool to ensure uniqueness per roll
+        let pool = JSON.parse(JSON.stringify(characters));
+
         activeIndices.forEach(pIdx => {
-            const activePool = characters.filter(c => c.weights[pIdx] > 0);
+            const activePool = pool.filter(c => c.weights[pIdx] > 0);
             let selectedCharName = "";
 
             if(activePool.length > 0) {
                 let total = activePool.reduce((sum, c) => sum + c.weights[pIdx], 0);
                 let rand = Math.random() * total;
                 let sum = 0;
-                for(let c of activePool) {
-                    sum += c.weights[pIdx];
-                    if(rand <= sum) { selectedCharName = c.name; break; }
+                for(let i = 0; i < activePool.length; i++) {
+                    sum += activePool[i].weights[pIdx];
+                    if(rand <= sum) { 
+                        selectedCharName = activePool[i].name;
+                        // REMOVE from pool so others can't roll it
+                        const poolIdx = pool.findIndex(p => p.name === selectedCharName);
+                        pool.splice(poolIdx, 1);
+                        break; 
+                    }
                 }
             }
 
-            // Render row with dropdown
+            const charData = characters.find(c => c.name === selectedCharName);
+
             const row = document.createElement('div');
             row.className = 'player-row';
             row.innerHTML = `
-                <div class="player-label" style="color:var(--p${pIdx+1})">${NAMES[pIdx]}</div>
-                <select class="char-select" data-player="${pIdx}">
-                    ${characters.map(c => `
-                        <option value="${c.name}" ${c.name === selectedCharName ? 'selected' : ''} ${c.weights[pIdx] === 0 ? 'disabled' : ''}>
-                            ${c.name} ${c.weights[pIdx] === 0 ? '(Locked)' : ''}
-                        </option>
-                    `).join('')}
-                </select>
+                <img src="${charData?.url || DEFAULT_IMG}" class="char-img" id="img-${pIdx}" onerror="this.src='${DEFAULT_IMG}'">
+                <div style="flex:1">
+                    <div class="player-label" style="color:var(--p${pIdx+1})">${NAMES[pIdx]}</div>
+                    <select class="char-select" data-player="${pIdx}" onchange="updateRowImage(this)">
+                        ${characters.map(c => `
+                            <option value="${c.name}" ${c.name === selectedCharName ? 'selected' : ''}>
+                                ${c.name}
+                            </option>
+                        `).join('')}
+                    </select>
+                </div>
             `;
             resultsDiv.appendChild(row);
         });
@@ -184,27 +182,27 @@
         document.getElementById('confirmBtn').style.display = 'block';
     }
 
-    // --- LOCK IN LOGIC ---
+    function updateRowImage(selectEl) {
+        const pIdx = selectEl.dataset.player;
+        const char = characters.find(c => c.name === selectEl.value);
+        document.getElementById(`img-${pIdx}`).src = char.url || DEFAULT_IMG;
+    }
+
+    // --- LOCK IN ---
     function applyResults() {
         const dropdowns = document.querySelectorAll('.char-select');
-        const sessionPicks = []; // Array of { playerIndex, charName }
-
+        const sessionPicks = [];
         dropdowns.forEach(sel => {
-            sessionPicks.push({
-                pIdx: parseInt(sel.dataset.player),
-                charName: sel.value
-            });
+            sessionPicks.push({ pIdx: parseInt(sel.dataset.player), charName: sel.value });
         });
 
         const playingIndices = sessionPicks.map(s => s.pIdx);
 
         characters.forEach(char => {
             playingIndices.forEach(pIdx => {
-                if (char.weights[pIdx] === 0) return; // Ignore permanently disabled
-
-                const wasPickedForThisPlayer = sessionPicks.some(s => s.pIdx === pIdx && s.charName === char.name);
-                
-                if (wasPickedForThisPlayer) {
+                if (char.weights[pIdx] === 0) return;
+                const wasPicked = sessionPicks.some(s => s.pIdx === pIdx && s.charName === char.name);
+                if (wasPicked) {
                     char.weights[pIdx] = Math.max(MIN_W, char.weights[pIdx] * DECAY);
                 } else {
                     char.weights[pIdx] = Math.min(MAX_W, char.weights[pIdx] * BOOST);
@@ -214,13 +212,14 @@
 
         db.ref('characters_v4').set(characters);
         document.getElementById('confirmBtn').style.display = 'none';
-        document.getElementById('results').innerHTML = `<p style="color:#28a745; text-align:center; font-weight:bold;">Weights Updated for the Group!</p>`;
+        document.getElementById('results').innerHTML = `<p style="color:#28a745; text-align:center; font-weight:bold;">Weights Updated!</p>`;
     }
 
-    // --- MANAGEMENT LOGIC ---
+    // --- MANAGEMENT & PERCENTAGE DISPLAY ---
     function handleFormSubmit() {
         const name = document.getElementById('newName').value.trim();
         const group = document.getElementById('newGroup').value.trim();
+        const url = document.getElementById('newUrl').value.trim();
         if (!name) return;
 
         const weights = [
@@ -231,9 +230,9 @@
         ];
 
         if (editIndex > -1) {
-            characters[editIndex] = { name, group, weights };
+            characters[editIndex] = { name, group, url, weights };
         } else {
-            characters.push({ name, group, weights });
+            characters.push({ name, group, url, weights });
         }
         
         db.ref('characters_v4').set(characters);
@@ -245,15 +244,16 @@
         const c = characters[editIndex];
         document.getElementById('newName').value = c.name;
         document.getElementById('newGroup').value = c.group || '';
+        document.getElementById('newUrl').value = c.url || '';
         c.weights.forEach((w, i) => document.getElementById(`w${i}`).value = Math.round(w));
-        document.getElementById('formTitle').innerText = "Edit " + c.name;
+        document.getElementById('formTitle').innerText = "Edit Hero";
         document.getElementById('cancelEdit').style.display = "block";
     }
 
     function resetForm() {
         editIndex = -1;
         document.querySelectorAll('.manage-section input').forEach(i => i.value = '');
-        document.getElementById('formTitle').innerText = "Manage Hero";
+        document.getElementById('formTitle').innerText = "Add/Edit Hero";
         document.getElementById('cancelEdit').style.display = "none";
     }
 
@@ -268,15 +268,24 @@
         const listDiv = document.getElementById('charList');
         const sorted = [...characters].sort((a,b) => (a.group || '').localeCompare(b.group || '') || a.name.localeCompare(b.name));
 
+        // Calculate Totals for Percentages
+        const totals = [0, 0, 0, 0];
+        characters.forEach(c => {
+            c.weights.forEach((w, i) => totals[i] += w);
+        });
+
         listDiv.innerHTML = sorted.map(c => `
             <div class="char-item">
-                <div class="list-details">
-                    <span style="font-weight:bold; color:var(--accent)">${c.name}</span>
-                    <div class="w-badges">
-                        <span class="badge" title="Claudine" style="background:var(--p1)">${Math.round(c.weights[0])}</span>
-                        <span class="badge" title="Joel" style="background:var(--p2)">${Math.round(c.weights[1])}</span>
-                        <span class="badge" title="Julie" style="background:var(--p3)">${Math.round(c.weights[2])}</span>
-                        <span class="badge" title="Martin" style="background:var(--p4)">${Math.round(c.weights[3])}</span>
+                <div style="display:flex; align-items:center;">
+                    <img src="${c.url || DEFAULT_IMG}" class="list-thumb" onerror="this.src='${DEFAULT_IMG}'">
+                    <div class="list-details">
+                        <span style="font-weight:bold; color:var(--accent)">${c.name}</span>
+                        <div class="w-badges">
+                            ${c.weights.map((w, i) => {
+                                const pct = totals[i] > 0 ? ((w / totals[i]) * 100).toFixed(1) : 0;
+                                return `<span class="badge" title="${NAMES[i]}" style="background:var(--p${i+1})">${pct}%</span>`;
+                            }).join('')}
+                        </div>
                     </div>
                 </div>
                 <div class="action-btns">
