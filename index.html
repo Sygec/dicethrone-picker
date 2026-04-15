@@ -128,7 +128,7 @@
     const NAMES = ["Claudine", "Joel", "Julie", "Martin", "Invitee"];
     const PLAYER_COLORS = ['var(--p1)', 'var(--p2)', 'var(--p3)', 'var(--p4)'];
     let characters = [];
-    let currentSort = 'name';
+    let currentSort = 'group';
     let sortAsc = true;
     let editIndex = -1;
 
@@ -137,9 +137,6 @@
 
     function init() {
         db.ref('characters_v4').on('value', snap => {
-            const initialSort = currentSort;
-            currentSort = null;
-            setSort(initialSort);
             characters = snap.val() || [];
             renderList();
         });
@@ -314,68 +311,21 @@
     /* --- LIST & HELPERS --- */
     function resetAllWeights() { if(confirm("Reset all probabilities to 100?")) { characters.forEach(c => c.weights = [100, 100, 100, 100]); db.ref('characters_v4').set(characters); } }
     function resetAllStats() { if(confirm("Reset all play history?")) { characters.forEach(c => { c.playCount = [0,0,0,0]; c.lastPlayed = ["","","",""]; }); db.ref('characters_v4').set(characters); } }
-/*    function setSort(key) { if (currentSort === key) sortAsc = !sortAsc; else { currentSort = key; sortAsc = true; } renderList(); }*/
+    function setSort(key) { if (currentSort === key) sortAsc = !sortAsc; else { currentSort = key; sortAsc = true; } renderList(); }
 
-function setSort(key) {
-    if (currentSort === key) {
-        sortAsc = !sortAsc;
-    } else {
-        currentSort = key;
-        sortAsc = true;
-    }
-
-    // 1. Clear all active states and arrows
-    document.querySelectorAll('.btn-mini-sort').forEach(btn => {
-        btn.classList.remove('active');
-        // Reset text to original (removing any existing arrows)
-        if (btn.id === 'sort-name') btn.innerText = '\u{1F464}';
-        if (btn.id === 'sort-group') btn.innerText = '\u{1F465}';
-        if (btn.id.includes('w')) btn.innerText = '%';
-        if (btn.id.includes('d')) btn.innerText = '\u{1F4C5}';
-    });
-
-    // 2. Highlight the clicked button
-    const activeBtn = document.getElementById(`sort-${key}`);
-    if (activeBtn) {
-        activeBtn.classList.add('active');
-        // 3. Add the directional arrow
-        const arrow = sortAsc ? ' ▲' : ' ▼';
-        activeBtn.innerText += arrow;
-    }
-
-    renderList();
-}
-
-function renderList() {
-    const container = document.getElementById('heroContainer');
-    const totals = [0, 1, 2, 3].map(i => characters.reduce((sum, c) => sum + c.weights[i], 0));
-
-    const sorted = [...characters].sort((a, b) => {
-        let valA, valB;
-
-        if (currentSort.startsWith('w')) {
-            // Probability Weight Sort
-            const idx = parseInt(currentSort[1]);
-            valA = a.weights[idx]; valB = b.weights[idx];
-        } 
-        else if (currentSort.startsWith('d')) {
-            // Date Sort
-            const idx = parseInt(currentSort[1]);
-            valA = (a.lastPlayed && a.lastPlayed[idx]) || "";
-            valB = (b.lastPlayed && b.lastPlayed[idx]) || "";
-            
-            // Treat "Never" as an empty string so it sorts to the end
-            if (valA === "Never") valA = "";
-            if (valB === "Never") valB = "";
-        } 
-        else {
-            // Text Sort (Name/Group)
-            valA = (a[currentSort] || "").toLowerCase(); valB = (b[currentSort] || "").toLowerCase();
-        }
-        if (valA < valB) return sortAsc ? -1 : 1;
-        if (valA > valB) return sortAsc ? 1 : -1;
-        return 0;
-    });
+    function renderList() {
+        const container = document.getElementById('heroContainer');
+        const totals = [0, 1, 2, 3].map(i => characters.reduce((sum, c) => sum + c.weights[i], 0));
+        const sorted = [...characters].sort((a, b) => {
+            let valA, valB;
+            if (currentSort.startsWith('w')) {
+                const idx = parseInt(currentSort[1]);
+                valA = a.weights[idx]; valB = b.weights[idx];
+            } else {
+                valA = (a[currentSort] || "").toLowerCase(); valB = (b[currentSort] || "").toLowerCase();
+            }
+            return (valA < valB ? -1 : 1) * (sortAsc ? 1 : -1);
+        });
 
         container.innerHTML = sorted.map(c => {
             const counts = c.playCount || [0,0,0,0];
