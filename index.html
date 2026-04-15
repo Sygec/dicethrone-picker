@@ -5,67 +5,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dice Throne - Discovery Suite</title>
-    <style>
-        :root {
-            --bg: #1a1a2e;
-            --card-bg: #16213e;
-            --accent: #e94560;
-            --text: #ffffff;
-            --secondary: #0f3460;
-            --danger: #941b2d;
-            --edit: #f39c12;
-            --p1: #4ecca3; --p2: #45b7d1; --p3: #9b59b6; --p4: #f1c40f; --p5: #a2a2a2;
-        }
 
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { max-width: 550px; width: 100%; }
-        h1 { text-align: center; color: var(--accent); letter-spacing: 2px; margin-bottom: 20px; text-transform: uppercase; }
+    <script>
+        // Check if we are running locally
+        const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+        
+        // Create a new link element
+        const themeLink = document.createElement('link');
+        themeLink.rel = 'stylesheet';
+        
+        // Assign the file path based on the hostname
+        themeLink.href = isLocal ? 'style-dev.css' : 'style.css';
+        
+        // Append it to the head
+        document.head.appendChild(themeLink);
+    </script>
 
-        .player-tag { display: inline-block; padding: 4px 8px; border-radius: 4px; font-weight: bold; color: #1a1a2e; font-size: 0.75rem; text-transform: uppercase; text-align: center; min-width: 70px; }
-        .player-toggle-zone { background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; border: 1px solid var(--secondary); }
-        .p-chk { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
-        .p-chk input { width: 22px; height: 22px; accent-color: var(--accent); }
-
-        .results { background: var(--card-bg); padding: 15px; border-radius: 15px; margin-bottom: 10px; border: 2px solid var(--secondary); }
-        .player-row { display: flex; align-items: flex-start; background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 10px; gap: 12px; margin-bottom: 8px; }
-        .char-img-roll { width: 65px; height: 65px; border-radius: 8px; object-fit: cover; border: 1px solid var(--accent); }
-        .roll-stats { font-size: 0.65rem; color: #aaa; margin-top: 4px; display: flex; flex-direction: column; gap: 2px; }
-        .char-select { flex: 1; background: #1a1a2e; color: white; border: 1px solid var(--secondary); padding: 10px; border-radius: 5px; outline: none; width: 100%; }
-        /* Validation Styling */
-        .char-select.error { border-color: var(--danger); background: #301014; }
-        #error-msg { color: var(--danger); font-size: 0.85rem; font-weight: bold; text-align: center; margin: 10px 0; display: none; background: rgba(148, 27, 45, 0.1); padding: 8px; border-radius: 5px; border: 1px solid var(--danger); }
-
-        #rollBtn { background: var(--accent); width: 100%; padding: 15px; font-size: 1.1rem; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; }
-        .btn-confirm { background: #28a745; display: none; width: 100%; padding: 15px; border: none; border-radius: 8px; color: white; font-weight: bold; margin-top: 10px; cursor: pointer; }
-        .btn-confirm.disabled { background: #444 !important; opacity: 0.5; cursor: not-allowed; }
-
-        .db-toggle-btn { background: var(--secondary); color: white; width: 100%; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin: 25px 0 15px 0; text-transform: uppercase; font-size: 0.8rem; }
-        #dbSection { display: none; width: 100%; }
-
-        /* Management Form */
-        .manage-form { background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--secondary); }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-        input[type="text"] { background: #1a1a2e; color: white; border: 1px solid var(--secondary); padding: 10px; border-radius: 5px; font-size: 0.9rem; }
-        .btn-save { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 6px; width: 100%; cursor: pointer; font-weight: bold; }
-        .btn-cancel { background: #444; color: white; border: none; padding: 8px; border-radius: 6px; width: 100%; cursor: pointer; margin-top: 5px; font-size: 0.8rem; }
-
-        .char-item { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--secondary); display: flex; gap: 15px; position: relative; }
-        .btn-edit-small { position: absolute; top: 10px; right: 10px; background: var(--edit); border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.6rem; font-weight: bold; cursor: pointer; color: #1a1a2e; }
-        .list-thumb { width: 70px; height: 70px; border-radius: 8px; object-fit: cover; border: 2px solid var(--accent); }
-        .hero-details { flex: 1; }
-        .hero-name { font-size: 1.1rem; font-weight: bold; color: var(--accent); margin-bottom: 8px; display: block; }
-
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
-        .player-stat-box { background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px; border-left: 3px solid transparent; }
-        .stat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
-        .stat-label { font-size: 0.6rem; color: #aaa; text-transform: uppercase; }
-        .stat-value { font-size: 0.7rem; font-weight: bold; }
-        .stat-date { font-size: 0.55rem; color: #666; display: block; text-align: right; margin-top: 2px; }
-
-        .sort-controls { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 15px; justify-content: center; }
-        .btn-sort { border: none; padding: 6px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
-        .btn-danger { background: var(--danger); color: white; border: none; padding: 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
-    </style>
 </head>
 <body>
 
@@ -121,8 +76,17 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <script>
-    const firebaseConfig = {apiKey: "AIzaSyDxBCHqFOr3K-Vh4-KeTAUt2UM03DJ60nE", authDomain: "dicethrone-ba1f1.firebaseapp.com", databaseURL: "https://dicethrone-ba1f1-default-rtdb.firebaseio.com", projectId: "dicethrone-ba1f1", storageBucket: "dicethrone-ba1f1.firebasestorage.app", messagingSenderId: "580487401452", appId: "1:580487401452:web:94d49e4bff6f3815b63ac9"};
-    firebase.initializeApp(firebaseConfig);
+    const prodFirebaseConfig = {apiKey: "AIzaSyDxBCHqFOr3K-Vh4-KeTAUt2UM03DJ60nE", authDomain: "dicethrone-ba1f1.firebaseapp.com", databaseURL: "https://dicethrone-ba1f1-default-rtdb.firebaseio.com", projectId: "dicethrone-ba1f1", storageBucket: "dicethrone-ba1f1.firebasestorage.app", messagingSenderId: "580487401452", appId: "1:580487401452:web:94d49e4bff6f3815b63ac9"};
+    const devFirebaseConfig = {apiKey: "AIzaSyDIrNnHU5TkKuXCsZJpuLHxzbhfhIV9KXk", authDomain: "dicethrone-dev.firebaseapp.com", projectId: "dicethrone-dev", storageBucket: "dicethrone-dev.firebasestorage.app", messagingSenderId: "139571744700", appId: "1:139571744700:web:5d9755e7a7fa2a5711e5b9"};
+    
+    // Choose the config based on where the app is running
+    // const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    const selectedConfig = isLocal ? devFirebaseConfig : prodFirebaseConfig;
+
+    // Initialize Firebase with the selected config
+    firebase.initializeApp(selectedConfig);
+
+    // Keep your existing database reference
     const db = firebase.database();
 
     const NAMES = ["Claudine", "Joel", "Julie", "Martin", "Invitee"];
