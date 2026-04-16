@@ -52,7 +52,7 @@
         .sort-row { display: flex; gap: 8px; width: 100%; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; scrollbar-width: none; }
         .sort-row::-webkit-scrollbar { display: none; }
         /* The Compact Player Card */
-        .player-card-mini { flex: 0 0 auto; background: rgba(255, 255, 255, 0.05); border-left: 4px solid transparent; border-radius: 4px; padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; min-width: 60px; }
+        .player-card-mini { flex: 0 0 auto; background: rgba(255, 255, 255, 0.05); border-left: 4px solid transparent; border-radius: 4px; padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; min-width: 40px; }
         .mini-name { font-size: 0.6rem; font-weight: bold; text-transform: uppercase; opacity: 0.7; }
         .mini-actions { display: grid; gap: 4px; }
         .btn-mini-sort { flex: 1; background: var(--secondary); border: 1px solid transparent; color: white; padding: 4px 0; font-size: 0.65rem; border-radius: 3px; cursor: pointer; }
