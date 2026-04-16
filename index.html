@@ -15,11 +15,13 @@
         themeLink.rel = 'stylesheet';
         
         // Assign the file path based on the hostname
-        themeLink.href = isLocal ? 'style-dev.css' : 'style.css';
+        themeLink.href = isLocal ? 'style-dev.css' : 'style-prod.css';
         
         // Append it to the head
         document.head.appendChild(themeLink);
     </script>
+
+    <link rel="stylesheet" type="text/css" href="style.css">
 
 </head>
 <body>
@@ -44,19 +46,13 @@
     <button class="db-toggle-btn" onclick="toggleDatabase()">📂 Show Hero Database & Stats</button>
 
     <div id="dbSection">
-        <div class="search-container" style="margin-bottom: 15px; text-align: center">
-            <input type="text" id="hero-search" placeholder="Search Heroes or Groups..." 
-                oninput="renderList()" 
-                style="width: 95%; padding: 5px; border-radius: 8px; border: 1px solid var(--secondary); background: var(--card-bg); color: var(--text);">
-        </div>
         <div class="sort-controls">
             <div class="sort-row">
 
                 <div class="player-card-mini">
-                    <span class="mini-name">General</span>
+                    <span class="mini-name"> </span>
                     <div class="mini-actions">
-                        <button class="btn-mini-sort" id="sort-name" onclick="setSort('name')">&#128100;</button>
-                        <button class="btn-mini-sort" id="sort-group" onclick="setSort('group')">&#128101;</button>
+                        <button class="btn-mini-sort" id="sort-name" onclick="setSort('name')">Name</button>
                     </div>
                 </div>
 
@@ -93,10 +89,19 @@
                 </div>
             </div>
         </div>
+        <div class="search-container" style="margin-bottom: 30px; margin-top: 15px; text-align: center">
+            <input type="text" id="hero-search" placeholder="Search Heroes or Groups..." 
+                oninput="renderList()" 
+                style="display: inline-block; width: 95%; padding: 10px; padding-right: 25px ; border-radius: 8px; border: 1px solid var(--secondary); background: var(--card-bg); color: var(--text);">
+<!--            <span class="clear-btn" id="clearBtn">&times;</span>-->
+            <div id="count-stats" style="font-size: 0.7rem; opacity: 0.6; margin-bottom: 15px; padding-left: 5px;">
+                Showing 0 of 0 heroes
+            </div>
+        </div>
         <div id="heroContainer"></div>
     </div>
 
-    <button class="admin-toggle-btn" onclick="toggleAdmin()">&#x26A0; &#x2699; Show Admin Section &#x2699; &#x26A0;</button>
+    <button class="admin-toggle-btn" onclick="toggleAdmin()">Show Admin Section</button>
     <div id="adminSection">
         <div class="manage-form">
             <h3 id="formTitle" style="margin-top:0; font-size: 1rem; color: var(--accent);">Add New Hero</h3>
@@ -165,7 +170,7 @@
         const b = document.querySelector('.admin-toggle-btn');
         const isHidden = s.style.display !== "block";
         s.style.display = isHidden ? "block" : "none";
-        b.innerText = isHidden ? "📁 Hide Admin" : "📂 Show Admin Section";
+        b.innerText = isHidden ? 'Hide Admin Section' : 'Show Admin Section';
     }    
 
     /* --- MANAGEMENT LOGIC --- */
@@ -263,7 +268,10 @@
                         ${pIdx < 4 ? `<div class="roll-stats"><span>Plays: <b>${plays}</b></span><span>Last: <b>${last}</b></span></div>` : ''}
                     </div>
                     <select class="char-select" data-player="${pIdx}" onchange="handleDropdownChange(this)">
-                        ${characters.map(c => `<option value="${c.name}" ${c.name === selectedName ? 'selected' : ''}>${c.name}</option>`).join('')}
+                        ${[...characters]
+                            .sort((a, b) => a.name.localeCompare(b.name))
+                            .map(c => `<option value="${c.name}" ${c.name === selectedName ? 'selected' : ''}>${c.name}</option>`)
+                            .join('')}
                     </select>
                 </div>
             </div>`;
@@ -341,8 +349,8 @@
     document.querySelectorAll('.btn-mini-sort').forEach(btn => {
         btn.classList.remove('active');
         // Reset text to original (removing any existing arrows)
-        if (btn.id === 'sort-name') btn.innerText = '\u{1F464}';
-        if (btn.id === 'sort-group') btn.innerText = '\u{1F465}';
+        if (btn.id === 'sort-name') btn.innerText = 'Name';
+//        if (btn.id === 'sort-group') btn.innerText = '\u{1F465}';
         if (btn.id.includes('w')) btn.innerText = '%';
         if (btn.id.includes('d')) btn.innerText = '\u{1F4C5}';
     });
@@ -363,8 +371,7 @@ function renderList() {
     const container = document.getElementById('heroContainer');
     
     // 1. Capture the search term (ensure you have an input with id="hero-search")
-    const searchInput = document.getElementById('hero-search');
-    const searchTerm = searchInput ? searchInput.value.toLowerCase() : "";
+    const searchTerm = document.getElementById('hero-search')?.value.toLowerCase() || "";
 
     // 2. Calculate totals from the FULL 'characters' array
     // This ensures percentages remain relative to the whole pool, even when filtering.
@@ -376,6 +383,12 @@ function renderList() {
         const groupMatch = (c.group || "").toLowerCase().includes(searchTerm);
         return nameMatch || groupMatch;
     });
+
+    // 3.5 Update the Counter UI
+    const count = document.getElementById('count-stats');
+    if (count) {
+        count.innerText = `Showing ${filtered.length} of ${characters.length} heroes`;
+    }
 
     // 4. Sort the FILTERED list
     const sorted = [...filtered].sort((a, b) => {
@@ -417,7 +430,7 @@ function renderList() {
 
         return `
         <div class="char-item">
-            <button class="btn-edit-small" onclick="editChar(${realIdx})">EDIT</button>
+            <button class="btn-edit-small" onclick="editChar(${realIdx})" style="display: none;">EDIT</button>
             <div class="hero-main-info">
                 <a href="${getHeroLink(c.slug)}" target="_blank">
                     <img src="${getImgUrl(c.slug)}" class="list-thumb">
@@ -425,14 +438,14 @@ function renderList() {
             </div>
             <div class="hero-details">
                 <div class="hero-header">
-                    <span class="group-label">${c.group || 'Season ?'}</span>
                     <span class="hero-name">${c.name}</span>
+                    <span class="group-label"> (${c.group || 'Season ?'})</span>
                 </div>
                 <div class="stats-grid">
                     ${[0,1,2,3].map(i => `
                         <div class="player-stat-box" style="border-left-color: ${PLAYER_COLORS[i]}">
                             <div class="stat-row">
-                                <span class="stat-label">${NAMES[i].charAt(0)} %</span>
+                                <span class="stat-label">${NAMES[i]} %</span>
                                 <span class="stat-value">${totals[i] > 0 ? ((c.weights[i]/totals[i])*100).toFixed(2) : '0.00'}%</span>
                             </div>
                             <div class="stat-row">
