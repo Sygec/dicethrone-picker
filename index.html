@@ -128,7 +128,7 @@
     const NAMES = ["Claudine", "Joel", "Julie", "Martin", "Invitee"];
     const PLAYER_COLORS = ['var(--p1)', 'var(--p2)', 'var(--p3)', 'var(--p4)'];
     let characters = [];
-    let currentSort = 'group';
+    let currentSort = 'name';
     let sortAsc = true;
     let editIndex = -1;
 
@@ -319,7 +319,7 @@
         sortAsc = !sortAsc;
     } else {
         currentSort = key;
-        sortAsc = true;
+        sortAsc = !key.startsWith('d') && !key.startsWith('w');
     }
 
     // 1. Clear all active states and arrows
@@ -388,7 +388,7 @@
                     <div class="stats-grid">
                         ${[0,1,2,3].map(i => `
                             <div class="player-stat-box" style="border-left-color: ${PLAYER_COLORS[i]}">
-                                <div class="stat-row"><span class="stat-label">${NAMES[i].charAt(0)} %</span><span class="stat-value">${totals[i] > 0 ? ((c.weights[i]/totals[i])*100).toFixed(2) : '0.00'}%</span></div>
+                                <div class="stat-row"><span class="stat-label">${NAMES[i]} %</span><span class="stat-value">${totals[i] > 0 ? ((c.weights[i]/totals[i])*100).toFixed(2) : '0.00'}%</span></div>
                                 <div class="stat-row"><span class="stat-label">Plays</span><span class="stat-value">${counts[i]}</span></div>
                                 <span class="stat-date">${dates[i] || 'Never'}</span>
                             </div>
