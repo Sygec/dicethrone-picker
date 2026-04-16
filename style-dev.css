@@ -34,6 +34,9 @@
         .db-toggle-btn { background: var(--secondary); color: white; width: 100%; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin: 25px 0 15px 0; text-transform: uppercase; font-size: 0.8rem; }
         #dbSection { display: none; width: 100%; }
 
+        .admin-toggle-btn { background: var(--secondary); color: white; width: 100%; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin: 25px 0 15px 0; text-transform: uppercase; font-size: 0.8rem; }
+        #adminSection { display: none; width: 100%; }
+
         /* Management Form */
         .manage-form { background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--secondary); }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
@@ -45,7 +48,7 @@
         .btn-edit-small { position: absolute; top: 10px; right: 10px; background: var(--edit); border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.6rem; font-weight: bold; cursor: pointer; color: #1a1a2e; }
         .list-thumb { width: 70px; height: 70px; border-radius: 8px; object-fit: cover; border: 2px solid var(--accent); }
         .hero-details { flex: 1; }
-        .hero-name { font-size: 1.1rem; font-weight: bold; color: var(--accent); margin-bottom: 8px; display: block; }
+        .hero-name { font-size: 1.1rem; font-weight: bold; color: var(--accent); margin-bottom: 8px; display: inline flow-root; }
 
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
         .player-stat-box { background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px; border-left: 3px solid transparent; }
