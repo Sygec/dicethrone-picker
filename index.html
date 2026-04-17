@@ -89,6 +89,17 @@
                 </div>
             </div>
         </div>
+        <div class="dice-filter-section" style="margin-bottom: 20px;">
+            <div class="dice-bar">
+                <img src="images/d1.png" class="dice-icon" id="dice-1" onclick="toggleLevel(1)" title="Level 1">
+                <img src="images/d2.png" class="dice-icon" id="dice-2" onclick="toggleLevel(2)" title="Level 2">
+                <img src="images/d3.png" class="dice-icon" id="dice-3" onclick="toggleLevel(3)" title="Level 3">
+                <img src="images/d4.png" class="dice-icon" id="dice-4" onclick="toggleLevel(4)" title="Level 4">
+                <img src="images/d5.png" class="dice-icon" id="dice-5" onclick="toggleLevel(5)" title="Level 5">
+                <img src="images/d6.png" class="dice-icon" id="dice-6" onclick="toggleLevel(6)" title="Level 6">
+                <img src="images/d_all.png" class="dice-icon" id="dice-all" onclick="toggleLevel('all')" title="All Levels">
+            </div>
+        </div>
         <div class="search-container" style="margin-bottom: 30px; margin-top: 15px; text-align: center">
             <input type="text" id="hero-search" placeholder="Search Heroes or Groups..." 
                 oninput="renderList()" 
@@ -108,6 +119,7 @@
                 <input type="text" id="charName" placeholder="Hero Name">
                 <input type="text" id="charGroup" placeholder="Group (e.g. Season 1)">
                 <input type="text" id="charSlug" placeholder="Slug (for image)">
+                <input type="text" id="charComplexity" placeholder="Complexity level">
             </div>
             <button class="btn-save" id="saveBtn" onclick="saveCharacter()">Save Hero</button>
             <button class="btn-cancel" id="cancelBtn" onclick="resetForm()" style="display:none;">Cancel Edit</button>
@@ -177,14 +189,16 @@
         const name = document.getElementById('charName').value.trim();
         const group = document.getElementById('charGroup').value.trim();
         const slug = document.getElementById('charSlug').value.trim();
+        const complexity = document.getElementById('charComplexity').value.trim();
+        
         if(!name) return alert("Name is required");
 
         if (editIndex > -1) {
             characters[editIndex] = { ...characters[editIndex], name, group, slug };
         } else {
             characters.push({
-                name, group, slug,
-                weights: [100, 100, 100, 100],
+                name, group, slug, complexity,
+                weights: [300, 300, 300, 300],
                 playCount: [0, 0, 0, 0],
                 lastPlayed: ["", "", "", ""]
             });
@@ -209,6 +223,7 @@
         document.getElementById('charName').value = "";
         document.getElementById('charGroup').value = "";
         document.getElementById('charSlug').value = "";
+        document.getElementById('charComplexity').value = "";
         document.getElementById('formTitle').innerText = "Add New Hero";
         document.getElementById('cancelBtn').style.display = "none";
     }
@@ -318,7 +333,7 @@
                 const pick = picks.find(s => s.pIdx === pIdx);
                 const wasPicked = pick && pick.charName === char.name;
                 if (picks.some(s => s.pIdx === pIdx)) {
-                    char.weights[pIdx] = wasPicked ? Math.max(30, char.weights[pIdx] * 0.33) : Math.min(300, char.weights[pIdx] * 1.20);
+                    char.weights[pIdx] = wasPicked ? Math.max(30, char.weights[pIdx] * 0.33) : Math.min(500, char.weights[pIdx] * 1.20);
                 }
                 if (wasPicked) {
                     if (!char.playCount) char.playCount = [0,0,0,0];
@@ -333,132 +348,205 @@
         document.getElementById('results').innerHTML = `<p style="color:#28a745; text-align:center; font-weight:bold;">Legacy Stats Updated!</p>`;
     }
 
-    /* --- LIST & HELPERS --- */
-    function resetAllWeights() { if(confirm("Reset all probabilities to 100?")) { characters.forEach(c => c.weights = [100, 100, 100, 100]); db.ref('characters_v4').set(characters); } }
-    function resetAllStats() { if(confirm("Reset all play history?")) { characters.forEach(c => { c.playCount = [0,0,0,0]; c.lastPlayed = ["","","",""]; }); db.ref('characters_v4').set(characters); } }
-    function setSort(key) {
-    if (currentSort === key) {
-        sortAsc = !sortAsc;
-    } else {
-        currentSort = key;
-        sortAsc = !key.startsWith('d') && !key.startsWith('w');
+    /* DICE BAR LIST LOGIC */
+    // Initialize with all levels (1-6) active by default
+    let activeLevels = new Set([1, 2, 3, 4, 5, 6]);
+
+    function initDiceFilter() {
+        // Apply the 'active-die' class to all dice on load
+        activeLevels.forEach(level => {
+            const die = document.getElementById(`dice-${level}`);
+            if (die) die.classList.add('active-die');
+        });
     }
 
-    // 1. Clear all active states and arrows
-    document.querySelectorAll('.btn-mini-sort').forEach(btn => {
-        btn.classList.remove('active');
-        // Reset text to original (removing any existing arrows)
-        if (btn.id === 'sort-name') btn.innerText = 'Name';
-//        if (btn.id === 'sort-group') btn.innerText = '\u{1F465}';
-        if (btn.id.includes('w')) btn.innerText = '%';
-        if (btn.id.includes('d')) btn.innerText = '\u{1F4C5}';
-    });
-
-    // 2. Highlight the clicked button
-    const activeBtn = document.getElementById(`sort-${key}`);
-    if (activeBtn) {
-        activeBtn.classList.add('active');
-        // 3. Add the directional arrow
-        const arrow = sortAsc ? ' ▲' : ' ▼';
-        activeBtn.innerText += arrow;
-    }
-
-    renderList();
-}
-
-function renderList() {
-    const container = document.getElementById('heroContainer');
-    
-    // 1. Capture the search term (ensure you have an input with id="hero-search")
-    const searchTerm = document.getElementById('hero-search')?.value.toLowerCase() || "";
-
-    // 2. Calculate totals from the FULL 'characters' array
-    // This ensures percentages remain relative to the whole pool, even when filtering.
-    const totals = [0, 1, 2, 3].map(i => characters.reduce((sum, c) => sum + c.weights[i], 0));
-
-    // 3. Filter the characters based on the search term
-    const filtered = characters.filter(c => {
-        const nameMatch = c.name.toLowerCase().includes(searchTerm);
-        const groupMatch = (c.group || "").toLowerCase().includes(searchTerm);
-        return nameMatch || groupMatch;
-    });
-
-    // 3.5 Update the Counter UI
-    const count = document.getElementById('count-stats');
-    if (count) {
-        count.innerText = `Showing ${filtered.length} of ${characters.length} heroes`;
-    }
-
-    // 4. Sort the FILTERED list
-    const sorted = [...filtered].sort((a, b) => {
-        let valA, valB;
-
-        if (currentSort.startsWith('w')) {
-            // Probability Weight Sort
-            const idx = parseInt(currentSort[1]);
-            valA = a.weights[idx]; valB = b.weights[idx];
-        } 
-        else if (currentSort.startsWith('d')) {
-            // Date Sort
-            const idx = parseInt(currentSort[1]);
-            valA = (a.lastPlayed && a.lastPlayed[idx]) || "";
-            valB = (b.lastPlayed && b.lastPlayed[idx]) || "";
-            
-            // Treat "Never" or empty as empty string so it sorts to the bottom
-            if (valA === "Never") valA = "";
-            if (valB === "Never") valB = "";
-        } 
-        else {
-            // Text Sort (Name/Group)
-            valA = (a[currentSort] || "").toLowerCase(); 
-            valB = (b[currentSort] || "").toLowerCase();
+    function toggleLevel(level) {
+        if (level === 'all') {
+            // If "ALL" is clicked, reset the set to include all 6 levels
+            activeLevels = new Set([1, 2, 3, 4, 5, 6]);
+        } else {
+            // Normal toggle logic for individual dice
+            if (activeLevels.has(level)) {
+                activeLevels.delete(level);
+            } else {
+                activeLevels.add(level);
+            }
         }
 
-        if (valA < valB) return sortAsc ? -1 : 1;
-        if (valA > valB) return sortAsc ? 1 : -1;
-        return 0;
-    });
+        // Refresh the visuals for all dice based on the current Set
+        updateDiceVisuals();
 
-    // 5. Generate the HTML for the sorted and filtered list
-    container.innerHTML = sorted.map(c => {
-        const counts = c.playCount || [0,0,0,0];
-        const dates = c.lastPlayed || ["Never", "Never", "Never", "Never"];
+        // Trigger your render function to update the list
+        if (typeof renderList === "function") renderList();
+    }
+
+    function updateDiceVisuals() {
+        // 1. Update individual level dice (1-6)
+        for (let i = 1; i <= 6; i++) {
+            const die = document.getElementById(`dice-${i}`);
+            if (die) {
+                if (activeLevels.has(i)) {
+                    die.classList.add('active-die');
+                } else {
+                    die.classList.remove('active-die');
+                }
+            }
+        }
+
+        // 2. Update the "ALL" dice state
+        const allDie = document.getElementById('dice-all');
+        if (allDie) {
+            // Active only if the Set contains all 6 levels
+            if (activeLevels.size === 6) {
+                allDie.classList.add('active-die');
+            } else {
+                allDie.classList.remove('active-die');
+            }
+        }
+    }
+
+    // Ensure visuals are correct when the page loads
+    window.addEventListener('DOMContentLoaded', updateDiceVisuals);
+
+    /* --- LIST & HELPERS --- */
+    function resetAllWeights() { if(confirm("Reset all probabilities to 100?")) { characters.forEach(c => c.weights = [100, 100, 100, 100]); db.ref('characters_v4').set(characters); } }
+
+    function resetAllStats() { if(confirm("Reset all play history?")) { characters.forEach(c => { c.playCount = [0,0,0,0]; c.lastPlayed = ["","","",""]; }); db.ref('characters_v4').set(characters); } }
+
+    function setSort(key) {
+        if (currentSort === key) {
+            sortAsc = !sortAsc;
+        } else {
+            currentSort = key;
+            sortAsc = !key.startsWith('d') && !key.startsWith('w');
+        }
+
+        // 1. Clear all active states and arrows
+        document.querySelectorAll('.btn-mini-sort').forEach(btn => {
+            btn.classList.remove('active');
+            // Reset text to original (removing any existing arrows)
+            if (btn.id === 'sort-name') btn.innerText = 'Name';
+    //        if (btn.id === 'sort-group') btn.innerText = '\u{1F465}';
+            if (btn.id.includes('w')) btn.innerText = '%';
+            if (btn.id.includes('d')) btn.innerText = '\u{1F4C5}';
+        });
+
+        // 2. Highlight the clicked button
+        const activeBtn = document.getElementById(`sort-${key}`);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+            // 3. Add the directional arrow
+            const arrow = sortAsc ? ' ▲' : ' ▼';
+            activeBtn.innerText += arrow;
+        }
+
+        renderList();
+    }
+
+    function renderList() {
+        const container = document.getElementById('heroContainer');
         
-        // Find the index in the ORIGINAL array so the Edit button works correctly
-        const realIdx = characters.findIndex(orig => orig.name === c.name);
+        // 1. Capture the search term (ensure you have an input with id="hero-search")
+        const searchTerm = document.getElementById('hero-search')?.value.toLowerCase() || "";
 
-        return `
-        <div class="char-item">
-            <button class="btn-edit-small" onclick="editChar(${realIdx})" style="display: none;">EDIT</button>
-            <div class="hero-main-info">
-                <a href="${getHeroLink(c.slug)}" target="_blank">
-                    <img src="${getImgUrl(c.slug)}" class="list-thumb">
-                </a>
-            </div>
-            <div class="hero-details">
-                <div class="hero-header">
-                    <span class="hero-name">${c.name}</span>
-                    <span class="group-label"> (${c.group || 'Season ?'})</span>
+        // 2. Calculate totals from the FULL 'characters' array
+        // This ensures percentages remain relative to the whole pool, even when filtering.
+        const totals = [0, 1, 2, 3].map(i => characters.reduce((sum, c) => sum + c.weights[i], 0));
+
+        // 3. Filter the characters based on the search term
+            const filtered = characters.filter(c => {
+                const nameMatch = c.name.toLowerCase().includes(searchTerm);
+                const groupMatch = (c.group || "").toLowerCase().includes(searchTerm);
+                
+                // Check if the hero's complexity is in our active filters
+                // We use Number() because the complexity might be stored as a string
+                const complexityMatch = activeLevels.has(Number(c.complexity));
+
+                return (nameMatch || groupMatch) && complexityMatch;
+    });
+//        const filtered = characters.filter(c => {
+//            const nameMatch = c.name.toLowerCase().includes(searchTerm);
+//            const groupMatch = (c.group || "").toLowerCase().includes(searchTerm);
+//            return nameMatch || groupMatch;
+//        });
+
+        // 3.5 Update the Counter UI
+        const count = document.getElementById('count-stats');
+        if (count) {
+            count.innerText = `Showing ${filtered.length} of ${characters.length} heroes`;
+        }
+
+        // 4. Sort the FILTERED list
+        const sorted = [...filtered].sort((a, b) => {
+            let valA, valB;
+
+            if (currentSort.startsWith('w')) {
+                // Probability Weight Sort
+                const idx = parseInt(currentSort[1]);
+                valA = a.weights[idx]; valB = b.weights[idx];
+            } 
+            else if (currentSort.startsWith('d')) {
+                // Date Sort
+                const idx = parseInt(currentSort[1]);
+                valA = (a.lastPlayed && a.lastPlayed[idx]) || "";
+                valB = (b.lastPlayed && b.lastPlayed[idx]) || "";
+                
+                // Treat "Never" or empty as empty string so it sorts to the bottom
+                if (valA === "Never") valA = "";
+                if (valB === "Never") valB = "";
+            } 
+            else {
+                // Text Sort (Name/Group)
+                valA = (a[currentSort] || "").toLowerCase(); 
+                valB = (b[currentSort] || "").toLowerCase();
+            }
+
+            if (valA < valB) return sortAsc ? -1 : 1;
+            if (valA > valB) return sortAsc ? 1 : -1;
+            return 0;
+        });
+
+        // 5. Generate the HTML for the sorted and filtered list
+        container.innerHTML = sorted.map(c => {
+            const counts = c.playCount || [0,0,0,0];
+            const dates = c.lastPlayed || ["Never", "Never", "Never", "Never"];
+            
+            // Find the index in the ORIGINAL array so the Edit button works correctly
+            const realIdx = characters.findIndex(orig => orig.name === c.name);
+
+            return `
+            <div class="char-item">
+                <button class="btn-edit-small" onclick="editChar(${realIdx})" style="display: none;">EDIT</button>
+                <div class="hero-main-info">
+                    <a href="${getHeroLink(c.slug)}" target="_blank">
+                        <img src="${getImgUrl(c.slug)}" class="list-thumb">
+                    </a>
                 </div>
-                <div class="stats-grid">
-                    ${[0,1,2,3].map(i => `
-                        <div class="player-stat-box" style="border-left-color: ${PLAYER_COLORS[i]}">
-                            <div class="stat-row">
-                                <span class="stat-label">${NAMES[i]} %</span>
-                                <span class="stat-value">${totals[i] > 0 ? ((c.weights[i]/totals[i])*100).toFixed(2) : '0.00'}%</span>
+                <div class="hero-details">
+                    <div class="hero-header">
+                        <span><img src="images/d${c.complexity}.png" width="20" height="20" title="Complexity: ${c.complexity}"></span>
+                        <span class="hero-name"> ${c.name}</span>
+                        <span class="group-label"> (${c.group || 'Season ?'}) </span>
+                    </div>
+                    <div class="stats-grid">
+                        ${[0,1,2,3].map(i => `
+                            <div class="player-stat-box" style="border-left-color: ${PLAYER_COLORS[i]}">
+                                <div class="stat-row">
+                                    <span class="stat-label">${NAMES[i]} %</span>
+                                    <span class="stat-value">${totals[i] > 0 ? ((c.weights[i]/totals[i])*100).toFixed(2) : '0.00'}%</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Plays</span>
+                                    <span class="stat-value">${counts[i]}</span>
+                                </div>
+                                <span class="stat-date">${dates[i] || 'Never'}</span>
                             </div>
-                            <div class="stat-row">
-                                <span class="stat-label">Plays</span>
-                                <span class="stat-value">${counts[i]}</span>
-                            </div>
-                            <span class="stat-date">${dates[i] || 'Never'}</span>
-                        </div>
-                    `).join('')}
+                        `).join('')}
+                    </div>
                 </div>
-            </div>
-        </div>`;
-    }).join('');
-}
+            </div>`;
+        }).join('');
+    }
 
     init();
 </script>
