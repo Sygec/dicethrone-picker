@@ -89,6 +89,16 @@
                 </div>
             </div>
         </div>
+        <div class="dice-filter-section" style="margin-bottom: 20px;">
+            <div class="dice-bar">
+                <img src="images/d1.png" class="dice-icon" id="dice-1" onclick="toggleLevel(1)" title="Level 1">
+                <img src="images/d2.png" class="dice-icon" id="dice-2" onclick="toggleLevel(2)" title="Level 2">
+                <img src="images/d3.png" class="dice-icon" id="dice-3" onclick="toggleLevel(3)" title="Level 3">
+                <img src="images/d4.png" class="dice-icon" id="dice-4" onclick="toggleLevel(4)" title="Level 4">
+                <img src="images/d5.png" class="dice-icon" id="dice-5" onclick="toggleLevel(5)" title="Level 5">
+                <img src="images/d6.png" class="dice-icon" id="dice-6" onclick="toggleLevel(6)" title="Level 6">
+            </div>
+        </div>
         <div class="search-container" style="margin-bottom: 30px; margin-top: 15px; text-align: center">
             <input type="text" id="hero-search" placeholder="Search Heroes or Groups..." 
                 oninput="renderList()" 
@@ -332,6 +342,42 @@
         document.getElementById('confirmBtn').style.display = 'none';
         document.getElementById('results').innerHTML = `<p style="color:#28a745; text-align:center; font-weight:bold;">Legacy Stats Updated!</p>`;
     }
+
+    /* DICE BAR LIST LOGIC */
+    // Initialize with all levels (1-6) active by default
+    let activeLevels = new Set([1, 2, 3, 4, 5, 6]);
+
+    function initDiceFilter() {
+        // Apply the 'active-die' class to all dice on load
+        activeLevels.forEach(level => {
+            const die = document.getElementById(`dice-${level}`);
+            if (die) die.classList.add('active-die');
+        });
+    }
+
+    function toggleLevel(level) {
+        const die = document.getElementById(`dice-${level}`);
+
+        if (activeLevels.has(level)) {
+            // If it's already there, remove it
+            activeLevels.delete(level);
+            die.classList.remove('active-die');
+        } else {
+            // If it's not there, add it
+            activeLevels.add(level);
+            die.classList.add('active-die');
+        }
+
+        console.log("Current active levels:", Array.from(activeLevels));
+        
+        // Trigger renderList to update the view (when you're ready to add the filter logic)
+        if (typeof renderList === "function") {
+            renderList();
+        }
+    }
+
+    // Ensure visuals are correct when the page loads
+    window.addEventListener('DOMContentLoaded', initDiceFilter);
 
     /* --- LIST & HELPERS --- */
     function resetAllWeights() { if(confirm("Reset all probabilities to 100?")) { characters.forEach(c => c.weights = [100, 100, 100, 100]); db.ref('characters_v4').set(characters); } }
