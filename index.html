@@ -8,14 +8,15 @@
 
     <script>
         // Check if we are running locally
-        const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+        // const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+        const isProd = window.location.hostname === "dicethrone-picker.pages.dev" || window.location.hostname === "sygec.github.io"; 
         
         // Create a new link element
         const themeLink = document.createElement('link');
         themeLink.rel = 'stylesheet';
         
         // Assign the file path based on the hostname
-        themeLink.href = isLocal ? 'style-dev.css' : 'style-prod.css';
+        themeLink.href = isProd ? 'style-prod.css' : 'style-dev.css';
         
         // Append it to the head
         document.head.appendChild(themeLink);
@@ -139,8 +140,7 @@
     const devFirebaseConfig = {apiKey: "AIzaSyDIrNnHU5TkKuXCsZJpuLHxzbhfhIV9KXk", authDomain: "dicethrone-dev.firebaseapp.com", projectId: "dicethrone-dev", storageBucket: "dicethrone-dev.firebasestorage.app", messagingSenderId: "139571744700", appId: "1:139571744700:web:5d9755e7a7fa2a5711e5b9"};
     
     // Choose the config based on where the app is running
-    // const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-    const selectedConfig = isLocal ? devFirebaseConfig : prodFirebaseConfig;
+    const selectedConfig = isProd ? prodFirebaseConfig : devFirebaseConfig;
 
     // Initialize Firebase with the selected config
     firebase.initializeApp(selectedConfig);
@@ -333,7 +333,7 @@
                 const pick = picks.find(s => s.pIdx === pIdx);
                 const wasPicked = pick && pick.charName === char.name;
                 if (picks.some(s => s.pIdx === pIdx)) {
-                    char.weights[pIdx] = wasPicked ? Math.max(30, char.weights[pIdx] * 0.33) : Math.min(500, char.weights[pIdx] * 1.20);
+                    char.weights[pIdx] = wasPicked ? 20 : char.weights[pIdx] + 10;
                 }
                 if (wasPicked) {
                     if (!char.playCount) char.playCount = [0,0,0,0];
@@ -533,7 +533,7 @@
                             <div class="player-stat-box" style="border-left-color: ${PLAYER_COLORS[i]}">
                                 <div class="stat-row">
                                     <span class="stat-label">${NAMES[i]} %</span>
-                                    <span class="stat-value">${totals[i] > 0 ? ((c.weights[i]/totals[i])*100).toFixed(2) : '0.00'}%</span>
+                                    <span class="stat-value">${totals[i] > 0 ? ((c.weights[i]/totals[i])*100).toFixed(2) : '0.00'}% (${c.weights[i].toFixed(0)})</span>
                                 </div>
                                 <div class="stat-row">
                                     <span class="stat-label">Plays</span>
