@@ -360,28 +360,46 @@
         });
     }
 
+    // ****************************************** 
+    // toggleLevel(level)
+    // input: level -> dice number
+    // ****************************************** 
+    // This function will manage the Set used to determine which dice are active and which are not
+    // ****************************************** 
     function toggleLevel(level) {
         if (level === 'all') {
-            // If "ALL" is clicked, reset the set to include all 6 levels
-            activeLevels = new Set([1, 2, 3, 4, 5, 6]);
+            //if clicking the ALL dice
+            if (activeLevels.size === 6) {
+                //if all dice are active
+                activeLevels = new Set([]);  //reset Set to empty, i.e. set all dice to disabled
+            } else {
+                // otherwise, reset the Set to include all 6 levels, i.e. all deice active
+                activeLevels = new Set([1, 2, 3, 4, 5, 6]);
+            }
         } else {
-            // Normal toggle logic for individual dice
+            // clicking a number dice
             if (activeLevels.has(level)) {
+                // if set includes this dice, i.e. dice is active then remove from Set
                 activeLevels.delete(level);
             } else {
+                // otherwise add dice to set to activate it
                 activeLevels.add(level);
             }
         }
-
-        // Refresh the visuals for all dice based on the current Set
+        // refresh the visuals for all dice based on the current Set
         updateDiceVisuals();
-
-        // Trigger your render function to update the list
+        // trigger your render function to update the list
         if (typeof renderList === "function") renderList();
     }
 
+    // ****************************************** 
+    // updateDiceVisuals()
+    // input: none
+    // ****************************************** 
+    // This function will manage the visuals of the dice bar, setting to active if part of Set 
+    // ****************************************** 
     function updateDiceVisuals() {
-        // 1. Update individual level dice (1-6)
+        // update state of 6 "number" dice
         for (let i = 1; i <= 6; i++) {
             const die = document.getElementById(`dice-${i}`);
             if (die) {
@@ -392,11 +410,10 @@
                 }
             }
         }
-
-        // 2. Update the "ALL" dice state
+        // update state of the "ALL" dice
         const allDie = document.getElementById('dice-all');
         if (allDie) {
-            // Active only if the Set contains all 6 levels
+            // cctive only if the Set contains all 6 levels
             if (activeLevels.size === 6) {
                 allDie.classList.add('active-die');
             } else {
