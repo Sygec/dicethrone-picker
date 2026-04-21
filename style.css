@@ -496,7 +496,21 @@
         max-width: 500px;
         position: relative;
         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        max-height: 80vh; /* Limits height to 80% of the screen height */
+        overflow-y: auto; /* Adds a scrollbar only if content is too long */
+        display: flex;
+        flex-direction: column;
         }
+
+        /* Optional: Make the header stay at the top while you scroll */
+/*        .modal-content h2 {
+        position: sticky;
+        top: 0;
+        background: white;
+        padding-bottom: 10px;
+        margin-top: 0;
+        z-index: 1;
+        }*/
 
         /* The Close Button (X) */
         .close-button {
@@ -511,4 +525,19 @@
 
         .close-button:hover {
         color: #000;
+        }
+
+        /* Mobile Optimization */
+        @media screen and (max-width: 600px) {
+        .modal-content {
+        width: 90%; /* Much narrower side margins */
+        margin: 20% auto; /* Brings the modal slightly higher on the screen */
+        padding: 15px; /* Slightly less padding to save space */
+        }
+
+        .close-button {
+        top: 5px;
+        right: 15px;
+        font-size: 32px; /* Makes the X easier to tap with a thumb */
+        }
         }
