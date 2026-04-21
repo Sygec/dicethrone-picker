@@ -76,7 +76,8 @@
         <label class="p-chk"><span class="player-tag" style="background:var(--p2)">Joel</span> <input type="checkbox" id="use1" checked></label>
         <label class="p-chk"><span class="player-tag" style="background:var(--p3)">Julie</span> <input type="checkbox" id="use2" checked></label>
         <label class="p-chk"><span class="player-tag" style="background:var(--p4)">Martin</span> <input type="checkbox" id="use3" checked></label>
-        <label class="p-chk"><span class="player-tag" style="background:var(--p5)">Invitee</span> <input type="checkbox" id="use4"></label>
+        <label class="p-chk"><span class="player-tag" style="background:var(--p5)">Invitee 1</span> <input type="checkbox" id="use4"></label>
+        <label class="p-chk"><span class="player-tag" style="background:var(--p5)">Invitee 2</span> <input type="checkbox" id="use5"></label>
     </div>
 
     <div id="results" class="results"><p style="text-align: center; opacity: 0.6;">Select players and roll.</p></div>
@@ -210,7 +211,7 @@
     // Keep your existing database reference
     const db = firebase.database();
 
-    const NAMES = ["Claudine", "Joel", "Julie", "Martin", "Invitee"];
+    const NAMES = ["Claudine", "Joel", "Julie", "Martin", "Invitee 1", "Invitee 2"];
     const PLAYER_COLORS = ['var(--p1)', 'var(--p2)', 'var(--p3)', 'var(--p4)'];
     let characters = [];
     let currentSort = 'name';
@@ -292,21 +293,29 @@
 
     /* --- ROLLING LOGIC --- */
     function pickCharacters() {
+        // reset active array
         let active = [];
-        NAMES.forEach((_, i) => { if(document.getElementById(`use${i}`).checked) active.push(i); });
-        if(active.length === 0) return alert("Select players!");
+        NAMES.forEach((_, i) => {                                   // for every person in the NAMES const array, i = 0 to 5
+            if(document.getElementById(`use${i}`).checked) 
+                active.push(i);                                     // active array will contain the id of the checked boxes
+            });
+        if(active.length === 0) return alert("Select players!");  
         
-        active = active.sort(() => Math.random() - 0.5);
-        const resultsDiv = document.getElementById('results');
-        resultsDiv.innerHTML = '';
-        let pool = JSON.parse(JSON.stringify(characters));
+        active = active.sort(() => Math.random() - 0.5);            // shuffle the active keys
+        const resultsDiv = document.getElementById('results');      // get the results section
+        resultsDiv.innerHTML = '';                                  // reset/blank result innerHTML
+        let pool = JSON.parse(JSON.stringify(characters));          // set "pool" to all characters??
 
-        active.forEach(pIdx => {
-            let selectedName = "";
-            if (pIdx === 4) { // Invitee
-                const r = Math.floor(Math.random() * pool.length);
+        active.forEach(pIdx => {                                    // for every item in "active", i.e. all ids of checked box
+            let selectedName = "";                                  
+            if (pIdx === 4)  {                       // Invitee 1 or Invitee 2 roll
+                console.log("pool.lenght: ", pool.length);
+                const r = Math.floor(Math.random() * pool.length);  // get a random number 
                 selectedName = pool[r]?.name;
+                console.log("selectedName: ",selectedName)
+                console.log(pool);
                 pool.splice(r, 1);
+                console.log(pool);
             } else { // Scaled Random
                 const activePool = pool.filter(c => c.weights[pIdx] > 0);
                 let totalScaled = activePool.reduce((sum, c) => sum + (c.weights[pIdx] / (((c.playCount?.[pIdx]) || 0) + 1)), 0);
