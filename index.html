@@ -303,44 +303,40 @@
         // reset active array
         let active = [];
         NAMES.forEach((_, i) => {                                   // for every person in the NAMES const array, i = 0 to 5
-            if(document.getElementById(`use${i}`).checked) 
-                active.push(i);                                     // active array will contain the id of the checked boxes
+            if(document.getElementById(`use${i}`).checked)          // if the checkbox for this person is checked, i.e. player is active
+                active.push(i);                                     // add the index of this person to the "active" array, i.e. active will be an array of the indexes of the players that are active, e.g. [0,2,4] if Claudine, Julie and Invitee 1 are selected
             });
-        if(active.length === 0) return alert("Select players!");  
+        if(active.length === 0) return alert("Select players!");    // if no players are selected, alert and exit function
         
-        active = active.sort(() => Math.random() - 0.5);            // shuffle the active keys
-        const resultsDiv = document.getElementById('results');      // get the results section
-        resultsDiv.innerHTML = '';                                  // reset/blank result innerHTML
-        let pool = JSON.parse(JSON.stringify(characters));          // set "pool" to all characters??
+        active = active.sort(() => Math.random() - 0.5);            // randomize order of active players so rolls are in random order each time
+        const resultsDiv = document.getElementById('results');      // get the div where results are rendered
+        resultsDiv.innerHTML = '';                                  // clear previous results so we can render new ones
+        let pool = JSON.parse(JSON.stringify(characters));          // create a copy of the characters array to manipulate for this roll, we will remove characters from this pool as they are selected to avoid duplicates in the random selection process, but we want to keep the original "characters" array intact for reference and for the list rendering
 
-        active.forEach(pIdx => {                                    // for every item in "active", i.e. all ids of checked box
-            let selectedName = "";                                  
-            if (pIdx === 4)  {                       // Invitee 1 or Invitee 2 roll
-                console.log("pool.lenght: ", pool.length);
-                const r = Math.floor(Math.random() * pool.length);  // get a random number 
-                selectedName = pool[r]?.name;
-                console.log("selectedName: ",selectedName)
-                console.log(pool);
-                pool.splice(r, 1);
-                console.log(pool);
-            } else { // Scaled Random
-                const activePool = pool.filter(c => c.weights[pIdx] > 0);
-                let totalScaled = activePool.reduce((sum, c) => sum + (c.weights[pIdx] / (((c.playCount?.[pIdx]) || 0) + 1)), 0);
-                let rand = Math.random() * totalScaled;
-                let runningSum = 0;
-                for(let c of activePool) {
-                    runningSum += (c.weights[pIdx] / (((c.playCount?.[pIdx]) || 0) + 1));
-                    if(rand <= runningSum) { 
-                        selectedName = c.name; 
-                        pool.splice(pool.findIndex(p => p.name === selectedName), 1);
-                        break; 
+        active.forEach(pIdx => {                                    // for each active player index, e.g. 0 for Claudine, 2 for Julie, etc
+            let selectedName = "";                                  // initialize variable to hold the name of the character that will be selected for this player
+            if ((pIdx === 4) || (pIdx === 5)) {                     // if this is an invitee slot, select purely random from the pool without weighting, to give them a "wild card" feel and avoid accidentally punishing them with high weights on characters that the main 4 players have played a lot
+                const r = Math.floor(Math.random() * pool.length);  // select a random index from the pool
+                selectedName = pool[r]?.name;                       // get the name of the character at that index
+                pool.splice(r, 1);                                  // remove that character from the pool to avoid duplicates, this modifies the pool array in place
+            } else {                                                // for the main 4 players, we want to weight the random selection based on the weights in the characters array, which are influenced by past play history to encourage variety and reduce repeats. The weighting formula is: weight / (playCount + 1) so that characters that have been played more often will have their effective weight reduced, but they won't be completely removed from the pool unless their weight is 0
+                const activePool = pool.filter(c => c.weights[pIdx] > 0); // create a temporary pool of only characters that have a weight greater than 0 for this player, this is the pool that the random selection will be made from, if a character has a weight of 0 for this player it means they have been played so much that we want to temporarily remove them from the random selection to give other characters a better chance to be selected
+                let totalScaled = activePool.reduce((sum, c) => sum + (c.weights[pIdx] / (((c.playCount?.[pIdx]) || 0) + 1)), 0); // calculate the total of the scaled weights for the active pool, this is used to determine the range of the random number for selection, we sum up the scaled weights which are calculated as weight / (playCount + 1) to give a fair chance to characters that have been played less often
+                let rand = Math.random() * totalScaled;             // generate a random number between 0 and the total of the scaled weights, this will be used to select a character from the active pool based on their weighted probability
+                let runningSum = 0;                                 // initialize a running sum variable to keep track of the cumulative probability as we iterate through the active pool, we will add the scaled weight of each character to this running sum until it exceeds the random number, at which point we know that the current character is the one that has been selected based on the weighted probabilities 
+                for(let c of activePool) {                          // iterate through each character in the active pool
+                    runningSum += (c.weights[pIdx] / (((c.playCount?.[pIdx]) || 0) + 1)); // add the scaled weight of this character to the running sum
+                    if(rand <= runningSum) {                        // if the random number is less than or equal to the running sum, it means we have found our selected character based on the weighted probabilities
+                        selectedName = c.name;                      // set the selected name to this character's name   
+                        pool.splice(pool.findIndex(p => p.name === selectedName), 1); // remove this character from the pool to avoid duplicates in the selection for the next players, we find the index of this character in the original pool and remove it using splice, this modifies the pool array in place
+                        break;                                      // break out of the loop since we have found our selected character for this player
                     }
                 }
             }
-            renderPlayerRow(pIdx, selectedName);
+            renderPlayerRow(pIdx, selectedName);                    // call the function to render the selected character for this player in the results div, passing the player index and the name of the selected character
         });
-        validateSelection(); // Run validation after roll
-        document.getElementById('confirmBtn').style.display = 'block';
+        validateSelection();                                        // after all players have been assigned a character and rendered, call the validation function to check for any duplicates in the selections (in case of manual changes with the dropdowns) and enable/disable the confirm button accordingly
+        document.getElementById('confirmBtn').style.display = 'block';  // show the confirm button so the user can lock in their session after rolling, this button is hidden by default and only shown after a roll to encourage users to roll before confirming, and to prevent confusion about when the button should be used
     }
 
     function renderPlayerRow(pIdx, selectedName) {
@@ -348,11 +344,15 @@
         const resultsDiv = document.getElementById('results');
         const plays = (charData?.playCount && charData.playCount[pIdx]) || 0;
         const last = (charData?.lastPlayed && charData.lastPlayed[pIdx]) || "Never";
+        const complexity = charData?.complexity ? ` (Complexity: ${charData.complexity})` : "";
 
         resultsDiv.innerHTML += `
             <div class="player-row">
                 <a href="${getHeroLink(charData?.slug)}" target="_blank" id="link-${pIdx}">
-                    <img src="${getImgUrl(charData?.slug)}" class="char-img-roll" id="img-${pIdx}">
+                    <div class="char-complexity-roll">
+                        <img src="${getImgUrl(charData?.slug)}" class="char-img-roll" id="img-${pIdx}">
+                        <img src="images/d${charData?.complexity}.png" class="complexity-roll" alt="Complexity">
+                    </div>
                 </a>
                 <div style="flex:1">
                     <div style="margin-bottom:5px; display:flex; justify-content:space-between; align-items:center;">
@@ -362,6 +362,7 @@
                     <select class="char-select" data-player="${pIdx}" onchange="handleDropdownChange(this)">
                         ${[...characters]
                             .sort((a, b) => a.name.localeCompare(b.name))
+//                            .map(c => `<option value="${c.name}" ${c.name === selectedName ? 'selected' : ''}>${c.name}&ensp;&ensp;&ensp;&ensp;&ensp;(Plays: ${c.playCount?.[pIdx] || '0'}&ensp;Last: ${c.lastPlayed?.[pIdx] || 'Never'})</option>`)
                             .map(c => `<option value="${c.name}" ${c.name === selectedName ? 'selected' : ''}>${c.name}</option>`)
                             .join('')}
                     </select>
