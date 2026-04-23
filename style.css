@@ -66,12 +66,26 @@
                 margin-bottom: 8px;
         }
 
+        .char-complexity-roll {
+                position: relative;
+        }
+
         .char-img-roll {
                 width: 65px;
                 height: 65px;
                 border-radius: 8px;
                 object-fit: cover;
                 border: 1px solid var(--accent);
+                display: block;
+        }
+
+        .complexity-roll {
+                width: 25px;
+                height: 25px;
+                position: absolute;
+                bottom: -5px;
+                right: -5px;
+                z-index: 10;
         }
 
         .roll-stats {
@@ -496,6 +510,10 @@
         max-width: 500px;
         position: relative;
         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        max-height: 80vh; /* Limits height to 80% of the screen height */
+        overflow-y: auto; /* Adds a scrollbar only if content is too long */
+        display: flex;
+        flex-direction: column;
         }
 
         /* The Close Button (X) */
@@ -511,4 +529,19 @@
 
         .close-button:hover {
         color: #000;
+        }
+
+        /* Mobile Optimization */
+        @media screen and (max-width: 600px) {
+        .modal-content {
+        width: 90%; /* Much narrower side margins */
+        margin: 20% auto; /* Brings the modal slightly higher on the screen */
+        padding: 15px; /* Slightly less padding to save space */
+        }
+
+        .close-button {
+        top: 5px;
+        right: 15px;
+        font-size: 32px; /* Makes the X easier to tap with a thumb */
+        }
         }

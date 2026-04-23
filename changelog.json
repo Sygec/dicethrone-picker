@@ -1,0 +1,26 @@
+[
+  {
+    "version": "1.1.2.20260423",
+    "changes": ["Added 2 invitee interface changes", "Added complexity dice to roll section", "Modified change log display", "Code cleanup"]
+  },
+  {
+    "version": "1.1.1.20260419",
+    "changes": ["Fixed 'ALL' dice toggle"]
+  },
+  {
+    "version": "1.1.0.20260419",
+    "changes": ["Updated to new weight system", "Picked heroes drop to weight 20, all others gain 10, no ceiling"]
+  },
+  {
+    "version": "1.0.2.20260416",
+    "changes": ["Added new search bar", "Moved form to add hero to admin section", "Other minor tweaks to sort section and search bar"]
+  },
+  {
+    "version": "1.0.1.20260415",
+    "changes": ["Added button to sort by dates", "Updated sort section entirely"]
+  },
+  {
+    "version": "1.0.0.20260414",
+    "changes": ["Original version"]
+  }
+]

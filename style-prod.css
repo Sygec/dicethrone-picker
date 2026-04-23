@@ -6,7 +6,7 @@
             --secondary: #0f3460;
             --danger: #941b2d;
             --edit: #f39c12;
-            --p1: #4ecca3; --p2: #45b7d1; --p3: #9b59b6; --p4: #f1c40f; --p5: #a2a2a2;
+            --p1: #4ecca3; --p2: #45b7d1; --p3: #9b59b6; --p4: #f1c40f; --p5: #a2a2a2; --p6: #a2a2a2;
         }
 
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 20px; display: flex; flex-direction: column; align-items: center; }

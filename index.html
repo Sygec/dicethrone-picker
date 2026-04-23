@@ -6,77 +6,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dice Throne</title>
 
+    <!-- Stylesheets: We will dynamically load either the production or development stylesheet based on the hostname -->
     <script>
-        // Check if we are running locally
-        // const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+        // Check if this is Production or Local environment based on hostname
         const isProd = window.location.hostname === "dicethrone-picker.pages.dev" || window.location.hostname === "sygec.github.io"; 
         
         // Create a new link element
         const themeLink = document.createElement('link');
         themeLink.rel = 'stylesheet';
-        
-        // Assign the file path based on the hostname
+        // Assign the file path based on if this is prod or dev
         themeLink.href = isProd ? 'style-prod.css' : 'style-dev.css';
-        
         // Append it to the head
         document.head.appendChild(themeLink);
     </script>
-
+    <!-- Additionnally, link the common stylesheet -->
     <link rel="stylesheet" type="text/css" href="style.css">
 
 </head>
+
 <body>
 
 <div class="container">
     <h1>Dice Throne</h1>
-    <p style="text-align: center;">Latest version: <span id="version-number" style="cursor: pointer; text-decoration: underline;">1.1.1.20260419</span></p>
+    <p align="center">v<span id="version-number" style="cursor: pointer; text-decoration: underline;">...</span></p>
 
-        <div id="changelog-modal" class="modal">
-            <div class="modal-content">
-                <span class="close-button">&times;</span>
-                <h2>Change Log</h2>
-                <hr>
-                <ul>
-                <li><strong>v1.1.1.20260419</strong>
-                    <ul>
-                        <li>Fixed "ALL" dice toggle</li>
-                    </ul>
-                </li>
-                <li><strong>v1.1.0.20260419</strong>
-                    <ul>
-                        <li>Updated to new weight system</li>
-                        <li>Picked heroes drop to weight 20, all others gain 10, no ceiling</li>
-                    </ul>
-                </li>
-                <li><strong>v1.0.2.20260416</strong>
-                    <ul>
-                        <li>Added new search bar</li>
-                        <li>Moved form to add hero to admin section</li>
-                        <li>Other minor tweaks to sort section and search bar</li>
-
-                    </ul>
-                </li>
-                <li><strong>v1.0.1.20260415</strong>
-                    <ul>
-                        <li>Added button to sort by dates</li>
-                        <li>Updated sort section entirely</li>
-                    </ul>
-                </li>
-                <li><strong>v1.0.0.20260414</strong>
-                    <ul>
-                        <li>Original version</li>
-                    </ul>
-                </li>
-                </ul>
-            </div>
-        </div>    
+    <div id="changelog-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h2>Change Log</h2>
+        <hr>
+        <div id="changelog-container"></div>
+    </div>
+    </div>   
     
     <div class="player-toggle-zone">
         <label class="p-chk"><span class="player-tag" style="background:var(--p1)">Claudine</span> <input type="checkbox" id="use0" checked></label>
         <label class="p-chk"><span class="player-tag" style="background:var(--p2)">Joel</span> <input type="checkbox" id="use1" checked></label>
         <label class="p-chk"><span class="player-tag" style="background:var(--p3)">Julie</span> <input type="checkbox" id="use2" checked></label>
         <label class="p-chk"><span class="player-tag" style="background:var(--p4)">Martin</span> <input type="checkbox" id="use3" checked></label>
-        <label class="p-chk"><span class="player-tag" style="background:var(--p5)">Invitee</span> <input type="checkbox" id="use4"></label>
+        <label class="p-chk"><span class="player-tag" style="background:var(--p5)">Invitee 1</span> <input type="checkbox" id="use4"></label>
+        <label class="p-chk"><span class="player-tag" style="background:var(--p5)">Invitee 2</span> <input type="checkbox" id="use5"></label>
     </div>
 
     <div id="results" class="results"><p style="text-align: center; opacity: 0.6;">Select players and roll.</p></div>
@@ -177,25 +146,64 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <script>
+    
+    // Global variable to store the log once it's fetched
+    let cachedChangelog = null;
+
+    const versionLabel = document.getElementById("version-number");
+    const container = document.getElementById("changelog-container");
     const modal = document.getElementById("changelog-modal");
-    const versionBtn = document.getElementById("version-number");
     const closeBtn = document.querySelector(".close-button");
 
-    // Open the modal when the version number is clicked
-    versionBtn.onclick = function() {
+    // 1. Fetch data as soon as the page loads
+    async function initializeApp() {
+    try {
+        const response = await fetch('changelog.json');
+        cachedChangelog = await response.json();
+
+        // Set the label to the latest version in the JSON
+        if (cachedChangelog.length > 0) {
+        versionLabel.innerText = cachedChangelog[0].version;
+        }
+    } catch (error) {
+        console.error("Could not load version number:", error);
+        versionLabel.innerText = "Error";
+    }
+    }
+
+    // 2. Function to build the list and show the modal
+    function openChangelog() {
+    if (!cachedChangelog) return; // Wait if data isn't loaded yet
+
+    container.innerHTML = ''; // Clear old content
+    cachedChangelog.forEach(entry => {
+        const section = document.createElement('div');
+        section.innerHTML = `
+        <h3>v${entry.version}</h3>
+        <ul>
+            ${entry.changes.map(change => `<li>${change}</li>`).join('')}
+        </ul>
+        `;
+        container.appendChild(section);
+    });
+
     modal.style.display = "block";
+    document.body.style.overflow = "hidden"; // Stops background scrolling
     }
 
-    // Close the modal when clicking the (x)
-    closeBtn.onclick = function() {
+    function closeChangelog() {
     modal.style.display = "none";
+    document.body.style.overflow = "auto"; // Restores background scrolling
     }
 
-    // Close the modal when clicking anywhere outside of the modal content
-    window.onclick = function(event) {
-    if (event.target == modal) {
-        modal.style.display = "none";
-    }
+    // 3. Event Listeners
+    window.addEventListener('DOMContentLoaded', initializeApp);
+    versionLabel.onclick = openChangelog;
+    closeBtn.onclick = closeChangelog;
+
+    // Close if user clicks the dark background
+    window.onclick = (event) => {
+    if (event.target == modal) closeChangelog();
     }
 
     const prodFirebaseConfig = {apiKey: "AIzaSyDxBCHqFOr3K-Vh4-KeTAUt2UM03DJ60nE", authDomain: "dicethrone-ba1f1.firebaseapp.com", databaseURL: "https://dicethrone-ba1f1-default-rtdb.firebaseio.com", projectId: "dicethrone-ba1f1", storageBucket: "dicethrone-ba1f1.firebasestorage.app", messagingSenderId: "580487401452", appId: "1:580487401452:web:94d49e4bff6f3815b63ac9"};
@@ -210,7 +218,7 @@
     // Keep your existing database reference
     const db = firebase.database();
 
-    const NAMES = ["Claudine", "Joel", "Julie", "Martin", "Invitee"];
+    const NAMES = ["Claudine", "Joel", "Julie", "Martin", "Invitee 1", "Invitee 2"];
     const PLAYER_COLORS = ['var(--p1)', 'var(--p2)', 'var(--p3)', 'var(--p4)'];
     let characters = [];
     let currentSort = 'name';
@@ -292,39 +300,43 @@
 
     /* --- ROLLING LOGIC --- */
     function pickCharacters() {
+        // reset active array
         let active = [];
-        NAMES.forEach((_, i) => { if(document.getElementById(`use${i}`).checked) active.push(i); });
-        if(active.length === 0) return alert("Select players!");
+        NAMES.forEach((_, i) => {                                   // for every person in the NAMES const array, i = 0 to 5
+            if(document.getElementById(`use${i}`).checked)          // if the checkbox for this person is checked, i.e. player is active
+                active.push(i);                                     // add the index of this person to the "active" array, i.e. active will be an array of the indexes of the players that are active, e.g. [0,2,4] if Claudine, Julie and Invitee 1 are selected
+            });
+        if(active.length === 0) return alert("Select players!");    // if no players are selected, alert and exit function
         
-        active = active.sort(() => Math.random() - 0.5);
-        const resultsDiv = document.getElementById('results');
-        resultsDiv.innerHTML = '';
-        let pool = JSON.parse(JSON.stringify(characters));
+        active = active.sort(() => Math.random() - 0.5);            // randomize order of active players so rolls are in random order each time
+        const resultsDiv = document.getElementById('results');      // get the div where results are rendered
+        resultsDiv.innerHTML = '';                                  // clear previous results so we can render new ones
+        let pool = JSON.parse(JSON.stringify(characters));          // create a copy of the characters array to manipulate for this roll, we will remove characters from this pool as they are selected to avoid duplicates in the random selection process, but we want to keep the original "characters" array intact for reference and for the list rendering
 
-        active.forEach(pIdx => {
-            let selectedName = "";
-            if (pIdx === 4) { // Invitee
-                const r = Math.floor(Math.random() * pool.length);
-                selectedName = pool[r]?.name;
-                pool.splice(r, 1);
-            } else { // Scaled Random
-                const activePool = pool.filter(c => c.weights[pIdx] > 0);
-                let totalScaled = activePool.reduce((sum, c) => sum + (c.weights[pIdx] / (((c.playCount?.[pIdx]) || 0) + 1)), 0);
-                let rand = Math.random() * totalScaled;
-                let runningSum = 0;
-                for(let c of activePool) {
-                    runningSum += (c.weights[pIdx] / (((c.playCount?.[pIdx]) || 0) + 1));
-                    if(rand <= runningSum) { 
-                        selectedName = c.name; 
-                        pool.splice(pool.findIndex(p => p.name === selectedName), 1);
-                        break; 
+        active.forEach(pIdx => {                                    // for each active player index, e.g. 0 for Claudine, 2 for Julie, etc
+            let selectedName = "";                                  // initialize variable to hold the name of the character that will be selected for this player
+            if ((pIdx === 4) || (pIdx === 5)) {                     // if this is an invitee slot, select purely random from the pool without weighting, to give them a "wild card" feel and avoid accidentally punishing them with high weights on characters that the main 4 players have played a lot
+                const r = Math.floor(Math.random() * pool.length);  // select a random index from the pool
+                selectedName = pool[r]?.name;                       // get the name of the character at that index
+                pool.splice(r, 1);                                  // remove that character from the pool to avoid duplicates, this modifies the pool array in place
+            } else {                                                // for the main 4 players, we want to weight the random selection based on the weights in the characters array, which are influenced by past play history to encourage variety and reduce repeats. The weighting formula is: weight / (playCount + 1) so that characters that have been played more often will have their effective weight reduced, but they won't be completely removed from the pool unless their weight is 0
+                const activePool = pool.filter(c => c.weights[pIdx] > 0); // create a temporary pool of only characters that have a weight greater than 0 for this player, this is the pool that the random selection will be made from, if a character has a weight of 0 for this player it means they have been played so much that we want to temporarily remove them from the random selection to give other characters a better chance to be selected
+                let totalScaled = activePool.reduce((sum, c) => sum + (c.weights[pIdx] / (((c.playCount?.[pIdx]) || 0) + 1)), 0); // calculate the total of the scaled weights for the active pool, this is used to determine the range of the random number for selection, we sum up the scaled weights which are calculated as weight / (playCount + 1) to give a fair chance to characters that have been played less often
+                let rand = Math.random() * totalScaled;             // generate a random number between 0 and the total of the scaled weights, this will be used to select a character from the active pool based on their weighted probability
+                let runningSum = 0;                                 // initialize a running sum variable to keep track of the cumulative probability as we iterate through the active pool, we will add the scaled weight of each character to this running sum until it exceeds the random number, at which point we know that the current character is the one that has been selected based on the weighted probabilities 
+                for(let c of activePool) {                          // iterate through each character in the active pool
+                    runningSum += (c.weights[pIdx] / (((c.playCount?.[pIdx]) || 0) + 1)); // add the scaled weight of this character to the running sum
+                    if(rand <= runningSum) {                        // if the random number is less than or equal to the running sum, it means we have found our selected character based on the weighted probabilities
+                        selectedName = c.name;                      // set the selected name to this character's name   
+                        pool.splice(pool.findIndex(p => p.name === selectedName), 1); // remove this character from the pool to avoid duplicates in the selection for the next players, we find the index of this character in the original pool and remove it using splice, this modifies the pool array in place
+                        break;                                      // break out of the loop since we have found our selected character for this player
                     }
                 }
             }
-            renderPlayerRow(pIdx, selectedName);
+            renderPlayerRow(pIdx, selectedName);                    // call the function to render the selected character for this player in the results div, passing the player index and the name of the selected character
         });
-        validateSelection(); // Run validation after roll
-        document.getElementById('confirmBtn').style.display = 'block';
+        validateSelection();                                        // after all players have been assigned a character and rendered, call the validation function to check for any duplicates in the selections (in case of manual changes with the dropdowns) and enable/disable the confirm button accordingly
+        document.getElementById('confirmBtn').style.display = 'block';  // show the confirm button so the user can lock in their session after rolling, this button is hidden by default and only shown after a roll to encourage users to roll before confirming, and to prevent confusion about when the button should be used
     }
 
     function renderPlayerRow(pIdx, selectedName) {
@@ -332,11 +344,15 @@
         const resultsDiv = document.getElementById('results');
         const plays = (charData?.playCount && charData.playCount[pIdx]) || 0;
         const last = (charData?.lastPlayed && charData.lastPlayed[pIdx]) || "Never";
+        const complexity = charData?.complexity ? ` (Complexity: ${charData.complexity})` : "";
 
         resultsDiv.innerHTML += `
             <div class="player-row">
                 <a href="${getHeroLink(charData?.slug)}" target="_blank" id="link-${pIdx}">
-                    <img src="${getImgUrl(charData?.slug)}" class="char-img-roll" id="img-${pIdx}">
+                    <div class="char-complexity-roll">
+                        <img src="${getImgUrl(charData?.slug)}" class="char-img-roll" id="img-${pIdx}">
+                        <img src="images/d${charData?.complexity}.png" class="complexity-roll" alt="Complexity">
+                    </div>
                 </a>
                 <div style="flex:1">
                     <div style="margin-bottom:5px; display:flex; justify-content:space-between; align-items:center;">
@@ -346,6 +362,7 @@
                     <select class="char-select" data-player="${pIdx}" onchange="handleDropdownChange(this)">
                         ${[...characters]
                             .sort((a, b) => a.name.localeCompare(b.name))
+//                            .map(c => `<option value="${c.name}" ${c.name === selectedName ? 'selected' : ''}>${c.name}&ensp;&ensp;&ensp;&ensp;&ensp;(Plays: ${c.playCount?.[pIdx] || '0'}&ensp;Last: ${c.lastPlayed?.[pIdx] || 'Never'})</option>`)
                             .map(c => `<option value="${c.name}" ${c.name === selectedName ? 'selected' : ''}>${c.name}</option>`)
                             .join('')}
                     </select>
