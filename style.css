@@ -70,6 +70,10 @@
                 position: relative;
         }
 
+        .char-complexity-db {
+                position: relative;
+        }
+
         .char-img-roll {
                 width: 65px;
                 height: 65px;
@@ -299,6 +303,7 @@
                 font-variant-caps: all-small-caps;
                 font-size: 0.8rem;
                 display: inline flow-root;
+                padding-top: 10px;
         }
 
         .stats-grid {

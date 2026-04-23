@@ -535,74 +535,59 @@
             const arrow = sortAsc ? ' ▲' : ' ▼';
             activeBtn.innerText += arrow;
         }
-
         renderList();
     }
 
+    // ****************************************** 
+    // renderList()
+    // input: none
+    // ****************************************** 
+    // Renders the list of heroes in the database section based on the current search term, 
+    // the active dice filters, and the current sort settings. This function is called whenever 
+    // any of those parameters change to update the displayed list accordingly.
+    // ****************************************** 
     function renderList() {
-        const container = document.getElementById('heroContainer');
-        
-        // 1. Capture the search term (ensure you have an input with id="hero-search")
-        const searchTerm = document.getElementById('hero-search')?.value.toLowerCase() || "";
-
-        // 2. Calculate totals from the FULL 'characters' array
-        // This ensures percentages remain relative to the whole pool, even when filtering.
-        const totals = [0, 1, 2, 3].map(i => characters.reduce((sum, c) => sum + c.weights[i], 0));
-
-        // 3. Filter the characters based on the search term
-            const filtered = characters.filter(c => {
-                const nameMatch = c.name.toLowerCase().includes(searchTerm);
-                const groupMatch = (c.group || "").toLowerCase().includes(searchTerm);
-                
-                // Check if the hero's complexity is in our active filters
-                // We use Number() because the complexity might be stored as a string
-                const complexityMatch = activeLevels.has(Number(c.complexity));
-
-                return (nameMatch || groupMatch) && complexityMatch;
-    });
-//        const filtered = characters.filter(c => {
-//            const nameMatch = c.name.toLowerCase().includes(searchTerm);
-//            const groupMatch = (c.group || "").toLowerCase().includes(searchTerm);
-//            return nameMatch || groupMatch;
-//        });
-
-        // 3.5 Update the Counter UI
-        const count = document.getElementById('count-stats');
-        if (count) {
-            count.innerText = `Showing ${filtered.length} of ${characters.length} heroes`;
+        const container = document.getElementById('heroContainer');  // get the container element where the hero list will be rendered
+        const searchTerm = document.getElementById('hero-search')?.value.toLowerCase() || "";  // get the value of the search input and convert to lowercase for case-insensitive matching, if the element doesn't exist default to an empty string
+        // Calculate totals for each player index across all characters for percentage calculations
+        const totals = [0, 1, 2, 3].map(i => characters.reduce((sum, c) => sum + c.weights[i], 0));  // create an array of totals for each player index by reducing the full characters array, summing up the weights for each player index across all characters, this is used to calculate the percentages for the stats display in the list, and ensures that the percentages are always relative to the entire pool of characters, even after filtering, so that players can see how their stats compare to the overall distribution in the database
+        // Filter the characters based on the search term and active complexity filters
+        const filtered = characters.filter(c => {   // filter the characters array to only include characters that match the search term in either their name or group, and also match the active complexity filters
+            const nameMatch = c.name.toLowerCase().includes(searchTerm);            // Check if the character's name includes the search term (case-insensitive)
+            const groupMatch = (c.group || "").toLowerCase().includes(searchTerm);  // Check if the character's group includes the search term (case-insensitive), if group is undefined use empty string to avoid errors
+            const complexityMatch = activeLevels.has(Number(c.complexity));         // Check if the character's complexity level is in the activeLevels Set, converting to Number to ensure correct type comparison
+            return (nameMatch || groupMatch) && complexityMatch;                    // Return true if either the name or group matches the search term AND the complexity level matches the active filters, this means that the character will only be included in the filtered list if it satisfies both the search criteria and the complexity filter criteria
+        });
+        // Update the count of shown heroes vs total heroes in the database
+        const count = document.getElementById('count-stats');                               // Get the element that displays the count of shown heroes
+        if (count) {    // If the element exists, update its text to show how many heroes are currently displayed out of the total number of heroes in the database, this gives users immediate feedback on how their search and filter criteria are affecting the list
+            count.innerText = `Showing ${filtered.length} of ${characters.length} heroes`;  // Set the text to show the count of filtered heroes and total heroes
         }
-
-        // 4. Sort the FILTERED list
+        // Sort the filtered list based on the current sort settings
         const sorted = [...filtered].sort((a, b) => {
             let valA, valB;
-
-            if (currentSort.startsWith('w')) {
-                // Probability Weight Sort
-                const idx = parseInt(currentSort[1]);
-                valA = a.weights[idx]; valB = b.weights[idx];
+            if (currentSort.startsWith('w')) {                          // If sorting by weight, we need to sort based on the specific player's weight at the index indicated by currentSort[1]
+                const idx = parseInt(currentSort[1]);                   // Extract the player index from the sort key, e.g. 'w0' -> 0 for Claudine, 'w1' -> 1 for Joel, etc.
+                valA = a.weights[idx]; valB = b.weights[idx];           // Get the weight values for the specified player index from both characters to compare for sorting
             } 
-            else if (currentSort.startsWith('d')) {
-                // Date Sort
-                const idx = parseInt(currentSort[1]);
-                valA = (a.lastPlayed && a.lastPlayed[idx]) || "";
-                valB = (b.lastPlayed && b.lastPlayed[idx]) || "";
-                
-                // Treat "Never" or empty as empty string so it sorts to the bottom
-                if (valA === "Never") valA = "";
+            else if (currentSort.startsWith('d')) {                     // If sorting by date, we need to sort based on the specific player's last played date at the index indicated by currentSort[1]
+                const idx = parseInt(currentSort[1]);                   // Extract the player index from the sort key, e.g. 'd0' -> 0 for Claudine, 'd1' -> 1 for Joel, etc.
+                valA = (a.lastPlayed && a.lastPlayed[idx]) || "";       // Get the last played date for the specified player index from both characters to compare for sorting, if lastPlayed or the specific index is undefined, default to an empty string to avoid errors
+                valB = (b.lastPlayed && b.lastPlayed[idx]) || "";       // Get the last played date for the specified player index from both characters to compare for sorting, if lastPlayed or the specific index is undefined, default to an empty string to avoid errors
+                if (valA === "Never") valA = "";                        // If the date is "Never", treat it as an empty string for sorting purposes so that characters that have never been played will be sorted together, this ensures that "Never" dates are consistently sorted either at the beginning or end of the list depending on the sort direction, rather than being treated as a string that could be sorted in an unexpected position
                 if (valB === "Never") valB = "";
             } 
-            else {
-                // Text Sort (Name/Group)
-                valA = (a[currentSort] || "").toLowerCase(); 
+            else {                                                      // For regular string sorting (e.g. name, group), we can just compare the strings directly, converting to lowercase for case-insensitive sorting
+                valA = (a[currentSort] || "").toLowerCase();            // Get the value of the current sort key from both characters to compare for sorting, if the value is undefined default to an empty string to avoid errors, convert to lowercase for case-insensitive sorting
                 valB = (b[currentSort] || "").toLowerCase();
             }
 
-            if (valA < valB) return sortAsc ? -1 : 1;
-            if (valA > valB) return sortAsc ? 1 : -1;
-            return 0;
+            if (valA < valB) return sortAsc ? -1 : 1;                   // If valA is less than valB, return -1 for ascending sort or 1 for descending sort to position a before b or b before a accordingly
+            if (valA > valB) return sortAsc ? 1 : -1;                   // If valA is greater than valB, return 1 for ascending sort or -1 for descending sort to position b before a or a before b accordingly
+            return 0;                                                   // If valA and valB are equal, return 0 to keep their relative order unchanged, this ensures a stable sort where characters with the same value for the sort key will maintain their order relative to each other from the original array, which can be important for user experience when sorting by different keys multiple times
         });
 
-        // 5. Generate the HTML for the sorted and filtered list
+        // Generate the HTML for the sorted and filtered list
         container.innerHTML = sorted.map(c => {
             const counts = c.playCount || [0,0,0,0];
             const dates = c.lastPlayed || ["Never", "Never", "Never", "Never"];
@@ -615,14 +600,16 @@
                 <button class="btn-edit-small" onclick="editChar(${realIdx})" style="display: none;">EDIT</button>
                 <div class="hero-main-info">
                     <a href="${getHeroLink(c.slug)}" target="_blank">
-                        <img src="${getImgUrl(c.slug)}" class="list-thumb">
+                        <div class="char-complexity-db">
+                            <img src="${getImgUrl(c.slug)}" class="char-img-roll">
+                            <img src="images/d${c.complexity}.png" class="complexity-roll">
+                        </div>
                     </a>
+                    <span class="group-label"> (${c.group || 'Season ?'}) </span>
                 </div>
                 <div class="hero-details">
                     <div class="hero-header">
-                        <span><img src="images/d${c.complexity}.png" width="20" height="20" title="Complexity: ${c.complexity}"></span>
                         <span class="hero-name"> ${c.name}</span>
-                        <span class="group-label"> (${c.group || 'Season ?'}) </span>
                     </div>
                     <div class="stats-grid">
                         ${[0,1,2,3].map(i => `
