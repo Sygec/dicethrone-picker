@@ -25,122 +25,140 @@
 </head>
 
 <body>
+    <div class="container">
+        <h1>Dice Throne</h1>
+        <div class="small-text">v<span id="version-number" style="cursor: pointer; text-decoration: underline;">...</span></div>
 
-<div class="container">
-    <h1>Dice Throne</h1>
-    <p align="center">v<span id="version-number" style="cursor: pointer; text-decoration: underline;">...</span></p>
+        <!-- Modal section for the change log, initially hidden and only shown when the version number is clicked. The content of the modal will be dynamically generated based on the changelog.json file. -->
+        <div id="changelog-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Change Log</h2>
+            <hr>
+            <div id="changelog-container"></div>
+        </div>
+        </div>   
+        
+        <!-- Section for toggling which players are active in the randomizer, with checkboxes for each player. By default, the first 4 players are checked and the invitee slots are unchecked -->
+        <!-- The player names and colors are defined in the NAMES and PLAYER_COLORS constants in the script. -->
+        <div class="player-toggle-zone">
+            <label class="p-chk"><span class="player-tag" style="background:var(--p1)">Claudine</span> <input type="checkbox" id="use0" checked></label>
+            <label class="p-chk"><span class="player-tag" style="background:var(--p2)">Joel</span> <input type="checkbox" id="use1" checked></label>
+            <label class="p-chk"><span class="player-tag" style="background:var(--p3)">Julie</span> <input type="checkbox" id="use2" checked></label>
+            <label class="p-chk"><span class="player-tag" style="background:var(--p4)">Martin</span> <input type="checkbox" id="use3" checked></label>
+            <label class="p-chk"><span class="player-tag" style="background:var(--p5)">Invitee 1</span> <input type="checkbox" id="use4"></label>
+            <label class="p-chk"><span class="player-tag" style="background:var(--p5)">Invitee 2</span> <input type="checkbox" id="use5"></label>
+        </div>
 
-    <div id="changelog-modal" class="modal">
-    <div class="modal-content">
-        <span class="close-button">&times;</span>
-        <h2>Change Log</h2>
-        <hr>
-        <div id="changelog-container"></div>
-    </div>
-    </div>   
-    
-    <div class="player-toggle-zone">
-        <label class="p-chk"><span class="player-tag" style="background:var(--p1)">Claudine</span> <input type="checkbox" id="use0" checked></label>
-        <label class="p-chk"><span class="player-tag" style="background:var(--p2)">Joel</span> <input type="checkbox" id="use1" checked></label>
-        <label class="p-chk"><span class="player-tag" style="background:var(--p3)">Julie</span> <input type="checkbox" id="use2" checked></label>
-        <label class="p-chk"><span class="player-tag" style="background:var(--p4)">Martin</span> <input type="checkbox" id="use3" checked></label>
-        <label class="p-chk"><span class="player-tag" style="background:var(--p5)">Invitee 1</span> <input type="checkbox" id="use4"></label>
-        <label class="p-chk"><span class="player-tag" style="background:var(--p5)">Invitee 2</span> <input type="checkbox" id="use5"></label>
-    </div>
+        <!-- Div where the results of the randomizer roll will be rendered, initially showing a prompt to select players and roll. -->
+        <!-- After rolling, this section will display the assigned characters for each active player, along with dropdowns to manually change the selection if desired, 
+             and stats about past plays for the main 4 players. -->
+        <div id="results" class="results"><p style="text-align: center; opacity: 0.6;">Select players and roll.</p></div>
 
-    <div id="results" class="results"><p style="text-align: center; opacity: 0.6;">Select players and roll.</p></div>
+        <!-- Error message that is shown if there are duplicate characters selected for the active players, this is hidden by default and only shown 
+             if the validation function detects duplicates in the selections, either from the initial roll or from manual changes with the dropdowns.
+             The confirm button is also disabled in this case to prevent locking in a session with duplicate characters. -->
+        <div id="error-msg">⚠ Duplicate hero selected! Each player must have a unique character.</div>
 
-    <div id="error-msg">⚠ Duplicate hero selected! Each player must have a unique character.</div>
-    <button id="rollBtn" onclick="pickCharacters()">ROLL RANDOMIZER</button>
-    <button id="confirmBtn" class="btn-confirm" onclick="applyResults()">LOCK IN SESSION</button>
+        <!-- Button to roll the randomizer, which calls the pickCharacters function to perform the random selection and render the results. -->
+        <button id="rollBtn" onclick="pickCharacters()">ROLL RANDOMIZER</button>
+        <!-- Button to confirm the selections and apply the results, which calls the applyResults function to update the weights and stats in the database based on the selected characters for each player -->
+        <!-- This button is hidden by default and only shown after a roll to encourage users to roll before confirming, and to prevent confusion about when the button should be used. -->
+        <button id="confirmBtn" class="btn-confirm" onclick="applyResults()">LOCK IN SESSION</button>
 
-    <button class="db-toggle-btn" onclick="toggleDatabase()">📂 Show Hero Database & Stats</button>
+        <!-- Button to toggle the visibility of the hero database and stats section -->
+        <button class="db-toggle-btn" onclick="toggleDatabase()">📂 Show Hero Database & Stats</button>
 
-    <div id="dbSection">
-        <div class="sort-controls">
-            <div class="sort-row">
-
-                <div class="player-card-mini">
-                    <span class="mini-name"> </span>
-                    <div class="mini-actions">
-                        <button class="btn-mini-sort" id="sort-name" onclick="setSort('name')">Name</button>
+        <!-- Sorting controls for the hero database section, allowing sorting by name, weight in percentage and last played date for each player. -->
+        <div id="dbSection">
+            <div class="sort-controls">
+                <div class="sort-row">
+                    <div class="player-card-mini">
+                        <span class="mini-name"> </span>
+                        <div class="mini-actions">
+                            <button class="btn-mini-sort" id="sort-name" onclick="setSort('name')">Name</button>
+                        </div>
                     </div>
-                </div>
-
-                <div class="player-card-mini" style="border-left-color: var(--p1);">
-                    <span class="mini-name">Claudine</span>
-                    <div class="mini-actions">
-                        <button class="btn-mini-sort" id="sort-w0" onclick="setSort('w0')">%</button>
-                        <button class="btn-mini-sort" id="sort-d0" onclick="setSort('d0')">&#128197;</button>
+                    <div class="player-card-mini" style="border-left-color: var(--p1);">
+                        <span class="mini-name">Claudine</span>
+                        <div class="mini-actions">
+                            <button class="btn-mini-sort" id="sort-w0" onclick="setSort('w0')">%</button>
+                            <button class="btn-mini-sort" id="sort-d0" onclick="setSort('d0')">&#128197;</button>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="player-card-mini" style="border-left-color: var(--p2);">
-                    <span class="mini-name">Joel</span>
-                    <div class="mini-actions">
-                        <button class="btn-mini-sort" id="sort-w1" onclick="setSort('w1')">%</button>
-                        <button class="btn-mini-sort" id="sort-d1" onclick="setSort('d1')">&#128197;</button>
+                    <div class="player-card-mini" style="border-left-color: var(--p2);">
+                        <span class="mini-name">Joel</span>
+                        <div class="mini-actions">
+                            <button class="btn-mini-sort" id="sort-w1" onclick="setSort('w1')">%</button>
+                            <button class="btn-mini-sort" id="sort-d1" onclick="setSort('d1')">&#128197;</button>
+                        </div>
                     </div>
-                </div>
-
-                <div class="player-card-mini" style="border-left-color: var(--p3);">
-                    <span class="mini-name">Julie</span>
-                    <div class="mini-actions">
-                        <button class="btn-mini-sort" id="sort-w2" onclick="setSort('w2')">%</button>
-                        <button class="btn-mini-sort" id="sort-d2" onclick="setSort('d2')">&#128197;</button>
+                    <div class="player-card-mini" style="border-left-color: var(--p3);">
+                        <span class="mini-name">Julie</span>
+                        <div class="mini-actions">
+                            <button class="btn-mini-sort" id="sort-w2" onclick="setSort('w2')">%</button>
+                            <button class="btn-mini-sort" id="sort-d2" onclick="setSort('d2')">&#128197;</button>
+                        </div>
                     </div>
-                </div>
-
-                <div class="player-card-mini" style="border-left-color: var(--p4);">
-                    <span class="mini-name">Martin</span>
-                    <div class="mini-actions">
-                        <button class="btn-mini-sort" id="sort-w3" onclick="setSort('w3')">%</button>
-                        <button class="btn-mini-sort" id="sort-d3" onclick="setSort('d3')">&#128197;</button>
+                    <div class="player-card-mini" style="border-left-color: var(--p4);">
+                        <span class="mini-name">Martin</span>
+                        <div class="mini-actions">
+                            <button class="btn-mini-sort" id="sort-w3" onclick="setSort('w3')">%</button>
+                            <button class="btn-mini-sort" id="sort-d3" onclick="setSort('d3')">&#128197;</button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="dice-filter-section" style="margin-bottom: 20px;">
-            <div class="dice-bar">
-                <img src="images/d1.png" class="dice-icon" id="dice-1" onclick="toggleLevel(1)" title="Level 1">
-                <img src="images/d2.png" class="dice-icon" id="dice-2" onclick="toggleLevel(2)" title="Level 2">
-                <img src="images/d3.png" class="dice-icon" id="dice-3" onclick="toggleLevel(3)" title="Level 3">
-                <img src="images/d4.png" class="dice-icon" id="dice-4" onclick="toggleLevel(4)" title="Level 4">
-                <img src="images/d5.png" class="dice-icon" id="dice-5" onclick="toggleLevel(5)" title="Level 5">
-                <img src="images/d6.png" class="dice-icon" id="dice-6" onclick="toggleLevel(6)" title="Level 6">
-                <img src="images/d_all.png" class="dice-icon" id="dice-all" onclick="toggleLevel('all')" title="All Levels">
-            </div>
-        </div>
-        <div class="search-container" style="margin-bottom: 30px; margin-top: 15px; text-align: center">
-            <input type="text" id="hero-search" placeholder="Search Heroes or Groups..." 
-                oninput="renderList()" 
-                style="display: inline-block; width: 65%; padding: 10px; padding-right: 25px ; border-radius: 8px; border: 1px solid var(--secondary); background: lightgray; color: black; box-sizing: border-box;">
-            <div id="count-stats" style="font-size: 0.8rem; opacity: 0.6; margin-top: 10px;">
-                Showing 0 of 0 heroes
-            </div>
-        </div>
-        <div id="heroContainer"></div>
-    </div>
 
-    <button class="admin-toggle-btn" onclick="toggleAdmin()">Show Admin Section</button>
-    <div id="adminSection">
-        <div class="manage-form">
-            <h3 id="formTitle" style="margin-top:0; font-size: 1rem; color: var(--accent);">Add New Hero</h3>
-            <div class="form-grid">
-                <input type="text" id="charName" placeholder="Hero Name">
-                <input type="text" id="charGroup" placeholder="Group (e.g. Season 1)">
-                <input type="text" id="charSlug" placeholder="Slug (for image)">
-                <input type="text" id="charComplexity" placeholder="Complexity level">
+            <!-- Dice filter section to filter the hero list by complexity level, with buttons for each level and an "ALL" button to toggle all levels on/off -->
+            <div class="dice-filter-section" style="margin-bottom: 20px;">
+                <div class="dice-bar">
+                    <img src="images/d1.png" class="dice-icon" id="dice-1" onclick="toggleLevel(1)" title="Level 1">
+                    <img src="images/d2.png" class="dice-icon" id="dice-2" onclick="toggleLevel(2)" title="Level 2">
+                    <img src="images/d3.png" class="dice-icon" id="dice-3" onclick="toggleLevel(3)" title="Level 3">
+                    <img src="images/d4.png" class="dice-icon" id="dice-4" onclick="toggleLevel(4)" title="Level 4">
+                    <img src="images/d5.png" class="dice-icon" id="dice-5" onclick="toggleLevel(5)" title="Level 5">
+                    <img src="images/d6.png" class="dice-icon" id="dice-6" onclick="toggleLevel(6)" title="Level 6">
+                    <img src="images/d_all.png" class="dice-icon" id="dice-all" onclick="toggleLevel('all')" title="All Levels">
+                </div>
             </div>
-            <button class="btn-save" id="saveBtn" onclick="saveCharacter()">Save Hero</button>
-            <button class="btn-cancel" id="cancelBtn" onclick="resetForm()" style="display:none;">Cancel Edit</button>
-        </div>        
-        <div style="margin-top:20px; border-top: 1px solid #ffffff22; padding-top:15px;">
-            <button class="btn-danger" onclick="resetAllWeights()">RESET PROBABILITIES TO 100</button>
-            <button class="btn-danger" onclick="resetAllStats()">RESET PLAY COUNTS & DATES</button>
+
+            <!---  Search bar to filter the hero list by name or group, with an input field that calls the renderList function on input to update the displayed list based on the search term. 
+                   The count-stats div below it shows how many heroes are currently displayed out of the total number of heroes in the database, this is also updated by the renderList
+                   function whenever the list is re-rendered. -->
+            <div class="search-container">
+                <input class="search-bar" type="text" id="hero-search" placeholder="Search Heroes or Groups..." oninput="renderList()">
+                <div class="small-text" id="count-stats">
+                    Showing 0 of 0 heroes
+                </div>
+            </div>
+            <!-- Hero container for displaying the filtered list -->
+            <div id="heroContainer"></div>
+        </div>
+
+        <!-- Admin section for adding new heroes to the database and resetting weights and stats, this section is hidden by default and can be toggled with the "Show Admin Section" button. 
+             The form allows entering the hero name, group, slug for the image and complexity level, and has a save button that calls the saveCharacter function to add the new hero to the database. 
+             If editing an existing hero, the form will populate with that hero's data and allow saving changes or canceling the edit. 
+             Below the form are buttons to reset all probabilities to 100 or reset all play counts and dates, which call their respective functions to update the database accordingly. -->
+        <button class="admin-toggle-btn" onclick="toggleAdmin()">Show Admin Section</button>
+        <div id="adminSection">
+            <div class="manage-form">
+                <h3 id="formTitle" style="margin-top:0; font-size: 1rem; color: var(--accent);">Add New Hero</h3>
+                <div class="form-grid">
+                    <input type="text" id="charName" placeholder="Hero Name">
+                    <input type="text" id="charGroup" placeholder="Group (e.g. Season 1)">
+                    <input type="text" id="charSlug" placeholder="Slug (for image)">
+                    <input type="text" id="charComplexity" placeholder="Complexity level">
+                </div>
+                <button class="btn-save" id="saveBtn" onclick="saveCharacter()">Save Hero</button>
+                <button class="btn-cancel" id="cancelBtn" onclick="resetForm()" style="display:none;">Cancel Edit</button>
+            </div>        
+            <div style="margin-top:20px; border-top: 1px solid #ffffff22; padding-top:15px;">
+                <button class="btn-danger" onclick="resetAllWeights()">RESET PROBABILITIES TO 100</button>
+                <button class="btn-danger" onclick="resetAllStats()">RESET PLAY COUNTS & DATES</button>
+            </div>
         </div>
     </div>
-</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
@@ -589,47 +607,51 @@
 
         // Generate the HTML for the sorted and filtered list
         container.innerHTML = sorted.map(c => {
+            //let activePlayers = [0, 1, 2, 3];
+            let activePlayers = [0,1,2,3].filter(i => c.weights[i] > 0); // Only show stats for players that have a weight greater than 0 for this character, this means that if a character has been heavily played by a specific player and has a weight of 0 for that player, their stats will be hidden from the list to avoid showing stale data for characters that are effectively "retired" for that player, while still showing stats for other players who may have a weight greater than 0 for that character
             const counts = c.playCount || [0,0,0,0];
             const dates = c.lastPlayed || ["Never", "Never", "Never", "Never"];
             
             // Find the index in the ORIGINAL array so the Edit button works correctly
             const realIdx = characters.findIndex(orig => orig.name === c.name);
 
+            // 
+            const statsHtml = activePlayers.map(p => `
+                        <div class="stat-column" style="border-top: 3px solid ${PLAYER_COLORS[p]}">
+                            <span class="mini-name">${NAMES[p]}</span>
+                            <div class="stat-main">
+                                ${totals[p] > 0 ? ((c.weights[p]/totals[p])*100).toFixed(1) : '0.0'}%
+                            </div>
+                            <div class="stat-sub">(${c.weights[p]})</div>
+                            <div class="stat-sub">Wins: ${c.wins ? c.wins[p] : 0}</div>
+                            <div class="stat-date-small">${dates[p] || 'Never'}</div>
+                        </div>
+            `).join('');
+
             return `
-            <div class="char-item">
-                <button class="btn-edit-small" onclick="editChar(${realIdx})" style="display: none;">EDIT</button>
-                <div class="hero-main-info">
-                    <a href="${getHeroLink(c.slug)}" target="_blank">
+
+                <div class="hero-header">
+                    <span class="hero-name">${c.name}</span>
+                </div>
+                
+                <div class="char-item">
+
+                    <div class="hero-main-info">
                         <div class="char-complexity-db">
                             <img src="${getImgUrl(c.slug)}" class="char-img-roll">
                             <img src="images/d${c.complexity}.png" class="complexity-roll">
                         </div>
-                    </a>
-                    <span class="group-label"> (${c.group || 'Season ?'}) </span>
-                </div>
-                <div class="hero-details">
-                    <div class="hero-header">
-                        <span class="hero-name"> ${c.name}</span>
+                        <span class="group-label">(${c.group || 'Season ?'})</span>
                     </div>
-                    <div class="stats-grid">
-                        ${[0,1,2,3].map(i => `
-                            <div class="player-stat-box" style="border-left-color: ${PLAYER_COLORS[i]}">
-                                <div class="stat-row">
-                                    <span class="stat-label">${NAMES[i]} %</span>
-                                    <span class="stat-value">${totals[i] > 0 ? ((c.weights[i]/totals[i])*100).toFixed(2) : '0.00'}% (${c.weights[i].toFixed(0)})</span>
-                                </div>
-                                <div class="stat-row">
-                                    <span class="stat-label">Plays</span>
-                                    <span class="stat-value">${counts[i]}</span>
-                                </div>
-                                <span class="stat-date">${dates[i] || 'Never'}</span>
-                            </div>
-                        `).join('')}
+                
+                    <div class="hero-details">
+                        <div class="dynamic-stats">
+                            ${statsHtml}
+                        </div>
                     </div>
-                </div>
-            </div>`;
-        }).join('');
-    }
+                </div>`;
+            }).join('');
+        }
 
     init();
 </script>
