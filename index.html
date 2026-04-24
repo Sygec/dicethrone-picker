@@ -637,10 +637,12 @@
                 <div class="hero-body">
 
                     <div class="hero-main-info">
-                        <div class="char-complexity-db">
-                            <img src="${getImgUrl(c.slug)}" class="char-img-roll">
-                            <img src="images/d${c.complexity}.png" class="complexity-roll">
-                        </div>
+                        <a href="${getHeroLink(c.slug)}" target="_blank">
+                            <div class="char-complexity-db">
+                                <img src="${getImgUrl(c.slug)}" class="char-img-roll">
+                                <img src="images/d${c.complexity}.png" class="complexity-roll">
+                            </div>
+                        </a>
                         <span class="group-label">(${c.group || 'Season ?'})</span>
                     </div>
                 
