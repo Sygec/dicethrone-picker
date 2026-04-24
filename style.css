@@ -331,8 +331,10 @@
         .group-label {
                 font-variant-caps: all-small-caps;
                 font-size: 0.8rem;
-                display: inline flow-root;
+                /*display: inline flow-root;*/
                 padding-top: 10px;
+                text-align: center;
+                display: block
         }
 
         .stats-grid {
@@ -578,4 +580,46 @@
         right: 15px;
         font-size: 32px; /* Makes the X easier to tap with a thumb */
         }
+        }
+
+        /* NEW SECTION PROVIDED BY GEMINI FOR DYNAMIC STATS DISPLAY */
+        /* The container for the player stats */
+        .dynamic-stats {
+        display: flex;
+        gap: 8px;
+        width: 100%;
+        /*margin-top: 10px;*/
+        justify-content: space-between;
+        }
+
+        /* The individual columns inside the container */
+        .stat-column {
+        flex: 1;                /* This makes columns share space equally */
+        min-width: 0;           /* Prevents columns from overflowing on small screens */
+        background: rgba(255, 255, 255, 0.05);
+        padding: 8px 4px;
+        border-radius: 6px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        }
+
+        .stat-main {
+        font-size: 0.9rem;
+        font-weight: bold;
+        color: var(--text);
+        }
+
+        .stat-sub {
+        font-size: 0.7rem;
+        opacity: 0.6;
+        }
+
+        .stat-date-small {
+        font-size: 0.6rem;
+        margin-top: 4px;
+        opacity: 0.4;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 2px;
         }

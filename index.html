@@ -607,47 +607,51 @@
 
         // Generate the HTML for the sorted and filtered list
         container.innerHTML = sorted.map(c => {
+            //let activePlayers = [0, 1, 2, 3];
+            let activePlayers = [0,1,2,3].filter(i => c.weights[i] > 0); // Only show stats for players that have a weight greater than 0 for this character, this means that if a character has been heavily played by a specific player and has a weight of 0 for that player, their stats will be hidden from the list to avoid showing stale data for characters that are effectively "retired" for that player, while still showing stats for other players who may have a weight greater than 0 for that character
             const counts = c.playCount || [0,0,0,0];
             const dates = c.lastPlayed || ["Never", "Never", "Never", "Never"];
             
             // Find the index in the ORIGINAL array so the Edit button works correctly
             const realIdx = characters.findIndex(orig => orig.name === c.name);
 
+            // 
+            const statsHtml = activePlayers.map(p => `
+                        <div class="stat-column" style="border-top: 3px solid ${PLAYER_COLORS[p]}">
+                            <span class="mini-name">${NAMES[p]}</span>
+                            <div class="stat-main">
+                                ${totals[p] > 0 ? ((c.weights[p]/totals[p])*100).toFixed(1) : '0.0'}%
+                            </div>
+                            <div class="stat-sub">(${c.weights[p]})</div>
+                            <div class="stat-sub">Wins: ${c.wins ? c.wins[p] : 0}</div>
+                            <div class="stat-date-small">${dates[p] || 'Never'}</div>
+                        </div>
+            `).join('');
+
             return `
-            <div class="char-item">
-                <button class="btn-edit-small" onclick="editChar(${realIdx})" style="display: none;">EDIT</button>
-                <div class="hero-main-info">
-                    <a href="${getHeroLink(c.slug)}" target="_blank">
+
+                <div class="hero-header">
+                    <span class="hero-name">${c.name}</span>
+                </div>
+                
+                <div class="char-item">
+
+                    <div class="hero-main-info">
                         <div class="char-complexity-db">
                             <img src="${getImgUrl(c.slug)}" class="char-img-roll">
                             <img src="images/d${c.complexity}.png" class="complexity-roll">
                         </div>
-                    </a>
-                    <span class="group-label"> (${c.group || 'Season ?'}) </span>
-                </div>
-                <div class="hero-details">
-                    <div class="hero-header">
-                        <span class="hero-name"> ${c.name}</span>
+                        <span class="group-label">(${c.group || 'Season ?'})</span>
                     </div>
-                    <div class="stats-grid">
-                        ${[0,1,2,3].map(i => `
-                            <div class="player-stat-box" style="border-left-color: ${PLAYER_COLORS[i]}">
-                                <div class="stat-row">
-                                    <span class="stat-label">${NAMES[i]} %</span>
-                                    <span class="stat-value">${totals[i] > 0 ? ((c.weights[i]/totals[i])*100).toFixed(2) : '0.00'}% (${c.weights[i].toFixed(0)})</span>
-                                </div>
-                                <div class="stat-row">
-                                    <span class="stat-label">Plays</span>
-                                    <span class="stat-value">${counts[i]}</span>
-                                </div>
-                                <span class="stat-date">${dates[i] || 'Never'}</span>
-                            </div>
-                        `).join('')}
+                
+                    <div class="hero-details">
+                        <div class="dynamic-stats">
+                            ${statsHtml}
+                        </div>
                     </div>
-                </div>
-            </div>`;
-        }).join('');
-    }
+                </div>`;
+            }).join('');
+        }
 
     init();
 </script>
