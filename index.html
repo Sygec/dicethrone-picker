@@ -27,7 +27,7 @@
 <body>
     <div class="container">
         <h1>Dice Throne</h1>
-        <div align="center">v<span id="version-number" style="cursor: pointer; text-decoration: underline;">...</span></div>
+        <div class="small-text">v<span id="version-number" style="cursor: pointer; text-decoration: underline;">...</span></div>
 
         <!-- Modal section for the change log, initially hidden and only shown when the version number is clicked. The content of the modal will be dynamically generated based on the changelog.json file. -->
         <div id="changelog-modal" class="modal">
@@ -126,11 +126,9 @@
             <!---  Search bar to filter the hero list by name or group, with an input field that calls the renderList function on input to update the displayed list based on the search term. 
                    The count-stats div below it shows how many heroes are currently displayed out of the total number of heroes in the database, this is also updated by the renderList
                    function whenever the list is re-rendered. -->
-            <div class="search-container" style="margin-bottom: 30px; margin-top: 15px; text-align: center">
-                <input type="text" id="hero-search" placeholder="Search Heroes or Groups..." 
-                    oninput="renderList()" 
-                    style="display: inline-block; width: 65%; padding: 10px; padding-right: 25px ; border-radius: 8px; border: 1px solid var(--secondary); background: lightgray; color: black; box-sizing: border-box;">
-                <div id="count-stats" style="font-size: 0.8rem; opacity: 0.6; margin-top: 10px;">
+            <div class="search-container">
+                <input class="search-bar" type="text" id="hero-search" placeholder="Search Heroes or Groups..." oninput="renderList()">
+                <div class="small-text" id="count-stats">
                     Showing 0 of 0 heroes
                 </div>
             </div>
