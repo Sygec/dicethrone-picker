@@ -277,7 +277,7 @@
                 font-size: 0.8rem;
         }
 
-        .char-item {
+        .hero-body {
                 background: var(--card-bg);
                 border-radius: 12px;
                 padding: 15px;
@@ -311,10 +311,12 @@
         }
 
         .hero-header {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-        }
+                text-align: left;
+                margin-bottom: -15px;
+                margin-left: 15px;
+                position: relative;
+                z-index: 2;
+        }       
 
         .hero-details {
                 flex: 1;
