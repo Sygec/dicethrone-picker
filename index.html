@@ -71,32 +71,40 @@
 
         <!-- Sorting controls for the hero database section, allowing sorting by name, weight in percentage and last played date for each player. -->
         <div id="dbSection">
-            <div class="sort-controls">
-                <div class="sort-row">
-                    <div id="player-sort-container" class="player-toggle-zone"></div>
-                </div>
-            </div>
-
-            <!-- Dice filter section to filter the hero list by complexity level, with buttons for each level and an "ALL" button to toggle all levels on/off -->
-            <div class="dice-filter-section" style="margin-bottom: 20px;">
-                <div class="dice-bar">
-                    <img src="images/d1.png" class="dice-icon" id="dice-1" onclick="toggleLevel(1)" title="Level 1">
-                    <img src="images/d2.png" class="dice-icon" id="dice-2" onclick="toggleLevel(2)" title="Level 2">
-                    <img src="images/d3.png" class="dice-icon" id="dice-3" onclick="toggleLevel(3)" title="Level 3">
-                    <img src="images/d4.png" class="dice-icon" id="dice-4" onclick="toggleLevel(4)" title="Level 4">
-                    <img src="images/d5.png" class="dice-icon" id="dice-5" onclick="toggleLevel(5)" title="Level 5">
-                    <img src="images/d6.png" class="dice-icon" id="dice-6" onclick="toggleLevel(6)" title="Level 6">
-                    <img src="images/d_all.png" class="dice-icon" id="dice-all" onclick="toggleLevel('all')" title="All Levels">
-                </div>
-            </div>
 
             <!---  Search bar to filter the hero list by name or group, with an input field that calls the renderList function on input to update the displayed list based on the search term. 
                    The count-stats div below it shows how many heroes are currently displayed out of the total number of heroes in the database, this is also updated by the renderList
                    function whenever the list is re-rendered. -->
             <div class="search-container">
-                <input class="search-bar" type="text" id="hero-search" placeholder="Search Heroes or Groups..." oninput="renderList()">
+                <div class="search-wrapper">
+                    <input class="search-bar" type="text" id="hero-search" placeholder="Search Heroes or Groups..." oninput="handleSearchInput()">
+                    <div class="search-actions">
+                        <img src="images/icons/close.png" id="clear-search" class="search-icon hidden" onclick="clearSearch()" alt="Clear" title="Clear Search">
+                        <img src="images/icons/sort.png" id="sort-toggle" class="search-icon" onclick="toggleSort()" alt="Sort" title="Toggle Sort Section">
+                    </div>
+                </div>
                 <div class="small-text" id="count-stats">
                     Showing 0 of 0 heroes
+                </div>
+            </div>
+            <!-- Sort section -->
+            <div id="sort-section" class="hidden">
+                <div class="sort-controls">
+                    <div class="sort-row">
+                        <div id="player-sort-container" class="player-toggle-zone"></div>
+                    </div>
+                </div>
+                <!-- Dice filter section to filter the hero list by complexity level, with buttons for each level and an "ALL" button to toggle all levels on/off -->
+                <div class="dice-filter-section" style="margin-bottom: 20px;">
+                    <div class="dice-bar">
+                        <img src="images/d1.png" class="dice-icon" id="dice-1" onclick="toggleLevel(1)" title="Level 1">
+                        <img src="images/d2.png" class="dice-icon" id="dice-2" onclick="toggleLevel(2)" title="Level 2">
+                        <img src="images/d3.png" class="dice-icon" id="dice-3" onclick="toggleLevel(3)" title="Level 3">
+                        <img src="images/d4.png" class="dice-icon" id="dice-4" onclick="toggleLevel(4)" title="Level 4">
+                        <img src="images/d5.png" class="dice-icon" id="dice-5" onclick="toggleLevel(5)" title="Level 5">
+                        <img src="images/d6.png" class="dice-icon" id="dice-6" onclick="toggleLevel(6)" title="Level 6">
+                        <img src="images/d_all.png" class="dice-icon" id="dice-all" onclick="toggleLevel('all')" title="All Levels">
+                    </div>
                 </div>
             </div>
             <!-- Hero container for displaying the filtered list.  heroContainer content is generated when function renderList() is called -->
@@ -561,6 +569,38 @@
             activeBtn.innerText += arrow;
         }
         renderList();
+    }
+
+
+    function handleSearchInput() {
+        const searchInput = document.getElementById('hero-search');
+        const clearBtn = document.getElementById('clear-search');
+        const val = searchInput.value.trim();
+        
+        // Show 'X' only if there is text
+        if (searchInput.value.trim().length > 0) {
+            clearBtn.classList.remove('hidden');
+        } else {
+            clearBtn.classList.add('hidden');
+        }
+        renderList();
+    }   
+
+    function clearSearch() {
+        const searchInput = document.getElementById('hero-search');
+        searchInput.value = '';
+        document.getElementById('clear-search').classList.add('hidden');
+        searchInput.focus();
+        renderList();
+    }
+
+    function toggleSort() {
+        const sortSection = document.getElementById('sort-section');
+        if (sortSection.classList.contains('hidden')) {
+            sortSection.classList.remove('hidden');
+        } else {
+            sortSection.classList.add('hidden');
+        }
     }
 
     // ****************************************** 
