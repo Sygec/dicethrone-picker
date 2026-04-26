@@ -41,7 +41,7 @@
         
         <!-- Section for toggling which players are active in the randomizer, with checkboxes for each player. By default, the first 4 players are checked and the invitee slots are unchecked -->
         <!-- The player names and colors are defined in the NAMES and PLAYER_COLORS constants in the script. -->
-        <div class="player-toggle-zone">
+        <div class="player-toggle-zone-top">
             <label class="p-chk"><span class="player-tag" style="background:var(--p1)">Claudine</span> <input type="checkbox" id="use0" checked></label>
             <label class="p-chk"><span class="player-tag" style="background:var(--p2)">Joel</span> <input type="checkbox" id="use1" checked></label>
             <label class="p-chk"><span class="player-tag" style="background:var(--p3)">Julie</span> <input type="checkbox" id="use2" checked></label>
@@ -73,40 +73,7 @@
         <div id="dbSection">
             <div class="sort-controls">
                 <div class="sort-row">
-                    <div class="player-card-mini">
-                        <span class="mini-name"> </span>
-                        <div class="mini-actions">
-                            <button class="btn-mini-sort" id="sort-name" onclick="setSort('name')">Name</button>
-                        </div>
-                    </div>
-                    <div class="player-card-mini" style="border-left-color: var(--p1);">
-                        <span class="mini-name">Claudine</span>
-                        <div class="mini-actions">
-                            <button class="btn-mini-sort" id="sort-w0" onclick="setSort('w0')">%</button>
-                            <button class="btn-mini-sort" id="sort-d0" onclick="setSort('d0')">&#128197;</button>
-                        </div>
-                    </div>
-                    <div class="player-card-mini" style="border-left-color: var(--p2);">
-                        <span class="mini-name">Joel</span>
-                        <div class="mini-actions">
-                            <button class="btn-mini-sort" id="sort-w1" onclick="setSort('w1')">%</button>
-                            <button class="btn-mini-sort" id="sort-d1" onclick="setSort('d1')">&#128197;</button>
-                        </div>
-                    </div>
-                    <div class="player-card-mini" style="border-left-color: var(--p3);">
-                        <span class="mini-name">Julie</span>
-                        <div class="mini-actions">
-                            <button class="btn-mini-sort" id="sort-w2" onclick="setSort('w2')">%</button>
-                            <button class="btn-mini-sort" id="sort-d2" onclick="setSort('d2')">&#128197;</button>
-                        </div>
-                    </div>
-                    <div class="player-card-mini" style="border-left-color: var(--p4);">
-                        <span class="mini-name">Martin</span>
-                        <div class="mini-actions">
-                            <button class="btn-mini-sort" id="sort-w3" onclick="setSort('w3')">%</button>
-                            <button class="btn-mini-sort" id="sort-d3" onclick="setSort('d3')">&#128197;</button>
-                        </div>
-                    </div>
+                    <div id="player-sort-container" class="player-toggle-zone"></div>
                 </div>
             </div>
 
@@ -132,7 +99,7 @@
                     Showing 0 of 0 heroes
                 </div>
             </div>
-            <!-- Hero container for displaying the filtered list -->
+            <!-- Hero container for displaying the filtered list.  heroContainer content is generated when function renderList() is called -->
             <div id="heroContainer"></div>
         </div>
 
@@ -248,6 +215,7 @@
 
     function init() {
         db.ref('characters_v4').on('value', snap => {
+            renderSortControls();
             const initialSort = currentSort;
             currentSort = null;
             setSort(initialSort);
@@ -368,8 +336,8 @@
             <div class="player-row">
                 <a href="${getHeroLink(charData?.slug)}" target="_blank" id="link-${pIdx}">
                     <div class="char-complexity-roll">
-                        <img src="${getImgUrl(charData?.slug)}" class="char-img-roll" id="img-${pIdx}">
-                        <img src="images/d${charData?.complexity}.png" class="complexity-roll" alt="Complexity">
+                        <img src="${getImgUrl(charData?.slug)}" class="char-img-roll" id="img-${pIdx}" alt="${selectedName}" title="${selectedName}">
+                        <img src="images/d${charData?.complexity}.png" class="complexity-roll" alt="Complexity" id="comp-${pIdx}" title="Complexity: ${charData?.complexity}">
                     </div>
                 </a>
                 <div style="flex:1">
@@ -380,7 +348,6 @@
                     <select class="char-select" data-player="${pIdx}" onchange="handleDropdownChange(this)">
                         ${[...characters]
                             .sort((a, b) => a.name.localeCompare(b.name))
-//                            .map(c => `<option value="${c.name}" ${c.name === selectedName ? 'selected' : ''}>${c.name}&ensp;&ensp;&ensp;&ensp;&ensp;(Plays: ${c.playCount?.[pIdx] || '0'}&ensp;Last: ${c.lastPlayed?.[pIdx] || 'Never'})</option>`)
                             .map(c => `<option value="${c.name}" ${c.name === selectedName ? 'selected' : ''}>${c.name}</option>`)
                             .join('')}
                     </select>
@@ -388,20 +355,31 @@
             </div>`;
     }
 
+    // This function is called when a user changes the character selection for a player using the dropdown, it updates the displayed image and link for that player 
+    // based on the newly selected character, and also updates the stats displayed for that player if it's one of the main 4 players. After updating the display, 
+    // it calls the validateSelection function to check for any duplicate selections among the active players and update the UI accordingly.
     function handleDropdownChange(el) {
-        const pIdx = parseInt(el.dataset.player);
-        const char = characters.find(c => c.name === el.value);
-        document.getElementById(`img-${pIdx}`).src = getImgUrl(char.slug);
-        document.getElementById(`link-${pIdx}`).href = getHeroLink(char.slug);
+        const pIdx = parseInt(el.dataset.player);                                   // get the player index from the data attribute of the dropdown that triggered the change event
+        const char = characters.find(c => c.name === el.value);                     // find the character object in the characters array that matches the newly selected character name from the dropdown
+        document.getElementById(`img-${pIdx}`).src = getImgUrl(char.slug);          // update the image source for this player to the image URL of the newly selected character, this changes the displayed character image in the results section to match the new selection
+        document.getElementById(`comp-${pIdx}`).src = `images/d${char.complexity}.png`; // update the complexity icon for this player to match the complexity of the newly selected character
+        document.getElementById(`link-${pIdx}`).href = getHeroLink(char.slug);      // update the hyperlink for this player to point to the hero page of the newly selected character, this allows users to click on the character image or name and be taken to the correct hero page based on their selection
         
-        const statsDiv = el.closest('.player-row').querySelector('.roll-stats');
+        const statsDiv = el.closest('.player-row').querySelector('.roll-stats');    // find the stats div for this player row, which is only present for the main 4 players, this is where we display the play count and last played date for the selected character and player index
         if (statsDiv && pIdx < 4) {
+            // Update the displayed play count and last played date for this character and player index based on the data in the characters array, 
+            // this ensures that when a user manually changes their character selection with the dropdown, they can immediately see the relevant stats 
+            // for that character and how it compares to their previous selection
             statsDiv.innerHTML = `<span>Plays: <b>${(char.playCount?.[pIdx] || 0)}</b></span><span>Last: <b>${(char.lastPlayed?.[pIdx] || 'Never')}</b></span>`;
         }
         validateSelection(); // Check for duplicates after manual change
     }
 
     /* --- VALIDATION LOGIC --- */
+    // This function checks for duplicate character selections among the active players, either from the initial random roll or from manual changes with the dropdowns
+    // It collects the selected character names for each player, checks if there are any duplicates, and then updates the UI accordingly by showing an error message 
+    // and disabling the confirm button if duplicates are found, and also highlighting the dropdowns that have duplicate selections with a red border to visually 
+    // indicate which selections need to be changed to resolve the issue.
     function validateSelection() {
         const dropdowns = document.querySelectorAll('.char-select');
         const names = Array.from(dropdowns).map(d => d.value);
@@ -445,6 +423,34 @@
         document.getElementById('results').innerHTML = `<p style="color:#28a745; text-align:center; font-weight:bold;">Legacy Stats Updated!</p>`;
     }
 
+    function renderSortControls() {
+        const container = document.getElementById('player-sort-container');
+        const OnlyNAMES = NAMES.slice(0,4);  // we only want to render sort controls for the main 4 players, since the invitee slots don't have weights or play history to sort by, so we take a slice of the NAMES array to get only the first 4 names for rendering the sort controls
+        
+        let html = `
+            <div class="player-card-mini">
+                <span class="mini-name"> </span>
+                <div class="mini-actions">
+                    <button class="btn-mini-sort" id="sort-name" onclick="setSort('name')">Name</button>
+                </div>
+            </div>
+        `;
+
+        // We loop through the NAMES array (Claudine, Joel, Julie, Martin)
+        html += OnlyNAMES.map((name, i) => `
+            <div class="player-card-mini" style="border-left-color: var(--p${i + 1});">
+                <span class="player-tag-small" style="background:var(--p${i + 1})">${name}</span>
+                <div class="mini-actions">
+                    <button class="btn-mini-sort" id="sort-w${i}" onclick="setSort('w${i}')">%</button>
+                    <button class="btn-mini-sort" id="sort-d${i}" onclick="setSort('d${i}')">&#128197;</button>
+                </div>
+            </div>
+        `).join('');
+
+        container.innerHTML = html;
+    }
+    
+    
     /* DICE BAR LIST LOGIC */
     // Initialize with all levels (1-6) active by default
     let activeLevels = new Set([1, 2, 3, 4, 5, 6]);
@@ -527,6 +533,8 @@
 
     function resetAllStats() { if(confirm("Reset all play history?")) { characters.forEach(c => { c.playCount = [0,0,0,0]; c.lastPlayed = ["","","",""]; }); db.ref('characters_v4').set(characters); } }
 
+    /* --- SORTING LOGIC --- */
+    //
     function setSort(key) {
         if (currentSort === key) {
             sortAsc = !sortAsc;
@@ -540,7 +548,6 @@
             btn.classList.remove('active');
             // Reset text to original (removing any existing arrows)
             if (btn.id === 'sort-name') btn.innerText = 'Name';
-    //        if (btn.id === 'sort-group') btn.innerText = '\u{1F465}';
             if (btn.id.includes('w')) btn.innerText = '%';
             if (btn.id.includes('d')) btn.innerText = '\u{1F4C5}';
         });
@@ -607,8 +614,8 @@
 
         // Generate the HTML for the sorted and filtered list
         container.innerHTML = sorted.map(c => {
-            //let activePlayers = [0, 1, 2, 3];
-            let activePlayers = [0,1,2,3].filter(i => c.weights[i] > 0); // Only show stats for players that have a weight greater than 0 for this character, this means that if a character has been heavily played by a specific player and has a weight of 0 for that player, their stats will be hidden from the list to avoid showing stale data for characters that are effectively "retired" for that player, while still showing stats for other players who may have a weight greater than 0 for that character
+            let activePlayers = [ 0, 1, 2, 3];
+            //let activePlayers = [0,1,2,3].filter(i => c.weights[i] > 0); // Only show stats for players that have a weight greater than 0 for this character, this means that if a character has been heavily played by a specific player and has a weight of 0 for that player, their stats will be hidden from the list to avoid showing stale data for characters that are effectively "retired" for that player, while still showing stats for other players who may have a weight greater than 0 for that character
             const counts = c.playCount || [0,0,0,0];
             const dates = c.lastPlayed || ["Never", "Never", "Never", "Never"];
             
@@ -617,13 +624,14 @@
 
             // 
             const statsHtml = activePlayers.map(p => `
-                        <div class="stat-column" style="border-top: 3px solid ${PLAYER_COLORS[p]}">
-                            <span class="mini-name">${NAMES[p]}</span>
+                        <div class="stat-column">
+                            <!-- <span class="mini-name">${NAMES[p]}</span> -->
+                            <div class="player-tag" style="background-color: var(--p${p + 1}); margin-bottom: 8px; width: 100%; box-sizing: border-box;">${NAMES[p]}</div>
                             <div class="stat-main">
                                 ${totals[p] > 0 ? ((c.weights[p]/totals[p])*100).toFixed(1) : '0.0'}%
                             </div>
                             <div class="stat-sub">(${c.weights[p]})</div>
-                            <div class="stat-sub">Wins: ${c.wins ? c.wins[p] : 0}</div>
+                            <div class="stat-sub">Plays: ${c.playCount ? c.playCount[p] : 0}</div>
                             <div class="stat-date-small">${dates[p] || 'Never'}</div>
                         </div>
             `).join('');
