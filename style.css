@@ -34,7 +34,7 @@
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis; /* If 'Claudine' is too long for the column, it will show 'Clau...' */
-                min-width: 62px;
+                min-width: 61px;
         }
 
         .player-tag-small {
