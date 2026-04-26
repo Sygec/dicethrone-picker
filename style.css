@@ -61,14 +61,10 @@
         }
 
         .player-toggle-zone {
-                /*background: var(--card-bg);*/
-                /*padding: 15px;*/
                 border-radius: 12px;
                 margin-bottom: 5px;
                 display: flex;
                 flex-wrap: wrap;
-                /*gap: 12px;*/
-                /*border: 1px solid var(--secondary);*/
         }
 
         .p-chk {
@@ -217,6 +213,48 @@
                 margin-bottom: 30px; 
                 margin-top: 15px; 
                 text-align: center;
+        }
+
+        .search-wrapper {
+                position: relative;
+                display: flex;
+                align-items: center;
+                width: 100%;
+        }
+
+        #hero-search {
+                width: 100%;
+                padding: 12px 80px 12px 15px; /* Large right padding for 2 icons */
+                border-radius: 8px;
+                border: 1px solid var(--secondary);
+                background: var(--card-bg);
+                color: var(--text);
+        }
+
+        .search-actions {
+                position: absolute;
+                right: 10px;
+                display: flex;
+                gap: 12px;
+                align-items: center;
+                z-index: 5;
+        }
+
+        .search-icon {
+                width: 20px;
+                height: 20px;
+                cursor: pointer;
+                transition: opacity 0.2s;
+                filter: brightness(0.8);
+        }
+
+        .search-icon:hover {
+                filter: brightness(1);
+                transform: scale(1.1);
+                }
+
+        .hidden {
+                display: none;
         }
 
         .search-bar {
