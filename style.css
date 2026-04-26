@@ -24,17 +24,32 @@
 
         .player-tag {
                 display: inline-block;
-                padding: 4px 8px;
+                padding: 4px 2px;
                 border-radius: 4px;
                 font-weight: bold;
                 color: #1a1a2e;
-                font-size: 0.75rem;
+                font-size: 0.7rem;
                 text-transform: uppercase;
                 text-align: center;
-                min-width: 70px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis; /* If 'Claudine' is too long for the column, it will show 'Clau...' */
+                min-width: 62px;
         }
 
-        .player-toggle-zone {
+        .player-tag-small {
+                display: inline-block;
+                padding: 2px 4px;
+                border-radius: 3px;
+                font-weight: bold;
+                color: #1a1a2e;
+                font-size: 0.50rem;
+                text-transform: uppercase;
+                text-align: center;
+                min-width: 40px;
+        }
+
+        .player-toggle-zone-top {
                 background: var(--card-bg);
                 padding: 15px;
                 border-radius: 12px;
@@ -43,6 +58,17 @@
                 grid-template-columns: repeat(3, 1fr);
                 gap: 12px;
                 border: 1px solid var(--secondary);
+        }
+
+        .player-toggle-zone {
+                /*background: var(--card-bg);*/
+                /*padding: 15px;*/
+                border-radius: 12px;
+                margin-bottom: 5px;
+                display: flex;
+                flex-wrap: wrap;
+                /*gap: 12px;*/
+                /*border: 1px solid var(--secondary);*/
         }
 
         .p-chk {
@@ -404,8 +430,8 @@
                 gap: 8px;
                 width: 100%;
                 overflow-x: auto;
-                padding-top: 10px;
-                padding-bottom: 5px;
+                /*padding-top: 10px;*/
+                /*padding-bottom: 5px;*/
                 scrollbar-width: none;
                 justify-content: center;
         }
@@ -417,20 +443,22 @@
         /* The Compact Player Card */
         .player-card-mini {
                 flex: 0 0 auto;
-                background: rgba(255, 255, 255, 0.05);
-                border-left: 4px solid transparent;
+                /*background: rgba(255, 255, 255, 0.05);*/
+                /*border-left: 4px solid transparent;*/
                 border-radius: 4px;
-                padding: 6px 8px;
+                padding: 5px 3px;
                 display: flex;
                 flex-direction: column;
                 gap: 4px;
                 min-width: 40px;
+                justify-content: center;
         }
 
         .mini-name {
                 font-size: 0.6rem;
                 font-weight: bold;
                 text-transform: uppercase;
+                text-align: center;
                 opacity: 0.7;
         }
 
@@ -604,7 +632,7 @@
         text-align: center;
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        align-items: center; /* Centers the tag horizontally */
         }
 
         .stat-main {
