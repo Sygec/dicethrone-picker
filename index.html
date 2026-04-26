@@ -107,7 +107,7 @@
              The form allows entering the hero name, group, slug for the image and complexity level, and has a save button that calls the saveCharacter function to add the new hero to the database. 
              If editing an existing hero, the form will populate with that hero's data and allow saving changes or canceling the edit. 
              Below the form are buttons to reset all probabilities to 100 or reset all play counts and dates, which call their respective functions to update the database accordingly. -->
-        <button class="admin-toggle-btn" onclick="toggleAdmin()">Show Admin Section</button>
+        <button class="admin-toggle-btn" onclick="toggleAdmin()">⚠ Show Admin Section</button>
         <div id="adminSection">
             <div class="manage-form">
                 <h3 id="formTitle" style="margin-top:0; font-size: 1rem; color: var(--accent);">Add New Hero</h3>
@@ -237,7 +237,7 @@
         const b = document.querySelector('.admin-toggle-btn');
         const isHidden = s.style.display !== "block";
         s.style.display = isHidden ? "block" : "none";
-        b.innerText = isHidden ? 'Hide Admin Section' : 'Show Admin Section';
+        b.innerText = isHidden ? '⚠ Hide Admin Section' : '⚠ Show Admin Section';
     }    
 
     /* --- MANAGEMENT LOGIC --- */

@@ -237,17 +237,18 @@
         }
 
         .admin-toggle-btn {
-                background: red;
-                color: white;
+                border: 2px solid #d32f2f;
+                background-color: transparent;
+                color: #d32f2f;
                 width: 100%;
                 padding: 10px;
-                border: none;
                 border-radius: 8px;
                 font-weight: bold;
                 cursor: pointer;
                 /*margin: 25px 0 15px 0;*/
                 text-transform: uppercase;
                 font-size: 0.8rem;
+                margin-top: 100px;
         }
 
         #adminSection {
