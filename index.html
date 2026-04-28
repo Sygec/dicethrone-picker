@@ -25,11 +25,11 @@
 </head>
 
 <body>
-    <div class="container">
+    <main class="container">
         <h1>Dice Throne</h1>
-        <div class="small-text">v<span id="version-number" style="cursor: pointer; text-decoration: underline;">...</span></div>
+        <div class="small-text">v<button id="version-number" aria-label="View changelog" style="background:none; border:none; color:inherit; font:inherit; cursor:pointer; text-decoration:underline; padding:0;">...</button></div>
 
-        <!-- Modal section for the change log, initially hidden and only shown when the version number is clicked. The content of the modal will be dynamically generated based on the changelog.json file. -->
+        <!-- Changelog Modal -->
         <div id="changelog-modal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
@@ -39,8 +39,7 @@
         </div>
         </div>   
         
-        <!-- Section for toggling which players are active in the randomizer, with checkboxes for each player. By default, the first 4 players are checked and the invitee slots are unchecked -->
-        <!-- The player names and colors are defined in the NAMES and PLAYER_COLORS constants in the script. -->
+        <!-- Player Selection Toggles -->
         <div class="player-toggle-zone-top">
             <label class="p-chk"><span class="player-tag" style="background:var(--p1)">Claudine</span> <input type="checkbox" id="use0" checked></label>
             <label class="p-chk"><span class="player-tag" style="background:var(--p2)">Joel</span> <input type="checkbox" id="use1" checked></label>
@@ -50,34 +49,25 @@
             <label class="p-chk"><span class="player-tag" style="background:var(--p5)">Invitee 2</span> <input type="checkbox" id="use5"></label>
         </div>
 
-        <!-- Div where the results of the randomizer roll will be rendered, initially showing a prompt to select players and roll. -->
-        <!-- After rolling, this section will display the assigned characters for each active player, along with dropdowns to manually change the selection if desired, 
-             and stats about past plays for the main 4 players. -->
-        <div id="results" class="results"><p style="text-align: center; opacity: 0.6;">Select players and roll.</p></div>
+        <!-- Randomizer Results Area -->
+        <section id="results" class="results" aria-live="polite"><p style="text-align: center; opacity: 0.6;">Select players and roll.</p></section>
 
-        <!-- Error message that is shown if there are duplicate characters selected for the active players, this is hidden by default and only shown 
-             if the validation function detects duplicates in the selections, either from the initial roll or from manual changes with the dropdowns.
-             The confirm button is also disabled in this case to prevent locking in a session with duplicate characters. -->
-        <div id="error-msg">⚠ Duplicate hero selected! Each player must have a unique character.</div>
+        <!-- Validation Error Message -->
+        <div id="error-msg" role="alert">⚠ Duplicate hero selected! Each player must have a unique character.</div>
 
-        <!-- Button to roll the randomizer, which calls the pickCharacters function to perform the random selection and render the results. -->
-        <button id="rollBtn" onclick="pickCharacters()">ROLL RANDOMIZER</button>
-        <!-- Button to confirm the selections and apply the results, which calls the applyResults function to update the weights and stats in the database based on the selected characters for each player -->
-        <!-- This button is hidden by default and only shown after a roll to encourage users to roll before confirming, and to prevent confusion about when the button should be used. -->
-        <button id="confirmBtn" class="btn-confirm" onclick="applyResults()">LOCK IN SESSION</button>
+        <!-- Action Buttons -->
+        <button id="rollBtn" type="button" onclick="pickCharacters()">ROLL RANDOMIZER</button>
+        <button id="confirmBtn" type="button" class="btn-confirm" onclick="applyResults()">LOCK IN SESSION</button>
 
-        <!-- Button to toggle the visibility of the hero database and stats section -->
-        <button class="db-toggle-btn" onclick="toggleDatabase()">📂 Show Hero Database & Stats</button>
+        <!-- Hero Database & Stats Section -->
+        <button type="button" class="db-toggle-btn" onclick="toggleDatabase()">📂 Show Hero Database & Stats</button>
 
-        <!-- Sorting controls for the hero database section, allowing sorting by name, weight in percentage and last played date for each player. -->
-        <div id="dbSection">
+        <section id="dbSection" class="hidden">
 
-            <!---  Search bar to filter the hero list by name or group, with an input field that calls the renderList function on input to update the displayed list based on the search term. 
-                   The count-stats div below it shows how many heroes are currently displayed out of the total number of heroes in the database, this is also updated by the renderList
-                   function whenever the list is re-rendered. -->
+            <!-- Search & Filtering -->
             <div class="search-container">
                 <div class="search-wrapper">
-                    <input class="search-bar" type="text" id="hero-search" placeholder="Search Heroes or Groups..." oninput="handleSearchInput()">
+                    <input class="search-bar" type="text" id="hero-search" placeholder="Search Heroes or Groups..." oninput="handleSearchInput()" aria-label="Search heroes by name or group">
                     <div class="search-actions">
                         <img src="images/icons/close.png" id="clear-search" class="search-icon hidden" onclick="clearSearch()" alt="Clear" title="Clear Search">
                         <img src="images/icons/sort.png" id="sort-toggle" class="search-icon" onclick="toggleSort()" alt="Sort" title="Toggle Sort Section">
@@ -87,14 +77,14 @@
                     Showing 0 of 0 heroes
                 </div>
             </div>
-            <!-- Sort section -->
+
             <div id="sort-section" class="hidden">
                 <div class="sort-controls">
                     <div class="sort-row">
                         <div id="player-sort-container" class="player-toggle-zone"></div>
                     </div>
                 </div>
-                <!-- Dice filter section to filter the hero list by complexity level, with buttons for each level and an "ALL" button to toggle all levels on/off -->
+                <!-- Complexity Filter -->
                 <div class="dice-filter-section" style="margin-bottom: 20px;">
                     <div class="dice-bar">
                         <img src="images/d1.png" class="dice-icon" id="dice-1" onclick="toggleLevel(1)" title="Level 1">
@@ -107,16 +97,13 @@
                     </div>
                 </div>
             </div>
-            <!-- Hero container for displaying the filtered list.  heroContainer content is generated when function renderList() is called -->
-            <div id="heroContainer"></div>
-        </div>
 
-        <!-- Admin section for adding new heroes to the database and resetting weights and stats, this section is hidden by default and can be toggled with the "Show Admin Section" button. 
-             The form allows entering the hero name, group, slug for the image and complexity level, and has a save button that calls the saveCharacter function to add the new hero to the database. 
-             If editing an existing hero, the form will populate with that hero's data and allow saving changes or canceling the edit. 
-             Below the form are buttons to reset all probabilities to 100 or reset all play counts and dates, which call their respective functions to update the database accordingly. -->
-        <button class="admin-toggle-btn" onclick="toggleAdmin()">⚠ Show Admin Section</button>
-        <div id="adminSection">
+            <div id="heroContainer"></div>
+        </section>
+
+        <!-- Admin & Data Management -->
+        <button type="button" class="admin-toggle-btn" onclick="toggleAdmin()">⚠ Show Admin Section</button>
+        <section id="adminSection" class="hidden">
             <div class="manage-form">
                 <h3 id="formTitle" style="margin-top:0; font-size: 1rem; color: var(--accent);">Add New Hero</h3>
                 <div class="form-grid">
@@ -125,223 +112,352 @@
                     <input type="text" id="charSlug" placeholder="Slug (for image)">
                     <input type="text" id="charComplexity" placeholder="Complexity level">
                 </div>
-                <button class="btn-save" id="saveBtn" onclick="saveCharacter()">Save Hero</button>
-                <button class="btn-cancel" id="cancelBtn" onclick="resetForm()" style="display:none;">Cancel Edit</button>
+                <button type="button" class="btn-save" id="saveBtn" onclick="saveCharacter()">Save Hero</button>
+                <button type="button" class="btn-cancel" id="cancelBtn" onclick="resetForm()" style="display:none;">Cancel Edit</button>
             </div>        
             <div style="margin-top:20px; border-top: 1px solid #ffffff22; padding-top:15px;">
-                <button class="btn-danger" onclick="resetAllWeights()">RESET PROBABILITIES TO 100</button>
-                <button class="btn-danger" onclick="resetAllStats()">RESET PLAY COUNTS & DATES</button>
+                <button type="button" class="btn-danger" onclick="resetAllWeights()">RESET PROBABILITIES TO 100</button>
+                <button type="button" class="btn-danger" onclick="resetAllStats()">RESET PLAY COUNTS & DATES</button>
             </div>
-        </div>
-    </div>
+        </section>
+    </main>
 
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <script>
+    // ==========================================
+    // 1. GLOBAL CONSTANTS & STATE
+    // ==========================================
+    const NAMES = ["Claudine", "Joel", "Julie", "Martin", "Invitee 1", "Invitee 2"];
+    const PLAYER_COLORS = ['var(--p1)', 'var(--p2)', 'var(--p3)', 'var(--p4)'];
     
-    // Global variable to store the log once it's fetched
+    let characters = [];
     let cachedChangelog = null;
+    let activeLevels = new Set([1, 2, 3, 4, 5, 6]);
+    let currentSort = 'name';
+    let sortAsc = true;
+    let editIndex = -1;
 
+    // ==========================================
+    // 2. DOM ELEMENT REFERENCES
+    // ==========================================
     const versionLabel = document.getElementById("version-number");
     const container = document.getElementById("changelog-container");
     const modal = document.getElementById("changelog-modal");
     const closeBtn = document.querySelector(".close-button");
 
-    // 1. Fetch data as soon as the page loads
-    async function initializeApp() {
-    try {
-        const response = await fetch('changelog.json');
-        cachedChangelog = await response.json();
+    // ==========================================
+    // 3. FIREBASE CONFIGURATION
+    // ==========================================
+    const prodFirebaseConfig = {
+        apiKey: "AIzaSyDxBCHqFOr3K-Vh4-KeTAUt2UM03DJ60nE", 
+        authDomain: "dicethrone-ba1f1.firebaseapp.com", 
+        databaseURL: "https://dicethrone-ba1f1-default-rtdb.firebaseio.com", 
+        projectId: "dicethrone-ba1f1", 
+        storageBucket: "dicethrone-ba1f1.firebasestorage.app", 
+        messagingSenderId: "580487401452", 
+        appId: "1:580487401452:web:94d49e4bff6f3815b63ac9"
+    };
 
-        // Set the label to the latest version in the JSON
-        if (cachedChangelog.length > 0) {
-        versionLabel.innerText = cachedChangelog[0].version;
-        }
-    } catch (error) {
-        console.error("Could not load version number:", error);
-        versionLabel.innerText = "Error";
-    }
-    }
-
-    // 2. Function to build the list and show the modal
-    function openChangelog() {
-    if (!cachedChangelog) return; // Wait if data isn't loaded yet
-
-    container.innerHTML = ''; // Clear old content
-    cachedChangelog.forEach(entry => {
-        const section = document.createElement('div');
-        section.innerHTML = `
-        <h3>v${entry.version}</h3>
-        <ul>
-            ${entry.changes.map(change => `<li>${change}</li>`).join('')}
-        </ul>
-        `;
-        container.appendChild(section);
-    });
-
-    modal.style.display = "block";
-    document.body.style.overflow = "hidden"; // Stops background scrolling
-    }
-
-    function closeChangelog() {
-    modal.style.display = "none";
-    document.body.style.overflow = "auto"; // Restores background scrolling
-    }
-
-    // 3. Event Listeners
-    window.addEventListener('DOMContentLoaded', initializeApp);
-    versionLabel.onclick = openChangelog;
-    closeBtn.onclick = closeChangelog;
-
-    // Close if user clicks the dark background
-    window.onclick = (event) => {
-    if (event.target == modal) closeChangelog();
-    }
-
-    const prodFirebaseConfig = {apiKey: "AIzaSyDxBCHqFOr3K-Vh4-KeTAUt2UM03DJ60nE", authDomain: "dicethrone-ba1f1.firebaseapp.com", databaseURL: "https://dicethrone-ba1f1-default-rtdb.firebaseio.com", projectId: "dicethrone-ba1f1", storageBucket: "dicethrone-ba1f1.firebasestorage.app", messagingSenderId: "580487401452", appId: "1:580487401452:web:94d49e4bff6f3815b63ac9"};
-    const devFirebaseConfig = {apiKey: "AIzaSyDIrNnHU5TkKuXCsZJpuLHxzbhfhIV9KXk", authDomain: "dicethrone-dev.firebaseapp.com", projectId: "dicethrone-dev", storageBucket: "dicethrone-dev.firebasestorage.app", messagingSenderId: "139571744700", appId: "1:139571744700:web:5d9755e7a7fa2a5711e5b9"};
+    const devFirebaseConfig = {
+        apiKey: "AIzaSyDIrNnHU5TkKuXCsZJpuLHxzbhfhIV9KXk", 
+        authDomain: "dicethrone-dev.firebaseapp.com", 
+        projectId: "dicethrone-dev", 
+        storageBucket: "dicethrone-dev.firebasestorage.app", 
+        messagingSenderId: "139571744700", 
+        appId: "1:139571744700:web:5d9755e7a7fa2a5711e5b9"
+    };
     
-    // Choose the config based on where the app is running
+    // Initialize Firebase with config based on hostname (isProd defined in <head>)
     const selectedConfig = isProd ? prodFirebaseConfig : devFirebaseConfig;
-
-    // Initialize Firebase with the selected config
     firebase.initializeApp(selectedConfig);
-
-    // Keep your existing database reference
     const db = firebase.database();
 
-    const NAMES = ["Claudine", "Joel", "Julie", "Martin", "Invitee 1", "Invitee 2"];
-    const PLAYER_COLORS = ['var(--p1)', 'var(--p2)', 'var(--p3)', 'var(--p4)'];
-    let characters = [];
-    let currentSort = 'name';
-    let sortAsc = true;
-    let editIndex = -1;
-
+    // ==========================================
+    // 4. UTILITY HELPERS
+    // ==========================================
     const getImgUrl = (slug) => slug ? `https://dice-throne.rulepop.com/heroes/${slug}.webp` : "";
     const getHeroLink = (slug) => `https://dice-throne.rulepop.com/#hero/${slug}`;
 
+    // ==========================================
+    // 5. APPLICATION INITIALIZATION
+    // ==========================================
+
+    // ****************************************** 
+    // initializeApp()
+    // input: none
+    // ****************************************** 
+    // Fetches the changelog JSON and sets the initial version display.
+    // ****************************************** 
+    async function initializeApp() {
+        try {
+            const response = await fetch('changelog.json');
+            cachedChangelog = await response.json();
+
+            if (cachedChangelog.length > 0) {
+                versionLabel.innerText = cachedChangelog[0].version;
+            }
+        } catch (error) {
+            console.error("Could not load version number:", error);
+            versionLabel.innerText = "Error";
+        }
+    }
+
+    // ==========================================
+    // 6. EVENT LISTENERS
+    // ==========================================
+    window.addEventListener('DOMContentLoaded', initializeApp);
+    window.addEventListener('DOMContentLoaded', updateDiceVisuals); 
+    versionLabel.onclick = openChangelog;
+    closeBtn.onclick = closeChangelog;
+
+    window.onclick = (event) => {
+        if (event.target == modal) closeChangelog();
+    }
+
+    // ****************************************** 
+    // init()
+    // input: none
+    // ****************************************** 
+    // Establishes the Firebase listener and sets the initial sort state.
+    // ****************************************** 
     function init() {
         db.ref('characters_v4').on('value', snap => {
+            // 1. Update data first to ensure rendering uses latest values
+            characters = snap.val() || [];
             renderSortControls();
+            
+            // 2. Re-apply current sort (which internally calls renderList)
             const initialSort = currentSort;
             currentSort = null;
             setSort(initialSort);
-            characters = snap.val() || [];
-            renderList();
         });
     }
 
+    // ****************************************** 
+    // openChangelog()
+    // input: none
+    // ****************************************** 
+    // Populates the changelog modal with version history from the cached 
+    // JSON data and displays it to the user.
+    // ****************************************** 
+    function openChangelog() {
+        if (!cachedChangelog) return; // Wait if data isn't loaded yet
+
+        // Generate the HTML for all changelog entries and update the container in one go
+        container.innerHTML = cachedChangelog.map(entry => `
+            <div>
+                <h3>v${entry.version}</h3>
+                <ul>
+                    ${entry.changes.map(change => `<li>${change}</li>`).join('')}
+                </ul>
+            </div>
+        `).join('');
+
+        modal.style.display = "block"; // Show the modal
+        document.body.style.overflow = "hidden"; // Prevent background scrolling when modal is open
+    }
+    
+    // ****************************************** 
+    // closeChangelog()
+    // input: none
+    // ****************************************** 
+    // Hides the changelog modal and restores background scrolling.
+    // ****************************************** 
+    function closeChangelog() {
+        modal.style.display = "none";
+        document.body.style.overflow = "auto"; // Restores background scrolling
+    }
+
+    // ****************************************** 
+    // toggleDatabase()
+    // input: none
+    // ****************************************** 
+    // Toggles the visibility of the Hero Database section.
+    // ****************************************** 
     function toggleDatabase() {
         const s = document.getElementById('dbSection');
         const b = document.querySelector('.db-toggle-btn');
-        const isHidden = s.style.display !== "block";
-        s.style.display = isHidden ? "block" : "none";
-        b.innerText = isHidden ? "📁 Hide Hero Database" : "📂 Show Hero Database & Stats";
+        
+        // Use classList for consistency with toggleSort logic
+        const isHidden = s.classList.toggle('hidden');
+        
+        b.innerText = isHidden ? "📂 Show Hero Database & Stats" : "📁 Hide Hero Database";
     }
 
+    // ****************************************** 
+    // toggleAdmin()
+    // input: none
+    // ****************************************** 
+    // Toggles the visibility of the Admin section.
+    // ****************************************** 
     function toggleAdmin() {
         const s = document.getElementById('adminSection');
         const b = document.querySelector('.admin-toggle-btn');
-        const isHidden = s.style.display !== "block";
-        s.style.display = isHidden ? "block" : "none";
-        b.innerText = isHidden ? '⚠ Hide Admin Section' : '⚠ Show Admin Section';
+        
+        // Use classList for consistency with toggleSort logic
+        const isHidden = s.classList.toggle('hidden');
+        
+        b.innerText = isHidden ? '⚠ Show Admin Section' : '⚠ Hide Admin Section';
     }    
 
-    /* --- MANAGEMENT LOGIC --- */
+    // ****************************************** 
+    // saveCharacter()
+    // input: none
+    // ****************************************** 
+    // Adds a new hero or updates an existing one in the database.
+    // ****************************************** 
     function saveCharacter() {
+        // Extract and trim values from management form inputs
         const name = document.getElementById('charName').value.trim();
         const group = document.getElementById('charGroup').value.trim();
         const slug = document.getElementById('charSlug').value.trim();
         const complexity = document.getElementById('charComplexity').value.trim();
         
-        if(!name) return alert("Name is required");
+        if (!name) return alert("Name is required");
 
         if (editIndex > -1) {
-            characters[editIndex] = { ...characters[editIndex], name, group, slug };
+            // Update existing hero: merge changes while preserving play history and weights
+            characters[editIndex] = { ...characters[editIndex], name, group, slug, complexity };
         } else {
+            // Create a new hero record with high initial weights to prioritize new additions
             characters.push({
-                name, group, slug, complexity,
+                name, 
+                group, 
+                slug, 
+                complexity,
                 weights: [300, 300, 300, 300],
                 playCount: [0, 0, 0, 0],
                 lastPlayed: ["", "", "", ""]
             });
         }
+
+        // Persist the full array to Firebase and clear the management UI
         db.ref('characters_v4').set(characters);
         resetForm();
     }
 
+    // ****************************************** 
+    // editChar(idx)
+    // input: idx -> index of the character in the global array
+    // ****************************************** 
+    // Populates the admin form with data from a specific character for editing,
+    // ensures the admin section is visible, and scrolls the user to the form.
+    // ****************************************** 
     function editChar(idx) {
         editIndex = idx;
         const c = characters[idx];
+
+        // Populate all management form fields (including missing complexity)
         document.getElementById('charName').value = c.name;
         document.getElementById('charGroup').value = c.group || "";
         document.getElementById('charSlug').value = c.slug || "";
+        document.getElementById('charComplexity').value = c.complexity || "";
+
+        // Update UI state to "Edit" mode
         document.getElementById('formTitle').innerText = "Edit Hero: " + c.name;
         document.getElementById('cancelBtn').style.display = "block";
-        document.getElementById('dbSection').scrollIntoView();
+
+        // Ensure the admin section is expanded so the user can see the form
+        const adminSection = document.getElementById('adminSection');
+        if (adminSection.classList.contains('hidden')) toggleAdmin();
+
+        // Smoothly scroll to the form and focus the first field
+        adminSection.scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('charName').focus();
     }
 
+    // ****************************************** 
+    // resetForm()
+    // input: none
+    // ****************************************** 
+    // Clears the Hero Management form fields and resets the title.
+    // ****************************************** 
     function resetForm() {
         editIndex = -1;
-        document.getElementById('charName').value = "";
-        document.getElementById('charGroup').value = "";
-        document.getElementById('charSlug').value = "";
-        document.getElementById('charComplexity').value = "";
+        
+        // Clear all input values within the management form grid
+        document.querySelectorAll('.manage-form .form-grid input').forEach(input => input.value = "");
+
+        // Reset UI state to "Add" mode
         document.getElementById('formTitle').innerText = "Add New Hero";
         document.getElementById('cancelBtn').style.display = "none";
     }
 
-    /* --- ROLLING LOGIC --- */
+    // ****************************************** 
+    // pickCharacters()
+    // input: none
+    // ****************************************** 
+    // Randomly assigns a hero to each active player.
+    // Main players (0-3) use weighted probability based on play history.
+    // Invitees (4-5) are assigned purely at random.
+    // ****************************************** 
     function pickCharacters() {
-        // reset active array
-        let active = [];
-        NAMES.forEach((_, i) => {                                   // for every person in the NAMES const array, i = 0 to 5
-            if(document.getElementById(`use${i}`).checked)          // if the checkbox for this person is checked, i.e. player is active
-                active.push(i);                                     // add the index of this person to the "active" array, i.e. active will be an array of the indexes of the players that are active, e.g. [0,2,4] if Claudine, Julie and Invitee 1 are selected
-            });
-        if(active.length === 0) return alert("Select players!");    // if no players are selected, alert and exit function
-        
-        active = active.sort(() => Math.random() - 0.5);            // randomize order of active players so rolls are in random order each time
-        const resultsDiv = document.getElementById('results');      // get the div where results are rendered
-        resultsDiv.innerHTML = '';                                  // clear previous results so we can render new ones
-        let pool = JSON.parse(JSON.stringify(characters));          // create a copy of the characters array to manipulate for this roll, we will remove characters from this pool as they are selected to avoid duplicates in the random selection process, but we want to keep the original "characters" array intact for reference and for the list rendering
+        // Identify active players and randomize the order of selection
+        const active = NAMES
+            .map((_, i) => i)
+            .filter(i => document.getElementById(`use${i}`).checked)
+            .sort(() => Math.random() - 0.5);
 
-        active.forEach(pIdx => {                                    // for each active player index, e.g. 0 for Claudine, 2 for Julie, etc
-            let selectedName = "";                                  // initialize variable to hold the name of the character that will be selected for this player
-            if ((pIdx === 4) || (pIdx === 5)) {                     // if this is an invitee slot, select purely random from the pool without weighting, to give them a "wild card" feel and avoid accidentally punishing them with high weights on characters that the main 4 players have played a lot
-                const r = Math.floor(Math.random() * pool.length);  // select a random index from the pool
-                selectedName = pool[r]?.name;                       // get the name of the character at that index
-                pool.splice(r, 1);                                  // remove that character from the pool to avoid duplicates, this modifies the pool array in place
-            } else {                                                // for the main 4 players, we want to weight the random selection based on the weights in the characters array, which are influenced by past play history to encourage variety and reduce repeats. The weighting formula is: weight / (playCount + 1) so that characters that have been played more often will have their effective weight reduced, but they won't be completely removed from the pool unless their weight is 0
-                const activePool = pool.filter(c => c.weights[pIdx] > 0); // create a temporary pool of only characters that have a weight greater than 0 for this player, this is the pool that the random selection will be made from, if a character has a weight of 0 for this player it means they have been played so much that we want to temporarily remove them from the random selection to give other characters a better chance to be selected
-                let totalScaled = activePool.reduce((sum, c) => sum + (c.weights[pIdx] / (((c.playCount?.[pIdx]) || 0) + 1)), 0); // calculate the total of the scaled weights for the active pool, this is used to determine the range of the random number for selection, we sum up the scaled weights which are calculated as weight / (playCount + 1) to give a fair chance to characters that have been played less often
-                let rand = Math.random() * totalScaled;             // generate a random number between 0 and the total of the scaled weights, this will be used to select a character from the active pool based on their weighted probability
-                let runningSum = 0;                                 // initialize a running sum variable to keep track of the cumulative probability as we iterate through the active pool, we will add the scaled weight of each character to this running sum until it exceeds the random number, at which point we know that the current character is the one that has been selected based on the weighted probabilities 
-                for(let c of activePool) {                          // iterate through each character in the active pool
-                    runningSum += (c.weights[pIdx] / (((c.playCount?.[pIdx]) || 0) + 1)); // add the scaled weight of this character to the running sum
-                    if(rand <= runningSum) {                        // if the random number is less than or equal to the running sum, it means we have found our selected character based on the weighted probabilities
-                        selectedName = c.name;                      // set the selected name to this character's name   
-                        pool.splice(pool.findIndex(p => p.name === selectedName), 1); // remove this character from the pool to avoid duplicates in the selection for the next players, we find the index of this character in the original pool and remove it using splice, this modifies the pool array in place
-                        break;                                      // break out of the loop since we have found our selected character for this player
+        if (active.length === 0) return alert("Select players!");
+        
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = '';
+
+        // Work with a copy of characters to safely remove heroes as they are assigned
+        let pool = structuredClone(characters);
+
+        active.forEach(pIdx => {
+            let selectedName = "";
+
+            if (pIdx >= 4) {
+                // Purely random selection for invitee slots
+                const r = Math.floor(Math.random() * pool.length);
+                selectedName = pool[r]?.name;
+                pool.splice(r, 1);
+            } else {
+                // Weighted selection for main players (0-3). Formula: weight / (playCount + 1)
+                const activePool = pool.filter(c => c.weights[pIdx] > 0);
+                const totalScaled = activePool.reduce((sum, c) => sum + (c.weights[pIdx] / (((c.playCount?.[pIdx]) || 0) + 1)), 0);
+                
+                let rand = Math.random() * totalScaled;
+                let runningSum = 0;
+
+                for (let c of activePool) {
+                    runningSum += (c.weights[pIdx] / (((c.playCount?.[pIdx]) || 0) + 1));
+                    if (rand <= runningSum) {
+                        selectedName = c.name;
+                        pool.splice(pool.findIndex(p => p.name === selectedName), 1);
+                        break;
                     }
                 }
             }
-            renderPlayerRow(pIdx, selectedName);                    // call the function to render the selected character for this player in the results div, passing the player index and the name of the selected character
+            renderPlayerRow(pIdx, selectedName);
         });
-        validateSelection();                                        // after all players have been assigned a character and rendered, call the validation function to check for any duplicates in the selections (in case of manual changes with the dropdowns) and enable/disable the confirm button accordingly
-        document.getElementById('confirmBtn').style.display = 'block';  // show the confirm button so the user can lock in their session after rolling, this button is hidden by default and only shown after a roll to encourage users to roll before confirming, and to prevent confusion about when the button should be used
+
+        validateSelection();
+        document.getElementById('confirmBtn').style.display = 'block';
     }
 
+    // ****************************************** 
+    // renderPlayerRow(pIdx, selectedName)
+    // input: pIdx -> player index, selectedName -> hero name
+    // ****************************************** 
+    // Renders the HTML result for a specific player's randomized character.
+    // ****************************************** 
     function renderPlayerRow(pIdx, selectedName) {
         const charData = characters.find(c => c.name === selectedName);
         const resultsDiv = document.getElementById('results');
+        
+        // Retrieve play statistics for the current player and selected character
         const plays = (charData?.playCount && charData.playCount[pIdx]) || 0;
         const last = (charData?.lastPlayed && charData.lastPlayed[pIdx]) || "Never";
-        const complexity = charData?.complexity ? ` (Complexity: ${charData.complexity})` : "";
 
+        // Append the HTML for the player's row to the results container
         resultsDiv.innerHTML += `
             <div class="player-row">
+                <!-- Link to the hero's external page, wrapping the image and complexity icon -->
                 <a href="${getHeroLink(charData?.slug)}" target="_blank" id="link-${pIdx}">
                     <div class="char-complexity-roll">
                         <img src="${getImgUrl(charData?.slug)}" class="char-img-roll" id="img-${pIdx}" alt="${selectedName}" title="${selectedName}">
@@ -349,10 +465,12 @@
                     </div>
                 </a>
                 <div style="flex:1">
+                    <!-- Player tag and conditional display of play stats for main players -->
                     <div style="margin-bottom:5px; display:flex; justify-content:space-between; align-items:center;">
                         <span class="player-tag" style="background:var(--p${pIdx+1})">${NAMES[pIdx]}</span>
                         ${pIdx < 4 ? `<div class="roll-stats"><span>Plays: <b>${plays}</b></span><span>Last: <b>${last}</b></span></div>` : ''}
                     </div>
+                    <!-- Dropdown for manual hero selection -->
                     <select class="char-select" data-player="${pIdx}" onchange="handleDropdownChange(this)">
                         ${[...characters]
                             .sort((a, b) => a.name.localeCompare(b.name))
@@ -363,89 +481,148 @@
             </div>`;
     }
 
-    // This function is called when a user changes the character selection for a player using the dropdown, it updates the displayed image and link for that player 
-    // based on the newly selected character, and also updates the stats displayed for that player if it's one of the main 4 players. After updating the display, 
-    // it calls the validateSelection function to check for any duplicate selections among the active players and update the UI accordingly.
+    // ****************************************** 
+    // handleDropdownChange(el)
+    // input: el -> the select element that changed
+    // ****************************************** 
+    // Updates the visual results and stats for a player when their 
+    // hero is manually changed via dropdown.
+    // ****************************************** 
     function handleDropdownChange(el) {
-        const pIdx = parseInt(el.dataset.player);                                   // get the player index from the data attribute of the dropdown that triggered the change event
-        const char = characters.find(c => c.name === el.value);                     // find the character object in the characters array that matches the newly selected character name from the dropdown
-        document.getElementById(`img-${pIdx}`).src = getImgUrl(char.slug);          // update the image source for this player to the image URL of the newly selected character, this changes the displayed character image in the results section to match the new selection
-        document.getElementById(`comp-${pIdx}`).src = `images/d${char.complexity}.png`; // update the complexity icon for this player to match the complexity of the newly selected character
-        document.getElementById(`link-${pIdx}`).href = getHeroLink(char.slug);      // update the hyperlink for this player to point to the hero page of the newly selected character, this allows users to click on the character image or name and be taken to the correct hero page based on their selection
+        const pIdx = parseInt(el.dataset.player);
+        const char = characters.find(c => c.name === el.value);
         
-        const statsDiv = el.closest('.player-row').querySelector('.roll-stats');    // find the stats div for this player row, which is only present for the main 4 players, this is where we display the play count and last played date for the selected character and player index
+        if (!char) return;
+
+        // Update the visual assets: portrait, complexity dice, and wiki link
+        document.getElementById(`img-${pIdx}`).src = getImgUrl(char.slug);
+        document.getElementById(`comp-${pIdx}`).src = `images/d${char.complexity}.png`;
+        document.getElementById(`link-${pIdx}`).href = getHeroLink(char.slug);
+        
+        // Locate the stats container within the current player's row
+        const statsDiv = el.closest('.player-row').querySelector('.roll-stats');
+
+        // Update play history only for the main 4 players
         if (statsDiv && pIdx < 4) {
-            // Update the displayed play count and last played date for this character and player index based on the data in the characters array, 
-            // this ensures that when a user manually changes their character selection with the dropdown, they can immediately see the relevant stats 
-            // for that character and how it compares to their previous selection
-            statsDiv.innerHTML = `<span>Plays: <b>${(char.playCount?.[pIdx] || 0)}</b></span><span>Last: <b>${(char.lastPlayed?.[pIdx] || 'Never')}</b></span>`;
+            const playCount = char.playCount?.[pIdx] || 0;
+            const lastPlayed = char.lastPlayed?.[pIdx] || 'Never';
+
+            statsDiv.innerHTML = `
+                <span>Plays: <b>${playCount}</b></span>
+                <span>Last: <b>${lastPlayed}</b></span>
+            `;
         }
-        validateSelection(); // Check for duplicates after manual change
+
+        // Refresh duplicate detection UI
+        validateSelection();
     }
 
-    /* --- VALIDATION LOGIC --- */
-    // This function checks for duplicate character selections among the active players, either from the initial random roll or from manual changes with the dropdowns
-    // It collects the selected character names for each player, checks if there are any duplicates, and then updates the UI accordingly by showing an error message 
-    // and disabling the confirm button if duplicates are found, and also highlighting the dropdowns that have duplicate selections with a red border to visually 
-    // indicate which selections need to be changed to resolve the issue.
+    // ****************************************** 
+    // validateSelection()
+    // input: none
+    // ****************************************** 
+    // Checks for duplicate heroes in the current results and 
+    // enables/disables the confirmation UI accordingly.
+    // ****************************************** 
     function validateSelection() {
+        // Locate all hero selection dropdowns currently rendered in the results
         const dropdowns = document.querySelectorAll('.char-select');
         const names = Array.from(dropdowns).map(d => d.value);
-        const hasDupes = names.some((name, idx) => names.indexOf(name) !== idx);
-        
+
+        // Count occurrences of each hero to identify duplicates efficiently
+        const counts = names.reduce((acc, name) => {
+            acc[name] = (acc[name] || 0) + 1;
+            return acc;
+        }, {});
+
+        // Determine if any hero is selected more than once
+        const hasDupes = Object.values(counts).some(count => count > 1);
+
         const confirmBtn = document.getElementById('confirmBtn');
         const errorMsg = document.getElementById('error-msg');
         
+        // Update the "Lock In" button state: visual styling and functional toggle
         confirmBtn.classList.toggle('disabled', hasDupes);
         confirmBtn.disabled = hasDupes;
         errorMsg.style.display = hasDupes ? 'block' : 'none';
         
+        // Individually highlight dropdowns that contain duplicate entries
         dropdowns.forEach(d => {
-            const isDupe = names.filter(n => n === d.value).length > 1;
-            d.classList.toggle('error', isDupe);
+            d.classList.toggle('error', counts[d.value] > 1);
         });
     }
 
+    // ****************************************** 
+    // applyResults()
+    // input: none
+    // ****************************************** 
+    // Updates weights and play history in the database for 
+    // the currently selected heroes.
+    // ****************************************** 
     function applyResults() {
         const dropdowns = document.querySelectorAll('.char-select');
         const today = new Date().toLocaleDateString('en-CA');
-        const picks = Array.from(dropdowns).map(sel => ({ pIdx: parseInt(sel.dataset.player), charName: sel.value }));
+        
+        // Create a Map of [playerIndex -> heroName] for fast lookups
+        const activePicks = new Map(
+            Array.from(dropdowns).map(sel => [parseInt(sel.dataset.player), sel.value])
+        );
 
         characters.forEach(char => {
-            [0,1,2,3].forEach(pIdx => {
-                const pick = picks.find(s => s.pIdx === pIdx);
-                const wasPicked = pick && pick.charName === char.name;
-                if (picks.some(s => s.pIdx === pIdx)) {
-                    char.weights[pIdx] = wasPicked ? 20 : char.weights[pIdx] + 10;
-                }
-                if (wasPicked) {
-                    if (!char.playCount) char.playCount = [0,0,0,0];
-                    if (!char.lastPlayed) char.lastPlayed = ["","","",""];
-                    char.playCount[pIdx] = (char.playCount[pIdx] || 0) + 1;
-                    char.lastPlayed[pIdx] = today;
+            // Weights and history are only tracked for the 4 main players
+            [0, 1, 2, 3].forEach(pIdx => {
+                const playerChoice = activePicks.get(pIdx);
+                
+                // Only update data if this player was active in the current session
+                if (playerChoice !== undefined) {
+                    const wasPicked = (playerChoice === char.name);
+
+                    // Adjust weights: Reset picked hero to 20, boost others by +10
+                    char.weights[pIdx] = wasPicked ? 20 : (char.weights[pIdx] || 100) + 10;
+
+                    if (wasPicked) {
+                        // Ensure stat arrays exist for legacy/new heroes
+                        if (!char.playCount) char.playCount = [0, 0, 0, 0];
+                        if (!char.lastPlayed) char.lastPlayed = ["", "", "", ""];
+
+                        char.playCount[pIdx] = (char.playCount[pIdx] || 0) + 1;
+                        char.lastPlayed[pIdx] = today;
+                    }
                 }
             });
         });
+
+        // Sync changes to Firebase and update the UI
         db.ref('characters_v4').set(characters);
         document.getElementById('confirmBtn').style.display = 'none';
-        document.getElementById('results').innerHTML = `<p style="color:#28a745; text-align:center; font-weight:bold;">Legacy Stats Updated!</p>`;
+        document.getElementById('results').innerHTML = `
+            <p style="color:#28a745; text-align:center; font-weight:bold;">
+                Session Logged! Stats & weights updated.
+            </p>`;
     }
 
+    // ****************************************** 
+    // renderSortControls()
+    // input: none
+    // ****************************************** 
+    // Generates the sorting buttons for Name, Weights, and Dates.
+    // ****************************************** 
     function renderSortControls() {
         const container = document.getElementById('player-sort-container');
-        const OnlyNAMES = NAMES.slice(0,4);  // we only want to render sort controls for the main 4 players, since the invitee slots don't have weights or play history to sort by, so we take a slice of the NAMES array to get only the first 4 names for rendering the sort controls
+        // Sort controls are only rendered for the main 4 players (indices 0-3)
+        const mainPlayerNames = NAMES.slice(0, 4);
         
         let html = `
             <div class="player-card-mini">
                 <span class="mini-name"> </span>
                 <div class="mini-actions">
-                    <button class="btn-mini-sort" id="sort-name" onclick="setSort('name')">Name</button>
+                    <button class="btn-mini-sort" id="sort-name" onclick="setSort('name')">Hero</button> <!-- Button to sort by hero name -->
                 </div>
             </div>
         `;
 
-        // We loop through the NAMES array (Claudine, Joel, Julie, Martin)
-        html += OnlyNAMES.map((name, i) => `
+        // Generate sort buttons for each of the main players (weights and last played dates)
+        html += mainPlayerNames.map((name, i) => `
             <div class="player-card-mini" style="border-left-color: var(--p${i + 1});">
                 <span class="player-tag-small" style="background:var(--p${i + 1})">${name}</span>
                 <div class="mini-actions">
@@ -458,92 +635,96 @@
         container.innerHTML = html;
     }
     
-    
-    /* DICE BAR LIST LOGIC */
-    // Initialize with all levels (1-6) active by default
-    let activeLevels = new Set([1, 2, 3, 4, 5, 6]);
-
-    function initDiceFilter() {
-        // Apply the 'active-die' class to all dice on load
-        activeLevels.forEach(level => {
-            const die = document.getElementById(`dice-${level}`);
-            if (die) die.classList.add('active-die');
-        });
-    }
-
     // ****************************************** 
     // toggleLevel(level)
-    // input: level -> dice number
+    // input: level -> dice number or 'all'
     // ****************************************** 
-    // This function will manage the Set used to determine which dice are active and which are not
+    // Manages the complexity filter Set and triggers UI updates.
     // ****************************************** 
     function toggleLevel(level) {
         if (level === 'all') {
-            //if clicking the ALL dice
-            if (activeLevels.size === 6) {
-                //if all dice are active
-                activeLevels = new Set([]);  //reset Set to empty, i.e. set all dice to disabled
-            } else {
-                // otherwise, reset the Set to include all 6 levels, i.e. all deice active
-                activeLevels = new Set([1, 2, 3, 4, 5, 6]);
-            }
+            // Toggle: if all 6 levels are active, clear filters; otherwise, select all levels
+            activeLevels = (activeLevels.size === 6) ? new Set() : new Set([1, 2, 3, 4, 5, 6]);
         } else {
-            // clicking a number dice
-            if (activeLevels.has(level)) {
-                // if set includes this dice, i.e. dice is active then remove from Set
-                activeLevels.delete(level);
-            } else {
-                // otherwise add dice to set to activate it
-                activeLevels.add(level);
-            }
+            // Standard Sets lack a native .toggle() method; manually toggle existence
+            if (activeLevels.has(level)) activeLevels.delete(level);
+            else activeLevels.add(level);
         }
-        // refresh the visuals for all dice based on the current Set
+
+        // Update icon visuals and refresh the hero list display
         updateDiceVisuals();
-        // trigger your render function to update the list
-        if (typeof renderList === "function") renderList();
+        renderList();
     }
 
     // ****************************************** 
     // updateDiceVisuals()
     // input: none
     // ****************************************** 
-    // This function will manage the visuals of the dice bar, setting to active if part of Set 
+    // Synchronizes the dice icon styling with the current 
+    // active filter state (activeLevels set).
     // ****************************************** 
     function updateDiceVisuals() {
-        // update state of 6 "number" dice
+        // Update the active state for numeric dice 1 through 6
         for (let i = 1; i <= 6; i++) {
             const die = document.getElementById(`dice-${i}`);
-            if (die) {
-                if (activeLevels.has(i)) {
-                    die.classList.add('active-die');
-                } else {
-                    die.classList.remove('active-die');
-                }
-            }
+            if (die) die.classList.toggle('active-die', activeLevels.has(i));
         }
-        // update state of the "ALL" dice
+
+        // The 'ALL' icon is highlighted only if all 6 levels are active
         const allDie = document.getElementById('dice-all');
-        if (allDie) {
-            // cctive only if the Set contains all 6 levels
-            if (activeLevels.size === 6) {
-                allDie.classList.add('active-die');
-            } else {
-                allDie.classList.remove('active-die');
-            }
-        }
+        if (allDie) allDie.classList.toggle('active-die', activeLevels.size === 6);
     }
 
     // Ensure visuals are correct when the page loads
     window.addEventListener('DOMContentLoaded', updateDiceVisuals);
 
-    /* --- LIST & HELPERS --- */
-    function resetAllWeights() { if(confirm("Reset all probabilities to 100?")) { characters.forEach(c => c.weights = [100, 100, 100, 100]); db.ref('characters_v4').set(characters); } }
+    // ****************************************** 
+    // resetAllWeights()
+    // input: none
+    // ****************************************** 
+    // Resets the randomization weights for all heroes to 100 
+    // for all players after a user confirmation.
+    // ****************************************** 
+    function resetAllWeights() {
+        if (confirm("Reset all probabilities to 100?")) {
+            // Iterate through every character and reset the weight array
+            characters.forEach(c => {
+                c.weights = [100, 100, 100, 100];
+            });
+            // Sync the changes back to the Firebase database
+            db.ref('characters_v4').set(characters);
+        }
+    }
 
-    function resetAllStats() { if(confirm("Reset all play history?")) { characters.forEach(c => { c.playCount = [0,0,0,0]; c.lastPlayed = ["","","",""]; }); db.ref('characters_v4').set(characters); } }
+    // ****************************************** 
+    // resetAllStats()
+    // input: none
+    // ****************************************** 
+    // Resets play counts and last played dates for all heroes
+    // across all players after a user confirmation.
+    // ****************************************** 
+    function resetAllStats() {
+        if (confirm("Reset all play history?")) {
+            // Clear stats locally for every character in the array
+            characters.forEach(c => {
+                c.playCount = [0, 0, 0, 0];
+                c.lastPlayed = ["", "", "", ""];
+            });
+            // Update the remote database with the cleared statistics
+            db.ref('characters_v4').set(characters);
+        }
+    }
 
-    /* --- SORTING LOGIC --- */
-    //
+    // ****************************************** 
+    // setSort(key)
+    // input: key -> the column or player property to sort by
+    // ****************************************** 
+    // Updates the sorting criteria and direction, refreshes the 
+    // UI button indicators, and triggers a list re-render.
+    // ****************************************** 
     function setSort(key) {
+        // If the same key is clicked, toggle direction. 
+        // Otherwise, set default: Ascending for Name, Descending for Weights/Dates.
         if (currentSort === key) {
             sortAsc = !sortAsc;
         } else {
@@ -551,56 +732,68 @@
             sortAsc = !key.startsWith('d') && !key.startsWith('w');
         }
 
-        // 1. Clear all active states and arrows
+        // Reset all sort buttons: remove active class and strip any existing arrows
         document.querySelectorAll('.btn-mini-sort').forEach(btn => {
             btn.classList.remove('active');
-            // Reset text to original (removing any existing arrows)
-            if (btn.id === 'sort-name') btn.innerText = 'Name';
-            if (btn.id.includes('w')) btn.innerText = '%';
-            if (btn.id.includes('d')) btn.innerText = '\u{1F4C5}';
+            btn.innerText = btn.innerText.replace(/ [▲▼]/, '');
         });
 
-        // 2. Highlight the clicked button
+        // Highlight the current button and add the appropriate direction arrow
         const activeBtn = document.getElementById(`sort-${key}`);
         if (activeBtn) {
             activeBtn.classList.add('active');
-            // 3. Add the directional arrow
-            const arrow = sortAsc ? ' ▲' : ' ▼';
-            activeBtn.innerText += arrow;
+            activeBtn.innerText += sortAsc ? ' ▲' : ' ▼';
         }
+
+        // Trigger the list refresh with new sorting applied
         renderList();
     }
 
 
+    // ****************************************** 
+    // handleSearchInput()
+    // input: none
+    // ****************************************** 
+    // Manages the visibility of the clear button based on search input content
+    // and triggers the hero list re-render.
+    // ****************************************** 
     function handleSearchInput() {
         const searchInput = document.getElementById('hero-search');
         const clearBtn = document.getElementById('clear-search');
-        const val = searchInput.value.trim();
-        
-        // Show 'X' only if there is text
-        if (searchInput.value.trim().length > 0) {
-            clearBtn.classList.remove('hidden');
-        } else {
-            clearBtn.classList.add('hidden');
-        }
-        renderList();
-    }   
 
-    function clearSearch() {
-        const searchInput = document.getElementById('hero-search');
-        searchInput.value = '';
-        document.getElementById('clear-search').classList.add('hidden');
-        searchInput.focus();
+        // Toggle the 'hidden' class: add it if input is empty, remove it if text exists
+        clearBtn.classList.toggle('hidden', searchInput.value.trim().length === 0);
+
+        // Refresh the displayed list based on the new search value
         renderList();
     }
 
+    // ****************************************** 
+    // clearSearch()
+    // input: none
+    // ****************************************** 
+    // Resets the hero search input, refocuses the search bar, 
+    // and refreshes the displayed list.
+    // ****************************************** 
+    function clearSearch() {
+        const searchInput = document.getElementById('hero-search');
+        searchInput.value = ''; // Reset the input value to empty
+        searchInput.focus();    // Return focus to the bar so the user can type again immediately
+        
+        // Re-use handleSearchInput to hide the 'X' button and refresh the list
+        handleSearchInput();
+    }
+
+    // ****************************************** 
+    // toggleSort()
+    // input: none
+    // ****************************************** 
+    // Toggles the visibility of the sorting and filtering section (sort-section) 
+    // by adding or removing the 'hidden' CSS class.
+    // ****************************************** 
     function toggleSort() {
-        const sortSection = document.getElementById('sort-section');
-        if (sortSection.classList.contains('hidden')) {
-            sortSection.classList.remove('hidden');
-        } else {
-            sortSection.classList.add('hidden');
-        }
+        // Toggles the 'hidden' class: removes it if present, adds it if missing.
+        document.getElementById('sort-section').classList.toggle('hidden');
     }
 
     // ****************************************** 
@@ -612,96 +805,98 @@
     // any of those parameters change to update the displayed list accordingly.
     // ****************************************** 
     function renderList() {
-        const container = document.getElementById('heroContainer');  // get the container element where the hero list will be rendered
-        const searchTerm = document.getElementById('hero-search')?.value.toLowerCase() || "";  // get the value of the search input and convert to lowercase for case-insensitive matching, if the element doesn't exist default to an empty string
-        // Calculate totals for each player index across all characters for percentage calculations
-        const totals = [0, 1, 2, 3].map(i => characters.reduce((sum, c) => sum + c.weights[i], 0));  // create an array of totals for each player index by reducing the full characters array, summing up the weights for each player index across all characters, this is used to calculate the percentages for the stats display in the list, and ensures that the percentages are always relative to the entire pool of characters, even after filtering, so that players can see how their stats compare to the overall distribution in the database
-        // Filter the characters based on the search term and active complexity filters
-        const filtered = characters.filter(c => {   // filter the characters array to only include characters that match the search term in either their name or group, and also match the active complexity filters
-            const nameMatch = c.name.toLowerCase().includes(searchTerm);            // Check if the character's name includes the search term (case-insensitive)
-            const groupMatch = (c.group || "").toLowerCase().includes(searchTerm);  // Check if the character's group includes the search term (case-insensitive), if group is undefined use empty string to avoid errors
-            const complexityMatch = activeLevels.has(Number(c.complexity));         // Check if the character's complexity level is in the activeLevels Set, converting to Number to ensure correct type comparison
-            return (nameMatch || groupMatch) && complexityMatch;                    // Return true if either the name or group matches the search term AND the complexity level matches the active filters, this means that the character will only be included in the filtered list if it satisfies both the search criteria and the complexity filter criteria
+        const container = document.getElementById('heroContainer');
+        if (!container) return;
+        
+        const searchTerm = document.getElementById('hero-search')?.value.toLowerCase() || "";
+        const countLabel = document.getElementById('count-stats');
+
+        // 1. Efficiently calculate totals for the entire pool in a single pass O(N)
+        const totals = [0, 0, 0, 0];
+        characters.forEach(c => {
+            for (let i = 0; i < 4; i++) {
+                totals[i] += (c.weights && c.weights[i]) || 0;
+            }
         });
-        // Update the count of shown heroes vs total heroes in the database
-        const count = document.getElementById('count-stats');                               // Get the element that displays the count of shown heroes
-        if (count) {    // If the element exists, update its text to show how many heroes are currently displayed out of the total number of heroes in the database, this gives users immediate feedback on how their search and filter criteria are affecting the list
-            count.innerText = `Showing ${filtered.length} of ${characters.length} heroes`;  // Set the text to show the count of filtered heroes and total heroes
+
+        // 2. Prepare the list: Attach original indices to avoid expensive lookups during render,
+        // then filter based on search term and complexity levels.
+        const processedList = characters
+            .map((char, index) => ({ ...char, originalIndex: index }))
+            .filter(c => {
+                const nameMatch = c.name.toLowerCase().includes(searchTerm);
+                const groupMatch = (c.group || "").toLowerCase().includes(searchTerm);
+                const complexityMatch = activeLevels.has(Number(c.complexity));
+                return (nameMatch || groupMatch) && complexityMatch;
+            });
+
+        if (countLabel) {
+            countLabel.innerText = `Showing ${processedList.length} of ${characters.length} heroes`;
         }
-        // Sort the filtered list based on the current sort settings
-        const sorted = [...filtered].sort((a, b) => {
+
+        // 3. Sort the results based on current settings
+        processedList.sort((a, b) => {
             let valA, valB;
-            if (currentSort.startsWith('w')) {                          // If sorting by weight, we need to sort based on the specific player's weight at the index indicated by currentSort[1]
-                const idx = parseInt(currentSort[1]);                   // Extract the player index from the sort key, e.g. 'w0' -> 0 for Claudine, 'w1' -> 1 for Joel, etc.
-                valA = a.weights[idx]; valB = b.weights[idx];           // Get the weight values for the specified player index from both characters to compare for sorting
+            
+            if (currentSort.startsWith('w')) {
+                const idx = parseInt(currentSort[1]);
+                valA = a.weights[idx] || 0; 
+                valB = b.weights[idx] || 0;
             } 
-            else if (currentSort.startsWith('d')) {                     // If sorting by date, we need to sort based on the specific player's last played date at the index indicated by currentSort[1]
-                const idx = parseInt(currentSort[1]);                   // Extract the player index from the sort key, e.g. 'd0' -> 0 for Claudine, 'd1' -> 1 for Joel, etc.
-                valA = (a.lastPlayed && a.lastPlayed[idx]) || "";       // Get the last played date for the specified player index from both characters to compare for sorting, if lastPlayed or the specific index is undefined, default to an empty string to avoid errors
-                valB = (b.lastPlayed && b.lastPlayed[idx]) || "";       // Get the last played date for the specified player index from both characters to compare for sorting, if lastPlayed or the specific index is undefined, default to an empty string to avoid errors
-                if (valA === "Never") valA = "";                        // If the date is "Never", treat it as an empty string for sorting purposes so that characters that have never been played will be sorted together, this ensures that "Never" dates are consistently sorted either at the beginning or end of the list depending on the sort direction, rather than being treated as a string that could be sorted in an unexpected position
+            else if (currentSort.startsWith('d')) {
+                const idx = parseInt(currentSort[1]);
+                valA = (a.lastPlayed && a.lastPlayed[idx]) || "";
+                valB = (b.lastPlayed && b.lastPlayed[idx]) || "";
+                if (valA === "Never") valA = "";
                 if (valB === "Never") valB = "";
             } 
-            else {                                                      // For regular string sorting (e.g. name, group), we can just compare the strings directly, converting to lowercase for case-insensitive sorting
-                valA = (a[currentSort] || "").toLowerCase();            // Get the value of the current sort key from both characters to compare for sorting, if the value is undefined default to an empty string to avoid errors, convert to lowercase for case-insensitive sorting
+            else {
+                valA = (a[currentSort] || "").toLowerCase();
                 valB = (b[currentSort] || "").toLowerCase();
             }
 
-            if (valA < valB) return sortAsc ? -1 : 1;                   // If valA is less than valB, return -1 for ascending sort or 1 for descending sort to position a before b or b before a accordingly
-            if (valA > valB) return sortAsc ? 1 : -1;                   // If valA is greater than valB, return 1 for ascending sort or -1 for descending sort to position b before a or a before b accordingly
-            return 0;                                                   // If valA and valB are equal, return 0 to keep their relative order unchanged, this ensures a stable sort where characters with the same value for the sort key will maintain their order relative to each other from the original array, which can be important for user experience when sorting by different keys multiple times
+            if (valA === valB) return 0;
+            const comparison = valA < valB ? -1 : 1;
+            return sortAsc ? comparison : -comparison;
         });
 
-        // Generate the HTML for the sorted and filtered list
-        container.innerHTML = sorted.map(c => {
-            let activePlayers = [ 0, 1, 2, 3];
-            //let activePlayers = [0,1,2,3].filter(i => c.weights[i] > 0); // Only show stats for players that have a weight greater than 0 for this character, this means that if a character has been heavily played by a specific player and has a weight of 0 for that player, their stats will be hidden from the list to avoid showing stale data for characters that are effectively "retired" for that player, while still showing stats for other players who may have a weight greater than 0 for that character
-            const counts = c.playCount || [0,0,0,0];
-            const dates = c.lastPlayed || ["Never", "Never", "Never", "Never"];
-            
-            // Find the index in the ORIGINAL array so the Edit button works correctly
-            const realIdx = characters.findIndex(orig => orig.name === c.name);
+        // 4. Generate the HTML efficiently
+        container.innerHTML = processedList.map(c => {
+            const statsHtml = [0, 1, 2, 3].map(p => {
+                const weight = (c.weights && c.weights[p]) || 0;
+                const percentage = totals[p] > 0 ? ((weight / totals[p]) * 100).toFixed(1) : '0.0';
+                const playCount = (c.playCount && c.playCount[p]) || 0;
+                const lastPlayed = (c.lastPlayed && c.lastPlayed[p]) || "Never";
 
-            // 
-            const statsHtml = activePlayers.map(p => `
-                        <div class="stat-column">
-                            <!-- <span class="mini-name">${NAMES[p]}</span> -->
-                            <div class="player-tag" style="background-color: var(--p${p + 1}); margin-bottom: 8px; width: 100%; box-sizing: border-box;">${NAMES[p]}</div>
-                            <div class="stat-main">
-                                ${totals[p] > 0 ? ((c.weights[p]/totals[p])*100).toFixed(1) : '0.0'}%
-                            </div>
-                            <div class="stat-sub">(${c.weights[p]})</div>
-                            <div class="stat-sub">Plays: ${c.playCount ? c.playCount[p] : 0}</div>
-                            <div class="stat-date-small">${dates[p] || 'Never'}</div>
-                        </div>
-            `).join('');
+                return `
+                <div class="stat-column">
+                    <div class="player-tag" style="background-color: var(--p${p + 1}); margin-bottom: 8px; width: 100%; box-sizing: border-box;">${NAMES[p]}</div>
+                    <div class="stat-main">${percentage}%</div>
+                    <div class="stat-sub">(${weight})</div>
+                    <div class="stat-sub">Plays: ${playCount}</div>
+                    <div class="stat-date-small">${lastPlayed}</div>
+                </div>`;
+            }).join('');
 
             return `
-
-                <div class="hero-header">
-                    <span class="hero-name">${c.name}</span>
-                </div>
-                
+                <div class="hero-header"><span class="hero-name">${c.name}</span></div>
                 <div class="hero-body">
-
+                    <button class="btn-edit-small" onclick="editChar(${c.originalIndex})" title="Edit Hero">✎</button>
                     <div class="hero-main-info">
                         <a href="${getHeroLink(c.slug)}" target="_blank">
                             <div class="char-complexity-db">
-                                <img src="${getImgUrl(c.slug)}" class="char-img-roll">
-                                <img src="images/d${c.complexity}.png" class="complexity-roll">
+                                <img src="${getImgUrl(c.slug)}" class="char-img-roll" alt="${c.name}">
+                                <img src="images/d${c.complexity}.png" class="complexity-roll" alt="Complexity">
                             </div>
                         </a>
                         <span class="group-label">(${c.group || 'Season ?'})</span>
                     </div>
-                
                     <div class="hero-details">
-                        <div class="dynamic-stats">
-                            ${statsHtml}
-                        </div>
+                        <div class="dynamic-stats">${statsHtml}</div>
                     </div>
                 </div>`;
-            }).join('');
-        }
+        }).join('');
+    }
 
     init();
 </script>
