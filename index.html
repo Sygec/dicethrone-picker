@@ -49,6 +49,12 @@
             <label class="p-chk"><span class="player-tag" style="background:var(--p5)">Invitee 2</span> <input type="checkbox" id="use5"></label>
         </div>
 
+        <!-- Dropdown Sort Options -->
+        <div class="dropdown-sort-options">
+            <label><input type="radio" name="dropdownSort" value="name" checked onchange="updateDropdownSort()"> By Name</label>
+            <label><input type="radio" name="dropdownSort" value="weight" onchange="updateDropdownSort()"> By Percentage</label>
+        </div>
+
         <!-- Randomizer Results Area -->
         <section id="results" class="results" aria-live="polite"><p style="text-align: center; opacity: 0.6;">Select players and roll.</p></section>
 
@@ -441,6 +447,59 @@
     }
 
     // ****************************************** 
+    // updateDropdownSort()
+    // input: none
+    // ****************************************** 
+    // Refreshes all hero selection dropdowns in the results area
+    // based on the selected sort mode (Name vs Percentage).
+    // ****************************************** 
+    function updateDropdownSort() {
+        const dropdowns = document.querySelectorAll('.results .char-select');
+        dropdowns.forEach(dropdown => {
+            const pIdx = parseInt(dropdown.dataset.player);
+            const currentVal = dropdown.value;
+            dropdown.innerHTML = getSortedHeroOptions(pIdx, currentVal);
+        });
+    }
+
+    // ****************************************** 
+    // getSortedHeroOptions(pIdx, selectedName)
+    // input: pIdx -> player index, selectedName -> current hero
+    // ****************************************** 
+    // Returns HTML option tags for all heroes, sorted by the active
+    // mode. Percentage logic is only applied to main players (0-3).
+    // ****************************************** 
+    function getSortedHeroOptions(pIdx, selectedName) {
+        const sortMode = document.querySelector('input[name="dropdownSort"]:checked')?.value || 'name';
+        
+        let totalWeight = 0;
+        if (sortMode === 'weight' && pIdx < 4) {
+            characters.forEach(c => totalWeight += (c.weights?.[pIdx] ?? 100));
+        }
+
+        const sortedChars = [...characters].sort((a, b) => {
+            if (sortMode === 'name') return a.name.localeCompare(b.name);
+            
+            if (pIdx < 4) {
+                const wA = a.weights?.[pIdx] ?? 100;
+                const wB = b.weights?.[pIdx] ?? 100;
+                if (wA !== wB) return wB - wA; // Descending weight
+            }
+            return a.name.localeCompare(b.name);
+        });
+
+        return sortedChars.map(c => {
+            let label = c.name;
+            if (sortMode === 'weight' && pIdx < 4 && totalWeight > 0) {
+                const weight = c.weights?.[pIdx] ?? 100;
+                const pct = ((weight / totalWeight) * 100).toFixed(1);
+                label += ` (${pct}%)`;
+            }
+            return `<option value="${c.name}" ${c.name === selectedName ? 'selected' : ''}>${label}</option>`;
+        }).join('');
+    }
+
+    // ****************************************** 
     // renderPlayerRow(pIdx, selectedName)
     // input: pIdx -> player index, selectedName -> hero name
     // ****************************************** 
@@ -472,10 +531,7 @@
                     </div>
                     <!-- Dropdown for manual hero selection -->
                     <select class="char-select" data-player="${pIdx}" onchange="handleDropdownChange(this)">
-                        ${[...characters]
-                            .sort((a, b) => a.name.localeCompare(b.name))
-                            .map(c => `<option value="${c.name}" ${c.name === selectedName ? 'selected' : ''}>${c.name}</option>`)
-                            .join('')}
+                        ${getSortedHeroOptions(pIdx, selectedName)}
                     </select>
                 </div>
             </div>`;

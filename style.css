@@ -688,3 +688,25 @@
         border-top: 1px solid rgba(255, 255, 255, 0.1);
         padding-top: 2px;
         }
+
+        /* Dropdown Sort Radio Options */
+        .dropdown-sort-options {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 12px;
+        font-size: 0.75rem;
+        }
+
+        .dropdown-sort-options label {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        }
+
+        .dropdown-sort-options input[type="radio"] {
+        accent-color: var(--accent);
+        width: 14px;
+        height: 14px;
+        }
