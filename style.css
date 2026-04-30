@@ -7,7 +7,6 @@
                 text-align: center;
                 color: var(--accent);
                 letter-spacing: 2px;
-                /*margin-bottom: 20px;*/
                 text-transform: uppercase;
                 margin: 0px;
         }
@@ -282,7 +281,6 @@
                 border-radius: 8px;
                 font-weight: bold;
                 cursor: pointer;
-                /*margin: 25px 0 15px 0;*/
                 text-transform: uppercase;
                 font-size: 0.8rem;
                 margin-top: 100px;
@@ -343,24 +341,35 @@
         .hero-body {
                 background: var(--card-bg);
                 border-radius: 12px;
-                padding: 15px;
-                margin-bottom: 15px;
+                padding: 10px;
+                margin-bottom: 8px;
                 border: 1px solid var(--secondary);
                 display: flex;
                 gap: 15px;
                 position: relative;
         }
 
+        .hero-main-info {
+                padding-top: 8px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+        }
+
         .btn-edit-small {
-                position: absolute;
-                bottom: 10px;
-                left: 10px;
                 background: none;
-                border: none;
-                padding: 0;
-                font-size: 1.3rem;
+                font-size: 1.1rem;
                 cursor: pointer;
                 color: var(--accent);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background-color: rgba(255, 255, 255, 0.1);
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
+                cursor: pointer;
         }
 
         .list-thumb {
@@ -372,8 +381,12 @@
         }
 
         .hero-header {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                
                 text-align: left;
-                margin-bottom: -15px;
+                margin-bottom: -8px;
                 margin-left: 15px;
                 position: relative;
                 z-index: 2;
@@ -387,17 +400,14 @@
                 font-size: 1.1rem;
                 font-weight: bold;
                 color: var(--accent);
-                margin-bottom: 8px;
                 display: inline flow-root;
         }
 
         .group-label {
                 font-variant-caps: all-small-caps;
                 font-size: 0.8rem;
-                /*display: inline flow-root;*/
-                padding-top: 10px;
                 text-align: center;
-                display: block
+                display: inline flow-root;
         }
 
         .stats-grid {
@@ -465,8 +475,6 @@
                 gap: 8px;
                 width: 100%;
                 overflow-x: auto;
-                /*padding-top: 10px;*/
-                /*padding-bottom: 5px;*/
                 scrollbar-width: none;
                 justify-content: center;
         }
@@ -478,8 +486,6 @@
         /* The Compact Player Card */
         .player-card-mini {
                 flex: 0 0 auto;
-                /*background: rgba(255, 255, 255, 0.05);*/
-                /*border-left: 4px solid transparent;*/
                 border-radius: 4px;
                 padding: 5px 3px;
                 display: flex;

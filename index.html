@@ -935,9 +935,8 @@
             }).join('');
 
             return `
-                <div class="hero-header"><span class="hero-name">${c.name}</span></div>
+                <div class="hero-header"><span class="hero-name">${c.name}</span> <span class="group-label">(${c.group || 'Season ?'})</span></div>
                 <div class="hero-body">
-                    <button class="btn-edit-small" onclick="editChar(${c.originalIndex})" title="Edit Hero">✎</button>
                     <div class="hero-main-info">
                         <a href="${getHeroLink(c.slug)}" target="_blank">
                             <div class="char-complexity-db">
@@ -945,7 +944,8 @@
                                 <img src="images/d${c.complexity}.png" class="complexity-roll" alt="Complexity">
                             </div>
                         </a>
-                        <span class="group-label">(${c.group || 'Season ?'})</span>
+                        <!-- <span class="group-label">(${c.group || 'Season ?'})</span> -->
+                        <button class="btn-edit-small" onclick="editChar(${c.originalIndex})" title="Edit Hero">✎</button>
                     </div>
                     <div class="hero-details">
                         <div class="dynamic-stats">${statsHtml}</div>
