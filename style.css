@@ -48,6 +48,10 @@
                 min-width: 40px;
         }
 
+         .player-tag-small:hover {
+        cursor: pointer;
+        }
+
         .player-toggle-zone-top {
                 background: var(--card-bg);
                 padding: 15px;
@@ -64,6 +68,7 @@
                 margin-bottom: 5px;
                 display: flex;
                 flex-wrap: wrap;
+                gap: 5px;
         }
 
         .p-chk {
@@ -486,12 +491,12 @@
 
         /* The Compact Player Card */
         .player-card-mini {
-                flex: 0 0 auto;
-                border-radius: 4px;
-                padding: 5px 3px;
                 display: flex;
                 flex-direction: column;
-                gap: 4px;
+                /*flex: 0 0 auto;*/
+                gap: 13px;
+                border-radius: 4px;
+                padding: 5px 3px;
                 min-width: 40px;
                 justify-content: center;
         }
@@ -506,7 +511,7 @@
 
         .mini-actions {
                 display: grid;
-                gap: 4px;
+                gap: 8px;
         }
 
         .btn-mini-sort {
@@ -716,4 +721,19 @@
         accent-color: var(--accent);
         width: 14px;
         height: 14px;
+        }
+
+        /* Style for players that are filtered OUT */
+        .player-card-mini.inactive-filter {
+        filter: grayscale(100%); /* Turns it grey */
+        opacity: 0.6;            /* Makes it slightly see-through */
+        transform: scale(0.9);   /* Makes it 10% smaller */
+        transition: all 0.2s ease; /* Smooth transition when clicking */
+        }
+
+        /* Optional: hover effect to show it's clickable */
+        .player-card-mini.inactive-filter:hover {
+        filter: grayscale(50%);
+        opacity: 0.8;
+        cursor: pointer;
         }

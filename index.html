@@ -144,6 +144,7 @@
     let currentSort = 'name';
     let sortAsc = true;
     let editIndex = -1;
+    let activePlayerIndices = [0, 1, 2, 3];
 
     // ==========================================
     // 2. DOM ELEMENT REFERENCES
@@ -667,7 +668,7 @@
         const container = document.getElementById('player-sort-container');
         // Sort controls are only rendered for the main 4 players (indices 0-3)
         const mainPlayerNames = NAMES.slice(0, 4);
-        
+                
         let html = `
             <div class="player-card-mini">
                 <span class="mini-name"> </span>
@@ -677,18 +678,31 @@
             </div>
         `;
 
-        // Generate sort buttons for each of the main players (weights and last played dates)
-        html += mainPlayerNames.map((name, i) => `
-            <div class="player-card-mini" style="border-left-color: var(--p${i + 1});">
+        // Generate interactive player cards that act as visibility toggles and sort triggers
+        html += mainPlayerNames.map((name, i) => {
+            // Identify if the current player index is part of the active stats display
+            const isActive = activePlayerIndices.includes(i);
+            const filterClass = isActive ? '' : 'inactive-filter';
+
+            return `
+            <div class="player-card-mini ${filterClass}" 
+                 style="border-left-color: var(--p${i + 1});" 
+                 onclick="togglePlayerFilter(${i})">
                 <span class="player-tag-small" style="background:var(--p${i + 1})">${name}</span>
                 <div class="mini-actions">
-                    <button class="btn-mini-sort" id="sort-w${i}" onclick="setSort('w${i}')">%</button>
-                    <button class="btn-mini-sort" id="sort-d${i}" onclick="setSort('d${i}')">&#128197;</button>
+                    <!-- Important: use event.stopPropagation() so clicking these buttons 
+                         doesn't also trigger the togglePlayerFilter parent div -->
+                    <button class="btn-mini-sort" id="sort-w${i}" 
+                            onclick="event.stopPropagation(); setSort('w${i}')">%</button>
+                    <button class="btn-mini-sort" id="sort-d${i}" 
+                            onclick="event.stopPropagation(); setSort('d${i}')">&#128197;</button>
                 </div>
             </div>
-        `).join('');
+        `;
+        }).join('');
 
-        container.innerHTML = html;
+    container.innerHTML = html;
+
     }
     
     // ****************************************** 
@@ -853,6 +867,30 @@
     }
 
     // ****************************************** 
+    // togglePlayerFilter(index)
+    // input: index -> the player index to toggle
+    // ****************************************** 
+    // Adds or removes a player from the active filter list
+    // and refreshes the database and sorting UI.
+    // ****************************************** 
+    function togglePlayerFilter(index) {
+        const position = activePlayerIndices.indexOf(index);
+
+        if (position === -1) {
+            // Add the player index to the filter if it's not currently active
+            activePlayerIndices.push(index);
+            activePlayerIndices.sort((a, b) => a - b);
+        } else {
+            // Remove the player index from the filter if it's already active
+            activePlayerIndices.splice(position, 1);
+        }
+
+        // Re-render the list and sort controls to reflect the updated filter state
+        renderList();
+        renderSortControls(); 
+    }
+    
+    // ****************************************** 
     // renderList()
     // input: none
     // ****************************************** 
@@ -918,7 +956,7 @@
 
         // 4. Generate the HTML efficiently
         container.innerHTML = processedList.map(c => {
-            const statsHtml = [0, 1, 2, 3].map(p => {
+            const statsHtml = activePlayerIndices.map(p => {
                 const weight = (c.weights && c.weights[p]) || 0;
                 const percentage = totals[p] > 0 ? ((weight / totals[p]) * 100).toFixed(1) : '0.0';
                 const playCount = (c.playCount && c.playCount[p]) || 0;
