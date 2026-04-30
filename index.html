@@ -113,10 +113,10 @@
             <div class="manage-form">
                 <h3 id="formTitle" style="margin-top:0; font-size: 1rem; color: var(--accent);">Add New Hero</h3>
                 <div class="form-grid">
-                    <input type="text" id="charName" placeholder="Hero Name">
-                    <input type="text" id="charGroup" placeholder="Group (e.g. Season 1)">
-                    <input type="text" id="charSlug" placeholder="Slug (for image)">
-                    <input type="text" id="charComplexity" placeholder="Complexity level">
+                    <input type="text" id="charName" style="font-size: 16px;" placeholder="Hero Name">
+                    <input type="text" id="charGroup" style="font-size: 16px;" placeholder="Group (e.g. Season 1)">
+                    <input type="text" id="charSlug" style="font-size: 16px;" placeholder="Slug (for image)">
+                    <input type="text" id="charComplexity" style="font-size: 16px;" placeholder="Complexity level">
                 </div>
                 <button type="button" class="btn-save" id="saveBtn" onclick="saveCharacter()">Save Hero</button>
                 <button type="button" class="btn-cancel" id="cancelBtn" onclick="resetForm()" style="display:none;">Cancel Edit</button>
@@ -371,7 +371,7 @@
 
         // Smoothly scroll to the form and focus the first field
         adminSection.scrollIntoView({ behavior: 'smooth' });
-        document.getElementById('charName').focus();
+        // document.getElementById('charName').focus();
     }
 
     // ****************************************** 
