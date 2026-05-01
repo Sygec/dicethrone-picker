@@ -73,7 +73,7 @@
             <!-- Search & Filtering -->
             <div class="search-container">
                 <div class="search-wrapper">
-                    <input class="search-bar" type="text" id="hero-search" placeholder="Search Heroes or Groups..." oninput="handleSearchInput()" aria-label="Search heroes by name or group">
+                    <input class="search-bar" type="text" id="hero-search" style="font-size: 16px;" placeholder="Search Heroes or Groups..." oninput="handleSearchInput()" aria-label="Search heroes by name or group">
                     <div class="search-actions">
                         <img src="images/icons/close.png" id="clear-search" class="search-icon hidden" onclick="clearSearch()" alt="Clear" title="Clear Search">
                         <img src="images/icons/sort.png" id="sort-toggle" class="search-icon" onclick="toggleSort()" alt="Sort" title="Toggle Sort Section">
@@ -685,17 +685,13 @@
             const filterClass = isActive ? '' : 'inactive-filter';
 
             return `
-            <div class="player-card-mini ${filterClass}" 
-                 style="border-left-color: var(--p${i + 1});" 
-                 onclick="togglePlayerFilter(${i})">
-                <span class="player-tag-small" style="background:var(--p${i + 1})">${name}</span>
+            <div class="player-card-mini ${filterClass}" style="border-left-color: var(--p${i + 1});">
+                <span class="player-tag-small" style="background:var(--p${i + 1})" onclick="togglePlayerFilter(${i})">${name}</span>
                 <div class="mini-actions">
-                    <!-- Important: use event.stopPropagation() so clicking these buttons 
-                         doesn't also trigger the togglePlayerFilter parent div -->
                     <button class="btn-mini-sort" id="sort-w${i}" 
-                            onclick="event.stopPropagation(); setSort('w${i}')">%</button>
+                            ${isActive ? `onclick="setSort('w${i}')"` : 'style="pointer-events: none;"'}>%</button>
                     <button class="btn-mini-sort" id="sort-d${i}" 
-                            onclick="event.stopPropagation(); setSort('d${i}')">&#128197;</button>
+                            ${isActive ? `onclick="setSort('d${i}')"` : 'style="pointer-events: none;"'}>&#128197;</button>
                 </div>
             </div>
         `;
@@ -883,11 +879,18 @@
         } else {
             // Remove the player index from the filter if it's already active
             activePlayerIndices.splice(position, 1);
+            if (currentSort === `w${index}` || currentSort === `d${index}`) {
+                // If the current sort is based on the player being toggled off, reset to default sort
+                currentSort = 'name';
+                sortAsc = true;
+            }
         }
 
-        // Re-render the list and sort controls to reflect the updated filter state
-        renderList();
-        renderSortControls(); 
+        renderSortControls();
+        // Re-apply sort highlight and trigger list update without toggling direction
+        const activeKey = currentSort;
+        currentSort = null;
+        setSort(activeKey);
     }
     
     // ****************************************** 

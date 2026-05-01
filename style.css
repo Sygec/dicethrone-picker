@@ -732,8 +732,8 @@
         }
 
         /* Optional: hover effect to show it's clickable */
-        .player-card-mini.inactive-filter:hover {
+/*        .player-card-mini.inactive-filter:hover {
         filter: grayscale(50%);
         opacity: 0.8;
         cursor: pointer;
-        }
+        }*/
