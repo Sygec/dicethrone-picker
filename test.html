@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- <link rel="manifest" href="manifest.json"> -->
+    <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>Supa Dice Throne</title>
+
+    <script>
+        // Check if this is Production or Local environment based on hostname
+        const isProd = window.location.hostname === "dicethrone-picker.pages.dev" || window.location.hostname === "sygec.github.io"; 
+        const themeLink = document.createElement('link');
+        themeLink.rel = 'stylesheet';
+        themeLink.href = isProd ? 'style-prod.css' : 'style-dev.css';
+        document.head.appendChild(themeLink);
+    </script>
+    <!-- Additionnally, link the common stylesheet -->
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body>
+    <main class="container">
+        <h1>Supa Dice Throne</h1>
+
+        <!-- Player Selection Zone -->
+        <div class="player-toggle-zone-top" id="player-toggle-zone-top"></div>
+    </main>
+
+    <script>
+        // ==========================================
+        // 1. GLOBAL CONSTANTS & STATE
+        // ==========================================
+        const SUPABASE_URL = "https://wmxrzjmadvivvpzbslgj.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_Hohs2ojpVd5nmRJoi0upNg_PJv8M7x6";
+        const HEROES_TABLE = "heroes";
+        const PLAYERS_TABLE = "players";
+
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ==========================================
+        // loadPlayersData()
+        // ------------------------------------------
+        // Fetches all players from the database. 
+        // ==========================================
+        async function loadPlayersData() {
+            const { data, error } = await db.from(PLAYERS_TABLE).select("*");
+            
+            if (error) {
+                throw new Error(error.message);
+            }
+            
+            return data;
+        }
+
+        // ==========================================
+        // displayPlayerSelectionZone()
+        // ------------------------------------------
+        // Displays players in the player toggle zone. 
+        // ==========================================
+        function displayPlayerSelectionZone(players) {
+            const playerZone = document.getElementById("player-toggle-zone-top");
+            
+            playerZone.innerHTML += `
+                ${players.map((player, index) => `
+                    <label class="p-chk">
+                        <span class="player-tag" style="background:var(--${player.id})">${player.name}</span>
+                        <input type="checkbox" id="use${index}" ${index < 4 ? "checked" : ""}>
+                    </label>
+                `).join("")}
+            `;
+            playerZone.innerHTML += `
+                <label class="p-chk"><span class="player-tag" style="background:var(--p5)">Invitee 1</span> <input type="checkbox" id="use4"></label>
+                <label class="p-chk"><span class="player-tag" style="background:var(--p5)">Invitee 2</span> <input type="checkbox" id="use5"></label>
+            `;
+        }
+
+        // ==========================================
+        // loadPlayers()
+        // ------------------------------------------
+        // This function loads player data and then displays it. If there's an error, it shows the error message in the player zone.
+        // ==========================================
+        async function loadPlayers() {
+            try {
+                const players = await loadPlayersData();
+                displayPlayerSelectionZone(players);
+            } catch (error) {
+                const playerZone = document.getElementById("player-toggle-zone-top");
+                playerZone.textContent = "Error: " + error.message;
+            }
+        }
+
+        loadPlayers();
+    </script>
+</body>
+</html>
