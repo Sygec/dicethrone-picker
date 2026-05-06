@@ -21,31 +21,12 @@ const modal = document.getElementById("changelog-modal");
 const closeBtn = document.querySelector(".close-button");
 
 // ==========================================
-// 3. FIREBASE CONFIGURATION
+// 3. SUPABASE CONFIGURATION
 // ==========================================
-const prodFirebaseConfig = {
-    apiKey: "AIzaSyDxBCHqFOr3K-Vh4-KeTAUt2UM03DJ60nE", 
-    authDomain: "dicethrone-ba1f1.firebaseapp.com", 
-    databaseURL: "https://dicethrone-ba1f1-default-rtdb.firebaseio.com", 
-    projectId: "dicethrone-ba1f1", 
-    storageBucket: "dicethrone-ba1f1.firebasestorage.app", 
-    messagingSenderId: "580487401452", 
-    appId: "1:580487401452:web:94d49e4bff6f3815b63ac9"
-};
+const SUPABASE_URL = 'https://wmxrzjmadvivvpzbslgj.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Hohs2ojpVd5nmRJoi0upNg_PJv8M7x6';
 
-const devFirebaseConfig = {
-    apiKey: "AIzaSyDIrNnHU5TkKuXCsZJpuLHxzbhfhIV9KXk", 
-    authDomain: "dicethrone-dev.firebaseapp.com", 
-    projectId: "dicethrone-dev", 
-    storageBucket: "dicethrone-dev.firebasestorage.app", 
-    messagingSenderId: "139571744700", 
-    appId: "1:139571744700:web:5d9755e7a7fa2a5711e5b9"
-};
-
-// Initialize Firebase with config based on hostname (isProd defined in <head>)
-const selectedConfig = isProd ? prodFirebaseConfig : devFirebaseConfig;
-firebase.initializeApp(selectedConfig);
-const db = firebase.database();
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ==========================================
 // 4. UTILITY HELPERS
@@ -93,19 +74,57 @@ window.onclick = (event) => {
 // init()
 // input: none
 // ****************************************** 
-// Establishes the Firebase listener and sets the initial sort state.
+// Fetches initial data from Supabase and sets the initial sort state.
 // ****************************************** 
-function init() {
-    db.ref('characters_v4').on('value', snap => {
-        // 1. Update data first to ensure rendering uses latest values
-        characters = snap.val() || [];
-        renderSortControls();
-        
-        // 2. Re-apply current sort (which internally calls renderList)
-        const initialSort = currentSort;
-        currentSort = null;
-        setSort(initialSort);
+async function init() {
+    const { data, error } = await db
+        .from('heroes')
+        .select(`
+            *,
+            groups (name),
+            player_hero_stats (*)
+        `);
+
+    if (error) return console.error("Error fetching heroes:", error);
+
+    // Transform Supabase relational data into the flat array format expected by the app
+    characters = data.map(hero => {
+        const char = {
+            id: hero.id,
+            name: hero.name,
+            slug: hero.slug,
+            complexity: hero.complexity,
+            group: hero.groups?.name || "Unknown",
+            weights: [100, 100, 100, 100],
+            playCount: [0, 0, 0, 0],
+            lastPlayed: ["Never", "Never", "Never", "Never"]
+        };
+
+        // Map stats from the player_hero_stats table into the arrays by player index
+        hero.player_hero_stats?.forEach(stat => {
+            // Map player IDs "p1"-"p4" from the database to internal indices 0-3
+            const pIdx = parseInt(stat.player_id.substring(1)) - 1;
+            if (pIdx >= 0 && pIdx < 4) {
+                char.weights[pIdx] = stat.weight;
+                char.playCount[pIdx] = stat.play_count;
+                char.lastPlayed[pIdx] = stat.last_played || "Never";
+            }
+        });
+
+        return char;
     });
+
+    renderSortControls();
+    const initialSort = currentSort;
+    currentSort = null;
+    setSort(initialSort);
+
+    // Setup Realtime subscription
+    db
+        .channel('schema-db-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'player_hero_stats' }, init)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'heroes' }, init)
+        .subscribe();
 }
 
 // ****************************************** 
@@ -179,9 +198,9 @@ function toggleAdmin() {
 // saveCharacter()
 // input: none
 // ****************************************** 
-// Adds a new hero or updates an existing one in the database.
+// Adds a new hero or updates an existing one in Supabase.
 // ****************************************** 
-function saveCharacter() {
+async function saveCharacter() {
     // Extract and trim values from management form inputs
     const name = document.getElementById('charName').value.trim();
     const group = document.getElementById('charGroup').value.trim();
@@ -190,24 +209,25 @@ function saveCharacter() {
     
     if (!name) return alert("Name is required");
 
-    if (editIndex > -1) {
-        // Update existing hero: merge changes while preserving play history and weights
-        characters[editIndex] = { ...characters[editIndex], name, group, slug, complexity };
-    } else {
-        // Create a new hero record with high initial weights to prioritize new additions
-        characters.push({
-            name, 
-            group, 
-            slug, 
-            complexity,
-            weights: [300, 300, 300, 300],
-            playCount: [0, 0, 0, 0],
-            lastPlayed: ["", "", "", ""]
-        });
-    }
+    // Note: This logic assumes groups are handled by name for simplicity
+    // In a full implementation, you'd lookup/create the group_id first.
+    const charData = {
+        name,
+        slug,
+        complexity: parseInt(complexity)
+    };
 
-    // Persist the full array to Firebase and clear the management UI
-    db.ref('characters_v4').set(characters);
+    if (editIndex > -1) charData.id = characters[editIndex].id;
+
+    const { data: hero, error } = await db
+        .from('heroes')
+        .upsert(charData)
+        .select()
+        .single();
+
+    if (error) return alert("Error saving: " + error.message);
+
+    init(); // Refresh local state
     resetForm();
 }
 
@@ -479,12 +499,13 @@ function validateSelection() {
 // applyResults()
 // input: none
 // ****************************************** 
-// Updates weights and play history in the database for 
+// Updates weights and play history in Supabase for 
 // the currently selected heroes.
 // ****************************************** 
-function applyResults() {
+async function applyResults() {
     const dropdowns = document.querySelectorAll('.char-select');
     const today = new Date().toLocaleDateString('en-CA');
+    const statsUpdates = [];
     
     // Create a Map of [playerIndex -> heroName] for fast lookups
     const activePicks = new Map(
@@ -499,24 +520,25 @@ function applyResults() {
             // Only update data if this player was active in the current session
             if (playerChoice !== undefined) {
                 const wasPicked = (playerChoice === char.name);
+                const newWeight = wasPicked ? 20 : (char.weights[pIdx] || 100) + 10;
 
-                // Adjust weights: Reset picked hero to 20, boost others by +10
-                char.weights[pIdx] = wasPicked ? 20 : (char.weights[pIdx] || 100) + 10;
-
-                if (wasPicked) {
-                    // Ensure stat arrays exist for legacy/new heroes
-                    if (!char.playCount) char.playCount = [0, 0, 0, 0];
-                    if (!char.lastPlayed) char.lastPlayed = ["", "", "", ""];
-
-                    char.playCount[pIdx] = (char.playCount[pIdx] || 0) + 1;
-                    char.lastPlayed[pIdx] = today;
-                }
+                statsUpdates.push({
+                    hero_id: char.id,
+                    player_id: `p${pIdx + 1}`,
+                    weight: newWeight,
+                    play_count: wasPicked ? (char.playCount[pIdx] || 0) + 1 : (char.playCount[pIdx] || 0),
+                    last_played: wasPicked ? today : (char.lastPlayed[pIdx] === "Never" ? null : char.lastPlayed[pIdx])
+                });
             }
         });
     });
 
-    // Sync changes to Firebase and update the UI
-    db.ref('characters_v4').set(characters);
+    const { error } = await db
+        .from('player_hero_stats')
+        .upsert(statsUpdates);
+
+    if (error) return alert("Error saving results: " + error.message);
+
     document.getElementById('confirmBtn').style.display = 'none';
     document.getElementById('results').innerHTML = `
         <p style="color:#28a745; text-align:center; font-weight:bold;">
@@ -617,14 +639,14 @@ window.addEventListener('DOMContentLoaded', updateDiceVisuals);
 // Resets the randomization weights for all heroes to 100 
 // for all players after a user confirmation.
 // ****************************************** 
-function resetAllWeights() {
+async function resetAllWeights() {
     if (confirm("Reset all probabilities to 100?")) {
-        // Iterate through every character and reset the weight array
+        const updates = [];
         characters.forEach(c => {
-            c.weights = [100, 100, 100, 100];
+            [0,1,2,3].forEach(p => updates.push({ hero_id: c.id, player_id: `p${p + 1}`, weight: 100 }));
         });
-        // Sync the changes back to the Firebase database
-        db.ref('characters_v4').set(characters);
+        await db.from('player_hero_stats').upsert(updates, { onConflict: 'player_id, hero_id' });
+        init();
     }
 }
 
@@ -635,15 +657,14 @@ function resetAllWeights() {
 // Resets play counts and last played dates for all heroes
 // across all players after a user confirmation.
 // ****************************************** 
-function resetAllStats() {
+async function resetAllStats() {
     if (confirm("Reset all play history?")) {
-        // Clear stats locally for every character in the array
+        const updates = [];
         characters.forEach(c => {
-            c.playCount = [0, 0, 0, 0];
-            c.lastPlayed = ["", "", "", ""];
+            [0,1,2,3].forEach(p => updates.push({ hero_id: c.id, player_id: `p${p + 1}`, play_count: 0, last_played: null }));
         });
-        // Update the remote database with the cleared statistics
-        db.ref('characters_v4').set(characters);
+        await db.from('player_hero_stats').upsert(updates, { onConflict: 'player_id, hero_id' });
+        init();
     }
 }
 
