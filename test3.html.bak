@@ -129,7 +129,7 @@
     </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./javascript/dice-throne.js"></script>
+<script src="./javascript/test3.js"></script>
 
 </body>
 </html>
