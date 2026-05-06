@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dice Throne</title>
+
+    <!-- Stylesheets: We will dynamically load either the production or development stylesheet based on the hostname -->
+    <script>
+        // Check if this is Production or Local environment based on hostname
+        const isProd = window.location.hostname === "dicethrone-picker.pages.dev" || window.location.hostname === "sygec.github.io"; 
+        
+        // Create a new link element
+        const themeLink = document.createElement('link');
+        themeLink.rel = 'stylesheet';
+        // Assign the file path based on if this is prod or dev
+        themeLink.href = isProd ? 'style-prod.css' : 'style-dev.css';
+        // Append it to the head
+        document.head.appendChild(themeLink);
+    </script>
+    <!-- Additionnally, link the common stylesheet -->
+    <link rel="stylesheet" type="text/css" href="style.css">
+
+</head>
+
+<body>
+    <main class="container">
+        <h1>Supa Dice Throne</h1>
+        <div class="small-text">v<button id="version-number" aria-label="View changelog" style="background:none; border:none; color:inherit; font:inherit; cursor:pointer; text-decoration:underline; padding:0;">...</button></div>
+
+        <!-- Changelog Modal -->
+        <div id="changelog-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Change Log</h2>
+            <hr>
+            <div id="changelog-container"></div>
+        </div>
+        </div>   
+        
+        <!-- Player Selection Toggles -->
+        <div class="player-toggle-zone-top">
+            <label class="p-chk"><span class="player-tag" style="background:var(--p1)">Claudine</span> <input type="checkbox" id="use0" checked></label>
+            <label class="p-chk"><span class="player-tag" style="background:var(--p2)">Joel</span> <input type="checkbox" id="use1" checked></label>
+            <label class="p-chk"><span class="player-tag" style="background:var(--p3)">Julie</span> <input type="checkbox" id="use2" checked></label>
+            <label class="p-chk"><span class="player-tag" style="background:var(--p4)">Martin</span> <input type="checkbox" id="use3" checked></label>
+            <label class="p-chk"><span class="player-tag" style="background:var(--p5)">Invitee 1</span> <input type="checkbox" id="use4"></label>
+            <label class="p-chk"><span class="player-tag" style="background:var(--p5)">Invitee 2</span> <input type="checkbox" id="use5"></label>
+        </div>
+
+        <!-- Dropdown Sort Options -->
+        <div class="dropdown-sort-options">
+            <label><input type="radio" name="dropdownSort" value="name" checked onchange="updateDropdownSort()"> By Name</label>
+            <label><input type="radio" name="dropdownSort" value="weight" onchange="updateDropdownSort()"> By Percentage</label>
+        </div>
+
+        <!-- Randomizer Results Area -->
+        <section id="results" class="results" aria-live="polite"><p style="text-align: center; opacity: 0.6;">Select players and roll.</p></section>
+
+        <!-- Validation Error Message -->
+        <div id="error-msg" role="alert">⚠ Duplicate hero selected! Each player must have a unique character.</div>
+
+        <!-- Action Buttons -->
+        <button id="rollBtn" type="button" onclick="pickCharacters()">ROLL RANDOMIZER</button>
+        <button id="confirmBtn" type="button" class="btn-confirm" onclick="applyResults()">LOCK IN SESSION</button>
+
+        <!-- Hero Database & Stats Section -->
+        <button type="button" class="db-toggle-btn" onclick="toggleDatabase()">📂 Show Hero Database & Stats</button>
+
+        <section id="dbSection" class="hidden">
+
+            <!-- Search & Filtering -->
+            <div class="search-container">
+                <div class="search-wrapper">
+                    <input class="search-bar" type="text" id="hero-search" style="font-size: 16px;" placeholder="Search Heroes or Groups..." oninput="handleSearchInput()" aria-label="Search heroes by name or group">
+                    <div class="search-actions">
+                        <img src="images/icons/close.png" id="clear-search" class="search-icon hidden" onclick="clearSearch()" alt="Clear" title="Clear Search">
+                        <img src="images/icons/sort.png" id="sort-toggle" class="search-icon" onclick="toggleSort()" alt="Sort" title="Toggle Sort Section">
+                    </div>
+                </div>
+                <div class="small-text" id="count-stats">
+                    Showing 0 of 0 heroes
+                </div>
+            </div>
+
+            <div id="sort-section" class="hidden">
+                <div class="sort-controls">
+                    <div class="sort-row">
+                        <div id="player-sort-container" class="player-toggle-zone"></div>
+                    </div>
+                </div>
+                <!-- Complexity Filter -->
+                <div class="dice-filter-section" style="margin-bottom: 20px;">
+                    <div class="dice-bar">
+                        <img src="images/d1.png" class="dice-icon" id="dice-1" onclick="toggleLevel(1)" title="Level 1">
+                        <img src="images/d2.png" class="dice-icon" id="dice-2" onclick="toggleLevel(2)" title="Level 2">
+                        <img src="images/d3.png" class="dice-icon" id="dice-3" onclick="toggleLevel(3)" title="Level 3">
+                        <img src="images/d4.png" class="dice-icon" id="dice-4" onclick="toggleLevel(4)" title="Level 4">
+                        <img src="images/d5.png" class="dice-icon" id="dice-5" onclick="toggleLevel(5)" title="Level 5">
+                        <img src="images/d6.png" class="dice-icon" id="dice-6" onclick="toggleLevel(6)" title="Level 6">
+                        <img src="images/d_all.png" class="dice-icon" id="dice-all" onclick="toggleLevel('all')" title="All Levels">
+                    </div>
+                </div>
+            </div>
+
+            <div id="heroContainer"></div>
+        </section>
+
+        <!-- Admin & Data Management -->
+        <button type="button" class="admin-toggle-btn" onclick="toggleAdmin()">⚠ Show Admin Section</button>
+        <section id="adminSection" class="hidden">
+            <div class="manage-form">
+                <h3 id="formTitle" style="margin-top:0; font-size: 1rem; color: var(--accent);">Add New Hero</h3>
+                <div class="form-grid">
+                    <input type="text" id="charName" style="font-size: 16px;" placeholder="Hero Name">
+                    <input type="text" id="charGroup" style="font-size: 16px;" placeholder="Group (e.g. Season 1)">
+                    <input type="text" id="charSlug" style="font-size: 16px;" placeholder="Slug (for image)">
+                    <input type="text" id="charComplexity" style="font-size: 16px;" placeholder="Complexity level">
+                </div>
+                <button type="button" class="btn-save" id="saveBtn" onclick="saveCharacter()">Save Hero</button>
+                <button type="button" class="btn-cancel" id="cancelBtn" onclick="resetForm()" style="display:none;">Cancel Edit</button>
+            </div>        
+            <div style="margin-top:20px; border-top: 1px solid #ffffff22; padding-top:15px;">
+                <button type="button" class="btn-danger" onclick="resetAllWeights()">RESET PROBABILITIES TO 100</button>
+                <button type="button" class="btn-danger" onclick="resetAllStats()">RESET PLAY COUNTS & DATES</button>
+            </div>
+        </section>
+    </main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./javascript/test3.js"></script>
+
+</body>
+</html>
