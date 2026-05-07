@@ -23,8 +23,13 @@ const closeBtn = document.querySelector(".close-button");
 // ==========================================
 // 3. SUPABASE CONFIGURATION
 // ==========================================
-const SUPABASE_URL = 'https://wmxrzjmadvivvpzbslgj.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_Hohs2ojpVd5nmRJoi0upNg_PJv8M7x6';
+const PROD_SUPABASE_URL = 'https://ojqkkixtvdtccuixishh.supabase.co';
+const PROD_SUPABASE_KEY = 'sb_publishable_ney6ldkU_5Rfa1PZG89DVw_QejBB0w0';
+const DEV_SUPABASE_URL = 'https://wmxrzjmadvivvpzbslgj.supabase.co';
+const DEV_SUPABASE_KEY = 'sb_publishable_Hohs2ojpVd5nmRJoi0upNg_PJv8M7x6';
+
+const SUPABASE_URL = isProd ? PROD_SUPABASE_URL : DEV_SUPABASE_URL;
+const SUPABASE_KEY = isProd ? PROD_SUPABASE_KEY : DEV_SUPABASE_KEY;
 
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
