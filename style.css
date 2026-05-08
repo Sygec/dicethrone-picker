@@ -731,6 +731,18 @@
         transition: all 0.2s ease; /* Smooth transition when clicking */
         }
 
+        /* Build Info Box in Admin Section */
+        #admin-build-info {
+                background: rgba(255, 255, 255, 0.05);
+                padding: 12px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                border: 1px solid var(--secondary);
+                font-size: 0.75rem;
+                line-height: 1.6;
+                color: #aaa;
+                border-left: 4px solid var(--accent);
+        }
         /* Optional: hover effect to show it's clickable */
 /*        .player-card-mini.inactive-filter:hover {
         filter: grayscale(50%);

@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.2.1.20260507",
+    "changes": ["New aggressive weight system strongly favoring less played heroes without eliminating the others","Added new build info panel in admin section"]
+  },
+  {
+    "version": "1.2.0.20260507",
+    "changes": ["Move to Supabase"]
+  },
+  {
     "version": "1.1.4.20260501",
     "changes": ["Added ability to hide players from hero stats and sort section", "Re-added edit button for heroes", "Minor hero panel tweaks"]
   },
