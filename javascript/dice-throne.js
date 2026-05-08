@@ -959,7 +959,9 @@ function renderGamesList() {
             return `
                 <div class="stat-column" style="${boxStyle}">
                     <div class="player-tag" style="background-color: var(--p${pIdx + 1}); margin-bottom: 8px; width: 100%; box-sizing: border-box;">${NAMES[pIdx]}</div>
-                    <img src="${getImgUrl(heroSlug)}" style="width: 40px; height: 40px; border-radius: 4px; border: 1px solid var(--accent); margin-bottom: 4px;" alt="${heroName}">
+                    <a href="${getHeroLink(heroSlug)}" target="_blank" style="display: block;">
+                        <img src="${getImgUrl(heroSlug)}" style="width: 40px; height: 40px; border-radius: 4px; border: 1px solid var(--accent); margin-bottom: 4px;" alt="${heroName}">
+                    </a>
                     <div class="stat-main" style="font-size: 0.7rem;">${heroName}</div>
                 </div>`;
         }).join('');
