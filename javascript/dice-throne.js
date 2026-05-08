@@ -555,19 +555,34 @@ async function applyResults() {
     const dropdowns = document.querySelectorAll('.char-select');
     const today = new Date().toLocaleDateString('en-CA');
     const statsUpdates = [];
+    const gameParticipants = [];
     
     // Create a Map of [playerIndex -> heroName] for fast lookups
     const activePicks = new Map(
         Array.from(dropdowns).map(sel => [parseInt(sel.dataset.player), sel.value])
     );
 
+    // 1. Create the game record first to get the unique ID for this session
+    const { data: game, error: gameError } = await db.from('games').insert({}).select().single();
+    if (gameError) return alert("Error creating game: " + gameError.message);
+
     characters.forEach(char => {
-        // Weights and history are only tracked for the 4 main players
-        [0, 1, 2, 3].forEach(pIdx => {
+        // Loop through all 6 potential player slots to record the game history
+        [0, 1, 2, 3, 4, 5].forEach(pIdx => {
             const playerChoice = activePicks.get(pIdx);
+
+            // Add to game record if this specific player is using this specific hero
+            if (playerChoice === char.name) {
+                gameParticipants.push({
+                    game_id: game.id,
+                    player_id: `p${pIdx + 1}`,
+                    hero_id: char.id,
+                    is_winner: null // Explicitly undecided
+                });
+            }
             
-            // Only update data if this player was active in the current session
-            if (playerChoice !== undefined) {
+            // Long-term stats and weighting are only tracked for the 4 main players (0-3)
+            if (pIdx < 4 && playerChoice !== undefined) {
                 const wasPicked = (playerChoice === char.name);
                 const newWeight = wasPicked ? 20 : (char.weights[pIdx] || 100) + 10;
 
@@ -582,6 +597,11 @@ async function applyResults() {
         });
     });
 
+    // 2. Save the participants to the junction table
+    const { error: gpError } = await db.from('game_players').insert(gameParticipants);
+    if (gpError) return alert("Error logging game participants: " + gpError.message);
+
+    // 3. Update the weights and play counts for main players
     const { error } = await db
         .from('player_hero_stats')
         .upsert(statsUpdates);
@@ -591,7 +611,7 @@ async function applyResults() {
     document.getElementById('confirmBtn').style.display = 'none';
     document.getElementById('results').innerHTML = `
         <p style="color:#28a745; text-align:center; font-weight:bold;">
-            Session Logged! Stats & weights updated.
+            Session Logged! Game record created and stats updated.
         </p>`;
 }
 
