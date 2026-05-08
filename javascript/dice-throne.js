@@ -113,7 +113,6 @@ async function init() {
             if (pIdx >= 0 && pIdx < 4) {
                 char.weights[pIdx] = stat.weight;
                 char.playCount[pIdx] = stat.play_count;
-                char.lastPlayed[pIdx] = stat.last_played || "Never";
             }
         });
 
@@ -127,6 +126,7 @@ async function init() {
             id,
             played_at,
             game_players (
+                hero_id,
                 player_id,
                 is_winner,
                 heroes (
@@ -139,7 +139,33 @@ async function init() {
         .order('played_at', { ascending: false });
 
     if (gamesError) console.error("Error fetching games:", gamesError);
-    else games = gamesData;
+    else {
+        games = gamesData;
+
+        // Recalculate lastPlayed based on game history to ensure accuracy (handles legacy data and deletions)
+        characters.forEach(char => {
+            for (let i = 0; i < 4; i++) {
+                if (char.playCount[i] === 0) {
+                    char.lastPlayed[i] = "Never";
+                } else {
+                    const pId = `p${i + 1}`;
+                    // Find the most recent game entry for this specific hero and player combo
+                    const lastGame = games.find(g => 
+                        g.game_players.some(gp => gp.hero_id === char.id && gp.player_id === pId)
+                    );
+                    
+                    if (lastGame) {
+                        let d = lastGame.played_at || "";
+                        if (d && !d.includes('T')) d = d.replace(' ', 'T');
+                        if (d && !d.includes('Z') && !d.includes('+')) d += 'Z';
+                        char.lastPlayed[i] = new Date(d).toLocaleDateString('en-CA');
+                    } else {
+                        char.lastPlayed[i] = "Unknown";
+                    }
+                }
+            }
+        });
+    }
 
     renderSortControls();
     renderAdminBuildInfo();
@@ -617,7 +643,7 @@ async function applyResults() {
                     player_id: `p${pIdx + 1}`,
                     weight: newWeight,
                     play_count: wasPicked ? (char.playCount[pIdx] || 0) + 1 : (char.playCount[pIdx] || 0),
-                    last_played: wasPicked ? today : (char.lastPlayed[pIdx] === "Never" ? null : char.lastPlayed[pIdx])
+                    last_played: wasPicked ? today : (["Never", "Unknown"].includes(char.lastPlayed[pIdx]) ? null : char.lastPlayed[pIdx])
                 });
             }
         });
@@ -1062,6 +1088,33 @@ async function submitWinner(gameId) {
 // ****************************************** 
 async function deleteGame(gameId) {
     if (!confirm("Are you sure you want to delete this game record? This cannot be undone.")) return;
+
+    // Find the game in local state to identify participants and heroes
+    const game = games.find(g => g.id == gameId);
+
+    if (game) {
+        const statsUpdates = [];
+        game.game_players.forEach(gp => {
+            const pIdx = parseInt(gp.player_id.substring(1)) - 1;
+            // Play count stats are only tracked for the main 4 players
+            if (pIdx >= 0 && pIdx < 4) {
+                const char = characters.find(c => c.id === gp.hero_id);
+                if (char) {
+                    statsUpdates.push({
+                        hero_id: gp.hero_id,
+                        player_id: gp.player_id,
+                        play_count: Math.max(0, (char.playCount[pIdx] || 0) - 1),
+                        weight: char.weights[pIdx] // Maintain current weight as we don't have historical weights
+                    });
+                }
+            }
+        });
+
+        if (statsUpdates.length > 0) {
+            const { error: statsErr } = await db.from('player_hero_stats').upsert(statsUpdates, { onConflict: 'player_id, hero_id' });
+            if (statsErr) console.error("Error updating stats during deletion:", statsErr);
+        }
+    }
 
     const { error } = await db
         .from('games')
