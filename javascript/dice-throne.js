@@ -947,7 +947,6 @@ function renderGamesList() {
                 <div class="hero-main-info">
                     <div class="char-complexity-db">
                         <button class="btn-edit-small" onclick="selectWinner('${game.id}')" title="Select Winner">🏆</button>
-                        <button class="btn-edit-small" onclick="declareDraw('${game.id}')" title="Declare Draw">🔍</button>
                         <button class="btn-edit-small" onclick="deleteGame('${game.id}')" title="Delete Game" style="color: var(--danger);">🗑️</button>
                     </div>
                 </div>
@@ -960,34 +959,6 @@ function renderGamesList() {
     if (games.length === 0) {
         container.innerHTML = '<p style="text-align:center; opacity:0.6;">No games recorded yet.</p>';
     }
-}
-
-// ****************************************** 
-// declareDraw(gameId)
-// input: gameId -> the ID of the game to update
-// ****************************************** 
-// Updates all participants of a specific game to be marked as losers (is_winner: false),
-// which the system identifies as a draw.
-// ****************************************** 
-async function declareDraw(gameId) {
-    if (!confirm("Are you sure you want to declare this game a draw?")) return;
-
-    const { data, error } = await db
-        .from('game_players')
-        .update({ is_winner: false })
-        .eq('game_id', gameId)
-        .select();
-
-    if (error) {
-        console.error("Error declaring draw:", error);
-        return alert("Failed to update database: " + error.message);
-    }
-
-    if (!data || data.length === 0) {
-        alert("No records were updated. Please check your Supabase RLS policies for the 'game_players' table.");
-    }
-
-    await init();
 }
 
 // ****************************************** 
@@ -1005,7 +976,7 @@ async function selectWinner(gameId) {
     const confirmBtn = document.getElementById('confirm-winner-btn');
 
     // Build a list of radio buttons for each participant
-    container.innerHTML = game.game_players.map((gp, i) => {
+    let optionsHtml = game.game_players.map((gp, i) => {
         const pIdx = parseInt(gp.player_id.substring(1)) - 1;
         const heroName = gp.heroes?.name || 'Unknown';
         return `
@@ -1018,6 +989,19 @@ async function selectWinner(gameId) {
             </label>
         `;
     }).join('');
+
+    // Add Draw Option
+    optionsHtml += `
+        <label style="display: flex; align-items: center; gap: 15px; padding: 12px; cursor: pointer; color: black; background: rgba(0,0,0,0.05); border-radius: 0 0 8px 8px;">
+            <input type="radio" name="winner-choice" value="draw" style="width: 20px; height: 20px; accent-color: var(--accent);">
+            <div>
+                <div style="font-weight: bold;">🤝 Draw</div>
+                <div style="font-size: 0.8rem; opacity: 0.7;">No winner for this match</div>
+            </div>
+        </label>
+    `;
+
+    container.innerHTML = optionsHtml;
 
     // Attach the game ID to the button so submitWinner knows which game to update
     confirmBtn.onclick = () => submitWinner(gameId);
@@ -1049,13 +1033,18 @@ async function submitWinner(gameId) {
     btn.innerText = "Saving...";
 
     try {
-        // Update winner
-        const { error: winErr } = await db.from('game_players').update({ is_winner: true }).eq('game_id', gameId).eq('player_id', winnerPlayerId);
-        if (winErr) throw winErr;
+        if (winnerPlayerId === 'draw') {
+            const { error } = await db.from('game_players').update({ is_winner: false }).eq('game_id', gameId);
+            if (error) throw error;
+        } else {
+            // Update winner
+            const { error: winErr } = await db.from('game_players').update({ is_winner: true }).eq('game_id', gameId).eq('player_id', winnerPlayerId);
+            if (winErr) throw winErr;
 
-        // Update losers
-        const { error: loseErr } = await db.from('game_players').update({ is_winner: false }).eq('game_id', gameId).neq('player_id', winnerPlayerId);
-        if (loseErr) throw loseErr;
+            // Update losers
+            const { error: loseErr } = await db.from('game_players').update({ is_winner: false }).eq('game_id', gameId).neq('player_id', winnerPlayerId);
+            if (loseErr) throw loseErr;
+        }
 
         closeWinnerModal();
         await init();
