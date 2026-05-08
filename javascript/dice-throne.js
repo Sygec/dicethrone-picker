@@ -120,6 +120,7 @@ async function init() {
     });
 
     renderSortControls();
+    renderAdminBuildInfo();
     const initialSort = currentSort;
     currentSort = null;
     setSort(initialSort);
@@ -130,6 +131,33 @@ async function init() {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'player_hero_stats' }, init)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'heroes' }, init)
         .subscribe();
+}
+
+// ****************************************** 
+// renderAdminBuildInfo()
+// input: none
+// ****************************************** 
+// Displays environment and database info at the top of the admin panel.
+// ****************************************** 
+function renderAdminBuildInfo() {
+    const infoDiv = document.getElementById('admin-build-info');
+    if (!infoDiv) return;
+
+    const host = window.location.hostname;
+    let platform = "Localhost";
+    if (host.includes("github.io")) platform = "GitHub Pages";
+    else if (host.includes("workers.dev")) platform = "Cloudflare Workers";
+
+    const env = isProd ? "Production" : "Development";
+    const dbName = isProd ? "Supabase PROD" : "Supabase DEV";
+    const branchHint = isProd ? "main" : "dev/local";
+
+    infoDiv.innerHTML = `
+        <div><b>Platform:</b> ${platform} (${host})</div>
+        <div><b>Environment:</b> ${env} (Targeting: ${branchHint})</div>
+        <div><b>Database:</b> ${dbName}</div>
+        ${!isProd ? '<div style="margin-top:5px; color:var(--danger); font-style:italic;">Note: Dev heroes are prefixed with "DEV-" in this database.</div>' : ''}
+    `;
 }
 
 // ****************************************** 
@@ -284,6 +312,22 @@ function resetForm() {
 }
 
 // ****************************************** 
+// getSoftWeight(hero, userIndex)
+// input: hero -> hero object, userIndex -> player index
+// ****************************************** 
+// Calculates the temporary weight used for picking/displaying
+// without modifying the actual database weight.
+// ****************************************** 
+function getSoftWeight(hero, userIndex) {
+    const baseWeight = hero.weights[userIndex];
+    const plays = hero.playCount[userIndex];
+    
+    // Applying the (p*3+1)^2 formula
+    const penalty = Math.pow((plays * 3) + 1, 2);
+    return baseWeight / penalty;
+}
+
+// ****************************************** 
 // pickCharacters()
 // input: none
 // ****************************************** 
@@ -315,20 +359,20 @@ function pickCharacters() {
             selectedName = pool[r]?.name;
             pool.splice(r, 1);
         } else {
-            // Weighted selection for main players (0-3). Formula: weight / (playCount + 1)
+            // Weighted selection for main players (0-3) using soft weights
             const activePool = pool.filter(c => c.weights[pIdx] > 0);
-            const totalScaled = activePool.reduce((sum, c) => sum + (c.weights[pIdx] / (((c.playCount?.[pIdx]) || 0) + 1)), 0);
+            const totalEffectiveWeight = activePool.reduce((sum, c) => sum + getSoftWeight(c, pIdx), 0);
             
-            let rand = Math.random() * totalScaled;
-            let runningSum = 0;
+            let random = Math.random() * totalEffectiveWeight;
 
-            for (let c of activePool) {
-                runningSum += (c.weights[pIdx] / (((c.playCount?.[pIdx]) || 0) + 1));
-                if (rand <= runningSum) {
-                    selectedName = c.name;
+            for (const hero of activePool) {
+                const weight = getSoftWeight(hero, pIdx);
+                if (random < weight) {
+                    selectedName = hero.name;
                     pool.splice(pool.findIndex(p => p.name === selectedName), 1);
                     break;
                 }
+                random -= weight;
             }
         }
         renderPlayerRow(pIdx, selectedName);
@@ -366,15 +410,15 @@ function getSortedHeroOptions(pIdx, selectedName) {
     
     let totalWeight = 0;
     if (sortMode === 'weight' && pIdx < 4) {
-        characters.forEach(c => totalWeight += (c.weights?.[pIdx] ?? 100));
+        characters.forEach(c => totalWeight += getSoftWeight(c, pIdx));
     }
 
     const sortedChars = [...characters].sort((a, b) => {
         if (sortMode === 'name') return a.name.localeCompare(b.name);
         
         if (pIdx < 4) {
-            const wA = a.weights?.[pIdx] ?? 100;
-            const wB = b.weights?.[pIdx] ?? 100;
+            const wA = getSoftWeight(a, pIdx);
+            const wB = getSoftWeight(b, pIdx);
             if (wA !== wB) return wB - wA; // Descending weight
         }
         return a.name.localeCompare(b.name);
@@ -383,8 +427,8 @@ function getSortedHeroOptions(pIdx, selectedName) {
     return sortedChars.map(c => {
         let label = c.name;
         if (sortMode === 'weight' && pIdx < 4 && totalWeight > 0) {
-            const weight = c.weights?.[pIdx] ?? 100;
-            const pct = ((weight / totalWeight) * 100).toFixed(1);
+            const weight = getSoftWeight(c, pIdx);
+            const pct = ((weight / totalWeight) * 100).toFixed(2);
             label += ` (${pct}%)`;
         }
         return `<option value="${c.name}" ${c.name === selectedName ? 'selected' : ''}>${label}</option>`;
@@ -801,10 +845,11 @@ function renderList() {
     const countLabel = document.getElementById('count-stats');
 
     // 1. Efficiently calculate totals for the entire pool in a single pass O(N)
+    // Now uses soft weights (with play-count penalty) for the pool total
     const totals = [0, 0, 0, 0];
     characters.forEach(c => {
         for (let i = 0; i < 4; i++) {
-            totals[i] += (c.weights && c.weights[i]) || 0;
+            totals[i] += getSoftWeight(c, i);
         }
     });
 
@@ -829,8 +874,8 @@ function renderList() {
         
         if (currentSort.startsWith('w')) {
             const idx = parseInt(currentSort[1]);
-            valA = a.weights[idx] || 0; 
-            valB = b.weights[idx] || 0;
+            valA = getSoftWeight(a, idx); 
+            valB = getSoftWeight(b, idx);
         } 
         else if (currentSort.startsWith('d')) {
             const idx = parseInt(currentSort[1]);
@@ -853,7 +898,8 @@ function renderList() {
     container.innerHTML = processedList.map(c => {
         const statsHtml = activePlayerIndices.map(p => {
             const weight = (c.weights && c.weights[p]) || 0;
-            const percentage = totals[p] > 0 ? ((weight / totals[p]) * 100).toFixed(1) : '0.0';
+            const softWeight = getSoftWeight(c, p);
+            const percentage = totals[p] > 0 ? ((softWeight / totals[p]) * 100).toFixed(2) : '0.00';
             const playCount = (c.playCount && c.playCount[p]) || 0;
             const lastPlayed = (c.lastPlayed && c.lastPlayed[p]) || "Never";
 
