@@ -5,6 +5,7 @@ const NAMES = ["Claudine", "Joel", "Julie", "Martin", "Invitee 1", "Invitee 2"];
 const PLAYER_COLORS = ['var(--p1)', 'var(--p2)', 'var(--p3)', 'var(--p4)'];
 
 let characters = [];
+let games = [];
 let cachedChangelog = null;
 let activeLevels = new Set([1, 2, 3, 4, 5, 6]);
 let currentSort = 'name';
@@ -119,18 +120,33 @@ async function init() {
         return char;
     });
 
+    // Fetch Games and their participants
+    const { data: gamesData, error: gamesError } = await db
+        .from('games')
+        .select(`
+            id,
+            played_at,
+            game_players (
+                player_id,
+                is_winner,
+                heroes (
+                    name,
+                    slug,
+                    complexity
+                )
+            )
+        `)
+        .order('played_at', { ascending: false });
+
+    if (gamesError) console.error("Error fetching games:", gamesError);
+    else games = gamesData;
+
     renderSortControls();
     renderAdminBuildInfo();
+    renderGamesList();
     const initialSort = currentSort;
     currentSort = null;
     setSort(initialSort);
-
-    // Setup Realtime subscription
-    db
-        .channel('schema-db-changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'player_hero_stats' }, init)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'heroes' }, init)
-        .subscribe();
 }
 
 // ****************************************** 
@@ -203,12 +219,22 @@ function closeChangelog() {
 // ****************************************** 
 function toggleDatabase() {
     const s = document.getElementById('dbSection');
-    const b = document.querySelector('.db-toggle-btn');
-    
-    // Use classList for consistency with toggleSort logic
+    const b = document.getElementById('dbToggleBtn');
     const isHidden = s.classList.toggle('hidden');
-    
     b.innerText = isHidden ? "📂 Show Hero Database & Stats" : "📁 Hide Hero Database";
+}
+
+// ****************************************** 
+// toggleGames()
+// input: none
+// ****************************************** 
+// Toggles the visibility of the Games History section.
+// ****************************************** 
+function toggleGames() {
+    const s = document.getElementById('gamesSection');
+    const b = document.getElementById('gamesToggleBtn');
+    const isHidden = s.classList.toggle('hidden');
+    b.innerText = isHidden ? "🎲 Show Games History" : "🎲 Hide Games History";
 }
 
 // ****************************************** 
@@ -608,6 +634,9 @@ async function applyResults() {
 
     if (error) return alert("Error saving results: " + error.message);
 
+    // Refresh local state and UI immediately after database updates are successful
+    await init();
+
     document.getElementById('confirmBtn').style.display = 'none';
     document.getElementById('results').innerHTML = `
         <p style="color:#28a745; text-align:center; font-weight:bold;">
@@ -850,6 +879,217 @@ function togglePlayerFilter(index) {
 }
 
 // ****************************************** 
+// renderGamesList()
+// input: none
+// ****************************************** 
+// Renders the list of past games in the games history section.
+// ****************************************** 
+function renderGamesList() {
+    const container = document.getElementById('gamesContainer');
+    const countLabel = document.getElementById('game-count-stats');
+    if (!container || !games) return;
+
+    if (countLabel) {
+        countLabel.innerText = `Showing ${games.length} of ${games.length} games`;
+    }
+
+    container.innerHTML = games.map(game => {
+        // Ensure the date string is treated as UTC by forcing the ISO format (T separator and Z suffix)
+        let rawDate = game.played_at || "";
+        if (rawDate && !rawDate.includes('T')) rawDate = rawDate.replace(' ', 'T');
+        if (rawDate && !rawDate.includes('Z') && !rawDate.includes('+')) rawDate += 'Z';
+        
+        const dateStr = new Date(rawDate).toLocaleString('en-CA', { timeZone: 'America/Montreal', dateStyle: 'medium', timeStyle: 'short' });
+        
+        // Determine status/winner image logic
+        const winners = game.game_players.filter(p => p.is_winner === true);
+        const explicitLosers = game.game_players.filter(p => p.is_winner === false); // Players explicitly marked as not winning
+        let statusImg = "images/in_progress.png"; // Placeholder path
+        let statusLabel = "In Progress";
+
+        if (winners.length === 1) {
+            const pIdx = parseInt(winners[0].player_id.substring(1)) - 1;
+            statusImg = getImgUrl(winners[0].heroes?.slug);
+            statusLabel = ``;
+            // statusLabel = `Winner: ${NAMES[pIdx]} playing ${winners[0].heroes?.name}`;
+        } else if (winners.length === 0 && explicitLosers.length > 0 && explicitLosers.length === game.game_players.length) {
+            // A draw is identified when there are no winners and every participant is explicitly marked as a loser.
+            statusImg = "images/draw.png"; // Placeholder path
+            statusLabel = "Draw";
+        }
+
+        const playerCols = game.game_players.map(gp => {
+            // Map player ID (p1-p6) to internal index (0-5)
+            const pIdx = parseInt(gp.player_id.substring(1)) - 1;
+            const heroName = gp.heroes?.name || 'Unknown';
+            const heroSlug = gp.heroes?.slug || '';
+            // const isWinner = gp.is_winner === true;
+            const boxStyle = gp.is_winner 
+                ? "border: 2px solid #28a745; background: rgba(40, 167, 69, 0.1); filter: brightness(1.3);"   // win
+                : gp.is_winner === false
+                    ? "border: 1px solid transparent; filter: brightness(0.70);"  // loss
+                    : "border: 1px solid #d32f2f;";  // not finished
+
+            return `
+                <div class="stat-column" style="${boxStyle}">
+                    <div class="player-tag" style="background-color: var(--p${pIdx + 1}); margin-bottom: 8px; width: 100%; box-sizing: border-box;">${NAMES[pIdx]}</div>
+                    <img src="${getImgUrl(heroSlug)}" style="width: 40px; height: 40px; border-radius: 4px; border: 1px solid var(--accent); margin-bottom: 4px;" alt="${heroName}">
+                    <div class="stat-main" style="font-size: 0.7rem;">${heroName}</div>
+                </div>`;
+        }).join('');
+
+        return `
+            <div class="hero-header">
+                <span class="hero-name">${dateStr}</span>
+                <span class="group-label">${statusLabel}</span>
+            </div>
+            <div class="hero-body" style="margin-bottom: 20px;">
+                <div class="hero-main-info">
+                    <div class="char-complexity-db">
+                        <button class="btn-edit-small" onclick="selectWinner('${game.id}')" title="Select Winner">🏆</button>
+                        <button class="btn-edit-small" onclick="declareDraw('${game.id}')" title="Declare Draw">🔍</button>
+                        <button class="btn-edit-small" onclick="deleteGame('${game.id}')" title="Delete Game" style="color: var(--danger);">🗑️</button>
+                    </div>
+                </div>
+                <div class="hero-details">
+                    <div class="dynamic-stats">${playerCols}</div>
+                </div>
+            </div>`;
+    }).join('');
+
+    if (games.length === 0) {
+        container.innerHTML = '<p style="text-align:center; opacity:0.6;">No games recorded yet.</p>';
+    }
+}
+
+// ****************************************** 
+// declareDraw(gameId)
+// input: gameId -> the ID of the game to update
+// ****************************************** 
+// Updates all participants of a specific game to be marked as losers (is_winner: false),
+// which the system identifies as a draw.
+// ****************************************** 
+async function declareDraw(gameId) {
+    if (!confirm("Are you sure you want to declare this game a draw?")) return;
+
+    const { data, error } = await db
+        .from('game_players')
+        .update({ is_winner: false })
+        .eq('game_id', gameId)
+        .select();
+
+    if (error) {
+        console.error("Error declaring draw:", error);
+        return alert("Failed to update database: " + error.message);
+    }
+
+    if (!data || data.length === 0) {
+        alert("No records were updated. Please check your Supabase RLS policies for the 'game_players' table.");
+    }
+
+    await init();
+}
+
+// ****************************************** 
+// selectWinner(gameId)
+// input: gameId -> the ID of the game to update
+// ****************************************** 
+// Prompts the user to select which player won the game, 
+// updating the database accordingly.
+// ****************************************** 
+async function selectWinner(gameId) {
+    const game = games.find(g => g.id == gameId); // Use loose equality to handle string vs number IDs
+    if (!game) return;
+
+    const container = document.getElementById('winner-selection-container');
+    const confirmBtn = document.getElementById('confirm-winner-btn');
+
+    // Build a list of radio buttons for each participant
+    container.innerHTML = game.game_players.map((gp, i) => {
+        const pIdx = parseInt(gp.player_id.substring(1)) - 1;
+        const heroName = gp.heroes?.name || 'Unknown';
+        return `
+            <label style="display: flex; align-items: center; gap: 15px; padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; color: black;">
+                <input type="radio" name="winner-choice" value="${gp.player_id}" style="width: 20px; height: 20px; accent-color: var(--accent);">
+                <div>
+                    <div style="font-weight: bold;">${NAMES[pIdx]}</div>
+                    <div style="font-size: 0.8rem; opacity: 0.7;">${heroName}</div>
+                </div>
+            </label>
+        `;
+    }).join('');
+
+    // Attach the game ID to the button so submitWinner knows which game to update
+    confirmBtn.onclick = () => submitWinner(gameId);
+
+    document.getElementById('winner-modal').style.display = 'block';
+    document.body.style.overflow = "hidden";
+}
+
+// ****************************************** 
+// closeWinnerModal()
+// ****************************************** 
+function closeWinnerModal() {
+    document.getElementById('winner-modal').style.display = 'none';
+    document.body.style.overflow = "auto";
+}
+
+// ****************************************** 
+// submitWinner(gameId)
+// ****************************************** 
+async function submitWinner(gameId) {
+    const selectedRadio = document.querySelector('input[name="winner-choice"]:checked');
+    if (!selectedRadio) return alert("Please select a winner.");
+
+    const winnerPlayerId = selectedRadio.value;
+
+    // Disable button to prevent double-clicks
+    const btn = document.getElementById('confirm-winner-btn');
+    btn.disabled = true;
+    btn.innerText = "Saving...";
+
+    try {
+        // Update winner
+        const { error: winErr } = await db.from('game_players').update({ is_winner: true }).eq('game_id', gameId).eq('player_id', winnerPlayerId);
+        if (winErr) throw winErr;
+
+        // Update losers
+        const { error: loseErr } = await db.from('game_players').update({ is_winner: false }).eq('game_id', gameId).neq('player_id', winnerPlayerId);
+        if (loseErr) throw loseErr;
+
+        closeWinnerModal();
+        await init();
+    } catch (err) {
+        alert("Error updating winner: " + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "Confirm Winner";
+    }
+}
+
+// ****************************************** 
+// deleteGame(gameId)
+// input: gameId -> the ID of the game to delete
+// ****************************************** 
+async function deleteGame(gameId) {
+    if (!confirm("Are you sure you want to delete this game record? This cannot be undone.")) return;
+
+    const { error } = await db
+        .from('games')
+        .delete()
+        .eq('id', gameId);
+
+    if (error) {
+        console.error("Error deleting game:", error);
+        return alert("Failed to delete game: " + error.message);
+    }
+
+    await init();
+}
+
+// init();
+
+// ****************************************** 
 // renderList()
 // input: none
 // ****************************************** 
@@ -953,4 +1193,13 @@ function renderList() {
     }).join('');
 }
 
-init();
+init().then(() => {
+    // Setup Realtime subscription once after initial load to keep data in sync across clients
+    db
+        .channel('schema-db-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'player_hero_stats' }, init)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'heroes' }, init)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'games' }, init)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'game_players' }, init)
+        .subscribe();
+});

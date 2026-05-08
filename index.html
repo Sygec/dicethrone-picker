@@ -38,6 +38,16 @@
         </div>
         </div>   
         
+        <!-- Winner Selection Modal -->
+        <div id="winner-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" onclick="closeWinnerModal()">&times;</span>
+                <h2 style="color: black; margin-top: 0;">Select Winner</h2>
+                <div id="winner-selection-container" style="margin: 20px 0;"></div>
+                <button type="button" class="btn-save" id="confirm-winner-btn">Confirm Winner</button>
+            </div>
+        </div>
+
         <!-- Player Selection Toggles -->
         <div class="player-toggle-zone-top">
             <label class="p-chk"><span class="player-tag" style="background:var(--p1)">Claudine</span> <input type="checkbox" id="use0" checked></label>
@@ -65,7 +75,7 @@
         <button id="confirmBtn" type="button" class="btn-confirm" onclick="applyResults()">LOCK IN SESSION</button>
 
         <!-- Hero Database & Stats Section -->
-        <button type="button" class="db-toggle-btn" onclick="toggleDatabase()">📂 Show Hero Database & Stats</button>
+        <button type="button" class="db-toggle-btn" id="dbToggleBtn" onclick="toggleDatabase()">📂 Show Hero Database & Stats</button>
 
         <section id="dbSection" class="hidden">
 
@@ -104,6 +114,16 @@
             </div>
 
             <div id="heroContainer"></div>
+        </section>
+
+        <!-- Games History Section -->
+        <button type="button" class="db-toggle-btn" id="gamesToggleBtn" onclick="toggleGames()">🎲 Show Games History</button>
+
+        <section id="gamesSection" class="hidden">
+            <div class="small-text" id="game-count-stats" style="margin-top: 15px;">
+                Showing 0 of 0 games
+            </div>
+            <div id="gamesContainer" style="margin-top: 20px;"></div>
         </section>
 
         <!-- Admin & Data Management -->

@@ -109,6 +109,7 @@
 
         .char-complexity-db {
                 position: relative;
+                /* margin-bottom: 15px; */
         }
 
         .char-img-roll {
@@ -118,6 +119,7 @@
                 object-fit: cover;
                 border: 1px solid var(--accent);
                 display: block;
+                margin-bottom: 15px;
         }
 
         .complexity-roll {
@@ -208,7 +210,7 @@
                 border-radius: 8px;
                 font-weight: bold;
                 cursor: pointer;
-                margin: 25px 0 25px 0;
+                margin: 25px 0 0 0;
                 text-transform: uppercase;
                 font-size: 0.8rem;
         }
@@ -359,7 +361,9 @@
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                gap: 15px;
+                /* gap: 15px; */
+                /* width: 75px; */
+                /* flex-shrink: 0; */
         }
 
         .btn-edit-small {
@@ -376,6 +380,7 @@
                 border-radius: 50%;
                 border: none;
                 box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                margin-bottom: 10px;
         }
 
         .list-thumb {
@@ -671,8 +676,10 @@
 
         /* The individual columns inside the container */
         .stat-column {
-        flex: 1;                /* This makes columns share space equally */
-        min-width: 0;           /* Prevents columns from overflowing on small screens */
+        flex: 1;
+        min-width: 0;
+        /* max-width: 120px; */
+        /* box-sizing: border-box; */
         background: rgba(255, 255, 255, 0.05);
         padding: 8px 4px;
         border-radius: 6px;
@@ -736,16 +743,4 @@
                 background: rgba(255, 255, 255, 0.05);
                 padding: 12px;
                 border-radius: 8px;
-                margin-bottom: 20px;
-                border: 1px solid var(--secondary);
-                font-size: 0.75rem;
-                line-height: 1.6;
-                color: #aaa;
-                border-left: 4px solid var(--accent);
-        }
-        /* Optional: hover effect to show it's clickable */
-/*        .player-card-mini.inactive-filter:hover {
-        filter: grayscale(50%);
-        opacity: 0.8;
-        cursor: pointer;
-        }*/
+      
