@@ -9,12 +9,12 @@
     <!-- Stylesheets: We will dynamically load either the production or development stylesheet based on the hostname -->
     <script>
         // Check if this is Production or Local environment based on hostname
-        const isProd = window.location.hostname === "sygec.github.io" || window.location.hostname === "dicethrone-prod.sygec.workers.dev"; 
+        window.isProd = window.location.hostname === "sygec.github.io" || window.location.hostname === "dicethrone-prod.sygec.workers.dev"; 
         // Create a new link element
         const themeLink = document.createElement('link');
         themeLink.rel = 'stylesheet';
         // Assign the file path based on if this is prod or dev
-        themeLink.href = isProd ? 'style-prod.css' : 'style-dev.css';
+        themeLink.href = window.isProd ? 'style-prod.css' : 'style-dev.css';
         // Append it to the head
         document.head.appendChild(themeLink);
     </script>
@@ -25,8 +25,11 @@
 
 <body>
     <main class="container">
-        <h1>Supa Dice Throne</h1>
-        <div class="small-text">v<button id="version-number" aria-label="View changelog" style="background:none; border:none; color:inherit; font:inherit; cursor:pointer; text-decoration:underline; padding:0;">...</button></div>
+        <h1>Dice Throne</h1>
+        <div class="small-text">
+            v<button id="version-number" aria-label="View changelog" style="background:none; border:none; color:inherit; font:inherit; cursor:pointer; text-decoration:underline; padding:0;">...</button>
+            | <button id="auth-btn" style="background:none; border:none; color:inherit; font:inherit; cursor:pointer; text-decoration:underline; padding:0;">Login</button>
+        </div>
 
         <!-- Changelog Modal -->
         <div id="changelog-modal" class="modal">
@@ -48,15 +51,22 @@
             </div>
         </div>
 
-        <!-- Player Selection Toggles -->
-        <div class="player-toggle-zone-top">
-            <label class="p-chk"><span class="player-tag" style="background:var(--p1)">Claudine</span> <input type="checkbox" id="use0" checked></label>
-            <label class="p-chk"><span class="player-tag" style="background:var(--p2)">Joel</span> <input type="checkbox" id="use1" checked></label>
-            <label class="p-chk"><span class="player-tag" style="background:var(--p3)">Julie</span> <input type="checkbox" id="use2" checked></label>
-            <label class="p-chk"><span class="player-tag" style="background:var(--p4)">Martin</span> <input type="checkbox" id="use3" checked></label>
-            <label class="p-chk"><span class="player-tag" style="background:var(--p5)">Invitee 1</span> <input type="checkbox" id="use4"></label>
-            <label class="p-chk"><span class="player-tag" style="background:var(--p5)">Invitee 2</span> <input type="checkbox" id="use5"></label>
+        <!-- Login Modal -->
+        <div id="login-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" onclick="closeLoginModal()">&times;</span>
+                <h2 style="color: black; margin-top: 0;">Admin Login</h2>
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                    <input type="email" id="login-email" placeholder="Email" style="padding: 10px; border-radius: 4px; border: 1px solid #ccc; color: black;">
+                    <input type="password" id="login-password" placeholder="Password" style="padding: 10px; border-radius: 4px; border: 1px solid #ccc; color: black;">
+                    <button type="button" class="btn-save" onclick="handleLogin()">Sign In</button>
+                    <div id="login-error" style="color: var(--danger); font-size: 0.8rem; text-align: center; display: none; margin-top: 5px;"></div>
+                </div>
+            </div>
         </div>
+
+        <!-- Player Selection Toggles -->
+        <div class="player-toggle-zone-top" id="player-toggle-zone-top"></div>
 
         <!-- Dropdown Sort Options -->
         <div class="dropdown-sort-options">

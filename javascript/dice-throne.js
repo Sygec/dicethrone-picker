@@ -1,17 +1,22 @@
 // ==========================================
 // 1. GLOBAL CONSTANTS & STATE
 // ==========================================
-const NAMES = ["Claudine", "Joel", "Julie", "Martin", "Invitee 1", "Invitee 2"];
+let NAMES = [];
 const PLAYER_COLORS = ['var(--p1)', 'var(--p2)', 'var(--p3)', 'var(--p4)'];
 
 let characters = [];
 let games = [];
+let players = [];
 let cachedChangelog = null;
 let activeLevels = new Set([1, 2, 3, 4, 5, 6]);
 let currentSort = 'name';
 let sortAsc = true;
 let editIndex = -1;
 let activePlayerIndices = [0, 1, 2, 3];
+let currentUser = null;
+let loggedInPlayerIndex = -1;
+const isAdmin = () => currentUser?.app_metadata?.role === 'admin';
+const isUser = () => !!currentUser;
 
 // ==========================================
 // 2. DOM ELEMENT REFERENCES
@@ -20,6 +25,8 @@ const versionLabel = document.getElementById("version-number");
 const container = document.getElementById("changelog-container");
 const modal = document.getElementById("changelog-modal");
 const closeBtn = document.querySelector(".close-button");
+const loginModal = document.getElementById("login-modal");
+const authBtn = document.getElementById("auth-btn");
 
 // ==========================================
 // 3. SUPABASE CONFIGURATION
@@ -52,6 +59,11 @@ const getHeroLink = (slug) => `https://dice-throne.rulepop.com/#hero/${slug}`;
 // ****************************************** 
 async function initializeApp() {
     try {
+        // Check for existing session on load
+        const { data: { session } } = await db.auth.getSession();
+        currentUser = session?.user || null;
+        updateAuthUI();
+
         const response = await fetch('changelog.json');
         cachedChangelog = await response.json();
 
@@ -72,8 +84,93 @@ window.addEventListener('DOMContentLoaded', updateDiceVisuals);
 versionLabel.onclick = openChangelog;
 closeBtn.onclick = closeChangelog;
 
+// Auth Event Listeners
+db.auth.onAuthStateChange((event, session) => {
+    currentUser = session?.user || null;
+    if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') init();
+    updateAuthUI();
+    if (event === 'SIGNED_IN') closeLoginModal();
+});
+
 window.onclick = (event) => {
     if (event.target == modal) closeChangelog();
+    if (event.target == loginModal) closeLoginModal();
+}
+
+// ****************************************** 
+// Auth UI & Logic
+// ****************************************** 
+function updateAuthUI() {
+    const adminToggle = document.querySelector('.admin-toggle-btn');
+    const confirmBtn = document.getElementById('confirmBtn');
+
+    if (currentUser) {
+        if (loggedInPlayerIndex !== -1) {
+            authBtn.innerText = `Logout (${NAMES[loggedInPlayerIndex]})`;
+        } else {
+            authBtn.innerText = `Logout (${currentUser.email.split('@')[0]})`;
+        }
+        authBtn.onclick = handleLogout;
+        // Only show the Admin Section toggle to users with the admin role
+        if (adminToggle) adminToggle.style.display = isAdmin() ? 'block' : 'none';
+    } else {
+        authBtn.innerText = 'Login';
+        authBtn.onclick = openLoginModal;
+        if (adminToggle) adminToggle.style.display = 'none';
+        if (document.getElementById('adminSection')) document.getElementById('adminSection').classList.add('hidden');
+        if (confirmBtn) confirmBtn.style.display = 'none';
+    }
+    
+    // Refresh lists to show/hide edit buttons
+    renderList();
+    renderGamesList();
+}
+
+/**
+ * Dynamically builds the player selection checkboxes at the top of the app.
+ */
+function renderPlayerToggles() {
+    const container = document.getElementById('player-toggle-zone-top');
+    if (!container || players.length === 0) return;
+
+    container.innerHTML = players.map((p, i) => {
+        const isChecked = i < 4 ? 'checked' : '';
+        return `
+            <label class="p-chk">
+                <span class="player-tag" style="background:var(--${p.id})">${p.name}</span>
+                <input type="checkbox" id="use${i}" ${isChecked}>
+            </label>`;
+    }).join('');
+}
+
+function openLoginModal() {
+    loginModal.style.display = "block";
+    document.getElementById('login-error').style.display = 'none';
+    document.body.style.overflow = "hidden";
+}
+
+function closeLoginModal() {
+    loginModal.style.display = "none";
+    document.body.style.overflow = "auto";
+}
+
+async function handleLogin() {
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    const errorDiv = document.getElementById('login-error');
+    
+    const { error } = await db.auth.signInWithPassword({ email, password });
+    
+    if (error) {
+        errorDiv.innerText = error.message;
+        errorDiv.style.display = 'block';
+    }
+}
+
+async function handleLogout() {
+    if (confirm("Log out of admin session?")) {
+        await db.auth.signOut();
+    }
 }
 
 // ****************************************** 
@@ -83,6 +180,28 @@ window.onclick = (event) => {
 // Fetches initial data from Supabase and sets the initial sort state.
 // ****************************************** 
 async function init() {
+    // 0. Fetch Players and Map logged-in User
+    const { data: playersData, error: playersError } = await db
+        .from('players')
+        .select('*')
+        .order('id', { ascending: true });
+
+    if (!playersError && playersData) {
+        players = playersData;
+        NAMES = playersData.map(p => p.name);
+        loggedInPlayerIndex = -1;
+        playersData.forEach((p, i) => {
+            if (i < 6) {
+                NAMES[i] = p.name;
+                if (currentUser && p.user_id === currentUser.id) {
+                    loggedInPlayerIndex = i;
+                }
+            }
+        });
+        updateAuthUI();
+        renderPlayerToggles();
+    }
+
     const { data, error } = await db
         .from('heroes')
         .select(`
@@ -125,6 +244,7 @@ async function init() {
         .select(`
             id,
             played_at,
+            last_updated_by,
             game_players (
                 hero_id,
                 player_id,
@@ -299,7 +419,8 @@ async function saveCharacter() {
     const charData = {
         name,
         slug,
-        complexity: parseInt(complexity)
+        complexity: parseInt(complexity),
+        last_updated_by: currentUser.id
     };
 
     if (editIndex > -1) charData.id = characters[editIndex].id;
@@ -431,7 +552,7 @@ function pickCharacters() {
     });
 
     validateSelection();
-    document.getElementById('confirmBtn').style.display = 'block';
+    if (isUser()) document.getElementById('confirmBtn').style.display = 'block';
 }
 
 // ****************************************** 
@@ -615,7 +736,7 @@ async function applyResults() {
     );
 
     // 1. Create the game record first to get the unique ID for this session
-    const { data: game, error: gameError } = await db.from('games').insert({}).select().single();
+    const { data: game, error: gameError } = await db.from('games').insert({ last_updated_by: currentUser.id }).select().single();
     if (gameError) return alert("Error creating game: " + gameError.message);
 
     characters.forEach(char => {
@@ -629,7 +750,8 @@ async function applyResults() {
                     game_id: game.id,
                     player_id: `p${pIdx + 1}`,
                     hero_id: char.id,
-                    is_winner: null // Explicitly undecided
+                    is_winner: null, // Explicitly undecided
+                    last_updated_by: currentUser.id
                 });
             }
             
@@ -643,7 +765,8 @@ async function applyResults() {
                     player_id: `p${pIdx + 1}`,
                     weight: newWeight,
                     play_count: wasPicked ? (char.playCount[pIdx] || 0) + 1 : (char.playCount[pIdx] || 0),
-                    last_played: wasPicked ? today : (["Never", "Unknown"].includes(char.lastPlayed[pIdx]) ? null : char.lastPlayed[pIdx])
+                    last_played: wasPicked ? today : (["Never", "Unknown"].includes(char.lastPlayed[pIdx]) ? null : char.lastPlayed[pIdx]),
+                    last_updated_by: currentUser.id
                 });
             }
         });
@@ -767,7 +890,7 @@ async function resetAllWeights() {
     if (confirm("Reset all probabilities to 100?")) {
         const updates = [];
         characters.forEach(c => {
-            [0,1,2,3].forEach(p => updates.push({ hero_id: c.id, player_id: `p${p + 1}`, weight: 100 }));
+            [0,1,2,3].forEach(p => updates.push({ hero_id: c.id, player_id: `p${p + 1}`, weight: 100, last_updated_by: currentUser.id }));
         });
         await db.from('player_hero_stats').upsert(updates, { onConflict: 'player_id, hero_id' });
         init();
@@ -785,7 +908,7 @@ async function resetAllStats() {
     if (confirm("Reset all play history?")) {
         const updates = [];
         characters.forEach(c => {
-            [0,1,2,3].forEach(p => updates.push({ hero_id: c.id, player_id: `p${p + 1}`, play_count: 0, last_played: null }));
+            [0,1,2,3].forEach(p => updates.push({ hero_id: c.id, player_id: `p${p + 1}`, play_count: 0, last_played: null, last_updated_by: currentUser.id }));
         });
         await db.from('player_hero_stats').upsert(updates, { onConflict: 'player_id, hero_id' });
         init();
@@ -944,6 +1067,15 @@ function renderGamesList() {
             statusLabel = "Draw";
         }
 
+        // Standard users can select winners, but only admins can delete records
+        // Standard users can select winners, but only admins or the record creator can delete records
+        const gameActions = isUser() ? `
+            <button class="btn-edit-small" onclick="selectWinner('${game.id}')" title="Select Winner">🏆</button>
+            ${isAdmin() ? `<button class="btn-edit-small" onclick="deleteGame('${game.id}')" title="Delete Game" style="color: var(--danger);">🗑️</button>` : ''}
+            ${(isAdmin() || game.last_updated_by === currentUser.id) ? `<button class="btn-edit-small" onclick="deleteGame('${game.id}')" title="Delete Game" style="color: var(--danger);">🗑️</button>` : ''}
+        ` : '';
+
+
         const playerCols = game.game_players.map(gp => {
             // Map player ID (p1-p6) to internal index (0-5)
             const pIdx = parseInt(gp.player_id.substring(1)) - 1;
@@ -974,8 +1106,7 @@ function renderGamesList() {
             <div class="hero-body" style="margin-bottom: 20px;">
                 <div class="hero-main-info">
                     <div class="char-complexity-db">
-                        <button class="btn-edit-small" onclick="selectWinner('${game.id}')" title="Select Winner">🏆</button>
-                        <button class="btn-edit-small" onclick="deleteGame('${game.id}')" title="Delete Game" style="color: var(--danger);">🗑️</button>
+                        ${gameActions}
                     </div>
                 </div>
                 <div class="hero-details">
@@ -1062,15 +1193,15 @@ async function submitWinner(gameId) {
 
     try {
         if (winnerPlayerId === 'draw') {
-            const { error } = await db.from('game_players').update({ is_winner: false }).eq('game_id', gameId);
+            const { error } = await db.from('game_players').update({ is_winner: false, last_updated_by: currentUser.id }).eq('game_id', gameId);
             if (error) throw error;
         } else {
             // Update winner
-            const { error: winErr } = await db.from('game_players').update({ is_winner: true }).eq('game_id', gameId).eq('player_id', winnerPlayerId);
+            const { error: winErr } = await db.from('game_players').update({ is_winner: true, last_updated_by: currentUser.id }).eq('game_id', gameId).eq('player_id', winnerPlayerId);
             if (winErr) throw winErr;
 
             // Update losers
-            const { error: loseErr } = await db.from('game_players').update({ is_winner: false }).eq('game_id', gameId).neq('player_id', winnerPlayerId);
+            const { error: loseErr } = await db.from('game_players').update({ is_winner: false, last_updated_by: currentUser.id }).eq('game_id', gameId).neq('player_id', winnerPlayerId);
             if (loseErr) throw loseErr;
         }
 
@@ -1106,7 +1237,8 @@ async function deleteGame(gameId) {
                         hero_id: gp.hero_id,
                         player_id: gp.player_id,
                         play_count: Math.max(0, (char.playCount[pIdx] || 0) - 1),
-                        weight: char.weights[pIdx] // Maintain current weight as we don't have historical weights
+                        weight: char.weights[pIdx], // Maintain current weight as we don't have historical weights
+                        last_updated_by: currentUser.id
                     });
                 }
             }
@@ -1217,6 +1349,8 @@ function renderList() {
             </div>`;
         }).join('');
 
+        const editBtn = isAdmin() ? `<button class="btn-edit-small" onclick="editChar(${c.originalIndex})" title="Edit Hero">✎</button>` : '';
+
         return `
             <div class="hero-header"><span class="hero-name">${c.name}</span> <span class="group-label">(${c.group || 'Season ?'})</span></div>
             <div class="hero-body">
@@ -1227,8 +1361,7 @@ function renderList() {
                             <img src="images/d${c.complexity}.png" class="complexity-roll" alt="Complexity">
                         </div>
                     </a>
-                    <!-- <span class="group-label">(${c.group || 'Season ?'})</span> -->
-                    <button class="btn-edit-small" onclick="editChar(${c.originalIndex})" title="Edit Hero">✎</button>
+                    ${editBtn}
                 </div>
                 <div class="hero-details">
                     <div class="dynamic-stats">${statsHtml}</div>
