@@ -1071,7 +1071,6 @@ function renderGamesList() {
         // Standard users can select winners, but only admins or the record creator can delete records
         const gameActions = isUser() ? `
             <button class="btn-edit-small" onclick="selectWinner('${game.id}')" title="Select Winner">🏆</button>
-            ${isAdmin() ? `<button class="btn-edit-small" onclick="deleteGame('${game.id}')" title="Delete Game" style="color: var(--danger);">🗑️</button>` : ''}
             ${(isAdmin() || game.last_updated_by === currentUser.id) ? `<button class="btn-edit-small" onclick="deleteGame('${game.id}')" title="Delete Game" style="color: var(--danger);">🗑️</button>` : ''}
         ` : '';
 
