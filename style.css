@@ -308,6 +308,52 @@
                 border: 1px solid var(--secondary);
         }
 
+        .admin-panel {
+                margin-bottom: 20px;
+                border: 1px solid var(--secondary);
+                border-radius: 12px;
+                overflow: hidden;
+                background: rgba(255,255,255,0.04);
+        }
+
+        .panel-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 12px 15px;
+                cursor: default;
+                gap: 10px;
+                background: rgba(255,255,255,0.06);
+                user-select: none;
+        }
+
+        .panel-header h3 {
+                margin: 0;
+                font-size: 1rem;
+                color: var(--accent);
+        }
+
+        .panel-toggle {
+                border: none;
+                background: transparent;
+                color: var(--accent);
+                font-size: 1.1rem;
+                cursor: pointer;
+                transform: rotate(-90deg);
+                transition: transform 0.2s ease;
+                padding: 0 5px;
+                line-height: 1;
+        }
+
+        .panel-toggle.open {
+                transform: rotate(0deg);
+        }
+
+        .panel-content {
+                padding: 15px;
+                border-top: 1px solid rgba(255,255,255,0.08);
+        }
+
         .form-grid {
                 display: grid;
                 grid-template-columns: 1fr;

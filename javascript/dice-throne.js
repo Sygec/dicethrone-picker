@@ -452,6 +452,23 @@ function toggleAdmin() {
 }    
 
 // ****************************************** 
+// toggleAdminPanel(panelId)
+// input: panelId -> ID of the admin panel content section
+// ****************************************** 
+// Opens or closes a panel within the admin section.
+// ****************************************** 
+function toggleAdminPanel(event, panelId) {
+    event.stopPropagation();
+    const panel = document.getElementById(panelId);
+    const button = event.currentTarget;
+    if (!panel || !button) return;
+
+    const isHidden = panel.classList.toggle('hidden');
+    button.classList.toggle('open', !isHidden);
+    button.setAttribute('aria-expanded', String(!isHidden));
+}
+
+// ****************************************** 
 // saveCharacter()
 // input: none
 // ****************************************** 
