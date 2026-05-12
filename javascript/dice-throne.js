@@ -49,6 +49,15 @@ const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const getImgUrl = (slug) => slug ? `https://dice-throne.rulepop.com/heroes/${slug}.webp` : "";
 const getHeroLink = (slug) => `https://dice-throne.rulepop.com/#hero/${slug}`;
 
+const escapeHtml = (text) => {
+    return String(text || "")
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+};
+
 // ==========================================
 // 5. APPLICATION INITIALIZATION
 // ==========================================
@@ -557,14 +566,27 @@ function renderGroupsList() {
     }
 
     const html = groups.map(g => `
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(255,255,255,0.05); margin: 5px 0; border-radius: 4px;">
-            <div>
-                <strong>${g.name}</strong>
-                ${g.type ? ` <span style="opacity: 0.6;">(${g.type})</span>` : ''}
+        <div class="group-row" style="margin: 5px 0; background: rgba(255,255,255,0.05);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px;">
+                <div>
+                    <strong>${escapeHtml(g.name)}</strong>
+                    ${g.type ? ` <span style="opacity: 0.6;">(${escapeHtml(g.type)})</span>` : ''}
+                </div>
+                <div style="display: flex; gap: 5px;">
+                    <button type="button" class="btn-save" style="padding: 4px 8px; font-size: 0.9rem;" onclick="editGroup('${g.id}')">Edit</button>
+                    <button type="button" class="btn-cancel" style="padding: 4px 8px; font-size: 0.9rem;" onclick="deleteGroup('${g.id}')">Delete</button>
+                </div>
             </div>
-            <div style="display: flex; gap: 5px;">
-                <button type="button" class="btn-save" style="padding: 4px 8px; font-size: 0.9rem;" onclick="editGroup('${g.id}')">Edit</button>
-                <button type="button" class="btn-cancel" style="padding: 4px 8px; font-size: 0.9rem;" onclick="deleteGroup('${g.id}')">Delete</button>
+            <div id="groupEditPanel-${g.id}" class="group-edit-panel hidden">
+                <div class="form-grid">
+                    <input type="text" id="groupName-${g.id}" placeholder="Group Name" value="${escapeHtml(g.name)}">
+                    <input type="text" id="groupType-${g.id}" placeholder="Type (optional)" value="${escapeHtml(g.type || '')}">
+                    <input type="number" id="groupOrder-${g.id}" placeholder="Order Index" value="${g.order_index ?? ''}">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn-save" onclick="saveGroupInline('${g.id}')">Save</button>
+                    <button type="button" class="btn-cancel" onclick="cancelGroupEdit('${g.id}')">Cancel</button>
+                </div>
             </div>
         </div>
     `).join('');
@@ -610,17 +632,51 @@ async function saveGroup() {
 // editGroup(groupId)
 // input: groupId -> UUID of the group to edit
 // ****************************************** 
-// Populates the group form with data from a specific group for editing.
+// Opens an inline editor panel for the selected group.
 // ****************************************** 
 function editGroup(groupId) {
     const group = groups.find(g => g.id === groupId);
     if (!group) return;
 
-    editGroupId = groupId;
-    document.getElementById('groupName').value = group.name;
-    document.getElementById('groupType').value = group.type || "";
-    document.getElementById('groupOrder').value = group.order_index || "";
-    document.getElementById('cancelGroupBtn').style.display = "block";
+    // Close any other inline group editors
+    document.querySelectorAll('.group-edit-panel').forEach(panel => panel.classList.add('hidden'));
+
+    const panel = document.getElementById(`groupEditPanel-${groupId}`);
+    if (!panel) return;
+
+    document.getElementById(`groupName-${groupId}`).value = group.name;
+    document.getElementById(`groupType-${groupId}`).value = group.type || "";
+    document.getElementById(`groupOrder-${groupId}`).value = group.order_index || "";
+    panel.classList.remove('hidden');
+}
+
+function cancelGroupEdit(groupId) {
+    const panel = document.getElementById(`groupEditPanel-${groupId}`);
+    if (panel) panel.classList.add('hidden');
+}
+
+async function saveGroupInline(groupId) {
+    const name = document.getElementById(`groupName-${groupId}`).value.trim();
+    const type = document.getElementById(`groupType-${groupId}`).value.trim();
+    const order_index = document.getElementById(`groupOrder-${groupId}`).value.trim();
+
+    if (!name) return alert("Group name is required");
+
+    const { error } = await db
+        .from('groups')
+        .upsert({
+            id: groupId,
+            name,
+            type: type || null,
+            order_index: order_index ? parseInt(order_index) : null,
+            is_active: true
+        })
+        .select()
+        .single();
+
+    if (error) return alert("Error saving group: " + error.message);
+
+    init();
 }
 
 // ****************************************** 
