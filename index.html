@@ -212,6 +212,16 @@
                 </div>
             </div>
 
+            <div class="admin-panel">
+                <div class="panel-header">
+                    <h3>Manage Users</h3>
+                    <button type="button" class="panel-toggle" aria-expanded="false" onclick="toggleAdminPanel(event, 'usersPanel')">V</button>
+                </div>
+                <div id="usersPanel" class="panel-content hidden">
+                    <div id="usersListContainer" style="margin-top: 15px;"></div>
+                </div>
+            </div>
+
             <!-- <div style="margin-top:20px; border-top: 1px solid #ffffff22; padding-top:15px;">
                 <button type="button" class="btn-danger" onclick="resetAllWeights()">RESET PROBABILITIES TO 100</button>
                 <button type="button" class="btn-danger" onclick="resetAllStats()">RESET PLAY COUNTS & DATES</button>

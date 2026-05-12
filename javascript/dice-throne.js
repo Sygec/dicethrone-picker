@@ -8,6 +8,7 @@ let characters = [];
 let games = [];
 let players = [];
 let groups = [];
+let authUsers = [];
 let cachedChangelog = null;
 let activeLevels = new Set([1, 2, 3, 4, 5, 6]);
 let currentSort = 'name';
@@ -353,6 +354,7 @@ async function init() {
     renderGroupsList();
     renderHeroesList();
     renderPlayersList();
+    renderUsersList();
     const initialSort = currentSort;
     currentSort = null;
     setSort(initialSort);
@@ -961,6 +963,42 @@ async function savePlayerInline(playerId) {
 
     cancelPlayerEdit(playerId);
     renderPlayersList();
+}
+
+// ****************************************** 
+// renderUsersList()
+// input: none
+// ****************************************** 
+// Renders the list of auth users and shows any linked player record.
+// ****************************************** 
+function renderUsersList() {
+    const container = document.getElementById('usersListContainer');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (!authUsers.length) {
+        container.innerHTML = '<p style="opacity: 0.7; font-style: italic;">No auth users available or permission denied.</p>';
+        return;
+    }
+
+    authUsers.forEach(user => {
+        const linkedPlayer = players.find(p => p.user_id === user.id);
+        const row = document.createElement('div');
+        row.className = 'group-row user-admin-row';
+        row.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; gap: 10px;">
+                <div style="min-width: 0;">
+                    <div><strong>${escapeHtml(user.email || 'No email')}</strong></div>
+                    <div style="opacity: 0.7; font-size: 0.85rem; word-break: break-all;">ID: ${escapeHtml(user.id)}</div>
+                </div>
+                <div style="text-align: right; min-width: 130px;">
+                    ${linkedPlayer ? `<div style="opacity: 0.7; font-size: 0.85rem;">Linked Player</div><div><strong>${escapeHtml(linkedPlayer.name)}</strong></div>` : '<div style="opacity: 0.7; font-size: 0.85rem;">No linked player</div>'}
+                </div>
+            </div>
+        `;
+        container.appendChild(row);
+    });
 }
 
 function toggleGroupForm() {

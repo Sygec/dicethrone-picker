@@ -441,6 +441,11 @@
                 filter: brightness(0.85);
         }
 
+        .user-admin-row {
+                margin: 5px 0;
+                background: rgba(255,255,255,0.05);
+        }
+
         .group-row.editing {
                 background: rgba(255,255,255,0.12);
                 box-shadow: inset 0 0 0 1px rgba(255,255,255,0.18);
