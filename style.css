@@ -362,7 +362,7 @@
         }
 
         #heroForm .form-grid {
-                grid-template-columns: repeat(4, minmax(0, 1fr));
+                grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
         .group-edit-panel {
@@ -458,7 +458,7 @@
         }
 
         #heroesListContainer .group-row .form-grid {
-                grid-template-columns: repeat(4, minmax(0, 1fr));
+                grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
         input[type="text"] {
@@ -490,7 +490,7 @@
                 width: 100%;
                 cursor: pointer;
                 margin-top: 5px;
-                font-size: 0.8rem;
+                /*font-size: 0.8rem;*/
         }
 
         .btn-inline {

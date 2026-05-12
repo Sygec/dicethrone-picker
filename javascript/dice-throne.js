@@ -670,6 +670,8 @@ function renderHeroesList() {
                             <option value="">-- Select Group --</option>
                             ${groupOptions}
                         </select>
+                    </div>
+                    <div class="form-grid">
                         <input type="text" id="heroSlug-${idx}" placeholder="Slug (for image)" value="${escapeHtml(c.slug)}">
                         <select id="heroComplexity-${idx}">
                             <option value="">-- Complexity --</option>
