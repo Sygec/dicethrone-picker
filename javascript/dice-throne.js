@@ -7,11 +7,13 @@ const PLAYER_COLORS = ['var(--p1)', 'var(--p2)', 'var(--p3)', 'var(--p4)'];
 let characters = [];
 let games = [];
 let players = [];
+let groups = [];
 let cachedChangelog = null;
 let activeLevels = new Set([1, 2, 3, 4, 5, 6]);
 let currentSort = 'name';
 let sortAsc = true;
 let editIndex = -1;
+let editGroupId = null;
 let activePlayerIndices = [0, 1, 2, 3];
 let currentUser = null;
 let loggedInPlayerIndex = -1;
@@ -126,9 +128,12 @@ function updateAuthUI() {
     renderGamesList();
 }
 
-/**
- * Dynamically builds the player selection checkboxes at the top of the app.
- */
+// ****************************************** 
+// renderPlayerToggles()
+// input: none
+// ****************************************** 
+// Dynamically builds the player selection checkboxes at the top of the app.
+// ****************************************** 
 function renderPlayerToggles() {
     const container = document.getElementById('player-toggle-zone-top');
     if (!container || players.length === 0) return;
@@ -143,12 +148,24 @@ function renderPlayerToggles() {
     }).join('');
 }
 
+// ****************************************** 
+// openLoginModal()
+// input: none
+// ****************************************** 
+// Displays the login modal and prevents background scrolling.
+// ****************************************** 
 function openLoginModal() {
     loginModal.style.display = "block";
     document.getElementById('login-error').style.display = 'none';
     document.body.style.overflow = "hidden";
 }
 
+// ****************************************** 
+// closeLoginModal()
+// input: none
+// ****************************************** 
+// Hides the login modal and restores background scrolling.
+// ****************************************** 
 function closeLoginModal() {
     loginModal.style.display = "none";
     document.body.style.overflow = "auto";
@@ -156,6 +173,12 @@ function closeLoginModal() {
 
 async function handleLogin() {
     const email = document.getElementById('login-email').value;
+// ****************************************** 
+// handleLogin()
+// input: none
+// ****************************************** 
+// Attempts to sign in a user with provided email and password using Supabase authentication.
+// ****************************************** 
     const password = document.getElementById('login-password').value;
     const errorDiv = document.getElementById('login-error');
     
@@ -167,6 +190,12 @@ async function handleLogin() {
     }
 }
 
+// ****************************************** 
+// handleLogout()
+// input: none
+// ****************************************** 
+// Prompts the user for confirmation and then logs out the current user from Supabase.
+// ****************************************** 
 async function handleLogout() {
     if (confirm("Log out of admin session?")) {
         await db.auth.signOut();
@@ -180,7 +209,20 @@ async function handleLogout() {
 // Fetches initial data from Supabase and sets the initial sort state.
 // ****************************************** 
 async function init() {
-    // 0. Fetch Players and Map logged-in User
+    // 0. Fetch Groups
+    const { data: groupsData, error: groupsError } = await db
+        .from('groups')
+        .select('*')
+        .eq('is_active', true)
+        .order('order_index', { ascending: true });
+
+    if (!groupsError && groupsData) {
+        groups = groupsData;
+        populateGroupDropdown();
+        renderGroupsList();
+    }
+
+    // 1. Fetch Players and Map logged-in User
     const { data: playersData, error: playersError } = await db
         .from('players')
         .select('*')
@@ -219,6 +261,7 @@ async function init() {
             name: hero.name,
             slug: hero.slug,
             complexity: hero.complexity,
+            group_id: hero.group_id,
             group: hero.groups?.name || "Unknown",
             weights: [100, 100, 100, 100],
             playCount: [0, 0, 0, 0],
@@ -408,18 +451,18 @@ function toggleAdmin() {
 async function saveCharacter() {
     // Extract and trim values from management form inputs
     const name = document.getElementById('charName').value.trim();
-    const group = document.getElementById('charGroup').value.trim();
+    const groupId = document.getElementById('charGroup').value;
     const slug = document.getElementById('charSlug').value.trim();
     const complexity = document.getElementById('charComplexity').value.trim();
     
     if (!name) return alert("Name is required");
+    if (!groupId) return alert("Group is required");
 
-    // Note: This logic assumes groups are handled by name for simplicity
-    // In a full implementation, you'd lookup/create the group_id first.
     const charData = {
         name,
         slug,
         complexity: parseInt(complexity),
+        group_id: groupId,
         last_updated_by: currentUser.id
     };
 
@@ -450,7 +493,7 @@ function editChar(idx) {
 
     // Populate all management form fields (including missing complexity)
     document.getElementById('charName').value = c.name;
-    document.getElementById('charGroup').value = c.group || "";
+    document.getElementById('charGroup').value = c.group_id || "";
     document.getElementById('charSlug').value = c.slug || "";
     document.getElementById('charComplexity').value = c.complexity || "";
 
@@ -478,10 +521,140 @@ function resetForm() {
     
     // Clear all input values within the management form grid
     document.querySelectorAll('.manage-form .form-grid input').forEach(input => input.value = "");
+    
+    // Also reset the select element
+    document.getElementById('charGroup').value = "";
 
     // Reset UI state to "Add" mode
     document.getElementById('formTitle').innerText = "Add New Hero";
     document.getElementById('cancelBtn').style.display = "none";
+}
+
+// ****************************************** 
+// populateGroupDropdown()
+// input: none
+// ****************************************** 
+// Populates the group dropdown in the hero management form with all active groups.
+// ****************************************** 
+function populateGroupDropdown() {
+    const select = document.getElementById('charGroup');
+    const options = groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+    select.innerHTML = '<option value="">-- Select Group --</option>' + options;
+}
+
+// ****************************************** 
+// renderGroupsList()
+// input: none
+// ****************************************** 
+// Renders the list of groups with edit and delete buttons in the admin section.
+// ****************************************** 
+function renderGroupsList() {
+    const container = document.getElementById('groupsListContainer');
+    
+    if (groups.length === 0) {
+        container.innerHTML = '<p style="opacity: 0.6; font-style: italic;">No groups yet. Create one above.</p>';
+        return;
+    }
+
+    const html = groups.map(g => `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(255,255,255,0.05); margin: 5px 0; border-radius: 4px;">
+            <div>
+                <strong>${g.name}</strong>
+                ${g.type ? ` <span style="opacity: 0.6;">(${g.type})</span>` : ''}
+            </div>
+            <div style="display: flex; gap: 5px;">
+                <button type="button" class="btn-save" style="padding: 4px 8px; font-size: 0.9rem;" onclick="editGroup('${g.id}')">Edit</button>
+                <button type="button" class="btn-cancel" style="padding: 4px 8px; font-size: 0.9rem;" onclick="deleteGroup('${g.id}')">Delete</button>
+            </div>
+        </div>
+    `).join('');
+    
+    container.innerHTML = html;
+}
+
+// ****************************************** 
+// saveGroup()
+// input: none
+// ****************************************** 
+// Adds a new group or updates an existing one in Supabase.
+// ****************************************** 
+async function saveGroup() {
+    const name = document.getElementById('groupName').value.trim();
+    const type = document.getElementById('groupType').value.trim();
+    const order_index = document.getElementById('groupOrder').value.trim();
+    
+    if (!name) return alert("Group name is required");
+
+    const groupData = {
+        name,
+        type: type || null,
+        order_index: order_index ? parseInt(order_index) : null,
+        is_active: true
+    };
+
+    if (editGroupId) groupData.id = editGroupId;
+
+    const { data, error } = await db
+        .from('groups')
+        .upsert(groupData)
+        .select()
+        .single();
+
+    if (error) return alert("Error saving group: " + error.message);
+
+    resetGroupForm();
+    init(); // Refresh everything including groups
+}
+
+// ****************************************** 
+// editGroup(groupId)
+// input: groupId -> UUID of the group to edit
+// ****************************************** 
+// Populates the group form with data from a specific group for editing.
+// ****************************************** 
+function editGroup(groupId) {
+    const group = groups.find(g => g.id === groupId);
+    if (!group) return;
+
+    editGroupId = groupId;
+    document.getElementById('groupName').value = group.name;
+    document.getElementById('groupType').value = group.type || "";
+    document.getElementById('groupOrder').value = group.order_index || "";
+    document.getElementById('cancelGroupBtn').style.display = "block";
+}
+
+// ****************************************** 
+// resetGroupForm()
+// input: none
+// ****************************************** 
+// Clears the group management form fields and resets to "Add" mode.
+// ****************************************** 
+function resetGroupForm() {
+    editGroupId = null;
+    document.getElementById('groupName').value = "";
+    document.getElementById('groupType').value = "";
+    document.getElementById('groupOrder').value = "";
+    document.getElementById('cancelGroupBtn').style.display = "none";
+}
+
+// ****************************************** 
+// deleteGroup(groupId)
+// input: groupId -> UUID of the group to delete
+// ****************************************** 
+// Deletes a group from Supabase after user confirmation.
+// ****************************************** 
+async function deleteGroup(groupId) {
+    if (!confirm("Delete this group?")) return;
+
+    const { error } = await db
+        .from('groups')
+        .delete()
+        .eq('id', groupId);
+
+    if (error) return alert("Error deleting group: " + error.message);
+
+    resetGroupForm();
+    init(); // Refresh everything
 }
 
 // ****************************************** 

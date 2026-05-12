@@ -140,11 +140,30 @@
         <button type="button" class="admin-toggle-btn" onclick="toggleAdmin()">⚠ Show Admin Section</button>
         <section id="adminSection" class="hidden">
             <div id="admin-build-info"></div>
+            
+            <!-- Groups Management Section -->
+            <div class="manage-form" style="border-bottom: 1px solid #ffffff22; padding-bottom: 20px; margin-bottom: 20px;">
+                <h3 style="margin-top:0; font-size: 1rem; color: var(--accent);">Manage Groups</h3>
+                <div class="form-grid">
+                    <input type="text" id="groupName" style="font-size: 16px;" placeholder="Group Name">
+                    <input type="text" id="groupType" style="font-size: 16px;" placeholder="Type (optional)">
+                    <input type="number" id="groupOrder" style="font-size: 16px;" placeholder="Order Index">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn-save" id="saveGroupBtn" onclick="saveGroup()">Save Group</button>
+                    <button type="button" class="btn-cancel" id="cancelGroupBtn" onclick="resetGroupForm()" style="display:none;">Cancel</button>
+                </div>
+                <div id="groupsListContainer" style="margin-top: 15px;"></div>
+            </div>
+            
+            <!-- Heroes Management Section -->
             <div class="manage-form">
                 <h3 id="formTitle" style="margin-top:0; font-size: 1rem; color: var(--accent);">Add New Hero</h3>
                 <div class="form-grid">
                     <input type="text" id="charName" style="font-size: 16px;" placeholder="Hero Name">
-                    <input type="text" id="charGroup" style="font-size: 16px;" placeholder="Group (e.g. Season 1)">
+                    <select id="charGroup" style="font-size: 16px;" aria-label="Select group">
+                        <option value="">-- Select Group --</option>
+                    </select>
                     <input type="text" id="charSlug" style="font-size: 16px;" placeholder="Slug (for image)">
                     <input type="text" id="charComplexity" style="font-size: 16px;" placeholder="Complexity level">
                 </div>
