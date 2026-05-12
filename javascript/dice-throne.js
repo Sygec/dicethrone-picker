@@ -352,6 +352,7 @@ async function init() {
     renderAdminBuildInfo();
     renderGroupsList();
     renderHeroesList();
+    renderPlayersList();
     const initialSort = currentSort;
     currentSort = null;
     setSort(initialSort);
@@ -613,8 +614,8 @@ function renderGroupsList() {
                     ${g.type ? ` <span style="opacity: 0.6;">(${escapeHtml(g.type)})</span>` : ''}
                 </div>
                 <div style="display: flex; gap: 5px;">
-                    <button type="button" class="btn-save" style="padding: 4px 8px; font-size: 0.9rem;" onclick="editGroup('${g.id}')">Edit</button>
-                    <button type="button" class="btn-cancel" style="padding: 4px 8px; font-size: 0.9rem;" onclick="deleteGroup('${g.id}')">Delete</button>
+                    <button type="button" class="btn-save btn-inline" onclick="editGroup('${g.id}')">Edit</button>
+                    <button type="button" class="btn-cancel btn-inline" onclick="deleteGroup('${g.id}')">Delete</button>
                 </div>
             </div>
             <div id="groupEditPanel-${g.id}" class="group-edit-panel hidden">
@@ -645,8 +646,8 @@ function renderHeroesList() {
 
     const html = characters.map((c, idx) => {
         const isEditing = editIndex === idx;
-        const editBtn = isAdmin() ? `<button class="btn-save" style="padding: 4px 8px; font-size: 0.9rem;" onclick="editChar(${idx})">Edit</button>` : '';
-        const deleteBtn = isAdmin() ? `<button class="btn-cancel" style="padding: 4px 8px; font-size: 0.9rem;" onclick="deleteHero('${c.id}')">Delete</button>` : '';
+        const editBtn = isAdmin() ? `<button class="btn-save btn-inline" onclick="editChar(${idx})">Edit</button>` : '';
+        const deleteBtn = isAdmin() ? `<button class="btn-cancel btn-inline" onclick="deleteHero('${c.id}')">Delete</button>` : '';
         const groupOptions = groups.map(g => `<option value="${g.id}" ${g.id === c.group_id ? 'selected' : ''}>${escapeHtml(g.name)}</option>`).join('');
 
         return `
@@ -847,6 +848,119 @@ function resetGroupForm() {
         form.classList.add('hidden');
         button.innerText = 'Add Group';
     }
+}
+
+// ****************************************** 
+// renderPlayersList()
+// input: none
+// ****************************************** 
+// Renders the list of players in the admin panel with inline editing capabilities.
+// ****************************************** 
+function renderPlayersList() {
+    const container = document.getElementById('playersListContainer');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    players.forEach(player => {
+        const row = document.createElement('div');
+        row.className = 'player-admin-row';
+        row.id = `playerRow-${player.id}`;
+
+        const displayDiv = document.createElement('div');
+        displayDiv.className = 'player-display';
+        displayDiv.innerHTML = `
+            <span class="player-name">${player.name}</span>
+            <button type="button" class="btn-save btn-inline" onclick="editPlayer('${player.id}')">Edit</button>
+        `;
+
+        const editPanel = document.createElement('div');
+        editPanel.className = 'player-edit-panel hidden';
+        editPanel.id = `playerEditPanel-${player.id}`;
+        editPanel.innerHTML = `
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="text" id="playerName-${player.id}" value="${player.name}" style="flex: 1;">
+                <button type="button" class="btn-save" onclick="savePlayerInline('${player.id}')">Save</button>
+                <button type="button" class="btn-cancel" onclick="cancelPlayerEdit('${player.id}')">Cancel</button>
+            </div>
+        `;
+
+        row.appendChild(displayDiv);
+        row.appendChild(editPanel);
+        container.appendChild(row);
+    });
+}
+
+// ****************************************** 
+// editPlayer(playerId)
+// input: playerId -> UUID of the player to edit
+// ****************************************** 
+// Opens an inline editor for the selected player.
+// ****************************************** 
+function editPlayer(playerId) {
+    const player = players.find(p => p.id === playerId);
+    if (!player) return;
+
+    const listContainer = document.getElementById('playersListContainer');
+    if (listContainer) {
+        listContainer.classList.add('player-edit-active');
+        listContainer.querySelectorAll('.player-admin-row').forEach(row => row.classList.remove('editing'));
+    }
+
+    const panel = document.getElementById(`playerEditPanel-${playerId}`);
+    const activeRow = document.getElementById(`playerRow-${playerId}`);
+    if (!panel || !activeRow) return;
+
+    activeRow.classList.add('editing');
+    document.getElementById(`playerName-${playerId}`).value = player.name;
+    panel.classList.remove('hidden');
+}
+
+// ****************************************** 
+// cancelPlayerEdit(playerId)
+// input: playerId -> UUID of the player being edited
+// ****************************************** 
+// Cancels the inline edit for the player and hides the edit panel.
+// ****************************************** 
+function cancelPlayerEdit(playerId) {
+    const panel = document.getElementById(`playerEditPanel-${playerId}`);
+    const activeRow = document.getElementById(`playerRow-${playerId}`);
+    const listContainer = document.getElementById('playersListContainer');
+
+    if (panel) panel.classList.add('hidden');
+    if (activeRow) activeRow.classList.remove('editing');
+    if (listContainer) listContainer.classList.remove('player-edit-active');
+}
+
+// ****************************************** 
+// savePlayerInline(playerId)
+// input: playerId -> UUID of the player to save
+// ****************************************** 
+// Saves the inline edited player name to the database.
+// ****************************************** 
+async function savePlayerInline(playerId) {
+    const name = document.getElementById(`playerName-${playerId}`).value.trim();
+
+    if (!name) return alert("Player name is required");
+
+    const { error } = await db
+        .from('players')
+        .update({ name })
+        .eq('id', playerId)
+        .select()
+        .single();
+
+    if (error) return alert("Error saving player: " + error.message);
+
+    // Update local players array
+    const playerIndex = players.findIndex(p => p.id === playerId);
+    if (playerIndex !== -1) {
+        players[playerIndex].name = name;
+        NAMES[playerIndex] = name;
+    }
+
+    cancelPlayerEdit(playerId);
+    renderPlayersList();
 }
 
 function toggleGroupForm() {
