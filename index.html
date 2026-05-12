@@ -172,19 +172,33 @@
                     <button type="button" class="panel-toggle" aria-expanded="false" onclick="toggleAdminPanel(event, 'heroesPanel')">V</button>
                 </div>
                 <div id="heroesPanel" class="panel-content hidden">
-                    <div class="manage-form">
+                    <div style="margin-bottom: 15px;">
+                        <button type="button" class="btn-save" id="addHeroBtn" onclick="toggleHeroForm()">Add Hero</button>
+                    </div>
+                    <div id="heroForm" class="manage-form hidden">
                         <h3 id="formTitle" style="margin-top:0; font-size: 1rem; color: var(--accent);">Add New Hero</h3>
-                        <div class="form-grid">
+                        <div class="form-grid hero-form-grid">
                             <input type="text" id="charName" style="font-size: 16px;" placeholder="Hero Name">
                             <select id="charGroup" style="font-size: 16px;" aria-label="Select group">
                                 <option value="">-- Select Group --</option>
                             </select>
                             <input type="text" id="charSlug" style="font-size: 16px;" placeholder="Slug (for image)">
-                            <input type="text" id="charComplexity" style="font-size: 16px;" placeholder="Complexity level">
+                            <select id="charComplexity" style="font-size: 16px;" aria-label="Select complexity">
+                                <option value="">-- Complexity --</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                            </select>
                         </div>
-                        <button type="button" class="btn-save" id="saveBtn" onclick="saveCharacter()">Save Hero</button>
-                        <button type="button" class="btn-cancel" id="cancelBtn" onclick="resetForm()" style="display:none;">Cancel Edit</button>
+                        <div style="display: flex; gap: 10px;">
+                            <button type="button" class="btn-save" id="saveBtn" onclick="saveCharacter()">Save Hero</button>
+                            <button type="button" class="btn-cancel" id="cancelBtn" onclick="resetForm()" style="display:none;">Cancel Edit</button>
+                        </div>
                     </div>
+                    <div id="heroesListContainer" style="margin-top: 15px;"></div>
                 </div>
             </div>
 

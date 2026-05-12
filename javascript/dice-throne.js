@@ -135,6 +135,7 @@ function updateAuthUI() {
     // Refresh lists to show/hide edit buttons
     renderList();
     renderGamesList();
+    renderHeroesList();
 }
 
 // ****************************************** 
@@ -349,7 +350,8 @@ async function init() {
 
     renderSortControls();
     renderAdminBuildInfo();
-    renderGamesList();
+    renderGroupsList();
+    renderHeroesList();
     const initialSort = currentSort;
     currentSort = null;
     setSort(initialSort);
@@ -483,7 +485,7 @@ function toggleAdminPanel(event, panelId) {
 // Adds a new hero or updates an existing one in Supabase.
 // ****************************************** 
 async function saveCharacter() {
-    // Extract and trim values from management form inputs
+    // Extract and trim values from the add-new-hero form inputs
     const name = document.getElementById('charName').value.trim();
     const groupId = document.getElementById('charGroup').value;
     const slug = document.getElementById('charSlug').value.trim();
@@ -495,16 +497,14 @@ async function saveCharacter() {
     const charData = {
         name,
         slug,
-        complexity: parseInt(complexity),
+        complexity: complexity ? parseInt(complexity) : null,
         group_id: groupId,
         last_updated_by: currentUser.id
     };
 
-    if (editIndex > -1) charData.id = characters[editIndex].id;
-
     const { data: hero, error } = await db
         .from('heroes')
-        .upsert(charData)
+        .insert(charData)
         .select()
         .single();
 
@@ -523,25 +523,20 @@ async function saveCharacter() {
 // ****************************************** 
 function editChar(idx) {
     editIndex = idx;
-    const c = characters[idx];
+    renderHeroesList();
 
-    // Populate all management form fields (including missing complexity)
-    document.getElementById('charName').value = c.name;
-    document.getElementById('charGroup').value = c.group_id || "";
-    document.getElementById('charSlug').value = c.slug || "";
-    document.getElementById('charComplexity').value = c.complexity || "";
-
-    // Update UI state to "Edit" mode
-    document.getElementById('formTitle').innerText = "Edit Hero: " + c.name;
-    document.getElementById('cancelBtn').style.display = "block";
-
-    // Ensure the admin section is expanded so the user can see the form
     const adminSection = document.getElementById('adminSection');
     if (adminSection.classList.contains('hidden')) toggleAdmin();
 
-    // Smoothly scroll to the form and focus the first field
-    adminSection.scrollIntoView({ behavior: 'smooth' });
-    // document.getElementById('charName').focus();
+    const editPanel = document.getElementById(`heroEditPanel-${characters[idx]?.id}`);
+    if (editPanel && !isElementFullyVisible(editPanel)) {
+        editPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+function isElementFullyVisible(el) {
+    const rect = el.getBoundingClientRect();
+    return rect.top >= 0 && rect.left >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight);
 }
 
 // ****************************************** 
@@ -562,6 +557,26 @@ function resetForm() {
     // Reset UI state to "Add" mode
     document.getElementById('formTitle').innerText = "Add New Hero";
     document.getElementById('cancelBtn').style.display = "none";
+
+    const form = document.getElementById('heroForm');
+    const button = document.getElementById('addHeroBtn');
+    if (form && button) {
+        form.classList.add('hidden');
+        button.innerText = 'Add Hero';
+    }
+}
+
+function toggleHeroForm() {
+    const form = document.getElementById('heroForm');
+    const button = document.getElementById('addHeroBtn');
+    if (!form || !button) return;
+
+    const isHidden = form.classList.toggle('hidden');
+    button.innerText = isHidden ? 'Add Hero' : 'Hide Hero Form';
+
+    if (!isHidden) {
+        document.getElementById('charName')?.focus();
+    }
 }
 
 // ****************************************** 
@@ -617,6 +632,105 @@ function renderGroupsList() {
     `).join('');
     
     container.innerHTML = html;
+}
+
+function renderHeroesList() {
+    const container = document.getElementById('heroesListContainer');
+    if (!container) return;
+
+    if (characters.length === 0) {
+        container.innerHTML = '<p style="opacity: 0.6; font-style: italic;">No heroes yet. Add one above.</p>';
+        return;
+    }
+
+    const html = characters.map((c, idx) => {
+        const isEditing = editIndex === idx;
+        const editBtn = isAdmin() ? `<button class="btn-save" style="padding: 4px 8px; font-size: 0.9rem;" onclick="editChar(${idx})">Edit</button>` : '';
+        const deleteBtn = isAdmin() ? `<button class="btn-cancel" style="padding: 4px 8px; font-size: 0.9rem;" onclick="deleteHero('${c.id}')">Delete</button>` : '';
+        const groupOptions = groups.map(g => `<option value="${g.id}" ${g.id === c.group_id ? 'selected' : ''}>${escapeHtml(g.name)}</option>`).join('');
+
+        return `
+            <div id="heroRow-${c.id}" class="group-row hero-admin-row${isEditing ? ' editing' : ''}">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; gap: 10px;">
+                    <div>
+                        <strong>${escapeHtml(c.name)}</strong>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        ${editBtn}
+                        ${deleteBtn}
+                    </div>
+                </div>
+                <div id="heroEditPanel-${c.id}" class="group-edit-panel${isEditing ? '' : ' hidden'}">
+                    <div class="form-grid">
+                        <input type="text" id="heroName-${idx}" placeholder="Hero Name" value="${escapeHtml(c.name)}">
+                        <select id="heroGroup-${idx}">
+                            <option value="">-- Select Group --</option>
+                            ${groupOptions}
+                        </select>
+                        <input type="text" id="heroSlug-${idx}" placeholder="Slug (for image)" value="${escapeHtml(c.slug)}">
+                        <select id="heroComplexity-${idx}">
+                            <option value="">-- Complexity --</option>
+                            ${[1,2,3,4,5,6].map(value => `<option value="${value}" ${c.complexity == value ? 'selected' : ''}>${value}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-save" onclick="saveHeroInline('${c.id}', ${idx})">Save</button>
+                        <button class="btn-cancel" onclick="cancelHeroEdit()">Cancel</button>
+                    </div>
+                </div>
+            </div>`;
+    }).join('');
+
+    container.innerHTML = html;
+    if (editIndex !== -1) {
+        container.classList.add('group-edit-active');
+    } else {
+        container.classList.remove('group-edit-active');
+    }
+}
+
+function cancelHeroEdit() {
+    editIndex = -1;
+    renderHeroesList();
+}
+
+async function saveHeroInline(heroId, idx) {
+    const name = document.getElementById(`heroName-${idx}`).value.trim();
+    const groupId = document.getElementById(`heroGroup-${idx}`).value;
+    const slug = document.getElementById(`heroSlug-${idx}`).value.trim();
+    const complexity = document.getElementById(`heroComplexity-${idx}`).value.trim();
+
+    if (!name) return alert('Name is required');
+    if (!groupId) return alert('Group is required');
+
+    const charData = {
+        id: heroId,
+        name,
+        slug,
+        complexity: complexity ? parseInt(complexity) : null,
+        group_id: groupId,
+        last_updated_by: currentUser.id
+    };
+
+    const { data: hero, error } = await db
+        .from('heroes')
+        .upsert(charData)
+        .select()
+        .single();
+
+    if (error) return alert('Error saving: ' + error.message);
+
+    editIndex = -1;
+    await init();
+}
+
+async function deleteHero(heroId) {
+    if (!confirm('Delete this hero? This action cannot be undone.')) return;
+
+    const { error } = await db.from('heroes').delete().eq('id', heroId);
+    if (error) return alert('Error deleting hero: ' + error.message);
+
+    await init();
 }
 
 // ****************************************** 
