@@ -726,6 +726,26 @@ function resetGroupForm() {
     document.getElementById('groupType').value = "";
     document.getElementById('groupOrder').value = "";
     document.getElementById('cancelGroupBtn').style.display = "none";
+
+    const form = document.getElementById('groupForm');
+    const button = document.getElementById('addGroupBtn');
+    if (form && button) {
+        form.classList.add('hidden');
+        button.innerText = 'Add Group';
+    }
+}
+
+function toggleGroupForm() {
+    const form = document.getElementById('groupForm');
+    const button = document.getElementById('addGroupBtn');
+    if (!form || !button) return;
+
+    const isHidden = form.classList.toggle('hidden');
+    button.innerText = isHidden ? 'Add Group' : 'Hide Group Form';
+
+    if (!isHidden) {
+        document.getElementById('groupName')?.focus();
+    }
 }
 
 // ****************************************** 

@@ -147,7 +147,10 @@
                     <button type="button" class="panel-toggle" aria-expanded="false" onclick="toggleAdminPanel(event, 'groupsPanel')">V</button>
                 </div>
                 <div id="groupsPanel" class="panel-content hidden">
-                    <div class="manage-form" style="border-bottom: 1px solid #ffffff22; padding-bottom: 20px; margin-bottom: 20px;">
+                    <div style="margin-bottom: 15px;">
+                        <button type="button" class="btn-save" id="addGroupBtn" onclick="toggleGroupForm()">Add Group</button>
+                    </div>
+                    <div id="groupForm" class="manage-form hidden" style="border-bottom: 1px solid #ffffff22; padding-bottom: 20px; margin-bottom: 20px;">
                         <h3 style="margin-top:0; font-size: 1rem; color: var(--accent);">Groups</h3>
                         <div class="form-grid">
                             <input type="text" id="groupName" style="font-size: 16px;" placeholder="Group Name">
@@ -158,8 +161,8 @@
                             <button type="button" class="btn-save" id="saveGroupBtn" onclick="saveGroup()">Save Group</button>
                             <button type="button" class="btn-cancel" id="cancelGroupBtn" onclick="resetGroupForm()" style="display:none;">Cancel</button>
                         </div>
-                        <div id="groupsListContainer" style="margin-top: 15px;"></div>
                     </div>
+                    <div id="groupsListContainer" style="margin-top: 15px;"></div>
                 </div>
             </div>
 
