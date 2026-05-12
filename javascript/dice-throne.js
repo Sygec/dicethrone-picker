@@ -308,11 +308,19 @@ async function init() {
                 )
             )
         `)
-        .order('played_at', { ascending: false });
+        .order('played_at', { ascending: false })
+        .order('player_id', { foreignTable: 'game_players', ascending: true });
 
     if (gamesError) console.error("Error fetching games:", gamesError);
     else {
-        games = gamesData;
+        games = gamesData.map(game => ({
+            ...game,
+            game_players: (game.game_players || []).slice().sort((a, b) => {
+                const aIdx = parseInt(a.player_id?.substring(1) || '0', 10);
+                const bIdx = parseInt(b.player_id?.substring(1) || '0', 10);
+                return aIdx - bIdx;
+            })
+        }));
 
         // Recalculate lastPlayed based on game history to ensure accuracy (handles legacy data and deletions)
         characters.forEach(char => {
@@ -583,7 +591,7 @@ function renderGroupsList() {
     }
 
     const html = groups.map(g => `
-        <div class="group-row" style="margin: 5px 0; background: rgba(255,255,255,0.05);">
+        <div id="groupRow-${g.id}" class="group-row" style="margin: 5px 0; background: rgba(255,255,255,0.05);">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px;">
                 <div>
                     <strong>${escapeHtml(g.name)}</strong>
@@ -655,12 +663,17 @@ function editGroup(groupId) {
     const group = groups.find(g => g.id === groupId);
     if (!group) return;
 
-    // Close any other inline group editors
-    document.querySelectorAll('.group-edit-panel').forEach(panel => panel.classList.add('hidden'));
+    const listContainer = document.getElementById('groupsListContainer');
+    if (listContainer) {
+        listContainer.classList.add('group-edit-active');
+        listContainer.querySelectorAll('.group-row').forEach(row => row.classList.remove('editing'));
+    }
 
     const panel = document.getElementById(`groupEditPanel-${groupId}`);
-    if (!panel) return;
+    const activeRow = document.getElementById(`groupRow-${groupId}`);
+    if (!panel || !activeRow) return;
 
+    activeRow.classList.add('editing');
     document.getElementById(`groupName-${groupId}`).value = group.name;
     document.getElementById(`groupType-${groupId}`).value = group.type || "";
     document.getElementById(`groupOrder-${groupId}`).value = group.order_index || "";
@@ -669,7 +682,12 @@ function editGroup(groupId) {
 
 function cancelGroupEdit(groupId) {
     const panel = document.getElementById(`groupEditPanel-${groupId}`);
+    const activeRow = document.getElementById(`groupRow-${groupId}`);
+    const listContainer = document.getElementById('groupsListContainer');
+
     if (panel) panel.classList.add('hidden');
+    if (activeRow) activeRow.classList.remove('editing');
+    if (listContainer) listContainer.classList.remove('group-edit-active');
 }
 
 async function saveGroupInline(groupId) {

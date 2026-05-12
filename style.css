@@ -372,6 +372,22 @@
         .group-row {
                 border-radius: 6px;
                 overflow: hidden;
+                transition: background 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+        }
+
+        .group-row.editing .btn-save {
+                border: 2px solid #7ed321;
+                box-shadow: 0 0 0 1px rgba(126, 211, 33, 0.22);
+        }
+
+        #groupsListContainer.group-edit-active .group-row:not(.editing) {
+                opacity: 0.4;
+                filter: brightness(0.85);
+        }
+
+        .group-row.editing {
+                background: rgba(255,255,255,0.12);
+                box-shadow: inset 0 0 0 1px rgba(255,255,255,0.18);
         }
 
         .group-row .form-grid {
