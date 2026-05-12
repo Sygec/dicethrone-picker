@@ -1067,11 +1067,10 @@ function renderGamesList() {
             statusLabel = "Draw";
         }
 
-        // Standard users can select winners, but only admins can delete records
-        // Standard users can select winners, but only admins or the record creator can delete records
-        const gameActions = isUser() ? `
-            ${(isAdmin() || game.last_updated_by === currentUser.id) ? `<button class="btn-edit-small" onclick="selectWinner('${game.id}')" title="Select Winner">🏆</button>` : ''}
-            ${(isAdmin() || game.last_updated_by === currentUser.id) ? `<button class="btn-edit-small" onclick="deleteGame('${game.id}')" title="Delete Game" style="color: var(--danger);">🗑️</button>` : ''}
+        const canManage = isAdmin() || game.last_updated_by === currentUser?.id;
+        const gameActions = canManage ? `
+            <button class="btn-edit-small" onclick="selectWinner('${game.id}')" title="Select Winner">🏆</button>
+            <button class="btn-edit-small" onclick="deleteGame('${game.id}')" title="Delete Game" style="color: var(--danger);">🗑️</button>
         ` : '';
 
 

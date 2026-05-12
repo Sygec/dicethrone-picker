@@ -1,5 +1,9 @@
 [
   {
+    "version": "1.4.0.20260511",
+    "changes": ["Added login system with different access levels: viewer, user and admin","App now uses players defined in the database instead of hard-coded names","Full database security policies implemented"]
+  },
+  {
     "version": "1.3.0.20260508",
     "changes": ["Added new Games History section with game details and winner selection", "Added new game count stats in Games History section"]
   },
