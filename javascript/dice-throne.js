@@ -208,7 +208,7 @@ async function handleLogin() {
 // Prompts the user for confirmation and then logs out the current user from Supabase.
 // ****************************************** 
 async function handleLogout() {
-    if (confirm("Log out of admin session?")) {
+    if (confirm("Log out now?")) {
         await db.auth.signOut();
     }
 }
