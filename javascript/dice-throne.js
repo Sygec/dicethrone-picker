@@ -11,6 +11,7 @@ let groups = [];
 let authUsers = [];
 let cachedChangelog = null;
 let activeLevels = new Set([1, 2, 3, 4, 5, 6]);
+let selectedGamePlayerIndex = null;
 let currentSort = 'name';
 let sortAsc = true;
 let editIndex = -1;
@@ -257,6 +258,7 @@ async function init() {
         });
         updateAuthUI();
         renderPlayerToggles();
+        renderPlayerGameFilters();
     }
 
     const { data, error } = await db
@@ -1594,11 +1596,34 @@ function renderGamesList() {
     const countLabel = document.getElementById('game-count-stats');
     if (!container || !games) return;
 
+    const showWinsOnly = document.getElementById('games-winner-only')?.checked || false;
+
+    const filteredGames = games.filter(game => {
+        if (selectedGamePlayerIndex === null) return true;
+        
+        return game.game_players.some(gp => {
+            const pIdx = parseInt(gp.player_id.substring(1)) - 1;
+            let match = false;
+            
+            if (selectedGamePlayerIndex >= 0 && selectedGamePlayerIndex <= 3) {
+                match = (pIdx === selectedGamePlayerIndex);
+            } else if (selectedGamePlayerIndex === 4) {
+                // Invitee 1 or Invitee 2
+                match = (pIdx === 4 || pIdx === 5);
+            }
+
+            if (match && showWinsOnly) {
+                return gp.is_winner === true;
+            }
+            return match;
+        });
+    });
+
     if (countLabel) {
-        countLabel.innerText = `Showing ${games.length} of ${games.length} games`;
+        countLabel.innerText = `Showing ${filteredGames.length} of ${games.length} games`;
     }
 
-    container.innerHTML = games.map(game => {
+    container.innerHTML = filteredGames.map(game => {
         // Ensure the date string is treated as UTC by forcing the ISO format (T separator and Z suffix)
         let rawDate = game.played_at || "";
         if (rawDate && !rawDate.includes('T')) rawDate = rawDate.replace(' ', 'T');
@@ -1815,6 +1840,64 @@ async function deleteGame(gameId) {
     }
 
     await init();
+}
+
+function toggleGamesFilterUI() {
+    document.getElementById('games-filter-section').classList.toggle('hidden');
+}
+
+function renderPlayerGameFilters() {
+    const container = document.getElementById('player-game-filter-container');
+    if (!container || players.length === 0) return;
+
+    let html = '';
+    // Main 4 players
+    for (let i = 0; i < 4; i++) {
+        const p = players[i];
+        if (!p) continue;
+        const isActive = selectedGamePlayerIndex === i;
+        html += `
+            <button class="player-filter-btn ${isActive ? 'active' : ''}" 
+                    style="background-color: var(--p${i + 1});" 
+                    onclick="togglePlayerGameFilter(${i})">
+                ${p.name}
+            </button>
+        `;
+    }
+
+    // Invitee button (covers indices 4 and 5)
+    const isInviteeActive = selectedGamePlayerIndex === 4;
+    html += `
+        <button class="player-filter-btn ${isInviteeActive ? 'active' : ''}" 
+                style="background-color: var(--p5);" 
+                onclick="togglePlayerGameFilter(4)">
+            Invitee
+        </button>
+    `;
+
+    container.innerHTML = html;
+}
+
+function togglePlayerGameFilter(idx) {
+    if (selectedGamePlayerIndex === idx) {
+        selectedGamePlayerIndex = null;
+    } else {
+        selectedGamePlayerIndex = idx;
+    }
+
+    const wrapper = document.getElementById('winner-filter-wrapper');
+    const winnerCheckbox = document.getElementById('games-winner-only');
+    if (wrapper) {
+        if (selectedGamePlayerIndex !== null) {
+            wrapper.classList.remove('hidden');
+        } else {
+            wrapper.classList.add('hidden');
+            if (winnerCheckbox) winnerCheckbox.checked = false;
+        }
+    }
+
+    renderPlayerGameFilters();
+    renderGamesList();
 }
 
 // init();

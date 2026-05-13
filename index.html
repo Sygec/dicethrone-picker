@@ -130,9 +130,30 @@
         <button type="button" class="db-toggle-btn" id="gamesToggleBtn" onclick="toggleGames()">🎲 Show Games History</button>
 
         <section id="gamesSection" class="hidden">
-            <div class="small-text" id="game-count-stats" style="margin-top: 15px;">
-                Showing 0 of 0 games
+            <div class="search-container" style="margin-top: 15px;">
+                <div class="search-wrapper">
+                    <div style="flex: 1; text-align: left; padding-left: 10px;">
+                        <h3 style="margin: 0; color: var(--accent); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">Games History</h3>
+                    </div>
+                    <div class="search-actions">
+                        <img src="images/buttons/sort.png" id="games-filter-toggle" class="search-icon" onclick="toggleGamesFilterUI()" alt="Filter" title="Toggle Player Filters">
+                    </div>
+                </div>
+                <div class="small-text" id="game-count-stats" style="margin-top: 5px;">
+                    Showing 0 of 0 games
+                </div>
             </div>
+
+            <div id="games-filter-section" class="hidden" style="margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap: wrap;">
+                    <div class="dice-bar" id="player-game-filter-container" style="margin-bottom: 0;"></div>
+                    <div id="winner-filter-wrapper" class="hidden" style="display: flex; align-items: center; gap: 8px; color: var(--accent); font-weight: bold; font-size: 0.8rem; background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 6px;">
+                        <input type="checkbox" id="games-winner-only" onchange="renderGamesList()" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent);">
+                        <label for="games-winner-only" style="cursor: pointer; user-select: none;">Wins Only</label>
+                    </div>
+                </div>
+            </div>
+
             <div id="gamesContainer" style="margin-top: 20px;"></div>
         </section>
 

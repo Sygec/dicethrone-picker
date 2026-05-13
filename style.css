@@ -759,6 +759,30 @@
                 filter: grayscale(0%);
         }
 
+        .player-filter-btn {
+                padding: 6px 12px;
+                border-radius: 6px;
+                font-weight: bold;
+                font-size: 0.7rem;
+                cursor: pointer;
+                transition: border-color 0.2s ease, transform 0.1s ease;
+                opacity: 1;
+                filter: none;
+                transform: none;
+                border: 2px solid transparent;
+                color: #1a1a2e;
+                text-transform: uppercase;
+                min-width: 65px;
+                text-align: center;
+                filter: grayscale(25%);
+        }
+
+        .player-filter-btn.active {
+                border-color: var(--accent);
+                transform: scale(1.15);
+                filter: grayscale(0%);
+        }
+
         /* The Modal (background) */
         .modal {
         display: none; /* Hidden by default */
