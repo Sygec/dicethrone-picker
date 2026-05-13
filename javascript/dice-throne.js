@@ -1181,7 +1181,7 @@ function renderPlayerRow(pIdx, selectedName) {
             <a href="${getHeroLink(charData?.slug)}" target="_blank" id="link-${pIdx}">
                 <div class="char-complexity-roll">
                     <img src="${getImgUrl(charData?.slug)}" class="char-img-roll" id="img-${pIdx}" alt="${selectedName}" title="${selectedName}">
-                    <img src="images/d${charData?.complexity}.png" class="complexity-roll" alt="Complexity" id="comp-${pIdx}" title="Complexity: ${charData?.complexity}">
+                    <img src="images/dice/d${charData?.complexity}.png" class="complexity-roll" alt="Complexity" id="comp-${pIdx}" title="Complexity: ${charData?.complexity}">
                 </div>
             </a>
             <div style="flex:1">
@@ -1213,7 +1213,7 @@ function handleDropdownChange(el) {
 
     // Update the visual assets: portrait, complexity dice, and wiki link
     document.getElementById(`img-${pIdx}`).src = getImgUrl(char.slug);
-    document.getElementById(`comp-${pIdx}`).src = `images/d${char.complexity}.png`;
+    document.getElementById(`comp-${pIdx}`).src = `images/dice/d${char.complexity}.png`;
     document.getElementById(`link-${pIdx}`).href = getHeroLink(char.slug);
     
     // Locate the stats container within the current player's row
@@ -1908,7 +1908,7 @@ function renderList() {
                     <a href="${getHeroLink(c.slug)}" target="_blank">
                         <div class="char-complexity-db">
                             <img src="${getImgUrl(c.slug)}" class="char-img-roll" alt="${c.name}">
-                            <img src="images/d${c.complexity}.png" class="complexity-roll" alt="Complexity">
+                            <img src="images/dice/d${c.complexity}.png" class="complexity-roll" alt="Complexity">
                         </div>
                     </a>
                     ${editBtn}
