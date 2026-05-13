@@ -76,10 +76,9 @@ async function initializeApp() {
         currentUser = session?.user || null;
         updateAuthUI();
 
-        // Initialize app data if user is already logged in
-        if (currentUser) {
-            await init();
-        }
+        // Initialize app data
+        await init();
+        renderGamesList(); // Re-render games list after data is loaded
 
         const response = await fetch('changelog.json');
         cachedChangelog = await response.json();
