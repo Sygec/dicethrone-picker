@@ -76,6 +76,11 @@ async function initializeApp() {
         currentUser = session?.user || null;
         updateAuthUI();
 
+        // Initialize app data if user is already logged in
+        if (currentUser) {
+            await init();
+        }
+
         const response = await fetch('changelog.json');
         cachedChangelog = await response.json();
 
