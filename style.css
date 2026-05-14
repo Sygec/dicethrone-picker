@@ -927,7 +927,7 @@
 
         /* 1. Prevent content from being hidden behind the nav bar */
         .content {
-        padding-bottom: 70px; /* Adjust based on your nav bar height */
+        padding-bottom: 85px; /* Adjust based on your nav bar height */
         }
 
         /* 2. The Navigation Bar Container */
@@ -936,11 +936,11 @@
         bottom: 0;
         left: 0;
         right: 0;
-        height: 60px;
+        height: 75px;
         background-color: #1a1a1a; /* Dark theme for Dice Throne vibes */
         display: flex;
         justify-content: space-around;
-        align-items: center;
+        align-items: top;
         border-top: 1px solid #333;
         z-index: 1000;
         
@@ -950,9 +950,10 @@
 
         /* 3. Individual Nav Items */
         .nav-item {
+        margin-top: 5px;
         display: flex;
         flex-direction: column;
-        align-items: center;
+        align-items: top;
         text-decoration: none;
         color: #888;
         font-size: 0.75rem;
