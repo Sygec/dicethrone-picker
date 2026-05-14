@@ -1,11 +1,27 @@
 [
   {
+    "version": "1.4.0.20260513",
+    "changes": [
+      "Added login system with different access levels: viewer, user and admin",
+      "App now uses players defined in the database instead of hard-coded names",
+      "Full database security policies implemented",
+      "Added new admin section for groups, players and heroes",
+      "Added game history filtering by player"
+    ]
+  },
+  {
     "version": "1.3.0.20260508",
-    "changes": ["Added new Games History section with game details and winner selection", "Added new game count stats in Games History section"]
+    "changes": [
+      "Added new Games History section with game details and winner selection",
+      "Added new game count stats in Games History section"
+    ]
   },
   {
     "version": "1.2.1.20260507",
-    "changes": ["New aggressive weight system strongly favoring less played heroes without eliminating the others","Added new build info panel in admin section"]
+    "changes": [
+      "New aggressive weight system strongly favoring less played heroes without eliminating the others",
+      "Added new build info panel in admin section"
+    ]
   },
   {
     "version": "1.2.0.20260507",
@@ -13,23 +29,42 @@
   },
   {
     "version": "1.1.4.20260501",
-    "changes": ["Added ability to hide players from hero stats and sort section", "Re-added edit button for heroes", "Minor hero panel tweaks"]
+    "changes": [
+      "Added ability to hide players from hero stats and sort section",
+      "Re-added edit button for heroes",
+      "Minor hero panel tweaks"
+    ]
   },
   {
     "version": "1.1.3.20260427",
-    "changes": ["Added option to change sort for dropdown heroes", "Code/comments refactoring"]
+    "changes": [
+      "Added option to change sort for dropdown heroes",
+      "Code/comments refactoring"
+    ]
   },
   {
     "version": "1.1.3.20260425",
-    "changes": ["Fix bug in hero database view displaying wins instead of plays", "Fixed complexity dice image not updating on dropdown change", "Changed player header in sort section and hero stats to common look"]
+    "changes": [
+      "Fix bug in hero database view displaying wins instead of plays",
+      "Fixed complexity dice image not updating on dropdown change",
+      "Changed player header in sort section and hero stats to common look"
+    ]
   },
   {
     "version": "1.1.3.20260424",
-    "changes": ["Modified hero database view", "Code cleanup"]
+    "changes": [
+      "Modified hero database view",
+      "Code cleanup"
+    ]
   },
   {
     "version": "1.1.2.20260423",
-    "changes": ["Added 2 invitee interface changes", "Added complexity dice to roll section", "Modified change log display", "Code cleanup"]
+    "changes": [
+      "Added 2 invitee interface changes",
+      "Added complexity dice to roll section",
+      "Modified change log display",
+      "Code cleanup"
+    ]
   },
   {
     "version": "1.1.1.20260419",
@@ -37,15 +72,25 @@
   },
   {
     "version": "1.1.0.20260419",
-    "changes": ["Updated to new weight system", "Picked heroes drop to weight 20, all others gain 10, no ceiling"]
+    "changes": [
+      "Updated to new weight system", 
+      "Picked heroes drop to weight 20, all others gain 10, no ceiling"
+    ]
   },
   {
     "version": "1.0.2.20260416",
-    "changes": ["Added new search bar", "Moved form to add hero to admin section", "Other minor tweaks to sort section and search bar"]
+    "changes": [
+      "Added new search bar",
+      "Moved form to add hero to admin section",
+      "Other minor tweaks to sort section and search bar"
+    ]
   },
   {
     "version": "1.0.1.20260415",
-    "changes": ["Added button to sort by dates", "Updated sort section entirely"]
+    "changes": [
+      "Added button to sort by dates",
+      "Updated sort section entirely"
+    ]
   },
   {
     "version": "1.0.0.20260414",

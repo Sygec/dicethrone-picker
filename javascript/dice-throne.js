@@ -1,17 +1,26 @@
 // ==========================================
 // 1. GLOBAL CONSTANTS & STATE
 // ==========================================
-const NAMES = ["Claudine", "Joel", "Julie", "Martin", "Invitee 1", "Invitee 2"];
+let NAMES = [];
 const PLAYER_COLORS = ['var(--p1)', 'var(--p2)', 'var(--p3)', 'var(--p4)'];
 
 let characters = [];
 let games = [];
+let players = [];
+let groups = [];
+let authUsers = [];
 let cachedChangelog = null;
 let activeLevels = new Set([1, 2, 3, 4, 5, 6]);
+let selectedGamePlayerIndex = null;
 let currentSort = 'name';
 let sortAsc = true;
 let editIndex = -1;
+let editGroupId = null;
 let activePlayerIndices = [0, 1, 2, 3];
+let currentUser = null;
+let loggedInPlayerIndex = -1;
+const isAdmin = () => currentUser?.app_metadata?.role === 'admin';
+const isUser = () => !!currentUser;
 
 // ==========================================
 // 2. DOM ELEMENT REFERENCES
@@ -20,6 +29,8 @@ const versionLabel = document.getElementById("version-number");
 const container = document.getElementById("changelog-container");
 const modal = document.getElementById("changelog-modal");
 const closeBtn = document.querySelector(".close-button");
+const loginModal = document.getElementById("login-modal");
+const authBtn = document.getElementById("auth-btn");
 
 // ==========================================
 // 3. SUPABASE CONFIGURATION
@@ -40,6 +51,15 @@ const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const getImgUrl = (slug) => slug ? `https://dice-throne.rulepop.com/heroes/${slug}.webp` : "";
 const getHeroLink = (slug) => `https://dice-throne.rulepop.com/#hero/${slug}`;
 
+const escapeHtml = (text) => {
+    return String(text || "")
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+};
+
 // ==========================================
 // 5. APPLICATION INITIALIZATION
 // ==========================================
@@ -52,6 +72,15 @@ const getHeroLink = (slug) => `https://dice-throne.rulepop.com/#hero/${slug}`;
 // ****************************************** 
 async function initializeApp() {
     try {
+        // Check for existing session on load
+        const { data: { session } } = await db.auth.getSession();
+        currentUser = session?.user || null;
+        updateAuthUI();
+
+        // Initialize app data
+        await init();
+        renderGamesList(); // Re-render games list after data is loaded
+
         const response = await fetch('changelog.json');
         cachedChangelog = await response.json();
 
@@ -72,8 +101,121 @@ window.addEventListener('DOMContentLoaded', updateDiceVisuals);
 versionLabel.onclick = openChangelog;
 closeBtn.onclick = closeChangelog;
 
+// Auth Event Listeners
+db.auth.onAuthStateChange((event, session) => {
+    currentUser = session?.user || null;
+    if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') init();
+    updateAuthUI();
+    if (event === 'SIGNED_IN') closeLoginModal();
+});
+
 window.onclick = (event) => {
     if (event.target == modal) closeChangelog();
+    if (event.target == loginModal) closeLoginModal();
+}
+
+// ****************************************** 
+// Auth UI & Logic
+// ****************************************** 
+function updateAuthUI() {
+    const adminToggle = document.querySelector('.admin-toggle-btn');
+    const confirmBtn = document.getElementById('confirmBtn');
+
+    if (currentUser) {
+        if (loggedInPlayerIndex !== -1) {
+            authBtn.innerText = `Logout (${NAMES[loggedInPlayerIndex]})`;
+        } else {
+            authBtn.innerText = `Logout (${currentUser.email.split('@')[0]})`;
+        }
+        authBtn.onclick = handleLogout;
+        // Only show the Admin Section toggle to users with the admin role
+        if (adminToggle) adminToggle.style.display = isAdmin() ? 'block' : 'none';
+    } else {
+        authBtn.innerText = 'Login';
+        authBtn.onclick = openLoginModal;
+        if (adminToggle) adminToggle.style.display = 'none';
+        if (document.getElementById('adminSection')) document.getElementById('adminSection').classList.add('hidden');
+        if (confirmBtn) confirmBtn.style.display = 'none';
+    }
+    
+    // Refresh lists to show/hide edit buttons
+    renderList();
+    renderGamesList();
+    renderHeroesList();
+}
+
+// ****************************************** 
+// renderPlayerToggles()
+// input: none
+// ****************************************** 
+// Dynamically builds the player selection checkboxes at the top of the app.
+// ****************************************** 
+function renderPlayerToggles() {
+    const container = document.getElementById('player-toggle-zone-top');
+    if (!container || players.length === 0) return;
+
+    container.innerHTML = players.map((p, i) => {
+        const isChecked = i < 4 ? 'checked' : '';
+        return `
+            <label class="p-chk">
+                <span class="player-tag" style="background:var(--${p.id})">${p.name}</span>
+                <input type="checkbox" id="use${i}" ${isChecked}>
+            </label>`;
+    }).join('');
+}
+
+// ****************************************** 
+// openLoginModal()
+// input: none
+// ****************************************** 
+// Displays the login modal and prevents background scrolling.
+// ****************************************** 
+function openLoginModal() {
+    loginModal.style.display = "block";
+    document.getElementById('login-error').style.display = 'none';
+    document.body.style.overflow = "hidden";
+}
+
+// ****************************************** 
+// closeLoginModal()
+// input: none
+// ****************************************** 
+// Hides the login modal and restores background scrolling.
+// ****************************************** 
+function closeLoginModal() {
+    loginModal.style.display = "none";
+    document.body.style.overflow = "auto";
+}
+
+async function handleLogin() {
+    const email = document.getElementById('login-email').value;
+// ****************************************** 
+// handleLogin()
+// input: none
+// ****************************************** 
+// Attempts to sign in a user with provided email and password using Supabase authentication.
+// ****************************************** 
+    const password = document.getElementById('login-password').value;
+    const errorDiv = document.getElementById('login-error');
+    
+    const { error } = await db.auth.signInWithPassword({ email, password });
+    
+    if (error) {
+        errorDiv.innerText = error.message;
+        errorDiv.style.display = 'block';
+    }
+}
+
+// ****************************************** 
+// handleLogout()
+// input: none
+// ****************************************** 
+// Prompts the user for confirmation and then logs out the current user from Supabase.
+// ****************************************** 
+async function handleLogout() {
+    if (confirm("Log out now?")) {
+        await db.auth.signOut();
+    }
 }
 
 // ****************************************** 
@@ -83,6 +225,42 @@ window.onclick = (event) => {
 // Fetches initial data from Supabase and sets the initial sort state.
 // ****************************************** 
 async function init() {
+    // 0. Fetch Groups
+    const { data: groupsData, error: groupsError } = await db
+        .from('groups')
+        .select('*')
+        .eq('is_active', true)
+        .order('order_index', { ascending: true });
+
+    if (!groupsError && groupsData) {
+        groups = groupsData;
+        populateGroupDropdown();
+        renderGroupsList();
+    }
+
+    // 1. Fetch Players and Map logged-in User
+    const { data: playersData, error: playersError } = await db
+        .from('players')
+        .select('*')
+        .order('id', { ascending: true });
+
+    if (!playersError && playersData) {
+        players = playersData;
+        NAMES = playersData.map(p => p.name);
+        loggedInPlayerIndex = -1;
+        playersData.forEach((p, i) => {
+            if (i < 6) {
+                NAMES[i] = p.name;
+                if (currentUser && p.user_id === currentUser.id) {
+                    loggedInPlayerIndex = i;
+                }
+            }
+        });
+        updateAuthUI();
+        renderPlayerToggles();
+        renderPlayerGameFilters();
+    }
+
     const { data, error } = await db
         .from('heroes')
         .select(`
@@ -100,6 +278,7 @@ async function init() {
             name: hero.name,
             slug: hero.slug,
             complexity: hero.complexity,
+            group_id: hero.group_id,
             group: hero.groups?.name || "Unknown",
             weights: [100, 100, 100, 100],
             playCount: [0, 0, 0, 0],
@@ -125,6 +304,7 @@ async function init() {
         .select(`
             id,
             played_at,
+            last_updated_by,
             game_players (
                 hero_id,
                 player_id,
@@ -136,11 +316,19 @@ async function init() {
                 )
             )
         `)
-        .order('played_at', { ascending: false });
+        .order('played_at', { ascending: false })
+        .order('player_id', { foreignTable: 'game_players', ascending: true });
 
     if (gamesError) console.error("Error fetching games:", gamesError);
     else {
-        games = gamesData;
+        games = gamesData.map(game => ({
+            ...game,
+            game_players: (game.game_players || []).slice().sort((a, b) => {
+                const aIdx = parseInt(a.player_id?.substring(1) || '0', 10);
+                const bIdx = parseInt(b.player_id?.substring(1) || '0', 10);
+                return aIdx - bIdx;
+            })
+        }));
 
         // Recalculate lastPlayed based on game history to ensure accuracy (handles legacy data and deletions)
         characters.forEach(char => {
@@ -169,7 +357,10 @@ async function init() {
 
     renderSortControls();
     renderAdminBuildInfo();
-    renderGamesList();
+    renderGroupsList();
+    renderHeroesList();
+    renderPlayersList();
+    renderUsersList();
     const initialSort = currentSort;
     currentSort = null;
     setSort(initialSort);
@@ -280,33 +471,49 @@ function toggleAdmin() {
 }    
 
 // ****************************************** 
+// toggleAdminPanel(panelId)
+// input: panelId -> ID of the admin panel content section
+// ****************************************** 
+// Opens or closes a panel within the admin section.
+// ****************************************** 
+function toggleAdminPanel(event, panelId) {
+    event.stopPropagation();
+    const panel = document.getElementById(panelId);
+    const button = event.currentTarget;
+    if (!panel || !button) return;
+
+    const isHidden = panel.classList.toggle('hidden');
+    button.classList.toggle('open', !isHidden);
+    button.setAttribute('aria-expanded', String(!isHidden));
+}
+
+// ****************************************** 
 // saveCharacter()
 // input: none
 // ****************************************** 
 // Adds a new hero or updates an existing one in Supabase.
 // ****************************************** 
 async function saveCharacter() {
-    // Extract and trim values from management form inputs
+    // Extract and trim values from the add-new-hero form inputs
     const name = document.getElementById('charName').value.trim();
-    const group = document.getElementById('charGroup').value.trim();
+    const groupId = document.getElementById('charGroup').value;
     const slug = document.getElementById('charSlug').value.trim();
     const complexity = document.getElementById('charComplexity').value.trim();
     
     if (!name) return alert("Name is required");
+    if (!groupId) return alert("Group is required");
 
-    // Note: This logic assumes groups are handled by name for simplicity
-    // In a full implementation, you'd lookup/create the group_id first.
     const charData = {
         name,
         slug,
-        complexity: parseInt(complexity)
+        complexity: complexity ? parseInt(complexity) : null,
+        group_id: groupId,
+        last_updated_by: currentUser.id
     };
-
-    if (editIndex > -1) charData.id = characters[editIndex].id;
 
     const { data: hero, error } = await db
         .from('heroes')
-        .upsert(charData)
+        .insert(charData)
         .select()
         .single();
 
@@ -325,25 +532,20 @@ async function saveCharacter() {
 // ****************************************** 
 function editChar(idx) {
     editIndex = idx;
-    const c = characters[idx];
+    renderHeroesList();
 
-    // Populate all management form fields (including missing complexity)
-    document.getElementById('charName').value = c.name;
-    document.getElementById('charGroup').value = c.group || "";
-    document.getElementById('charSlug').value = c.slug || "";
-    document.getElementById('charComplexity').value = c.complexity || "";
-
-    // Update UI state to "Edit" mode
-    document.getElementById('formTitle').innerText = "Edit Hero: " + c.name;
-    document.getElementById('cancelBtn').style.display = "block";
-
-    // Ensure the admin section is expanded so the user can see the form
     const adminSection = document.getElementById('adminSection');
     if (adminSection.classList.contains('hidden')) toggleAdmin();
 
-    // Smoothly scroll to the form and focus the first field
-    adminSection.scrollIntoView({ behavior: 'smooth' });
-    // document.getElementById('charName').focus();
+    const editPanel = document.getElementById(`heroEditPanel-${characters[idx]?.id}`);
+    if (editPanel && !isElementFullyVisible(editPanel)) {
+        editPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+function isElementFullyVisible(el) {
+    const rect = el.getBoundingClientRect();
+    return rect.top >= 0 && rect.left >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight);
 }
 
 // ****************************************** 
@@ -357,10 +559,487 @@ function resetForm() {
     
     // Clear all input values within the management form grid
     document.querySelectorAll('.manage-form .form-grid input').forEach(input => input.value = "");
+    
+    // Also reset the select element
+    document.getElementById('charGroup').value = "";
 
     // Reset UI state to "Add" mode
     document.getElementById('formTitle').innerText = "Add New Hero";
     document.getElementById('cancelBtn').style.display = "none";
+
+    const form = document.getElementById('heroForm');
+    const button = document.getElementById('addHeroBtn');
+    if (form && button) {
+        form.classList.add('hidden');
+        button.innerText = 'Add Hero';
+    }
+}
+
+function toggleHeroForm() {
+    const form = document.getElementById('heroForm');
+    const button = document.getElementById('addHeroBtn');
+    if (!form || !button) return;
+
+    const isHidden = form.classList.toggle('hidden');
+    button.innerText = isHidden ? 'Add Hero' : 'Hide Hero Form';
+
+    if (!isHidden) {
+        document.getElementById('charName')?.focus();
+    }
+}
+
+// ****************************************** 
+// populateGroupDropdown()
+// input: none
+// ****************************************** 
+// Populates the group dropdown in the hero management form with all active groups.
+// ****************************************** 
+function populateGroupDropdown() {
+    const select = document.getElementById('charGroup');
+    const options = groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+    select.innerHTML = '<option value="">-- Select Group --</option>' + options;
+}
+
+// ****************************************** 
+// renderGroupsList()
+// input: none
+// ****************************************** 
+// Renders the list of groups with edit and delete buttons in the admin section.
+// ****************************************** 
+function renderGroupsList() {
+    const container = document.getElementById('groupsListContainer');
+    
+    if (groups.length === 0) {
+        container.innerHTML = '<p style="opacity: 0.6; font-style: italic;">No groups yet. Create one above.</p>';
+        return;
+    }
+
+    const html = groups.map(g => `
+        <div id="groupRow-${g.id}" class="group-row" style="margin: 5px 0; background: rgba(255,255,255,0.05);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px;">
+                <div>
+                    <strong>${escapeHtml(g.name)}</strong>
+                    ${g.type ? ` <span style="opacity: 0.6;">(${escapeHtml(g.type)})</span>` : ''}
+                </div>
+                <div style="display: flex; gap: 5px;">
+                    <button type="button" class="btn-save btn-inline" onclick="editGroup('${g.id}')">Edit</button>
+                    <button type="button" class="btn-cancel btn-inline" onclick="deleteGroup('${g.id}')">Delete</button>
+                </div>
+            </div>
+            <div id="groupEditPanel-${g.id}" class="group-edit-panel hidden">
+                <div class="form-grid">
+                    <input type="text" id="groupName-${g.id}" placeholder="Group Name" value="${escapeHtml(g.name)}">
+                    <input type="text" id="groupType-${g.id}" placeholder="Type (optional)" value="${escapeHtml(g.type || '')}">
+                    <input type="number" id="groupOrder-${g.id}" placeholder="Order Index" value="${g.order_index ?? ''}">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn-save" onclick="saveGroupInline('${g.id}')">Save</button>
+                    <button type="button" class="btn-cancel" onclick="cancelGroupEdit('${g.id}')">Cancel</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    container.innerHTML = html;
+}
+
+function renderHeroesList() {
+    const container = document.getElementById('heroesListContainer');
+    if (!container) return;
+
+    if (characters.length === 0) {
+        container.innerHTML = '<p style="opacity: 0.6; font-style: italic;">No heroes yet. Add one above.</p>';
+        return;
+    }
+
+    const html = characters.map((c, idx) => {
+        const isEditing = editIndex === idx;
+        const editBtn = isAdmin() ? `<button class="btn-save btn-inline" onclick="editChar(${idx})">Edit</button>` : '';
+        const deleteBtn = isAdmin() ? `<button class="btn-cancel btn-inline" onclick="deleteHero('${c.id}')">Delete</button>` : '';
+        const groupOptions = groups.map(g => `<option value="${g.id}" ${g.id === c.group_id ? 'selected' : ''}>${escapeHtml(g.name)}</option>`).join('');
+
+        return `
+            <div id="heroRow-${c.id}" class="group-row hero-admin-row${isEditing ? ' editing' : ''}">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; gap: 10px;">
+                    <div>
+                        <strong>${escapeHtml(c.name)}</strong>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        ${editBtn}
+                        ${deleteBtn}
+                    </div>
+                </div>
+                <div id="heroEditPanel-${c.id}" class="group-edit-panel${isEditing ? '' : ' hidden'}">
+                    <div class="form-grid">
+                        <input type="text" id="heroName-${idx}" placeholder="Hero Name" value="${escapeHtml(c.name)}">
+                        <select id="heroGroup-${idx}">
+                            <option value="">-- Select Group --</option>
+                            ${groupOptions}
+                        </select>
+                    </div>
+                    <div class="form-grid">
+                        <input type="text" id="heroSlug-${idx}" placeholder="Slug (for image)" value="${escapeHtml(c.slug)}">
+                        <select id="heroComplexity-${idx}">
+                            <option value="">-- Complexity --</option>
+                            ${[1,2,3,4,5,6].map(value => `<option value="${value}" ${c.complexity == value ? 'selected' : ''}>${value}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-save" onclick="saveHeroInline('${c.id}', ${idx})">Save</button>
+                        <button class="btn-cancel" onclick="cancelHeroEdit()">Cancel</button>
+                    </div>
+                </div>
+            </div>`;
+    }).join('');
+
+    container.innerHTML = html;
+    if (editIndex !== -1) {
+        container.classList.add('group-edit-active');
+    } else {
+        container.classList.remove('group-edit-active');
+    }
+}
+
+function cancelHeroEdit() {
+    editIndex = -1;
+    renderHeroesList();
+}
+
+async function saveHeroInline(heroId, idx) {
+    const name = document.getElementById(`heroName-${idx}`).value.trim();
+    const groupId = document.getElementById(`heroGroup-${idx}`).value;
+    const slug = document.getElementById(`heroSlug-${idx}`).value.trim();
+    const complexity = document.getElementById(`heroComplexity-${idx}`).value.trim();
+
+    if (!name) return alert('Name is required');
+    if (!groupId) return alert('Group is required');
+
+    const charData = {
+        id: heroId,
+        name,
+        slug,
+        complexity: complexity ? parseInt(complexity) : null,
+        group_id: groupId,
+        last_updated_by: currentUser.id
+    };
+
+    const { data: hero, error } = await db
+        .from('heroes')
+        .upsert(charData)
+        .select()
+        .single();
+
+    if (error) return alert('Error saving: ' + error.message);
+
+    editIndex = -1;
+    await init();
+}
+
+async function deleteHero(heroId) {
+    if (!confirm('Delete this hero? This action cannot be undone.')) return;
+
+    const { error } = await db.from('heroes').delete().eq('id', heroId);
+    if (error) return alert('Error deleting hero: ' + error.message);
+
+    await init();
+}
+
+// ****************************************** 
+// saveGroup()
+// input: none
+// ****************************************** 
+// Adds a new group or updates an existing one in Supabase.
+// ****************************************** 
+async function saveGroup() {
+    const name = document.getElementById('groupName').value.trim();
+    const type = document.getElementById('groupType').value.trim();
+    const order_index = document.getElementById('groupOrder').value.trim();
+    
+    if (!name) return alert("Group name is required");
+
+    const groupData = {
+        name,
+        type: type || null,
+        order_index: order_index ? parseInt(order_index) : null,
+        is_active: true
+    };
+
+    if (editGroupId) groupData.id = editGroupId;
+
+    const { data, error } = await db
+        .from('groups')
+        .upsert(groupData)
+        .select()
+        .single();
+
+    if (error) return alert("Error saving group: " + error.message);
+
+    resetGroupForm();
+    init(); // Refresh everything including groups
+}
+
+// ****************************************** 
+// editGroup(groupId)
+// input: groupId -> UUID of the group to edit
+// ****************************************** 
+// Opens an inline editor panel for the selected group.
+// ****************************************** 
+function editGroup(groupId) {
+    const group = groups.find(g => g.id === groupId);
+    if (!group) return;
+
+    const listContainer = document.getElementById('groupsListContainer');
+    if (listContainer) {
+        listContainer.classList.add('group-edit-active');
+        listContainer.querySelectorAll('.group-row').forEach(row => row.classList.remove('editing'));
+    }
+
+    const panel = document.getElementById(`groupEditPanel-${groupId}`);
+    const activeRow = document.getElementById(`groupRow-${groupId}`);
+    if (!panel || !activeRow) return;
+
+    activeRow.classList.add('editing');
+    document.getElementById(`groupName-${groupId}`).value = group.name;
+    document.getElementById(`groupType-${groupId}`).value = group.type || "";
+    document.getElementById(`groupOrder-${groupId}`).value = group.order_index || "";
+    panel.classList.remove('hidden');
+}
+
+function cancelGroupEdit(groupId) {
+    const panel = document.getElementById(`groupEditPanel-${groupId}`);
+    const activeRow = document.getElementById(`groupRow-${groupId}`);
+    const listContainer = document.getElementById('groupsListContainer');
+
+    if (panel) panel.classList.add('hidden');
+    if (activeRow) activeRow.classList.remove('editing');
+    if (listContainer) listContainer.classList.remove('group-edit-active');
+}
+
+async function saveGroupInline(groupId) {
+    const name = document.getElementById(`groupName-${groupId}`).value.trim();
+    const type = document.getElementById(`groupType-${groupId}`).value.trim();
+    const order_index = document.getElementById(`groupOrder-${groupId}`).value.trim();
+
+    if (!name) return alert("Group name is required");
+
+    const { error } = await db
+        .from('groups')
+        .upsert({
+            id: groupId,
+            name,
+            type: type || null,
+            order_index: order_index ? parseInt(order_index) : null,
+            is_active: true
+        })
+        .select()
+        .single();
+
+    if (error) return alert("Error saving group: " + error.message);
+
+    init();
+}
+
+// ****************************************** 
+// resetGroupForm()
+// input: none
+// ****************************************** 
+// Clears the group management form fields and resets to "Add" mode.
+// ****************************************** 
+function resetGroupForm() {
+    editGroupId = null;
+    document.getElementById('groupName').value = "";
+    document.getElementById('groupType').value = "";
+    document.getElementById('groupOrder').value = "";
+    document.getElementById('cancelGroupBtn').style.display = "none";
+
+    const form = document.getElementById('groupForm');
+    const button = document.getElementById('addGroupBtn');
+    if (form && button) {
+        form.classList.add('hidden');
+        button.innerText = 'Add Group';
+    }
+}
+
+// ****************************************** 
+// renderPlayersList()
+// input: none
+// ****************************************** 
+// Renders the list of players in the admin panel with inline editing capabilities.
+// ****************************************** 
+function renderPlayersList() {
+    const container = document.getElementById('playersListContainer');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    players.forEach(player => {
+        const row = document.createElement('div');
+        row.className = 'player-admin-row';
+        row.id = `playerRow-${player.id}`;
+
+        const displayDiv = document.createElement('div');
+        displayDiv.className = 'player-display';
+        displayDiv.innerHTML = `
+            <span class="player-name">${player.name}</span>
+            <button type="button" class="btn-save btn-inline" onclick="editPlayer('${player.id}')">Edit</button>
+        `;
+
+        const editPanel = document.createElement('div');
+        editPanel.className = 'player-edit-panel hidden';
+        editPanel.id = `playerEditPanel-${player.id}`;
+        editPanel.innerHTML = `
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="text" id="playerName-${player.id}" value="${player.name}" style="flex: 1;">
+                <button type="button" class="btn-save" onclick="savePlayerInline('${player.id}')">Save</button>
+                <button type="button" class="btn-cancel" onclick="cancelPlayerEdit('${player.id}')">Cancel</button>
+            </div>
+        `;
+
+        row.appendChild(displayDiv);
+        row.appendChild(editPanel);
+        container.appendChild(row);
+    });
+}
+
+// ****************************************** 
+// editPlayer(playerId)
+// input: playerId -> UUID of the player to edit
+// ****************************************** 
+// Opens an inline editor for the selected player.
+// ****************************************** 
+function editPlayer(playerId) {
+    const player = players.find(p => p.id === playerId);
+    if (!player) return;
+
+    const listContainer = document.getElementById('playersListContainer');
+    if (listContainer) {
+        listContainer.classList.add('player-edit-active');
+        listContainer.querySelectorAll('.player-admin-row').forEach(row => row.classList.remove('editing'));
+    }
+
+    const panel = document.getElementById(`playerEditPanel-${playerId}`);
+    const activeRow = document.getElementById(`playerRow-${playerId}`);
+    if (!panel || !activeRow) return;
+
+    activeRow.classList.add('editing');
+    document.getElementById(`playerName-${playerId}`).value = player.name;
+    panel.classList.remove('hidden');
+}
+
+// ****************************************** 
+// cancelPlayerEdit(playerId)
+// input: playerId -> UUID of the player being edited
+// ****************************************** 
+// Cancels the inline edit for the player and hides the edit panel.
+// ****************************************** 
+function cancelPlayerEdit(playerId) {
+    const panel = document.getElementById(`playerEditPanel-${playerId}`);
+    const activeRow = document.getElementById(`playerRow-${playerId}`);
+    const listContainer = document.getElementById('playersListContainer');
+
+    if (panel) panel.classList.add('hidden');
+    if (activeRow) activeRow.classList.remove('editing');
+    if (listContainer) listContainer.classList.remove('player-edit-active');
+}
+
+// ****************************************** 
+// savePlayerInline(playerId)
+// input: playerId -> UUID of the player to save
+// ****************************************** 
+// Saves the inline edited player name to the database.
+// ****************************************** 
+async function savePlayerInline(playerId) {
+    const name = document.getElementById(`playerName-${playerId}`).value.trim();
+
+    if (!name) return alert("Player name is required");
+
+    const { error } = await db
+        .from('players')
+        .update({ name })
+        .eq('id', playerId)
+        .select()
+        .single();
+
+    if (error) return alert("Error saving player: " + error.message);
+
+    // Update local players array
+    const playerIndex = players.findIndex(p => p.id === playerId);
+    if (playerIndex !== -1) {
+        players[playerIndex].name = name;
+        NAMES[playerIndex] = name;
+    }
+
+    cancelPlayerEdit(playerId);
+    renderPlayersList();
+}
+
+// ****************************************** 
+// renderUsersList()
+// input: none
+// ****************************************** 
+// Renders the list of auth users and shows any linked player record.
+// ****************************************** 
+function renderUsersList() {
+    const container = document.getElementById('usersListContainer');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (!authUsers.length) {
+        container.innerHTML = '<p style="opacity: 0.7; font-style: italic;">No auth users available or permission denied.</p>';
+        return;
+    }
+
+    authUsers.forEach(user => {
+        const linkedPlayer = players.find(p => p.user_id === user.id);
+        const row = document.createElement('div');
+        row.className = 'group-row user-admin-row';
+        row.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; gap: 10px;">
+                <div style="min-width: 0;">
+                    <div><strong>${escapeHtml(user.email || 'No email')}</strong></div>
+                    <div style="opacity: 0.7; font-size: 0.85rem; word-break: break-all;">ID: ${escapeHtml(user.id)}</div>
+                </div>
+                <div style="text-align: right; min-width: 130px;">
+                    ${linkedPlayer ? `<div style="opacity: 0.7; font-size: 0.85rem;">Linked Player</div><div><strong>${escapeHtml(linkedPlayer.name)}</strong></div>` : '<div style="opacity: 0.7; font-size: 0.85rem;">No linked player</div>'}
+                </div>
+            </div>
+        `;
+        container.appendChild(row);
+    });
+}
+
+function toggleGroupForm() {
+    const form = document.getElementById('groupForm');
+    const button = document.getElementById('addGroupBtn');
+    if (!form || !button) return;
+
+    const isHidden = form.classList.toggle('hidden');
+    button.innerText = isHidden ? 'Add Group' : 'Hide Group Form';
+
+    if (!isHidden) {
+        document.getElementById('groupName')?.focus();
+    }
+}
+
+// ****************************************** 
+// deleteGroup(groupId)
+// input: groupId -> UUID of the group to delete
+// ****************************************** 
+// Deletes a group from Supabase after user confirmation.
+// ****************************************** 
+async function deleteGroup(groupId) {
+    if (!confirm("Delete this group?")) return;
+
+    const { error } = await db
+        .from('groups')
+        .delete()
+        .eq('id', groupId);
+
+    if (error) return alert("Error deleting group: " + error.message);
+
+    resetGroupForm();
+    init(); // Refresh everything
 }
 
 // ****************************************** 
@@ -431,7 +1110,7 @@ function pickCharacters() {
     });
 
     validateSelection();
-    document.getElementById('confirmBtn').style.display = 'block';
+    if (isUser()) document.getElementById('confirmBtn').style.display = 'block';
 }
 
 // ****************************************** 
@@ -508,7 +1187,7 @@ function renderPlayerRow(pIdx, selectedName) {
             <a href="${getHeroLink(charData?.slug)}" target="_blank" id="link-${pIdx}">
                 <div class="char-complexity-roll">
                     <img src="${getImgUrl(charData?.slug)}" class="char-img-roll" id="img-${pIdx}" alt="${selectedName}" title="${selectedName}">
-                    <img src="images/d${charData?.complexity}.png" class="complexity-roll" alt="Complexity" id="comp-${pIdx}" title="Complexity: ${charData?.complexity}">
+                    <img src="images/dice/d${charData?.complexity}.png" class="complexity-roll" alt="Complexity" id="comp-${pIdx}" title="Complexity: ${charData?.complexity}">
                 </div>
             </a>
             <div style="flex:1">
@@ -540,7 +1219,7 @@ function handleDropdownChange(el) {
 
     // Update the visual assets: portrait, complexity dice, and wiki link
     document.getElementById(`img-${pIdx}`).src = getImgUrl(char.slug);
-    document.getElementById(`comp-${pIdx}`).src = `images/d${char.complexity}.png`;
+    document.getElementById(`comp-${pIdx}`).src = `images/dice/d${char.complexity}.png`;
     document.getElementById(`link-${pIdx}`).href = getHeroLink(char.slug);
     
     // Locate the stats container within the current player's row
@@ -615,7 +1294,7 @@ async function applyResults() {
     );
 
     // 1. Create the game record first to get the unique ID for this session
-    const { data: game, error: gameError } = await db.from('games').insert({}).select().single();
+    const { data: game, error: gameError } = await db.from('games').insert({ last_updated_by: currentUser.id }).select().single();
     if (gameError) return alert("Error creating game: " + gameError.message);
 
     characters.forEach(char => {
@@ -629,7 +1308,8 @@ async function applyResults() {
                     game_id: game.id,
                     player_id: `p${pIdx + 1}`,
                     hero_id: char.id,
-                    is_winner: null // Explicitly undecided
+                    is_winner: null, // Explicitly undecided
+                    last_updated_by: currentUser.id
                 });
             }
             
@@ -643,7 +1323,8 @@ async function applyResults() {
                     player_id: `p${pIdx + 1}`,
                     weight: newWeight,
                     play_count: wasPicked ? (char.playCount[pIdx] || 0) + 1 : (char.playCount[pIdx] || 0),
-                    last_played: wasPicked ? today : (["Never", "Unknown"].includes(char.lastPlayed[pIdx]) ? null : char.lastPlayed[pIdx])
+                    last_played: wasPicked ? today : (["Never", "Unknown"].includes(char.lastPlayed[pIdx]) ? null : char.lastPlayed[pIdx]),
+                    last_updated_by: currentUser.id
                 });
             }
         });
@@ -767,7 +1448,7 @@ async function resetAllWeights() {
     if (confirm("Reset all probabilities to 100?")) {
         const updates = [];
         characters.forEach(c => {
-            [0,1,2,3].forEach(p => updates.push({ hero_id: c.id, player_id: `p${p + 1}`, weight: 100 }));
+            [0,1,2,3].forEach(p => updates.push({ hero_id: c.id, player_id: `p${p + 1}`, weight: 100, last_updated_by: currentUser.id }));
         });
         await db.from('player_hero_stats').upsert(updates, { onConflict: 'player_id, hero_id' });
         init();
@@ -785,7 +1466,7 @@ async function resetAllStats() {
     if (confirm("Reset all play history?")) {
         const updates = [];
         characters.forEach(c => {
-            [0,1,2,3].forEach(p => updates.push({ hero_id: c.id, player_id: `p${p + 1}`, play_count: 0, last_played: null }));
+            [0,1,2,3].forEach(p => updates.push({ hero_id: c.id, player_id: `p${p + 1}`, play_count: 0, last_played: null, last_updated_by: currentUser.id }));
         });
         await db.from('player_hero_stats').upsert(updates, { onConflict: 'player_id, hero_id' });
         init();
@@ -915,11 +1596,34 @@ function renderGamesList() {
     const countLabel = document.getElementById('game-count-stats');
     if (!container || !games) return;
 
+    const showWinsOnly = document.getElementById('games-winner-only')?.checked || false;
+
+    const filteredGames = games.filter(game => {
+        if (selectedGamePlayerIndex === null) return true;
+        
+        return game.game_players.some(gp => {
+            const pIdx = parseInt(gp.player_id.substring(1)) - 1;
+            let match = false;
+            
+            if (selectedGamePlayerIndex >= 0 && selectedGamePlayerIndex <= 3) {
+                match = (pIdx === selectedGamePlayerIndex);
+            } else if (selectedGamePlayerIndex === 4) {
+                // Invitee 1 or Invitee 2
+                match = (pIdx === 4 || pIdx === 5);
+            }
+
+            if (match && showWinsOnly) {
+                return gp.is_winner === true;
+            }
+            return match;
+        });
+    });
+
     if (countLabel) {
-        countLabel.innerText = `Showing ${games.length} of ${games.length} games`;
+        countLabel.innerText = `Showing ${filteredGames.length} of ${games.length} games`;
     }
 
-    container.innerHTML = games.map(game => {
+    container.innerHTML = filteredGames.map(game => {
         // Ensure the date string is treated as UTC by forcing the ISO format (T separator and Z suffix)
         let rawDate = game.played_at || "";
         if (rawDate && !rawDate.includes('T')) rawDate = rawDate.replace(' ', 'T');
@@ -943,6 +1647,13 @@ function renderGamesList() {
             statusImg = "images/draw.png"; // Placeholder path
             statusLabel = "Draw";
         }
+
+        const canManage = isAdmin() || game.last_updated_by === currentUser?.id;
+        const gameActions = canManage ? `
+            <button class="btn-edit-small" onclick="selectWinner('${game.id}')" title="Select Winner">🏆</button>
+            <button class="btn-edit-small" onclick="deleteGame('${game.id}')" title="Delete Game" style="color: var(--danger);">🗑️</button>
+        ` : '';
+
 
         const playerCols = game.game_players.map(gp => {
             // Map player ID (p1-p6) to internal index (0-5)
@@ -974,8 +1685,7 @@ function renderGamesList() {
             <div class="hero-body" style="margin-bottom: 20px;">
                 <div class="hero-main-info">
                     <div class="char-complexity-db">
-                        <button class="btn-edit-small" onclick="selectWinner('${game.id}')" title="Select Winner">🏆</button>
-                        <button class="btn-edit-small" onclick="deleteGame('${game.id}')" title="Delete Game" style="color: var(--danger);">🗑️</button>
+                        ${gameActions}
                     </div>
                 </div>
                 <div class="hero-details">
@@ -1062,15 +1772,15 @@ async function submitWinner(gameId) {
 
     try {
         if (winnerPlayerId === 'draw') {
-            const { error } = await db.from('game_players').update({ is_winner: false }).eq('game_id', gameId);
+            const { error } = await db.from('game_players').update({ is_winner: false, last_updated_by: currentUser.id }).eq('game_id', gameId);
             if (error) throw error;
         } else {
             // Update winner
-            const { error: winErr } = await db.from('game_players').update({ is_winner: true }).eq('game_id', gameId).eq('player_id', winnerPlayerId);
+            const { error: winErr } = await db.from('game_players').update({ is_winner: true, last_updated_by: currentUser.id }).eq('game_id', gameId).eq('player_id', winnerPlayerId);
             if (winErr) throw winErr;
 
             // Update losers
-            const { error: loseErr } = await db.from('game_players').update({ is_winner: false }).eq('game_id', gameId).neq('player_id', winnerPlayerId);
+            const { error: loseErr } = await db.from('game_players').update({ is_winner: false, last_updated_by: currentUser.id }).eq('game_id', gameId).neq('player_id', winnerPlayerId);
             if (loseErr) throw loseErr;
         }
 
@@ -1106,7 +1816,8 @@ async function deleteGame(gameId) {
                         hero_id: gp.hero_id,
                         player_id: gp.player_id,
                         play_count: Math.max(0, (char.playCount[pIdx] || 0) - 1),
-                        weight: char.weights[pIdx] // Maintain current weight as we don't have historical weights
+                        weight: char.weights[pIdx], // Maintain current weight as we don't have historical weights
+                        last_updated_by: currentUser.id
                     });
                 }
             }
@@ -1129,6 +1840,64 @@ async function deleteGame(gameId) {
     }
 
     await init();
+}
+
+function toggleGamesFilterUI() {
+    document.getElementById('games-filter-section').classList.toggle('hidden');
+}
+
+function renderPlayerGameFilters() {
+    const container = document.getElementById('player-game-filter-container');
+    if (!container || players.length === 0) return;
+
+    let html = '';
+    // Main 4 players
+    for (let i = 0; i < 4; i++) {
+        const p = players[i];
+        if (!p) continue;
+        const isActive = selectedGamePlayerIndex === i;
+        html += `
+            <button class="player-filter-btn ${isActive ? 'active' : ''}" 
+                    style="background-color: var(--p${i + 1});" 
+                    onclick="togglePlayerGameFilter(${i})">
+                ${p.name}
+            </button>
+        `;
+    }
+
+    // Invitee button (covers indices 4 and 5)
+    const isInviteeActive = selectedGamePlayerIndex === 4;
+    html += `
+        <button class="player-filter-btn ${isInviteeActive ? 'active' : ''}" 
+                style="background-color: var(--p5);" 
+                onclick="togglePlayerGameFilter(4)">
+            Invitee
+        </button>
+    `;
+
+    container.innerHTML = html;
+}
+
+function togglePlayerGameFilter(idx) {
+    if (selectedGamePlayerIndex === idx) {
+        selectedGamePlayerIndex = null;
+    } else {
+        selectedGamePlayerIndex = idx;
+    }
+
+    const wrapper = document.getElementById('winner-filter-wrapper');
+    const winnerCheckbox = document.getElementById('games-winner-only');
+    if (wrapper) {
+        if (selectedGamePlayerIndex !== null) {
+            wrapper.classList.remove('hidden');
+        } else {
+            wrapper.classList.add('hidden');
+            if (winnerCheckbox) winnerCheckbox.checked = false;
+        }
+    }
+
+    renderPlayerGameFilters();
+    renderGamesList();
 }
 
 // init();
@@ -1217,6 +1986,8 @@ function renderList() {
             </div>`;
         }).join('');
 
+        const editBtn = isAdmin() ? `<button class="btn-edit-small" onclick="editChar(${c.originalIndex})" title="Edit Hero">✎</button>` : '';
+
         return `
             <div class="hero-header"><span class="hero-name">${c.name}</span> <span class="group-label">(${c.group || 'Season ?'})</span></div>
             <div class="hero-body">
@@ -1224,11 +1995,10 @@ function renderList() {
                     <a href="${getHeroLink(c.slug)}" target="_blank">
                         <div class="char-complexity-db">
                             <img src="${getImgUrl(c.slug)}" class="char-img-roll" alt="${c.name}">
-                            <img src="images/d${c.complexity}.png" class="complexity-roll" alt="Complexity">
+                            <img src="images/dice/d${c.complexity}.png" class="complexity-roll" alt="Complexity">
                         </div>
                     </a>
-                    <!-- <span class="group-label">(${c.group || 'Season ?'})</span> -->
-                    <button class="btn-edit-small" onclick="editChar(${c.originalIndex})" title="Edit Hero">✎</button>
+                    ${editBtn}
                 </div>
                 <div class="hero-details">
                     <div class="dynamic-stats">${statsHtml}</div>

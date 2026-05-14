@@ -9,12 +9,12 @@
     <!-- Stylesheets: We will dynamically load either the production or development stylesheet based on the hostname -->
     <script>
         // Check if this is Production or Local environment based on hostname
-        const isProd = window.location.hostname === "sygec.github.io" || window.location.hostname === "dicethrone-prod.sygec.workers.dev"; 
+        window.isProd = window.location.hostname === "sygec.github.io" || window.location.hostname === "dicethrone-prod.sygec.workers.dev"; 
         // Create a new link element
         const themeLink = document.createElement('link');
         themeLink.rel = 'stylesheet';
         // Assign the file path based on if this is prod or dev
-        themeLink.href = isProd ? 'style-prod.css' : 'style-dev.css';
+        themeLink.href = window.isProd ? 'style-prod.css' : 'style-dev.css';
         // Append it to the head
         document.head.appendChild(themeLink);
     </script>
@@ -25,8 +25,11 @@
 
 <body>
     <main class="container">
-        <h1>Supa Dice Throne</h1>
-        <div class="small-text">v<button id="version-number" aria-label="View changelog" style="background:none; border:none; color:inherit; font:inherit; cursor:pointer; text-decoration:underline; padding:0;">...</button></div>
+        <h1>Dice Throne</h1>
+        <div class="small-text">
+            v<button id="version-number" aria-label="View changelog" style="background:none; border:none; color:inherit; font:inherit; cursor:pointer; text-decoration:underline; padding:0;">...</button>
+            | <button id="auth-btn" style="background:none; border:none; color:inherit; font:inherit; cursor:pointer; text-decoration:underline; padding:0;">Login</button>
+        </div>
 
         <!-- Changelog Modal -->
         <div id="changelog-modal" class="modal">
@@ -48,15 +51,22 @@
             </div>
         </div>
 
-        <!-- Player Selection Toggles -->
-        <div class="player-toggle-zone-top">
-            <label class="p-chk"><span class="player-tag" style="background:var(--p1)">Claudine</span> <input type="checkbox" id="use0" checked></label>
-            <label class="p-chk"><span class="player-tag" style="background:var(--p2)">Joel</span> <input type="checkbox" id="use1" checked></label>
-            <label class="p-chk"><span class="player-tag" style="background:var(--p3)">Julie</span> <input type="checkbox" id="use2" checked></label>
-            <label class="p-chk"><span class="player-tag" style="background:var(--p4)">Martin</span> <input type="checkbox" id="use3" checked></label>
-            <label class="p-chk"><span class="player-tag" style="background:var(--p5)">Invitee 1</span> <input type="checkbox" id="use4"></label>
-            <label class="p-chk"><span class="player-tag" style="background:var(--p5)">Invitee 2</span> <input type="checkbox" id="use5"></label>
+        <!-- Login Modal -->
+        <div id="login-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" onclick="closeLoginModal()">&times;</span>
+                <h2 style="color: black; margin-top: 0;">Login</h2>
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                    <input type="email" id="login-email" placeholder="Email" style="font-size: 16px; padding: 10px; border-radius: 4px; border: 1px solid #ccc; color: black;">
+                    <input type="password" id="login-password" placeholder="Password" style="font-size: 16px; padding: 10px; border-radius: 4px; border: 1px solid #ccc; color: black;">
+                    <button type="button" class="btn-save" onclick="handleLogin()">Sign In</button>
+                    <div id="login-error" style="color: var(--danger); font-size: 0.8rem; text-align: center; display: none; margin-top: 5px;"></div>
+                </div>
+            </div>
         </div>
+
+        <!-- Player Selection Toggles -->
+        <div class="player-toggle-zone-top" id="player-toggle-zone-top"></div>
 
         <!-- Dropdown Sort Options -->
         <div class="dropdown-sort-options">
@@ -84,8 +94,8 @@
                 <div class="search-wrapper">
                     <input class="search-bar" type="text" id="hero-search" style="font-size: 16px;" placeholder="Search Heroes or Groups..." oninput="handleSearchInput()" aria-label="Search heroes by name or group">
                     <div class="search-actions">
-                        <img src="images/icons/close.png" id="clear-search" class="search-icon hidden" onclick="clearSearch()" alt="Clear" title="Clear Search">
-                        <img src="images/icons/sort.png" id="sort-toggle" class="search-icon" onclick="toggleSort()" alt="Sort" title="Toggle Sort Section">
+                        <img src="images/buttons/close.png" id="clear-search" class="search-icon hidden" onclick="clearSearch()" alt="Clear" title="Clear Search">
+                        <img src="images/buttons/sort.png" id="sort-toggle" class="search-icon" onclick="toggleSort()" alt="Sort" title="Toggle Sort Section">
                     </div>
                 </div>
                 <div class="small-text" id="count-stats">
@@ -102,13 +112,13 @@
                 <!-- Complexity Filter -->
                 <div class="dice-filter-section" style="margin-bottom: 20px;">
                     <div class="dice-bar">
-                        <img src="images/d1.png" class="dice-icon" id="dice-1" onclick="toggleLevel(1)" title="Level 1">
-                        <img src="images/d2.png" class="dice-icon" id="dice-2" onclick="toggleLevel(2)" title="Level 2">
-                        <img src="images/d3.png" class="dice-icon" id="dice-3" onclick="toggleLevel(3)" title="Level 3">
-                        <img src="images/d4.png" class="dice-icon" id="dice-4" onclick="toggleLevel(4)" title="Level 4">
-                        <img src="images/d5.png" class="dice-icon" id="dice-5" onclick="toggleLevel(5)" title="Level 5">
-                        <img src="images/d6.png" class="dice-icon" id="dice-6" onclick="toggleLevel(6)" title="Level 6">
-                        <img src="images/d_all.png" class="dice-icon" id="dice-all" onclick="toggleLevel('all')" title="All Levels">
+                        <img src="images/dice/d1.png" class="dice-icon" id="dice-1" onclick="toggleLevel(1)" title="Level 1">
+                        <img src="images/dice/d2.png" class="dice-icon" id="dice-2" onclick="toggleLevel(2)" title="Level 2">
+                        <img src="images/dice/d3.png" class="dice-icon" id="dice-3" onclick="toggleLevel(3)" title="Level 3">
+                        <img src="images/dice/d4.png" class="dice-icon" id="dice-4" onclick="toggleLevel(4)" title="Level 4">
+                        <img src="images/dice/d5.png" class="dice-icon" id="dice-5" onclick="toggleLevel(5)" title="Level 5">
+                        <img src="images/dice/d6.png" class="dice-icon" id="dice-6" onclick="toggleLevel(6)" title="Level 6">
+                        <img src="images/dice/d_all.png" class="dice-icon" id="dice-all" onclick="toggleLevel('all')" title="All Levels">
                     </div>
                 </div>
             </div>
@@ -120,9 +130,30 @@
         <button type="button" class="db-toggle-btn" id="gamesToggleBtn" onclick="toggleGames()">🎲 Show Games History</button>
 
         <section id="gamesSection" class="hidden">
-            <div class="small-text" id="game-count-stats" style="margin-top: 15px;">
-                Showing 0 of 0 games
+            <div class="search-container" style="margin-top: 15px;">
+                <div class="search-wrapper">
+                    <div style="flex: 1; text-align: left; padding-left: 10px;">
+                        <h3 style="margin: 0; color: var(--accent); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">Games History</h3>
+                    </div>
+                    <div class="search-actions">
+                        <img src="images/buttons/sort.png" id="games-filter-toggle" class="search-icon" onclick="toggleGamesFilterUI()" alt="Filter" title="Toggle Player Filters">
+                    </div>
+                </div>
+                <div class="small-text" id="game-count-stats" style="margin-top: 5px;">
+                    Showing 0 of 0 games
+                </div>
             </div>
+
+            <div id="games-filter-section" class="hidden" style="margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap: wrap;">
+                    <div class="dice-bar" id="player-game-filter-container" style="margin-bottom: 0;"></div>
+                    <div id="winner-filter-wrapper" class="hidden" style="display: flex; align-items: center; gap: 8px; color: var(--accent); font-weight: bold; font-size: 0.8rem; background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 6px;">
+                        <input type="checkbox" id="games-winner-only" onchange="renderGamesList()" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent);">
+                        <label for="games-winner-only" style="cursor: pointer; user-select: none;">Wins Only</label>
+                    </div>
+                </div>
+            </div>
+
             <div id="gamesContainer" style="margin-top: 20px;"></div>
         </section>
 
@@ -130,21 +161,92 @@
         <button type="button" class="admin-toggle-btn" onclick="toggleAdmin()">⚠ Show Admin Section</button>
         <section id="adminSection" class="hidden">
             <div id="admin-build-info"></div>
-            <div class="manage-form">
-                <h3 id="formTitle" style="margin-top:0; font-size: 1rem; color: var(--accent);">Add New Hero</h3>
-                <div class="form-grid">
-                    <input type="text" id="charName" style="font-size: 16px;" placeholder="Hero Name">
-                    <input type="text" id="charGroup" style="font-size: 16px;" placeholder="Group (e.g. Season 1)">
-                    <input type="text" id="charSlug" style="font-size: 16px;" placeholder="Slug (for image)">
-                    <input type="text" id="charComplexity" style="font-size: 16px;" placeholder="Complexity level">
+
+            <div class="admin-panel">
+                <div class="panel-header">
+                    <h3>Manage Groups</h3>
+                    <button type="button" class="panel-toggle" aria-expanded="false" onclick="toggleAdminPanel(event, 'groupsPanel')">V</button>
                 </div>
-                <button type="button" class="btn-save" id="saveBtn" onclick="saveCharacter()">Save Hero</button>
-                <button type="button" class="btn-cancel" id="cancelBtn" onclick="resetForm()" style="display:none;">Cancel Edit</button>
-            </div>        
-            <div style="margin-top:20px; border-top: 1px solid #ffffff22; padding-top:15px;">
+                <div id="groupsPanel" class="panel-content hidden">
+                    <div style="margin-bottom: 15px;">
+                        <button type="button" class="btn-save" id="addGroupBtn" onclick="toggleGroupForm()">Add Group</button>
+                    </div>
+                    <div id="groupForm" class="manage-form hidden" style="border-bottom: 1px solid #ffffff22; padding-bottom: 20px; margin-bottom: 20px;">
+                        <h3 style="margin-top:0; font-size: 1rem; color: var(--accent);">Groups</h3>
+                        <div class="form-grid">
+                            <input type="text" id="groupName" style="font-size: 16px;" placeholder="Group Name">
+                            <input type="text" id="groupType" style="font-size: 16px;" placeholder="Type (optional)">
+                            <input type="number" id="groupOrder" style="font-size: 16px;" placeholder="Order Index">
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button type="button" class="btn-save" id="saveGroupBtn" onclick="saveGroup()">Save Group</button>
+                            <button type="button" class="btn-cancel" id="cancelGroupBtn" onclick="resetGroupForm()" style="display:none;">Cancel</button>
+                        </div>
+                    </div>
+                    <div id="groupsListContainer" style="margin-top: 15px;"></div>
+                </div>
+            </div>
+
+            <div class="admin-panel">
+                <div class="panel-header">
+                    <h3>Manage Heroes</h3>
+                    <button type="button" class="panel-toggle" aria-expanded="false" onclick="toggleAdminPanel(event, 'heroesPanel')">V</button>
+                </div>
+                <div id="heroesPanel" class="panel-content hidden">
+                    <div style="margin-bottom: 15px;">
+                        <button type="button" class="btn-save" id="addHeroBtn" onclick="toggleHeroForm()">Add Hero</button>
+                    </div>
+                    <div id="heroForm" class="manage-form hidden">
+                        <h3 id="formTitle" style="margin-top:0; font-size: 1rem; color: var(--accent);">Add New Hero</h3>
+                        <div class="form-grid hero-form-grid">
+                            <input type="text" id="charName" style="font-size: 16px;" placeholder="Hero Name">
+                            <select id="charGroup" style="font-size: 16px;" aria-label="Select group">
+                                <option value="">-- Select Group --</option>
+                            </select>
+                            <input type="text" id="charSlug" style="font-size: 16px;" placeholder="Slug (for image)">
+                            <select id="charComplexity" style="font-size: 16px;" aria-label="Select complexity">
+                                <option value="">-- Complexity --</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button type="button" class="btn-save" id="saveBtn" onclick="saveCharacter()">Save Hero</button>
+                            <button type="button" class="btn-cancel" id="cancelBtn" onclick="resetForm()" style="display:none;">Cancel Edit</button>
+                        </div>
+                    </div>
+                    <div id="heroesListContainer" style="margin-top: 15px;"></div>
+                </div>
+            </div>
+
+            <div class="admin-panel">
+                <div class="panel-header">
+                    <h3>Manage Players</h3>
+                    <button type="button" class="panel-toggle" aria-expanded="false" onclick="toggleAdminPanel(event, 'playersPanel')">V</button>
+                </div>
+                <div id="playersPanel" class="panel-content hidden">
+                    <div id="playersListContainer" style="margin-top: 15px;"></div>
+                </div>
+            </div>
+
+            <div class="admin-panel">
+                <div class="panel-header">
+                    <h3>Manage Users</h3>
+                    <button type="button" class="panel-toggle" aria-expanded="false" onclick="toggleAdminPanel(event, 'usersPanel')">V</button>
+                </div>
+                <div id="usersPanel" class="panel-content hidden">
+                    <div id="usersListContainer" style="margin-top: 15px;"></div>
+                </div>
+            </div>
+
+            <!-- <div style="margin-top:20px; border-top: 1px solid #ffffff22; padding-top:15px;">
                 <button type="button" class="btn-danger" onclick="resetAllWeights()">RESET PROBABILITIES TO 100</button>
                 <button type="button" class="btn-danger" onclick="resetAllStats()">RESET PLAY COUNTS & DATES</button>
-            </div>
+            </div> -->
         </section>
     </main>
 
