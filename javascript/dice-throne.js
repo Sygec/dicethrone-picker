@@ -119,6 +119,7 @@ window.onclick = (event) => {
 // ****************************************** 
 function updateAuthUI() {
     const adminToggle = document.querySelector('.admin-toggle-btn');
+    const adminNav = document.querySelector('.bottom-nav .admin-only');
     const confirmBtn = document.getElementById('confirmBtn');
 
     if (currentUser) {
@@ -128,12 +129,14 @@ function updateAuthUI() {
             authBtn.innerText = `Logout (${currentUser.email.split('@')[0]})`;
         }
         authBtn.onclick = handleLogout;
-        // Only show the Admin Section toggle to users with the admin role
+        // Only show the Admin Section toggle and nav item to admins
         if (adminToggle) adminToggle.style.display = isAdmin() ? 'block' : 'none';
+        if (adminNav) adminNav.style.display = isAdmin() ? 'flex' : 'none';
     } else {
         authBtn.innerText = 'Login';
         authBtn.onclick = openLoginModal;
         if (adminToggle) adminToggle.style.display = 'none';
+        if (adminNav) adminNav.style.display = 'none';
         if (document.getElementById('adminSection')) document.getElementById('adminSection').classList.add('hidden');
         if (confirmBtn) confirmBtn.style.display = 'none';
     }
@@ -429,16 +432,39 @@ function closeChangelog() {
 }
 
 // ****************************************** 
+// toggleRoll()
+// input: none
+// ****************************************** 
+// Shows the Roll section and hides all other sections.
+// ****************************************** 
+function toggleRoll() {
+    const rs = document.getElementById('rollSection');
+    const ds = document.getElementById('dbSection');
+    const gs = document.getElementById('gamesSection');
+    const as = document.getElementById('adminSection');
+
+    rs.classList.remove('hidden');
+    ds.classList.add('hidden');
+    gs.classList.add('hidden');
+    as.classList.add('hidden');
+}
+
+// ****************************************** 
 // toggleDatabase()
 // input: none
 // ****************************************** 
 // Toggles the visibility of the Hero Database section.
 // ****************************************** 
 function toggleDatabase() {
-    const s = document.getElementById('dbSection');
-    const b = document.getElementById('dbToggleBtn');
-    const isHidden = s.classList.toggle('hidden');
-    b.innerText = isHidden ? "📂 Show Hero Database & Stats" : "📁 Hide Hero Database";
+    const rs = document.getElementById('rollSection');
+    const ds = document.getElementById('dbSection');
+    const gs = document.getElementById('gamesSection');
+    const as = document.getElementById('adminSection');
+
+    rs.classList.add('hidden');
+    ds.classList.remove('hidden');
+    gs.classList.add('hidden');
+    as.classList.add('hidden');
 }
 
 // ****************************************** 
@@ -448,10 +474,15 @@ function toggleDatabase() {
 // Toggles the visibility of the Games History section.
 // ****************************************** 
 function toggleGames() {
-    const s = document.getElementById('gamesSection');
-    const b = document.getElementById('gamesToggleBtn');
-    const isHidden = s.classList.toggle('hidden');
-    b.innerText = isHidden ? "🎲 Show Games History" : "🎲 Hide Games History";
+    const rs = document.getElementById('rollSection');
+    const ds = document.getElementById('dbSection');
+    const gs = document.getElementById('gamesSection');
+    const as = document.getElementById('adminSection');
+
+    rs.classList.add('hidden');
+    ds.classList.add('hidden');
+    gs.classList.remove('hidden');
+    as.classList.add('hidden');
 }
 
 // ****************************************** 
@@ -461,14 +492,23 @@ function toggleGames() {
 // Toggles the visibility of the Admin section.
 // ****************************************** 
 function toggleAdmin() {
-    const s = document.getElementById('adminSection');
+    if (!isAdmin()) return;
+
+    const rs = document.getElementById('rollSection');
+    const ds = document.getElementById('dbSection');
+    const gs = document.getElementById('gamesSection');
+    const as = document.getElementById('adminSection');
     const b = document.querySelector('.admin-toggle-btn');
-    
-    // Use classList for consistency with toggleSort logic
-    const isHidden = s.classList.toggle('hidden');
-    
-    b.innerText = isHidden ? '⚠ Show Admin Section' : '⚠ Hide Admin Section';
-}    
+
+    rs.classList.add('hidden');
+    ds.classList.add('hidden');
+    gs.classList.add('hidden');
+    const isHidden = as.classList.toggle('hidden');
+
+    if (b) {
+        b.innerText = isHidden ? '⚠ Show Admin Section' : '⚠ Hide Admin Section';
+    }
+}
 
 // ****************************************** 
 // toggleAdminPanel(panelId)
