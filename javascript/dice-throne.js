@@ -31,6 +31,7 @@ const modal = document.getElementById("changelog-modal");
 const closeBtn = document.querySelector(".close-button");
 const loginModal = document.getElementById("login-modal");
 const authBtn = document.getElementById("auth-btn");
+const actionButtons = document.getElementById("action-buttons");
 
 // ==========================================
 // 3. SUPABASE CONFIGURATION
@@ -119,7 +120,7 @@ window.onclick = (event) => {
 // ****************************************** 
 function updateAuthUI() {
     const adminToggle = document.querySelector('.admin-toggle-btn');
-    const confirmBtn = document.getElementById('confirmBtn');
+    const adminNav = document.querySelector('.bottom-nav .admin-only');
 
     if (currentUser) {
         if (loggedInPlayerIndex !== -1) {
@@ -128,14 +129,17 @@ function updateAuthUI() {
             authBtn.innerText = `Logout (${currentUser.email.split('@')[0]})`;
         }
         authBtn.onclick = handleLogout;
-        // Only show the Admin Section toggle to users with the admin role
+        // Only show the Admin Section toggle and nav item to admins
         if (adminToggle) adminToggle.style.display = isAdmin() ? 'block' : 'none';
+        if (adminNav) adminNav.style.display = isAdmin() ? 'flex' : 'none';
     } else {
         authBtn.innerText = 'Login';
         authBtn.onclick = openLoginModal;
         if (adminToggle) adminToggle.style.display = 'none';
+        if (adminNav) adminNav.style.display = 'none';
         if (document.getElementById('adminSection')) document.getElementById('adminSection').classList.add('hidden');
-        if (confirmBtn) confirmBtn.style.display = 'none';
+        if (actionButtons) actionButtons.style.display = 'none';
+        if (actionButtons) actionButtons.style.display = 'none';
     }
     
     // Refresh lists to show/hide edit buttons
@@ -429,16 +433,39 @@ function closeChangelog() {
 }
 
 // ****************************************** 
+// toggleRoll()
+// input: none
+// ****************************************** 
+// Shows the Roll section and hides all other sections.
+// ****************************************** 
+function toggleRoll() {
+    const rs = document.getElementById('rollSection');
+    const ds = document.getElementById('dbSection');
+    const gs = document.getElementById('gamesSection');
+    const as = document.getElementById('adminSection');
+
+    rs.classList.remove('hidden');
+    ds.classList.add('hidden');
+    gs.classList.add('hidden');
+    as.classList.add('hidden');
+}
+
+// ****************************************** 
 // toggleDatabase()
 // input: none
 // ****************************************** 
 // Toggles the visibility of the Hero Database section.
 // ****************************************** 
 function toggleDatabase() {
-    const s = document.getElementById('dbSection');
-    const b = document.getElementById('dbToggleBtn');
-    const isHidden = s.classList.toggle('hidden');
-    b.innerText = isHidden ? "📂 Show Hero Database & Stats" : "📁 Hide Hero Database";
+    const rs = document.getElementById('rollSection');
+    const ds = document.getElementById('dbSection');
+    const gs = document.getElementById('gamesSection');
+    const as = document.getElementById('adminSection');
+
+    rs.classList.add('hidden');
+    ds.classList.remove('hidden');
+    gs.classList.add('hidden');
+    as.classList.add('hidden');
 }
 
 // ****************************************** 
@@ -448,10 +475,15 @@ function toggleDatabase() {
 // Toggles the visibility of the Games History section.
 // ****************************************** 
 function toggleGames() {
-    const s = document.getElementById('gamesSection');
-    const b = document.getElementById('gamesToggleBtn');
-    const isHidden = s.classList.toggle('hidden');
-    b.innerText = isHidden ? "🎲 Show Games History" : "🎲 Hide Games History";
+    const rs = document.getElementById('rollSection');
+    const ds = document.getElementById('dbSection');
+    const gs = document.getElementById('gamesSection');
+    const as = document.getElementById('adminSection');
+
+    rs.classList.add('hidden');
+    ds.classList.add('hidden');
+    gs.classList.remove('hidden');
+    as.classList.add('hidden');
 }
 
 // ****************************************** 
@@ -461,14 +493,23 @@ function toggleGames() {
 // Toggles the visibility of the Admin section.
 // ****************************************** 
 function toggleAdmin() {
-    const s = document.getElementById('adminSection');
+    if (!isAdmin()) return;
+
+    const rs = document.getElementById('rollSection');
+    const ds = document.getElementById('dbSection');
+    const gs = document.getElementById('gamesSection');
+    const as = document.getElementById('adminSection');
     const b = document.querySelector('.admin-toggle-btn');
-    
-    // Use classList for consistency with toggleSort logic
-    const isHidden = s.classList.toggle('hidden');
-    
-    b.innerText = isHidden ? '⚠ Show Admin Section' : '⚠ Hide Admin Section';
-}    
+
+    rs.classList.add('hidden');
+    ds.classList.add('hidden');
+    gs.classList.add('hidden');
+    const isHidden = as.classList.toggle('hidden');
+
+    if (b) {
+        b.innerText = isHidden ? '⚠ Show Admin Section' : '⚠ Hide Admin Section';
+    }
+}
 
 // ****************************************** 
 // toggleAdminPanel(panelId)
@@ -1110,7 +1151,11 @@ function pickCharacters() {
     });
 
     validateSelection();
-    if (isUser()) document.getElementById('confirmBtn').style.display = 'block';
+    if (isUser()) document.getElementById('action-buttons').style.display = 'flex';
+    
+    // Ensure the roll section is visible and scroll to results
+    toggleRoll();
+    resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ****************************************** 
@@ -1344,11 +1389,22 @@ async function applyResults() {
     // Refresh local state and UI immediately after database updates are successful
     await init();
 
-    document.getElementById('confirmBtn').style.display = 'none';
+    document.getElementById('action-buttons').style.display = 'none';
     document.getElementById('results').innerHTML = `
         <p style="color:#28a745; text-align:center; font-weight:bold;">
             Session Logged! Game record created and stats updated.
         </p>`;
+}
+
+// ****************************************** 
+// cancelRoll()
+// input: none
+// ****************************************** 
+// Resets the roll results and hides the action buttons.
+// ****************************************** 
+function cancelRoll() {
+    document.getElementById('results').innerHTML = '<p style="text-align: center; opacity: 0.6;">Select players and roll.</p>';
+    document.getElementById('action-buttons').style.display = 'none';
 }
 
 // ****************************************** 

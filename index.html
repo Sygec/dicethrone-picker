@@ -24,8 +24,9 @@
 </head>
 
 <body>
-    <main class="container">
-        <h1>Dice Throne</h1>
+    <main class="content">
+        <img src="images/banner.png" alt="Dice Throne" style="width: 100%; height: auto;">
+        <!-- <h1>Dice Throne</h1> -->
         <div class="small-text">
             v<button id="version-number" aria-label="View changelog" style="background:none; border:none; color:inherit; font:inherit; cursor:pointer; text-decoration:underline; padding:0;">...</button>
             | <button id="auth-btn" style="background:none; border:none; color:inherit; font:inherit; cursor:pointer; text-decoration:underline; padding:0;">Login</button>
@@ -65,30 +66,34 @@
             </div>
         </div>
 
-        <!-- Player Selection Toggles -->
-        <div class="player-toggle-zone-top" id="player-toggle-zone-top"></div>
+        <section id="rollSection">
+            <!-- Player Selection Toggles -->
+            <div class="player-toggle-zone-top" id="player-toggle-zone-top"></div>
 
-        <!-- Dropdown Sort Options -->
-        <div class="dropdown-sort-options">
-            <label><input type="radio" name="dropdownSort" value="name" checked onchange="updateDropdownSort()"> By Name</label>
-            <label><input type="radio" name="dropdownSort" value="weight" onchange="updateDropdownSort()"> By Percentage</label>
-        </div>
+            <!-- Action Buttons -->
+            <button id="rollBtn" type="button" onclick="pickCharacters()">ROLL RANDOMIZER</button>
+            <div id="action-buttons" style="display: none; margin-top: 10px; gap: 10px;">
+                <button id="cancelBtn" type="button" class="btn-cancelroll" onclick="cancelRoll()" style="flex: 1;">CANCEL ROLL</button>
+                <button id="confirmBtn" type="button" class="btn-confirm" onclick="applyResults()" style="flex: 2;">LOCK IN SESSION</button>
+            </div>
 
-        <!-- Randomizer Results Area -->
-        <section id="results" class="results" aria-live="polite"><p style="text-align: center; opacity: 0.6;">Select players and roll.</p></section>
+            <!-- Dropdown Sort Options -->
+            <div class="dropdown-sort-options">
+                <label><input type="radio" name="dropdownSort" value="name" checked onchange="updateDropdownSort()"> By Name</label>
+                <label><input type="radio" name="dropdownSort" value="weight" onchange="updateDropdownSort()"> By Percentage</label>
+            </div>
 
-        <!-- Validation Error Message -->
-        <div id="error-msg" role="alert">⚠ Duplicate hero selected! Each player must have a unique character.</div>
+            <!-- Randomizer Results Area -->
+            <section id="results" class="results" aria-live="polite"><p style="text-align: center; opacity: 0.6;">Select players and roll.</p></section>
 
-        <!-- Action Buttons -->
-        <button id="rollBtn" type="button" onclick="pickCharacters()">ROLL RANDOMIZER</button>
-        <button id="confirmBtn" type="button" class="btn-confirm" onclick="applyResults()">LOCK IN SESSION</button>
+            <!-- Validation Error Message -->
+            <div id="error-msg" role="alert">⚠ Duplicate hero selected! Each player must have a unique character.</div>
+        </section>
 
         <!-- Hero Database & Stats Section -->
-        <button type="button" class="db-toggle-btn" id="dbToggleBtn" onclick="toggleDatabase()">📂 Show Hero Database & Stats</button>
+        <!-- <button type="button" class="db-toggle-btn" id="dbToggleBtn" onclick="toggleDatabase()">📂 Show Hero Database & Stats</button> -->
 
         <section id="dbSection" class="hidden">
-
             <!-- Search & Filtering -->
             <div class="search-container">
                 <div class="search-wrapper">
@@ -127,7 +132,7 @@
         </section>
 
         <!-- Games History Section -->
-        <button type="button" class="db-toggle-btn" id="gamesToggleBtn" onclick="toggleGames()">🎲 Show Games History</button>
+        <!-- <button type="button" class="db-toggle-btn" id="gamesToggleBtn" onclick="toggleGames()">🎲 Show Games History</button> -->
 
         <section id="gamesSection" class="hidden">
             <div class="search-container" style="margin-top: 15px;">
@@ -158,7 +163,7 @@
         </section>
 
         <!-- Admin & Data Management -->
-        <button type="button" class="admin-toggle-btn" onclick="toggleAdmin()">⚠ Show Admin Section</button>
+        <!-- <button type="button" class="admin-toggle-btn" onclick="toggleAdmin()">⚠ Show Admin Section</button> -->
         <section id="adminSection" class="hidden">
             <div id="admin-build-info"></div>
 
@@ -249,6 +254,27 @@
             </div> -->
         </section>
     </main>
+
+    <!-- Persistent Bottom Navigation -->
+    <nav class="bottom-nav">
+    <a href="#randomizer" class="nav-item" onclick="toggleRoll(); return false;">
+        <span class="icon">🎲</span>
+        <span class="label">Roll</span>
+    </a>
+    <a href="#database" class="nav-item" onclick="toggleDatabase(); return false;">
+        <span class="icon">🛡️</span>
+        <span class="label">Heroes</span>
+    </a>
+    <a href="#history" class="nav-item" onclick="toggleGames(); return false;">
+        <span class="icon">📜</span>
+        <span class="label">History</span>
+    </a>
+    <!-- Conditional Admin Icon -->
+    <a href="#admin" class="nav-item admin-only" onclick="toggleAdmin(); return false;">
+        <span class="icon">⚙️</span>
+        <span class="label">Admin</span>
+    </a>
+    </nav>    
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./javascript/dice-throne.js"></script>

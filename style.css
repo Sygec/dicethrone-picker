@@ -1,4 +1,4 @@
-        .container {
+        .content {
                 max-width: 550px;
                 width: 100%;
         }
@@ -186,14 +186,24 @@
 
         .btn-confirm {
                 background: #28a745;
-                display: none;
-                width: 100%;
+                display: block;
                 padding: 15px;
                 border: none;
                 border-radius: 8px;
                 color: white;
                 font-weight: bold;
-                margin-top: 10px;
+                margin-top: 0;
+                cursor: pointer;
+        }
+
+        .btn-cancelroll {
+                background: #444444;
+                display: block;
+                padding: 15px;
+                border: none;
+                border-radius: 8px;
+                color: white;
+                font-weight: bold;
                 cursor: pointer;
         }
 
@@ -891,7 +901,8 @@
         display: flex;
         justify-content: center;
         gap: 15px;
-        margin-bottom: 12px;
+        margin-top: 15px;
+        margin-bottom: 15px;
         font-size: 0.75rem;
         }
 
@@ -921,4 +932,69 @@
                 background: rgba(255, 255, 255, 0.05);
                 padding: 12px;
                 border-radius: 8px;
+        }
+
+/* Navigation bar styles */
+
+        /* 1. Prevent content from being hidden behind the nav bar */
+        .content {
+        padding-bottom: 85px; /* Adjust based on your nav bar height */
+        }
+
+        /* 2. The Navigation Bar Container */
+        .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 75px;
+        background-color: #1a1a1a; /* Dark theme for Dice Throne vibes */
+        display: flex;
+        justify-content: space-around;
+        align-items: top;
+        border-top: 1px solid #333;
+        z-index: 1000;
+        
+        /* Critical for modern mobile browsers (iOS/Android bars) */
+        padding-bottom: env(safe-area-inset-bottom); 
+        }
+
+        /* 3. Individual Nav Items */
+        .nav-item {
+        margin-top: 5px;
+        display: flex;
+        flex-direction: column;
+        align-items: top;
+        text-decoration: none;
+        color: #888;
+        font-size: 0.75rem;
+        transition: color 0.2s ease;
+        }
+
+        .nav-item:active, .nav-item:focus {
+        color: var(--accent);
+        }
+
+        .icon {
+        font-size: 1.5rem;
+        margin-bottom: 2px;
+        }
+
+        /* 4. Desktop Adaptation */
+        @media (min-width: 768px) {
+        .bottom-nav {
+        top: 0;
+        bottom: auto;
+        flex-direction: column;
+        width: 60px;
+        height: 100vh;
+        justify-content: flex-start;
+        padding-top: 30px;
+        padding-left: 30px;
+        }
+        
+        .content {
+        padding-bottom: 0;
+        margin-left: 80px; /* Push content right to make room for sidebar */
+        }
         }
