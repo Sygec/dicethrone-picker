@@ -1,11 +1,12 @@
 [
   {
-    "version": "1.4.0.20260511",
+    "version": "1.4.0.20260513",
     "changes": [
       "Added login system with different access levels: viewer, user and admin",
       "App now uses players defined in the database instead of hard-coded names",
       "Full database security policies implemented",
-      "Added new admin section for groups, players and heroes"
+      "Added new admin section for groups, players and heroes",
+      "Added game history filtering by player"
     ]
   },
   {
