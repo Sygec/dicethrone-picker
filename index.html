@@ -70,6 +70,10 @@
             <!-- Player Selection Toggles -->
             <div class="player-toggle-zone-top" id="player-toggle-zone-top"></div>
 
+            <!-- Action Buttons -->
+            <button id="rollBtn" type="button" onclick="pickCharacters()">ROLL RANDOMIZER</button>
+            <button id="confirmBtn" type="button" class="btn-confirm" onclick="applyResults()">LOCK IN SESSION</button>
+
             <!-- Dropdown Sort Options -->
             <div class="dropdown-sort-options">
                 <label><input type="radio" name="dropdownSort" value="name" checked onchange="updateDropdownSort()"> By Name</label>
@@ -81,10 +85,6 @@
 
             <!-- Validation Error Message -->
             <div id="error-msg" role="alert">⚠ Duplicate hero selected! Each player must have a unique character.</div>
-
-            <!-- Action Buttons -->
-            <button id="rollBtn" type="button" onclick="pickCharacters()">ROLL RANDOMIZER</button>
-            <button id="confirmBtn" type="button" class="btn-confirm" onclick="applyResults()">LOCK IN SESSION</button>
         </section>
 
         <!-- Hero Database & Stats Section -->

@@ -1151,6 +1151,10 @@ function pickCharacters() {
 
     validateSelection();
     if (isUser()) document.getElementById('confirmBtn').style.display = 'block';
+    
+    // Ensure the roll section is visible and scroll to results
+    toggleRoll();
+    resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ****************************************** 
