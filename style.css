@@ -186,14 +186,24 @@
 
         .btn-confirm {
                 background: #28a745;
-                display: none;
-                width: 100%;
+                display: block;
                 padding: 15px;
                 border: none;
                 border-radius: 8px;
                 color: white;
                 font-weight: bold;
-                margin-top: 10px;
+                margin-top: 0;
+                cursor: pointer;
+        }
+
+        .btn-cancelroll {
+                background: #444444;
+                display: block;
+                padding: 15px;
+                border: none;
+                border-radius: 8px;
+                color: white;
+                font-weight: bold;
                 cursor: pointer;
         }
 

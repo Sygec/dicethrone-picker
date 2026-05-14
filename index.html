@@ -72,7 +72,10 @@
 
             <!-- Action Buttons -->
             <button id="rollBtn" type="button" onclick="pickCharacters()">ROLL RANDOMIZER</button>
-            <button id="confirmBtn" type="button" class="btn-confirm" onclick="applyResults()">LOCK IN SESSION</button>
+            <div id="action-buttons" style="display: none; margin-top: 10px; gap: 10px;">
+                <button id="cancelBtn" type="button" class="btn-cancelroll" onclick="cancelRoll()" style="flex: 1;">CANCEL ROLL</button>
+                <button id="confirmBtn" type="button" class="btn-confirm" onclick="applyResults()" style="flex: 2;">LOCK IN SESSION</button>
+            </div>
 
             <!-- Dropdown Sort Options -->
             <div class="dropdown-sort-options">
