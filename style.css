@@ -964,7 +964,8 @@
         margin-top: 5px;
         display: flex;
         flex-direction: column;
-        align-items: top;
+        align-items: center;
+        text-align: center;
         text-decoration: none;
         color: #888;
         font-size: 0.75rem;
