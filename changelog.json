@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.5.0.20260514",
+    "changes": [
+      "New layout and design with bottom navigation bar",
+      "New Cancel Roll button added to roll section"
+    ]
+  },
+  {
     "version": "1.4.0.20260513",
     "changes": [
       "Added login system with different access levels: viewer, user and admin",
