@@ -1,6 +1,6 @@
 {
-  "name": "Dice Throne Picker",
-  "short_name": "DT Picker",
+  "name": "Dice Throne Companion App",
+  "short_name": "DT Companion",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#1a1a2e",
