@@ -1,3 +1,46 @@
+        /* 1. Full-screen overlay for the loader */
+        #preloader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background-color: var(--bg); /* Change to match your site's background */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        opacity: 1;
+        }
+
+        .fade-out {
+        animation: fadeEffect 0.6s ease forwards;
+        pointer-events: none;
+        }
+
+        @keyframes fadeEffect {
+        from { opacity: 1; }
+        to { opacity: 0; }
+        }
+
+        /* 2. Pure CSS Hourglass Graphic */
+        .hourglass {
+        display: inline-block;
+        width: 50px;
+        height: 50px;
+        border: 10px solid var(--accent);
+        border-radius: 50%;
+        border-top-color: transparent;
+        border-bottom-color: transparent;
+        animation: spin 2s linear infinite;
+        }
+
+        /* 3. The Spinning Animation */
+        @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+        }
+
         .content {
                 max-width: 550px;
                 width: 100%;

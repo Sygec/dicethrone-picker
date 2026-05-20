@@ -24,6 +24,9 @@
 </head>
 
 <body>
+    <div id="preloader">
+        <div class="hourglass"></div>
+    </div>
     <main class="content">
         <img src="images/banner.png" alt="Dice Throne" style="width: 100%; height: auto;">
         <!-- <h1>Dice Throne</h1> -->
@@ -276,8 +279,22 @@
     </a>
     </nav>    
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./javascript/dice-throne.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./javascript/dice-throne.js"></script>
+
+    <script>
+        window.addEventListener('load', function() {
+            const preloader = document.getElementById('preloader');
+            
+            // 1. Apply the fade-out class to trigger the animation
+            preloader.classList.add('fade-out');
+            
+            // 2. Safely remove it from the page ONLY after the fade finish
+            preloader.addEventListener('animationend', function() {
+            preloader.remove();
+            });
+        });
+    </script>
 
 </body>
 </html>
