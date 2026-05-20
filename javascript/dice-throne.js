@@ -91,7 +91,17 @@ async function initializeApp() {
     } catch (error) {
         console.error("Could not load version number:", error);
         versionLabel.innerText = "Error";
+    } finally {
+        hidePreloader();
     }
+}
+
+function hidePreloader() {
+    const preloader = document.getElementById('preloader');
+    if (!preloader) return;
+
+    preloader.classList.add('fade-out');
+    preloader.addEventListener('animationend', () => preloader.remove(), { once: true });
 }
 
 // ==========================================
