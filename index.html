@@ -24,6 +24,18 @@
 </head>
 
 <body>
+    <div id="preloader">
+        <div class="dice-container">
+            <div class="dice">
+                <div class="dice-face front">1</div>
+                <div class="dice-face back">6</div>
+                <div class="dice-face right">3</div>
+                <div class="dice-face left">4</div>
+                <div class="dice-face top">5</div>
+                <div class="dice-face bottom">2</div>
+            </div>
+        </div>
+    </div>
     <main class="content">
         <img src="images/banner.png" alt="Dice Throne" style="width: 100%; height: auto;">
         <!-- <h1>Dice Throne</h1> -->
@@ -185,7 +197,7 @@
                         </div>
                         <div style="display: flex; gap: 10px;">
                             <button type="button" class="btn-save" id="saveGroupBtn" onclick="saveGroup()">Save Group</button>
-                            <button type="button" class="btn-cancel" id="cancelGroupBtn" onclick="resetGroupForm()" style="display:none;">Cancel</button>
+                            <button type="button" class="btn-cancel" id="cancelGroupBtn" onclick="if (document.getElementById('groupName').value && !confirm('Discard unsaved changes?')) return; resetGroupForm()">Cancel</button>
                         </div>
                     </div>
                     <div id="groupsListContainer" style="margin-top: 15px;"></div>
@@ -221,7 +233,7 @@
                         </div>
                         <div style="display: flex; gap: 10px;">
                             <button type="button" class="btn-save" id="saveBtn" onclick="saveCharacter()">Save Hero</button>
-                            <button type="button" class="btn-cancel" id="cancelBtn" onclick="resetForm()" style="display:none;">Cancel Edit</button>
+                            <button type="button" class="btn-cancel" id="cancelHeroBtn" onclick="if (document.getElementById('charName').value && !confirm('Discard unsaved changes?')) return; resetForm()">Cancel</button>
                         </div>
                     </div>
                     <div id="heroesListContainer" style="margin-top: 15px;"></div>
@@ -276,8 +288,8 @@
     </a>
     </nav>    
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./javascript/dice-throne.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./javascript/dice-throne.js"></script>
 
 </body>
 </html>

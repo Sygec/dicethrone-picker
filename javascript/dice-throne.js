@@ -38,8 +38,8 @@ const actionButtons = document.getElementById("action-buttons");
 // ==========================================
 const PROD_SUPABASE_URL = 'https://ojqkkixtvdtccuixishh.supabase.co';
 const PROD_SUPABASE_KEY = 'sb_publishable_AT9BZrEkq1IDrZmP1Y_pDQ_Qwnh57ZH';
-const DEV_SUPABASE_URL  = 'https://wmxrzjmadvivvpzbslgj.supabase.co';
-const DEV_SUPABASE_KEY  = 'sb_publishable_Hohs2ojpVd5nmRJoi0upNg_PJv8M7x6';
+const DEV_SUPABASE_URL = 'https://wmxrzjmadvivvpzbslgj.supabase.co';
+const DEV_SUPABASE_KEY = 'sb_publishable_Hohs2ojpVd5nmRJoi0upNg_PJv8M7x6';
 
 const SUPABASE_URL = isProd ? PROD_SUPABASE_URL : DEV_SUPABASE_URL;
 const SUPABASE_KEY = isProd ? PROD_SUPABASE_KEY : DEV_SUPABASE_KEY;
@@ -91,14 +91,24 @@ async function initializeApp() {
     } catch (error) {
         console.error("Could not load version number:", error);
         versionLabel.innerText = "Error";
+    } finally {
+        hidePreloader();
     }
+}
+
+function hidePreloader() {
+    const preloader = document.getElementById('preloader');
+    if (!preloader) return;
+
+    preloader.classList.add('fade-out');
+    preloader.addEventListener('animationend', () => preloader.remove(), { once: true });
 }
 
 // ==========================================
 // 6. EVENT LISTENERS
 // ==========================================
 window.addEventListener('DOMContentLoaded', initializeApp);
-window.addEventListener('DOMContentLoaded', updateDiceVisuals); 
+window.addEventListener('DOMContentLoaded', updateDiceVisuals);
 versionLabel.onclick = openChangelog;
 closeBtn.onclick = closeChangelog;
 
@@ -141,7 +151,7 @@ function updateAuthUI() {
         if (actionButtons) actionButtons.style.display = 'none';
         if (actionButtons) actionButtons.style.display = 'none';
     }
-    
+
     // Refresh lists to show/hide edit buttons
     renderList();
     renderGamesList();
@@ -193,17 +203,17 @@ function closeLoginModal() {
 
 async function handleLogin() {
     const email = document.getElementById('login-email').value;
-// ****************************************** 
-// handleLogin()
-// input: none
-// ****************************************** 
-// Attempts to sign in a user with provided email and password using Supabase authentication.
-// ****************************************** 
+    // ****************************************** 
+    // handleLogin()
+    // input: none
+    // ****************************************** 
+    // Attempts to sign in a user with provided email and password using Supabase authentication.
+    // ****************************************** 
     const password = document.getElementById('login-password').value;
     const errorDiv = document.getElementById('login-error');
-    
+
     const { error } = await db.auth.signInWithPassword({ email, password });
-    
+
     if (error) {
         errorDiv.innerText = error.message;
         errorDiv.style.display = 'block';
@@ -342,10 +352,10 @@ async function init() {
                 } else {
                     const pId = `p${i + 1}`;
                     // Find the most recent game entry for this specific hero and player combo
-                    const lastGame = games.find(g => 
+                    const lastGame = games.find(g =>
                         g.game_players.some(gp => gp.hero_id === char.id && gp.player_id === pId)
                     );
-                    
+
                     if (lastGame) {
                         let d = lastGame.played_at || "";
                         if (d && !d.includes('T')) d = d.replace(' ', 'T');
@@ -540,7 +550,7 @@ async function saveCharacter() {
     const groupId = document.getElementById('charGroup').value;
     const slug = document.getElementById('charSlug').value.trim();
     const complexity = document.getElementById('charComplexity').value.trim();
-    
+
     if (!name) return alert("Name is required");
     if (!groupId) return alert("Group is required");
 
@@ -597,16 +607,14 @@ function isElementFullyVisible(el) {
 // ****************************************** 
 function resetForm() {
     editIndex = -1;
-    
-    // Clear all input values within the management form grid
-    document.querySelectorAll('.manage-form .form-grid input').forEach(input => input.value = "");
-    
-    // Also reset the select element
+
+    document.getElementById('charName').value = "";
+    document.getElementById('charSlug').value = "";
     document.getElementById('charGroup').value = "";
+    document.getElementById('charComplexity').value = "";
 
     // Reset UI state to "Add" mode
     document.getElementById('formTitle').innerText = "Add New Hero";
-    document.getElementById('cancelBtn').style.display = "none";
 
     const form = document.getElementById('heroForm');
     const button = document.getElementById('addHeroBtn');
@@ -649,7 +657,7 @@ function populateGroupDropdown() {
 // ****************************************** 
 function renderGroupsList() {
     const container = document.getElementById('groupsListContainer');
-    
+
     if (groups.length === 0) {
         container.innerHTML = '<p style="opacity: 0.6; font-style: italic;">No groups yet. Create one above.</p>';
         return;
@@ -680,7 +688,7 @@ function renderGroupsList() {
             </div>
         </div>
     `).join('');
-    
+
     container.innerHTML = html;
 }
 
@@ -722,7 +730,7 @@ function renderHeroesList() {
                         <input type="text" id="heroSlug-${idx}" placeholder="Slug (for image)" value="${escapeHtml(c.slug)}">
                         <select id="heroComplexity-${idx}">
                             <option value="">-- Complexity --</option>
-                            ${[1,2,3,4,5,6].map(value => `<option value="${value}" ${c.complexity == value ? 'selected' : ''}>${value}</option>`).join('')}
+                            ${[1, 2, 3, 4, 5, 6].map(value => `<option value="${value}" ${c.complexity == value ? 'selected' : ''}>${value}</option>`).join('')}
                         </select>
                     </div>
                     <div style="display: flex; gap: 10px;">
@@ -795,7 +803,7 @@ async function saveGroup() {
     const name = document.getElementById('groupName').value.trim();
     const type = document.getElementById('groupType').value.trim();
     const order_index = document.getElementById('groupOrder').value.trim();
-    
+
     if (!name) return alert("Group name is required");
 
     const groupData = {
@@ -891,7 +899,6 @@ function resetGroupForm() {
     document.getElementById('groupName').value = "";
     document.getElementById('groupType').value = "";
     document.getElementById('groupOrder').value = "";
-    document.getElementById('cancelGroupBtn').style.display = "none";
 
     const form = document.getElementById('groupForm');
     const button = document.getElementById('addGroupBtn');
@@ -1093,7 +1100,7 @@ async function deleteGroup(groupId) {
 function getSoftWeight(hero, userIndex) {
     const baseWeight = hero.weights[userIndex];
     const plays = hero.playCount[userIndex];
-    
+
     // Applying the (p*3+1)^2 formula
     const penalty = Math.pow((plays * 3) + 1, 2);
     return baseWeight / penalty;
@@ -1115,7 +1122,7 @@ function pickCharacters() {
         .sort(() => Math.random() - 0.5);
 
     if (active.length === 0) return alert("Select players!");
-    
+
     const resultsDiv = document.getElementById('results');
     resultsDiv.innerHTML = '';
 
@@ -1134,7 +1141,7 @@ function pickCharacters() {
             // Weighted selection for main players (0-3) using soft weights
             const activePool = pool.filter(c => c.weights[pIdx] > 0);
             const totalEffectiveWeight = activePool.reduce((sum, c) => sum + getSoftWeight(c, pIdx), 0);
-            
+
             let random = Math.random() * totalEffectiveWeight;
 
             for (const hero of activePool) {
@@ -1152,7 +1159,7 @@ function pickCharacters() {
 
     validateSelection();
     if (isUser()) document.getElementById('action-buttons').style.display = 'flex';
-    
+
     // Ensure the roll section is visible and scroll to results
     toggleRoll();
     resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1183,7 +1190,7 @@ function updateDropdownSort() {
 // ****************************************** 
 function getSortedHeroOptions(pIdx, selectedName) {
     const sortMode = document.querySelector('input[name="dropdownSort"]:checked')?.value || 'name';
-    
+
     let totalWeight = 0;
     if (sortMode === 'weight' && pIdx < 4) {
         characters.forEach(c => totalWeight += getSoftWeight(c, pIdx));
@@ -1191,7 +1198,7 @@ function getSortedHeroOptions(pIdx, selectedName) {
 
     const sortedChars = [...characters].sort((a, b) => {
         if (sortMode === 'name') return a.name.localeCompare(b.name);
-        
+
         if (pIdx < 4) {
             const wA = getSoftWeight(a, pIdx);
             const wB = getSoftWeight(b, pIdx);
@@ -1220,7 +1227,7 @@ function getSortedHeroOptions(pIdx, selectedName) {
 function renderPlayerRow(pIdx, selectedName) {
     const charData = characters.find(c => c.name === selectedName);
     const resultsDiv = document.getElementById('results');
-    
+
     // Retrieve play statistics for the current player and selected character
     const plays = (charData?.playCount && charData.playCount[pIdx]) || 0;
     const last = (charData?.lastPlayed && charData.lastPlayed[pIdx]) || "Never";
@@ -1238,7 +1245,7 @@ function renderPlayerRow(pIdx, selectedName) {
             <div style="flex:1">
                 <!-- Player tag and conditional display of play stats for main players -->
                 <div style="margin-bottom:5px; display:flex; justify-content:space-between; align-items:center;">
-                    <span class="player-tag" style="background:var(--p${pIdx+1})">${NAMES[pIdx]}</span>
+                    <span class="player-tag" style="background:var(--p${pIdx + 1})">${NAMES[pIdx]}</span>
                     ${pIdx < 4 ? `<div class="roll-stats"><span>Plays: <b>${plays}</b></span><span>Last: <b>${last}</b></span></div>` : ''}
                 </div>
                 <!-- Dropdown for manual hero selection -->
@@ -1259,14 +1266,14 @@ function renderPlayerRow(pIdx, selectedName) {
 function handleDropdownChange(el) {
     const pIdx = parseInt(el.dataset.player);
     const char = characters.find(c => c.name === el.value);
-    
+
     if (!char) return;
 
     // Update the visual assets: portrait, complexity dice, and wiki link
     document.getElementById(`img-${pIdx}`).src = getImgUrl(char.slug);
     document.getElementById(`comp-${pIdx}`).src = `images/dice/d${char.complexity}.png`;
     document.getElementById(`link-${pIdx}`).href = getHeroLink(char.slug);
-    
+
     // Locate the stats container within the current player's row
     const statsDiv = el.closest('.player-row').querySelector('.roll-stats');
 
@@ -1308,12 +1315,12 @@ function validateSelection() {
 
     const confirmBtn = document.getElementById('confirmBtn');
     const errorMsg = document.getElementById('error-msg');
-    
+
     // Update the "Lock In" button state: visual styling and functional toggle
     confirmBtn.classList.toggle('disabled', hasDupes);
     confirmBtn.disabled = hasDupes;
     errorMsg.style.display = hasDupes ? 'block' : 'none';
-    
+
     // Individually highlight dropdowns that contain duplicate entries
     dropdowns.forEach(d => {
         d.classList.toggle('error', counts[d.value] > 1);
@@ -1332,7 +1339,7 @@ async function applyResults() {
     const today = new Date().toLocaleDateString('en-CA');
     const statsUpdates = [];
     const gameParticipants = [];
-    
+
     // Create a Map of [playerIndex -> heroName] for fast lookups
     const activePicks = new Map(
         Array.from(dropdowns).map(sel => [parseInt(sel.dataset.player), sel.value])
@@ -1357,7 +1364,7 @@ async function applyResults() {
                     last_updated_by: currentUser.id
                 });
             }
-            
+
             // Long-term stats and weighting are only tracked for the 4 main players (0-3)
             if (pIdx < 4 && playerChoice !== undefined) {
                 const wasPicked = (playerChoice === char.name);
@@ -1417,7 +1424,7 @@ function renderSortControls() {
     const container = document.getElementById('player-sort-container');
     // Sort controls are only rendered for the main 4 players (indices 0-3)
     const mainPlayerNames = NAMES.slice(0, 4);
-            
+
     let html = `
         <div class="player-card-mini">
             <span class="mini-name"> </span>
@@ -1446,7 +1453,7 @@ function renderSortControls() {
     `;
     }).join('');
 
-container.innerHTML = html;
+    container.innerHTML = html;
 
 }
 
@@ -1504,7 +1511,7 @@ async function resetAllWeights() {
     if (confirm("Reset all probabilities to 100?")) {
         const updates = [];
         characters.forEach(c => {
-            [0,1,2,3].forEach(p => updates.push({ hero_id: c.id, player_id: `p${p + 1}`, weight: 100, last_updated_by: currentUser.id }));
+            [0, 1, 2, 3].forEach(p => updates.push({ hero_id: c.id, player_id: `p${p + 1}`, weight: 100, last_updated_by: currentUser.id }));
         });
         await db.from('player_hero_stats').upsert(updates, { onConflict: 'player_id, hero_id' });
         init();
@@ -1522,7 +1529,7 @@ async function resetAllStats() {
     if (confirm("Reset all play history?")) {
         const updates = [];
         characters.forEach(c => {
-            [0,1,2,3].forEach(p => updates.push({ hero_id: c.id, player_id: `p${p + 1}`, play_count: 0, last_played: null, last_updated_by: currentUser.id }));
+            [0, 1, 2, 3].forEach(p => updates.push({ hero_id: c.id, player_id: `p${p + 1}`, play_count: 0, last_played: null, last_updated_by: currentUser.id }));
         });
         await db.from('player_hero_stats').upsert(updates, { onConflict: 'player_id, hero_id' });
         init();
@@ -1593,7 +1600,7 @@ function clearSearch() {
     const searchInput = document.getElementById('hero-search');
     searchInput.value = ''; // Reset the input value to empty
     searchInput.focus();    // Return focus to the bar so the user can type again immediately
-    
+
     // Re-use handleSearchInput to hide the 'X' button and refresh the list
     handleSearchInput();
 }
@@ -1656,11 +1663,11 @@ function renderGamesList() {
 
     const filteredGames = games.filter(game => {
         if (selectedGamePlayerIndex === null) return true;
-        
+
         return game.game_players.some(gp => {
             const pIdx = parseInt(gp.player_id.substring(1)) - 1;
             let match = false;
-            
+
             if (selectedGamePlayerIndex >= 0 && selectedGamePlayerIndex <= 3) {
                 match = (pIdx === selectedGamePlayerIndex);
             } else if (selectedGamePlayerIndex === 4) {
@@ -1684,9 +1691,9 @@ function renderGamesList() {
         let rawDate = game.played_at || "";
         if (rawDate && !rawDate.includes('T')) rawDate = rawDate.replace(' ', 'T');
         if (rawDate && !rawDate.includes('Z') && !rawDate.includes('+')) rawDate += 'Z';
-        
+
         const dateStr = new Date(rawDate).toLocaleString('en-CA', { timeZone: 'America/Montreal', dateStyle: 'medium', timeStyle: 'short' });
-        
+
         // Determine status/winner image logic
         const winners = game.game_players.filter(p => p.is_winner === true);
         const explicitLosers = game.game_players.filter(p => p.is_winner === false); // Players explicitly marked as not winning
@@ -1717,7 +1724,7 @@ function renderGamesList() {
             const heroName = gp.heroes?.name || 'Unknown';
             const heroSlug = gp.heroes?.slug || '';
             // const isWinner = gp.is_winner === true;
-            const boxStyle = gp.is_winner 
+            const boxStyle = gp.is_winner
                 ? "border: 2px solid #28a745; background: rgba(40, 167, 69, 0.1); filter: brightness(1.3);"   // win
                 : gp.is_winner === false
                     ? "border: 1px solid transparent; filter: brightness(0.70);"  // loss
@@ -1969,7 +1976,7 @@ function togglePlayerGameFilter(idx) {
 function renderList() {
     const container = document.getElementById('heroContainer');
     if (!container) return;
-    
+
     const searchTerm = document.getElementById('hero-search')?.value.toLowerCase() || "";
     const countLabel = document.getElementById('count-stats');
 
@@ -2000,19 +2007,19 @@ function renderList() {
     // 3. Sort the results based on current settings
     processedList.sort((a, b) => {
         let valA, valB;
-        
+
         if (currentSort.startsWith('w')) {
             const idx = parseInt(currentSort[1]);
-            valA = getSoftWeight(a, idx); 
+            valA = getSoftWeight(a, idx);
             valB = getSoftWeight(b, idx);
-        } 
+        }
         else if (currentSort.startsWith('d')) {
             const idx = parseInt(currentSort[1]);
             valA = (a.lastPlayed && a.lastPlayed[idx]) || "";
             valB = (b.lastPlayed && b.lastPlayed[idx]) || "";
             if (valA === "Never") valA = "";
             if (valB === "Never") valB = "";
-        } 
+        }
         else {
             valA = (a[currentSort] || "").toLowerCase();
             valB = (b[currentSort] || "").toLowerCase();
