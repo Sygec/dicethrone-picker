@@ -198,6 +198,13 @@ function openLoginModal() {
     loginModal.style.display = "block";
     document.getElementById('login-error').style.display = 'none';
     document.body.style.overflow = "hidden";
+    // Add key handler so Escape cancels (form submit handles Enter)
+    loginModalKeyHandler = (e) => {
+        if (e.key === 'Escape') {
+            closeLoginModal();
+        }
+    };
+    document.addEventListener('keydown', loginModalKeyHandler);
 }
 
 // ****************************************** 
@@ -209,6 +216,11 @@ function openLoginModal() {
 function closeLoginModal() {
     loginModal.style.display = "none";
     document.body.style.overflow = "auto";
+    // Remove key handler when modal is closed
+    if (loginModalKeyHandler) {
+        document.removeEventListener('keydown', loginModalKeyHandler);
+        loginModalKeyHandler = null;
+    }
 }
 
 async function handleLogin() {
