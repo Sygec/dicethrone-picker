@@ -32,6 +32,16 @@ const closeBtn = document.querySelector(".close-button");
 const loginModal = document.getElementById("login-modal");
 const authBtn = document.getElementById("auth-btn");
 const actionButtons = document.getElementById("action-buttons");
+let loginModalKeyHandler = null;
+const loginForm = document.getElementById('login-form');
+
+// If a login form exists, intercept submit and call handleLogin
+if (loginForm) {
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        handleLogin();
+    });
+}
 
 // ==========================================
 // 3. SUPABASE CONFIGURATION
