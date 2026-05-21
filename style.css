@@ -216,7 +216,7 @@
         .char-select {
                 flex: 1;
                 background: #1a1a2e;
-                color: white;
+                color: var(--text);
                 border: 1px solid var(--secondary);
                 padding: 10px;
                 border-radius: 5px;
@@ -354,7 +354,7 @@
                 border-radius: 8px; 
                 border: 1px solid var(--secondary); 
                 background: lightgray; 
-                color: black; 
+                color: var(--text); 
                 box-sizing: border-box;
         }
         
@@ -551,7 +551,7 @@
         input[type="number"],
         textarea {
                 background: #1a1a2e;
-                color: white;
+                color: var(--text);
                 border: 1px solid var(--secondary);
                 padding: 10px;
                 border-radius: 5px;
