@@ -148,14 +148,13 @@
 
         <section id="gamesSection" class="hidden">
             <div class="search-container" style="margin-top: 15px;">
-                <div class="search-wrapper">
-                    <div style="flex: 1; text-align: left; padding-left: 10px;">
-                        <h3 style="margin: 0; color: var(--accent); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">Games History</h3>
+                    <div class="search-wrapper">
+                        <input class="search-bar" type="text" id="games-search" style="font-size: 16px;" placeholder="Search games by hero..." oninput="handleGamesSearchInput()" aria-label="Search games">
+                        <div class="search-actions">
+                            <img src="images/buttons/close.png" id="clear-games-search" class="search-icon hidden" onclick="clearGamesSearch()" alt="Clear" title="Clear Search">
+                            <img src="images/buttons/sort.png" id="games-filter-toggle" class="search-icon" onclick="toggleGamesFilterUI()" alt="Filter" title="Toggle Player Filters">
+                        </div>
                     </div>
-                    <div class="search-actions">
-                        <img src="images/buttons/sort.png" id="games-filter-toggle" class="search-icon" onclick="toggleGamesFilterUI()" alt="Filter" title="Toggle Player Filters">
-                    </div>
-                </div>
                 <div class="small-text" id="game-count-stats" style="margin-top: 5px;">
                     Showing 0 of 0 games
                 </div>
