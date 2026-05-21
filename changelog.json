@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.6.0.20260521",
+    "changes": [
+      "New search bar in game history section",
+      "New visual preloader",
+      "New cancel buttons when adding new heroes and groups in admin section"
+    ]
+  },  {
     "version": "1.5.0.20260514",
     "changes": [
       "New layout and design with bottom navigation bar",
