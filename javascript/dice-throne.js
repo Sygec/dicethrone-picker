@@ -394,6 +394,7 @@ async function init() {
     renderSortControls();
     renderAdminBuildInfo();
     renderGroupsList();
+    renderGamesList();
     renderHeroesList();
     renderPlayersList();
     renderUsersList();
@@ -516,6 +517,7 @@ function toggleGames() {
     ds.classList.add('hidden');
     gs.classList.remove('hidden');
     as.classList.add('hidden');
+    renderGamesList();
 }
 
 // ****************************************** 
