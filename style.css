@@ -216,7 +216,7 @@
         .char-select {
                 flex: 1;
                 background: #1a1a2e;
-                color: white;
+                color: var(--text);
                 border: 1px solid var(--secondary);
                 padding: 10px;
                 border-radius: 5px;
@@ -354,7 +354,7 @@
                 border-radius: 8px; 
                 border: 1px solid var(--secondary); 
                 background: lightgray; 
-                color: black; 
+                color: var(--text); 
                 box-sizing: border-box;
         }
         
@@ -542,13 +542,20 @@
                 grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
-        input[type="text"] {
+        input[type="text"],
+        input[type="email"],
+        input[type="search"],
+        input[type="password"],
+        input[type="tel"],
+        input[type="url"],
+        input[type="number"],
+        textarea {
                 background: #1a1a2e;
-                color: white;
+                color: var(--text);
                 border: 1px solid var(--secondary);
                 padding: 10px;
                 border-radius: 5px;
-                font-size: 0.9rem;
+                font-size: 16px;
         }
 
         .btn-save {

@@ -32,6 +32,16 @@ const closeBtn = document.querySelector(".close-button");
 const loginModal = document.getElementById("login-modal");
 const authBtn = document.getElementById("auth-btn");
 const actionButtons = document.getElementById("action-buttons");
+let loginModalKeyHandler = null;
+const loginForm = document.getElementById('login-form');
+
+// If a login form exists, intercept submit and call handleLogin
+if (loginForm) {
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        handleLogin();
+    });
+}
 
 // ==========================================
 // 3. SUPABASE CONFIGURATION
@@ -188,6 +198,13 @@ function openLoginModal() {
     loginModal.style.display = "block";
     document.getElementById('login-error').style.display = 'none';
     document.body.style.overflow = "hidden";
+    // Add key handler so Escape cancels (form submit handles Enter)
+    loginModalKeyHandler = (e) => {
+        if (e.key === 'Escape') {
+            closeLoginModal();
+        }
+    };
+    document.addEventListener('keydown', loginModalKeyHandler);
 }
 
 // ****************************************** 
@@ -199,6 +216,11 @@ function openLoginModal() {
 function closeLoginModal() {
     loginModal.style.display = "none";
     document.body.style.overflow = "auto";
+    // Remove key handler when modal is closed
+    if (loginModalKeyHandler) {
+        document.removeEventListener('keydown', loginModalKeyHandler);
+        loginModalKeyHandler = null;
+    }
 }
 
 async function handleLogin() {
@@ -372,6 +394,7 @@ async function init() {
     renderSortControls();
     renderAdminBuildInfo();
     renderGroupsList();
+    renderGamesList();
     renderHeroesList();
     renderPlayersList();
     renderUsersList();
@@ -494,6 +517,7 @@ function toggleGames() {
     ds.classList.add('hidden');
     gs.classList.remove('hidden');
     as.classList.add('hidden');
+    renderGamesList();
 }
 
 // ****************************************** 
@@ -1606,6 +1630,37 @@ function clearSearch() {
 }
 
 // ****************************************** 
+// handleGamesSearchInput()
+// input: none
+// ****************************************** 
+// Manages visibility of the clear button for the games search
+// and triggers the games list re-render.
+// ****************************************** 
+function handleGamesSearchInput() {
+    const searchInput = document.getElementById('games-search');
+    const clearBtn = document.getElementById('clear-games-search');
+
+    if (!searchInput || !clearBtn) return;
+
+    clearBtn.classList.toggle('hidden', searchInput.value.trim().length === 0);
+    renderGamesList();
+}
+
+// ****************************************** 
+// clearGamesSearch()
+// input: none
+// ****************************************** 
+// Clears the games search input and refreshes the games list.
+// ****************************************** 
+function clearGamesSearch() {
+    const searchInput = document.getElementById('games-search');
+    if (!searchInput) return;
+    searchInput.value = '';
+    searchInput.focus();
+    handleGamesSearchInput();
+}
+
+// ****************************************** 
 // toggleSort()
 // input: none
 // ****************************************** 
@@ -1660,26 +1715,37 @@ function renderGamesList() {
     if (!container || !games) return;
 
     const showWinsOnly = document.getElementById('games-winner-only')?.checked || false;
+    const searchTerm = (document.getElementById('games-search')?.value || '').toLowerCase().trim();
 
     const filteredGames = games.filter(game => {
-        if (selectedGamePlayerIndex === null) return true;
+        // Player filter (if set)
+        let playerMatches = true;
+        if (selectedGamePlayerIndex !== null) {
+            playerMatches = game.game_players.some(gp => {
+                const pIdx = parseInt(gp.player_id.substring(1)) - 1;
+                let match = false;
 
-        return game.game_players.some(gp => {
-            const pIdx = parseInt(gp.player_id.substring(1)) - 1;
-            let match = false;
+                if (selectedGamePlayerIndex >= 0 && selectedGamePlayerIndex <= 3) {
+                    match = (pIdx === selectedGamePlayerIndex);
+                } else if (selectedGamePlayerIndex === 4) {
+                    match = (pIdx === 4 || pIdx === 5);
+                }
 
-            if (selectedGamePlayerIndex >= 0 && selectedGamePlayerIndex <= 3) {
-                match = (pIdx === selectedGamePlayerIndex);
-            } else if (selectedGamePlayerIndex === 4) {
-                // Invitee 1 or Invitee 2
-                match = (pIdx === 4 || pIdx === 5);
-            }
+                if (match && showWinsOnly) return gp.is_winner === true;
+                return match;
+            });
+        }
+        if (!playerMatches) return false;
 
-            if (match && showWinsOnly) {
-                return gp.is_winner === true;
-            }
-            return match;
-        });
+        // Search filter (if term provided) - match against date, hero names, and player names
+        if (searchTerm) {
+            // Only match hero names in the games list as requested
+            const heroes = (game.game_players || []).map(gp => gp.heroes?.name || '').join(' ');
+            const hay = heroes.toLowerCase();
+            if (!hay.includes(searchTerm)) return false;
+        }
+
+        return true;
     });
 
     if (countLabel) {
@@ -1723,12 +1789,20 @@ function renderGamesList() {
             const pIdx = parseInt(gp.player_id.substring(1)) - 1;
             const heroName = gp.heroes?.name || 'Unknown';
             const heroSlug = gp.heroes?.slug || '';
+            // Determine if this player's hero matches the current games search term
+            const isSearchMatch = Boolean(searchTerm && heroName.toLowerCase().includes(searchTerm));
+
             // const isWinner = gp.is_winner === true;
-            const boxStyle = gp.is_winner
+            let boxStyle = gp.is_winner
                 ? "border: 2px solid #28a745; background: rgba(40, 167, 69, 0.1); filter: brightness(1.3);"   // win
                 : gp.is_winner === false
                     ? "border: 1px solid transparent; filter: brightness(0.70);"  // loss
                     : "border: 1px solid #d32f2f;";  // not finished
+
+            // If this hero matches the search, add an accent border to highlight the player
+            if (isSearchMatch) {
+                boxStyle += ' border: 2px solid var(--accent);';
+            }
 
             return `
                 <div class="stat-column" style="${boxStyle}">
