@@ -14,12 +14,12 @@
         const themeLink = document.createElement('link');
         themeLink.rel = 'stylesheet';
         // Assign the file path based on if this is prod or dev
-        themeLink.href = window.isProd ? 'style-prod.css' : 'style-dev.css';
+        themeLink.href = window.isProd ? 'styles/style-prod.css' : 'styles/style-dev.css';
         // Append it to the head
         document.head.appendChild(themeLink);
     </script>
     <!-- Additionnally, link the common stylesheet -->
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="styles/style.css">
 
 </head>
 
