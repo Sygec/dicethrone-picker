@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "compatibility_date": "2026-05-23",
   "assets": {
-    "directory": "./dist"
+    "directory": "./docs"
   },
   
   // Explicit environments configuration
