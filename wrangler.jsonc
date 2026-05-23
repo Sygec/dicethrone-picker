@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "compatibility_date": "2026-05-23",
+  "assets": {
+    "directory": "./docs"
+  },
+  
+  // Explicit environments configuration
+  "env": {
+    "development": {
+      "name": "dicethrone-dev"
+    },
+    "production": {
+      "name": "dicethrone-prod"
+    }
+  }
+}
