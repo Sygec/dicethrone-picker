@@ -8,7 +8,7 @@
   
   // Explicit environments configuration
   "env": {
-    "dev": {
+    "development": {
       "name": "dicethrone-dev"
     },
     "production": {
