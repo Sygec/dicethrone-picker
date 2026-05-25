@@ -71,6 +71,66 @@ const escapeHtml = (text) => {
         .replace(/'/g, '&#039;');
 };
 
+const normalizeColorValue = (color) => {
+    if (!color) return '#ffffff';
+    color = color.trim();
+    if (color.startsWith('#')) return color;
+    const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (rgbMatch) {
+        const r = parseInt(rgbMatch[1], 10);
+        const g = parseInt(rgbMatch[2], 10);
+        const b = parseInt(rgbMatch[3], 10);
+        return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
+    }
+    return color;
+};
+
+const getPlayerColor = (player) => {
+    if (player?.player_color) return normalizeColorValue(player.player_color);
+    const rootColor = getComputedStyle(document.documentElement).getPropertyValue(`--${player?.id}`).trim();
+    return normalizeColorValue(rootColor);
+};
+
+const setPlayerColorVariable = (playerId, color) => {
+    document.documentElement.style.setProperty(`--${playerId}`, color);
+};
+
+async function handlePlayerColorChange(playerId, input) {
+    const player = players.find(p => p.id === playerId);
+    if (!player) return;
+
+    const currentColor = getPlayerColor(player);
+    const newColor = normalizeColorValue(input.value);
+    if (newColor.toLowerCase() === currentColor.toLowerCase()) return;
+
+    const confirmed = confirm(`Change ${player.name}'s color from ${currentColor} to ${newColor}?`);
+    if (!confirmed) {
+        input.value = currentColor;
+        return;
+    }
+
+    const { error } = await db
+        .from('players')
+        .update({ player_color: newColor })
+        .eq('id', playerId)
+        .select()
+        .single();
+
+    if (error) {
+        alert("Error saving player color: " + error.message);
+        input.value = currentColor;
+        return;
+    }
+
+    const playerIndex = players.findIndex(p => p.id === playerId);
+    if (playerIndex !== -1) {
+        players[playerIndex].player_color = newColor;
+    }
+
+    setPlayerColorVariable(playerId, newColor);
+    renderPlayersList();
+}
+
 // ==========================================
 // 5. APPLICATION INITIALIZATION
 // ==========================================
@@ -282,6 +342,12 @@ async function init() {
 
     if (!playersError && playersData) {
         players = playersData;
+        playersData.forEach((p) => {
+            if (p.player_color) {
+                setPlayerColorVariable(p.id, normalizeColorValue(p.player_color));
+            }
+        });
+
         NAMES = playersData.map(p => p.name);
         loggedInPlayerIndex = -1;
         playersData.forEach((p, i) => {
@@ -952,8 +1018,14 @@ function renderPlayersList() {
         const displayDiv = document.createElement('div');
         displayDiv.className = 'player-display';
         displayDiv.innerHTML = `
-            <span class="player-name">${player.name}</span>
-            <button type="button" class="btn-save btn-inline" onclick="editPlayer('${player.id}')">Edit</button>
+            <span class="player-tag" style="background:var(--${player.id})">${escapeHtml(player.name)}</span>
+            <div class="player-actions">
+                <label class="color-picker-button" title="Choose player color">
+                    <span>🎨</span>
+                    <input type="color" id="playerColor-${player.id}" value="${escapeHtml(getPlayerColor(player))}" onchange="handlePlayerColorChange('${player.id}', this)">
+                </label>
+                <button type="button" class="btn-save btn-inline" onclick="editPlayer('${player.id}')">Edit</button>
+            </div>
         `;
 
         const editPanel = document.createElement('div');

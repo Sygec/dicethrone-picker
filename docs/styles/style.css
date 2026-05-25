@@ -467,6 +467,49 @@
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
+                gap: 10px;
+        }
+
+        .player-actions {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+        }
+
+        .color-picker-button {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 36px;
+                min-width: 36px;
+                height: 36px;
+                padding: 0;
+                background: #333;
+                color: white;
+                border-radius: 6px;
+                border: 1px solid rgba(255,255,255,0.12);
+                cursor: pointer;
+                font-size: 0.9rem;
+                position: relative;
+        }
+
+        .color-picker-button input[type="color"] {
+                appearance: none;
+                -webkit-appearance: none;
+                border: none;
+                background: transparent;
+                cursor: pointer;
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                top: 0;
+                left: 0;
+                opacity: 0;
+        }
+
+        .color-picker-button span {
+                pointer-events: none;
+                z-index: 1;
         }
 
         .player-name {
@@ -586,6 +629,10 @@
                 padding: 4px 10px;
                 font-size: 0.9rem;
                 min-width: 80px;
+                height: 36px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
         }
 
         .hero-body {
