@@ -618,9 +618,9 @@ function toggleAdmin() {
 // Opens or closes a panel within the admin section.
 // ****************************************** 
 function toggleAdminPanel(event, panelId) {
-    event.stopPropagation();
     const panel = document.getElementById(panelId);
-    const button = event.currentTarget;
+    const header = event.currentTarget.closest('.panel-header') || event.currentTarget;
+    const button = header.querySelector('.panel-toggle');
     if (!panel || !button) return;
 
     const isHidden = panel.classList.toggle('hidden');

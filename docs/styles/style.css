@@ -402,10 +402,14 @@
                 justify-content: space-between;
                 align-items: center;
                 padding: 12px 15px;
-                cursor: default;
+                cursor: pointer;
                 gap: 10px;
                 background: rgba(255,255,255,0.06);
                 user-select: none;
+        }
+
+        .panel-toggle {
+                cursor: pointer;
         }
 
         .panel-header h3 {

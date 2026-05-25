@@ -179,9 +179,9 @@
             <div id="admin-build-info"></div>
 
             <div class="admin-panel">
-                <div class="panel-header">
+                <div class="panel-header" onclick="toggleAdminPanel(event, 'groupsPanel')">
                     <h3>Manage Groups</h3>
-                    <button type="button" class="panel-toggle" aria-expanded="false" onclick="toggleAdminPanel(event, 'groupsPanel')">V</button>
+                    <button type="button" class="panel-toggle" aria-expanded="false">V</button>
                 </div>
                 <div id="groupsPanel" class="panel-content hidden">
                     <div style="margin-bottom: 15px;">
@@ -204,9 +204,9 @@
             </div>
 
             <div class="admin-panel">
-                <div class="panel-header">
+                <div class="panel-header" onclick="toggleAdminPanel(event, 'heroesPanel')">
                     <h3>Manage Heroes</h3>
-                    <button type="button" class="panel-toggle" aria-expanded="false" onclick="toggleAdminPanel(event, 'heroesPanel')">V</button>
+                    <button type="button" class="panel-toggle" aria-expanded="false">V</button>
                 </div>
                 <div id="heroesPanel" class="panel-content hidden">
                     <div style="margin-bottom: 15px;">
@@ -240,9 +240,9 @@
             </div>
 
             <div class="admin-panel">
-                <div class="panel-header">
+                <div class="panel-header" onclick="toggleAdminPanel(event, 'playersPanel')">
                     <h3>Manage Players</h3>
-                    <button type="button" class="panel-toggle" aria-expanded="false" onclick="toggleAdminPanel(event, 'playersPanel')">V</button>
+                    <button type="button" class="panel-toggle" aria-expanded="false">V</button>
                 </div>
                 <div id="playersPanel" class="panel-content hidden">
                     <div id="playersListContainer" style="margin-top: 15px;"></div>
@@ -250,9 +250,9 @@
             </div>
 
             <div class="admin-panel">
-                <div class="panel-header">
+                <div class="panel-header" onclick="toggleAdminPanel(event, 'usersPanel')">
                     <h3>Manage Users</h3>
-                    <button type="button" class="panel-toggle" aria-expanded="false" onclick="toggleAdminPanel(event, 'usersPanel')">V</button>
+                    <button type="button" class="panel-toggle" aria-expanded="false">V</button>
                 </div>
                 <div id="usersPanel" class="panel-content hidden">
                     <div id="usersListContainer" style="margin-top: 15px;"></div>
