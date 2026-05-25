@@ -46,6 +46,7 @@ if (loginForm) {
 // ==========================================
 // 3. SUPABASE CONFIGURATION
 // ==========================================
+const isProd = window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1');
 const PROD_SUPABASE_URL = 'https://ojqkkixtvdtccuixishh.supabase.co';
 const PROD_SUPABASE_KEY = 'sb_publishable_AT9BZrEkq1IDrZmP1Y_pDQ_Qwnh57ZH';
 const DEV_SUPABASE_URL = 'https://wmxrzjmadvivvpzbslgj.supabase.co';
@@ -90,7 +91,6 @@ async function initializeApp() {
 
         // Initialize app data
         await init();
-        renderGamesList(); // Re-render games list after data is loaded
 
         const response = await fetch('changelog.json');
         cachedChangelog = await response.json();
@@ -98,6 +98,16 @@ async function initializeApp() {
         if (cachedChangelog.length > 0) {
             versionLabel.innerText = cachedChangelog[0].version;
         }
+
+        // Setup Realtime subscription once after initial load to keep data in sync across clients
+        db
+            .channel('schema-db-changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'player_hero_stats' }, init)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'heroes' }, init)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'games' }, init)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'game_players' }, init)
+            .subscribe();
+
     } catch (error) {
         console.error("Could not load version number:", error);
         versionLabel.innerText = "Error";
@@ -1359,6 +1369,13 @@ function validateSelection() {
 // the currently selected heroes.
 // ****************************************** 
 async function applyResults() {
+    const confirmBtn = document.getElementById('confirmBtn');
+    const originalText = confirmBtn ? confirmBtn.innerText : "Lock In";
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.innerText = "Saving...";
+    }
+
     const dropdowns = document.querySelectorAll('.char-select');
     const today = new Date().toLocaleDateString('en-CA');
     const statsUpdates = [];
@@ -1371,7 +1388,13 @@ async function applyResults() {
 
     // 1. Create the game record first to get the unique ID for this session
     const { data: game, error: gameError } = await db.from('games').insert({ last_updated_by: currentUser.id }).select().single();
-    if (gameError) return alert("Error creating game: " + gameError.message);
+    if (gameError) {
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerText = originalText;
+        }
+        return alert("Error creating game: " + gameError.message);
+    }
 
     characters.forEach(char => {
         // Loop through all 6 potential player slots to record the game history
@@ -1408,14 +1431,26 @@ async function applyResults() {
 
     // 2. Save the participants to the junction table
     const { error: gpError } = await db.from('game_players').insert(gameParticipants);
-    if (gpError) return alert("Error logging game participants: " + gpError.message);
+    if (gpError) {
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerText = originalText;
+        }
+        return alert("Error logging game participants: " + gpError.message);
+    }
 
     // 3. Update the weights and play counts for main players
     const { error } = await db
         .from('player_hero_stats')
         .upsert(statsUpdates);
 
-    if (error) return alert("Error saving results: " + error.message);
+    if (error) {
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerText = originalText;
+        }
+        return alert("Error saving results: " + error.message);
+    }
 
     // Refresh local state and UI immediately after database updates are successful
     await init();
@@ -2143,14 +2178,3 @@ function renderList() {
             </div>`;
     }).join('');
 }
-
-init().then(() => {
-    // Setup Realtime subscription once after initial load to keep data in sync across clients
-    db
-        .channel('schema-db-changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'player_hero_stats' }, init)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'heroes' }, init)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'games' }, init)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'game_players' }, init)
-        .subscribe();
-});
