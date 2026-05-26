@@ -46,7 +46,11 @@ if (loginForm) {
 // ==========================================
 // 3. SUPABASE CONFIGURATION
 // ==========================================
-const isProd = window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1');
+// const isProd = window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1') && ;
+const isProd = Boolean(
+    window.location.hostname === 'sygec.github.io/dicethrone-picker' ||
+    window.location.hostname === 'dicethrone-prod.sygec.workers.dev'
+)
 const PROD_SUPABASE_URL = 'https://ojqkkixtvdtccuixishh.supabase.co';
 const PROD_SUPABASE_KEY = 'sb_publishable_AT9BZrEkq1IDrZmP1Y_pDQ_Qwnh57ZH';
 const DEV_SUPABASE_URL = 'https://wmxrzjmadvivvpzbslgj.supabase.co';
