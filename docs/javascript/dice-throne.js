@@ -2,7 +2,6 @@
 // 1. GLOBAL CONSTANTS & STATE
 // ==========================================
 let NAMES = [];
-const PLAYER_COLORS = ['var(--p1)', 'var(--p2)', 'var(--p3)', 'var(--p4)'];
 
 let characters = [];
 let games = [];
@@ -15,7 +14,6 @@ let selectedGamePlayerIndex = null;
 let currentSort = 'name';
 let sortAsc = true;
 let editIndex = -1;
-let editGroupId = null;
 let activePlayerIndices = [0, 1, 2, 3];
 let currentUser = null;
 let loggedInPlayerIndex = -1;
@@ -46,7 +44,11 @@ if (loginForm) {
 // ==========================================
 // 3. SUPABASE CONFIGURATION
 // ==========================================
-const isProd = window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1');
+// const isProd = window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1') && ;
+const isProd = Boolean(
+    window.location.hostname === 'sygec.github.io/dicethrone-picker' ||
+    window.location.hostname === 'dicethrone-prod.sygec.workers.dev'
+)
 const PROD_SUPABASE_URL = 'https://ojqkkixtvdtccuixishh.supabase.co';
 const PROD_SUPABASE_KEY = 'sb_publishable_AT9BZrEkq1IDrZmP1Y_pDQ_Qwnh57ZH';
 const DEV_SUPABASE_URL = 'https://wmxrzjmadvivvpzbslgj.supabase.co';
@@ -913,8 +915,6 @@ async function saveGroup() {
         is_active: true
     };
 
-    if (editGroupId) groupData.id = editGroupId;
-
     const { data, error } = await db
         .from('groups')
         .upsert(groupData)
@@ -995,7 +995,6 @@ async function saveGroupInline(groupId) {
 // Clears the group management form fields and resets to "Add" mode.
 // ****************************************** 
 function resetGroupForm() {
-    editGroupId = null;
     document.getElementById('groupName').value = "";
     document.getElementById('groupType').value = "";
     document.getElementById('groupOrder').value = "";
@@ -1630,42 +1629,6 @@ function updateDiceVisuals() {
 
 // Ensure visuals are correct when the page loads
 window.addEventListener('DOMContentLoaded', updateDiceVisuals);
-
-// ****************************************** 
-// resetAllWeights()
-// input: none
-// ****************************************** 
-// Resets the randomization weights for all heroes to 100 
-// for all players after a user confirmation.
-// ****************************************** 
-async function resetAllWeights() {
-    if (confirm("Reset all probabilities to 100?")) {
-        const updates = [];
-        characters.forEach(c => {
-            [0, 1, 2, 3].forEach(p => updates.push({ hero_id: c.id, player_id: `p${p + 1}`, weight: 100, last_updated_by: currentUser.id }));
-        });
-        await db.from('player_hero_stats').upsert(updates, { onConflict: 'player_id, hero_id' });
-        init();
-    }
-}
-
-// ****************************************** 
-// resetAllStats()
-// input: none
-// ****************************************** 
-// Resets play counts and last played dates for all heroes
-// across all players after a user confirmation.
-// ****************************************** 
-async function resetAllStats() {
-    if (confirm("Reset all play history?")) {
-        const updates = [];
-        characters.forEach(c => {
-            [0, 1, 2, 3].forEach(p => updates.push({ hero_id: c.id, player_id: `p${p + 1}`, play_count: 0, last_played: null, last_updated_by: currentUser.id }));
-        });
-        await db.from('player_hero_stats').upsert(updates, { onConflict: 'player_id, hero_id' });
-        init();
-    }
-}
 
 // ****************************************** 
 // setSort(key)
