@@ -46,6 +46,7 @@ if (loginForm) {
 // ==========================================
 // 3. SUPABASE CONFIGURATION
 // ==========================================
+const isProd = window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1');
 const PROD_SUPABASE_URL = 'https://ojqkkixtvdtccuixishh.supabase.co';
 const PROD_SUPABASE_KEY = 'sb_publishable_AT9BZrEkq1IDrZmP1Y_pDQ_Qwnh57ZH';
 const DEV_SUPABASE_URL = 'https://wmxrzjmadvivvpzbslgj.supabase.co';
@@ -71,6 +72,66 @@ const escapeHtml = (text) => {
         .replace(/'/g, '&#039;');
 };
 
+const normalizeColorValue = (color) => {
+    if (!color) return '#ffffff';
+    color = color.trim();
+    if (color.startsWith('#')) return color;
+    const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (rgbMatch) {
+        const r = parseInt(rgbMatch[1], 10);
+        const g = parseInt(rgbMatch[2], 10);
+        const b = parseInt(rgbMatch[3], 10);
+        return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
+    }
+    return color;
+};
+
+const getPlayerColor = (player) => {
+    if (player?.player_color) return normalizeColorValue(player.player_color);
+    const rootColor = getComputedStyle(document.documentElement).getPropertyValue(`--${player?.id}`).trim();
+    return normalizeColorValue(rootColor);
+};
+
+const setPlayerColorVariable = (playerId, color) => {
+    document.documentElement.style.setProperty(`--${playerId}`, color);
+};
+
+async function handlePlayerColorChange(playerId, input) {
+    const player = players.find(p => p.id === playerId);
+    if (!player) return;
+
+    const currentColor = getPlayerColor(player);
+    const newColor = normalizeColorValue(input.value);
+    if (newColor.toLowerCase() === currentColor.toLowerCase()) return;
+
+    const confirmed = confirm(`Change ${player.name}'s color from ${currentColor} to ${newColor}?`);
+    if (!confirmed) {
+        input.value = currentColor;
+        return;
+    }
+
+    const { error } = await db
+        .from('players')
+        .update({ player_color: newColor })
+        .eq('id', playerId)
+        .select()
+        .single();
+
+    if (error) {
+        alert("Error saving player color: " + error.message);
+        input.value = currentColor;
+        return;
+    }
+
+    const playerIndex = players.findIndex(p => p.id === playerId);
+    if (playerIndex !== -1) {
+        players[playerIndex].player_color = newColor;
+    }
+
+    setPlayerColorVariable(playerId, newColor);
+    renderPlayersList();
+}
+
 // ==========================================
 // 5. APPLICATION INITIALIZATION
 // ==========================================
@@ -90,7 +151,6 @@ async function initializeApp() {
 
         // Initialize app data
         await init();
-        renderGamesList(); // Re-render games list after data is loaded
 
         const response = await fetch('changelog.json');
         cachedChangelog = await response.json();
@@ -98,6 +158,16 @@ async function initializeApp() {
         if (cachedChangelog.length > 0) {
             versionLabel.innerText = cachedChangelog[0].version;
         }
+
+        // Setup Realtime subscription once after initial load to keep data in sync across clients
+        db
+            .channel('schema-db-changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'player_hero_stats' }, init)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'heroes' }, init)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'games' }, init)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'game_players' }, init)
+            .subscribe();
+
     } catch (error) {
         console.error("Could not load version number:", error);
         versionLabel.innerText = "Error";
@@ -282,6 +352,12 @@ async function init() {
 
     if (!playersError && playersData) {
         players = playersData;
+        playersData.forEach((p) => {
+            if (p.player_color) {
+                setPlayerColorVariable(p.id, normalizeColorValue(p.player_color));
+            }
+        });
+
         NAMES = playersData.map(p => p.name);
         loggedInPlayerIndex = -1;
         playersData.forEach((p, i) => {
@@ -552,9 +628,9 @@ function toggleAdmin() {
 // Opens or closes a panel within the admin section.
 // ****************************************** 
 function toggleAdminPanel(event, panelId) {
-    event.stopPropagation();
     const panel = document.getElementById(panelId);
-    const button = event.currentTarget;
+    const header = event.currentTarget.closest('.panel-header') || event.currentTarget;
+    const button = header.querySelector('.panel-toggle');
     if (!panel || !button) return;
 
     const isHidden = panel.classList.toggle('hidden');
@@ -952,8 +1028,14 @@ function renderPlayersList() {
         const displayDiv = document.createElement('div');
         displayDiv.className = 'player-display';
         displayDiv.innerHTML = `
-            <span class="player-name">${player.name}</span>
-            <button type="button" class="btn-save btn-inline" onclick="editPlayer('${player.id}')">Edit</button>
+            <span class="player-tag" style="background:var(--${player.id})">${escapeHtml(player.name)}</span>
+            <div class="player-actions">
+                <label class="color-picker-button" title="Choose player color">
+                    <span>🎨</span>
+                    <input type="color" id="playerColor-${player.id}" value="${escapeHtml(getPlayerColor(player))}" onchange="handlePlayerColorChange('${player.id}', this)">
+                </label>
+                <button type="button" class="btn-save btn-inline" onclick="editPlayer('${player.id}')">Edit</button>
+            </div>
         `;
 
         const editPanel = document.createElement('div');
@@ -1359,6 +1441,13 @@ function validateSelection() {
 // the currently selected heroes.
 // ****************************************** 
 async function applyResults() {
+    const confirmBtn = document.getElementById('confirmBtn');
+    const originalText = confirmBtn ? confirmBtn.innerText : "Lock In";
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.innerText = "Saving...";
+    }
+
     const dropdowns = document.querySelectorAll('.char-select');
     const today = new Date().toLocaleDateString('en-CA');
     const statsUpdates = [];
@@ -1371,7 +1460,13 @@ async function applyResults() {
 
     // 1. Create the game record first to get the unique ID for this session
     const { data: game, error: gameError } = await db.from('games').insert({ last_updated_by: currentUser.id }).select().single();
-    if (gameError) return alert("Error creating game: " + gameError.message);
+    if (gameError) {
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerText = originalText;
+        }
+        return alert("Error creating game: " + gameError.message);
+    }
 
     characters.forEach(char => {
         // Loop through all 6 potential player slots to record the game history
@@ -1408,14 +1503,26 @@ async function applyResults() {
 
     // 2. Save the participants to the junction table
     const { error: gpError } = await db.from('game_players').insert(gameParticipants);
-    if (gpError) return alert("Error logging game participants: " + gpError.message);
+    if (gpError) {
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerText = originalText;
+        }
+        return alert("Error logging game participants: " + gpError.message);
+    }
 
     // 3. Update the weights and play counts for main players
     const { error } = await db
         .from('player_hero_stats')
         .upsert(statsUpdates);
 
-    if (error) return alert("Error saving results: " + error.message);
+    if (error) {
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerText = originalText;
+        }
+        return alert("Error saving results: " + error.message);
+    }
 
     // Refresh local state and UI immediately after database updates are successful
     await init();
@@ -2143,14 +2250,3 @@ function renderList() {
             </div>`;
     }).join('');
 }
-
-init().then(() => {
-    // Setup Realtime subscription once after initial load to keep data in sync across clients
-    db
-        .channel('schema-db-changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'player_hero_stats' }, init)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'heroes' }, init)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'games' }, init)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'game_players' }, init)
-        .subscribe();
-});
