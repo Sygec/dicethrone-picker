@@ -46,7 +46,7 @@ if (loginForm) {
 // ==========================================
 // const isProd = window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1') && ;
 const isProd = Boolean(
-    window.location.hostname === 'sygec.github.io/dicethrone-picker' ||
+    window.location.hostname === 'sygec.github.io' ||
     window.location.hostname === 'dicethrone-prod.sygec.workers.dev'
 )
 const PROD_SUPABASE_URL = 'https://ojqkkixtvdtccuixishh.supabase.co';
