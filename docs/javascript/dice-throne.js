@@ -26,6 +26,8 @@ const isUser = () => !!currentUser;
 const versionLabel = document.getElementById("version-number");
 const container = document.getElementById("changelog-container");
 const modal = document.getElementById("changelog-modal");
+const whatsNewModal = document.getElementById("whats-new-modal");
+const whatsNewContainer = document.getElementById("whats-new-container");
 const closeBtn = document.querySelector(".close-button");
 const loginModal = document.getElementById("login-modal");
 const authBtn = document.getElementById("auth-btn");
@@ -158,7 +160,13 @@ async function initializeApp() {
         cachedChangelog = await response.json();
 
         if (cachedChangelog.length > 0) {
-            versionLabel.innerText = cachedChangelog[0].version;
+            const latestEntry = cachedChangelog[0];
+            versionLabel.innerText = latestEntry.version;
+
+            // Check if user has seen this version already
+            if (localStorage.getItem('lastSeenVersion') !== latestEntry.version) {
+                showWhatsNew(latestEntry);
+            }
         }
 
         // Setup Realtime subscription once after initial load to keep data in sync across clients
@@ -205,6 +213,7 @@ db.auth.onAuthStateChange((event, session) => {
 window.onclick = (event) => {
     if (event.target == modal) closeChangelog();
     if (event.target == loginModal) closeLoginModal();
+    if (event.target == whatsNewModal) closeWhatsNew();
 }
 
 // ****************************************** 
@@ -476,6 +485,7 @@ async function init() {
     renderHeroesList();
     renderPlayersList();
     renderUsersList();
+    renderPlayerGameFilters();
     const initialSort = currentSort;
     currentSort = null;
     setSort(initialSort);
@@ -541,6 +551,32 @@ function openChangelog() {
 function closeChangelog() {
     modal.style.display = "none";
     document.body.style.overflow = "auto"; // Restores background scrolling
+}
+
+// ****************************************** 
+// showWhatsNew(entry)
+// input: entry -> the most recent changelog entry object
+// ****************************************** 
+// Displays a simplified modal showing only the most recent updates.
+// ****************************************** 
+function showWhatsNew(entry) {
+    whatsNewContainer.innerHTML = `
+        <div style="color: black;">
+            <h3>v${entry.version}</h3>
+            <ul style="text-align: left;">
+                ${entry.changes.map(change => `<li>${change}</li>`).join('')}
+            </ul>
+        </div>
+    `;
+    whatsNewModal.style.display = "block";
+    document.body.style.overflow = "hidden";
+    // Save to localStorage so it doesn't show again for this version
+    localStorage.setItem('lastSeenVersion', entry.version);
+}
+
+function closeWhatsNew() {
+    whatsNewModal.style.display = "none";
+    document.body.style.overflow = "auto";
 }
 
 // ****************************************** 
@@ -1833,19 +1869,9 @@ function renderGamesList() {
         // Determine status/winner image logic
         const winners = game.game_players.filter(p => p.is_winner === true);
         const explicitLosers = game.game_players.filter(p => p.is_winner === false); // Players explicitly marked as not winning
-        let statusImg = "images/in_progress.png"; // Placeholder path
-        let statusLabel = "In Progress";
-
-        if (winners.length === 1) {
-            const pIdx = parseInt(winners[0].player_id.substring(1)) - 1;
-            statusImg = getImgUrl(winners[0].heroes?.slug);
-            statusLabel = ``;
-            // statusLabel = `Winner: ${NAMES[pIdx]} playing ${winners[0].heroes?.name}`;
-        } else if (winners.length === 0 && explicitLosers.length > 0 && explicitLosers.length === game.game_players.length) {
-            // A draw is identified when there are no winners and every participant is explicitly marked as a loser.
-            statusImg = "images/draw.png"; // Placeholder path
-            statusLabel = "Draw";
-        }
+        const isDraw = winners.length === 0 && explicitLosers.length > 0 && explicitLosers.length === game.game_players.length;
+        
+        const statusLabel = (winners.length > 0 || isDraw) ? "" : "In Progress";
 
         const canManage = isAdmin() || game.last_updated_by === currentUser?.id;
         const gameActions = canManage ? `
@@ -1864,18 +1890,26 @@ function renderGamesList() {
 
             // const isWinner = gp.is_winner === true;
             let boxStyle = gp.is_winner
-                ? "border: 2px solid #28a745; background: rgba(40, 167, 69, 0.1); filter: brightness(1.3);"   // win
+                ? "position: relative; border: 2px solid #28a745; background-color: color-mix(in srgb, #28a745, transparent 65%); filter: brightness(1.3);"   // win
                 : gp.is_winner === false
                     ? "border: 1px solid transparent; filter: brightness(0.70);"  // loss
                     : "border: 1px solid #d32f2f;";  // not finished
 
-            // If this hero matches the search, add an accent border to highlight the player
+            // If this hero matches the search, add an accent border and a 25% tint background to highlight the player
             if (isSearchMatch) {
-                boxStyle += ' border: 2px solid var(--accent);';
+                boxStyle += ' border: 2px solid var(--accent); background-color: color-mix(in srgb, var(--accent), transparent 65%);';
+            }
+
+            let overlayHtml = '';
+            if (gp.is_winner) {
+                overlayHtml = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-12deg) scaleX(1.3); color: #28a745; font-weight: 900; font-size: 1.45rem; opacity: 1; pointer-events: none; z-index: 10; text-shadow: 2px 2px 4px rgba(0,0,0,0.9); width: 100%; text-align: center; text-transform: uppercase; font-family: Impact, sans-serif; letter-spacing: 1px; white-space: nowrap;">WINNER</div>';
+            } else if (isDraw) {
+                overlayHtml = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-12deg) scaleX(1.3); color: #999; font-weight: 900; font-size: 1.45rem; opacity: 1; pointer-events: none; z-index: 10; text-shadow: 2px 2px 4px rgba(0,0,0,0.9); width: 100%; text-align: center; text-transform: uppercase; font-family: Impact, sans-serif; letter-spacing: 1px; white-space: nowrap;">DRAW</div>';
             }
 
             return `
                 <div class="stat-column" style="${boxStyle}">
+                    ${overlayHtml}
                     <div class="player-tag" style="background-color: var(--p${pIdx + 1}); margin-bottom: 8px; width: 100%; box-sizing: border-box;">${NAMES[pIdx]}</div>
                     <a href="${getHeroLink(heroSlug)}" target="_blank" style="display: block;">
                         <img src="${getImgUrl(heroSlug)}" style="width: 40px; height: 40px; border-radius: 4px; border: 1px solid var(--accent); margin-bottom: 4px;" alt="${heroName}">
@@ -2057,6 +2091,24 @@ function renderPlayerGameFilters() {
     const container = document.getElementById('player-game-filter-container');
     if (!container || players.length === 0) return;
 
+    // Calculate stats for each player and invitees based on the full game history
+    const playerStats = players.map(() => ({ played: 0, won: 0 }));
+    let inviteePlayed = 0;
+    let inviteeWon = 0;
+
+    games.forEach(game => {
+        game.game_players.forEach(gp => {
+            const pIdx = parseInt(gp.player_id.substring(1)) - 1;
+            if (pIdx >= 0 && pIdx < 4) {
+                playerStats[pIdx].played++;
+                if (gp.is_winner) playerStats[pIdx].won++;
+            } else if (pIdx === 4 || pIdx === 5) {
+                inviteePlayed++;
+                if (gp.is_winner) inviteeWon++;
+            }
+        });
+    });
+
     let html = '';
     // Main 4 players
     for (let i = 0; i < 4; i++) {
@@ -2064,22 +2116,34 @@ function renderPlayerGameFilters() {
         if (!p) continue;
         const isActive = selectedGamePlayerIndex === i;
         html += `
-            <button class="player-filter-btn ${isActive ? 'active' : ''}" 
-                    style="background-color: var(--p${i + 1});" 
-                    onclick="togglePlayerGameFilter(${i})">
-                ${p.name}
-            </button>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                <button class="player-filter-btn ${isActive ? 'active' : ''}" 
+                        style="background-color: var(--p${i + 1});" 
+                        onclick="togglePlayerGameFilter(${i})">
+                    ${p.name}
+                </button>
+                <div style="font-size: 0.8rem; opacity: 0.8; text-align: center; line-height: 1.2;">
+                    Played: ${playerStats[i].played}<br>
+                    Won: ${playerStats[i].won}
+                </div>
+            </div>
         `;
     }
 
     // Invitee button (covers indices 4 and 5)
     const isInviteeActive = selectedGamePlayerIndex === 4;
     html += `
-        <button class="player-filter-btn ${isInviteeActive ? 'active' : ''}" 
-                style="background-color: var(--p5);" 
-                onclick="togglePlayerGameFilter(4)">
-            Invitee
-        </button>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
+            <button class="player-filter-btn ${isInviteeActive ? 'active' : ''}" 
+                    style="background-color: var(--p5);" 
+                    onclick="togglePlayerGameFilter(4)">
+                Invitee
+            </button>
+            <div style="font-size: 0.8rem; opacity: 0.8; text-align: center; line-height: 1.2;">
+                Played: ${inviteePlayed}<br>
+                Won: ${inviteeWon}
+            </div>
+        </div>
     `;
 
     container.innerHTML = html;
@@ -2095,7 +2159,7 @@ function togglePlayerGameFilter(idx) {
     const wrapper = document.getElementById('winner-filter-wrapper');
     const winnerCheckbox = document.getElementById('games-winner-only');
     if (wrapper) {
-        if (selectedGamePlayerIndex !== null) {
+        if (selectedGamePlayerIndex !== null && selectedGamePlayerIndex !== undefined) {
             wrapper.classList.remove('hidden');
         } else {
             wrapper.classList.add('hidden');
