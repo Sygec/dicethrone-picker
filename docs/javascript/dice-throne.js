@@ -2159,7 +2159,7 @@ function togglePlayerGameFilter(idx) {
     const wrapper = document.getElementById('winner-filter-wrapper');
     const winnerCheckbox = document.getElementById('games-winner-only');
     if (wrapper) {
-        if (selectedGamePlayerIndex !== null) {
+        if (selectedGamePlayerIndex !== null && selectedGamePlayerIndex !== undefined) {
             wrapper.classList.remove('hidden');
         } else {
             wrapper.classList.add('hidden');
