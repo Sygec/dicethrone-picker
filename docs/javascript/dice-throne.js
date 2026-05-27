@@ -1834,21 +1834,9 @@ function renderGamesList() {
         // Determine status/winner image logic
         const winners = game.game_players.filter(p => p.is_winner === true);
         const explicitLosers = game.game_players.filter(p => p.is_winner === false); // Players explicitly marked as not winning
-        let statusImg = "images/in_progress.png"; // Placeholder path
-        let statusLabel = "In Progress";
         const isDraw = winners.length === 0 && explicitLosers.length > 0 && explicitLosers.length === game.game_players.length;
-
-        if (winners.length === 1) {
-            const pIdx = parseInt(winners[0].player_id.substring(1)) - 1;
-            statusImg = getImgUrl(winners[0].heroes?.slug);
-            statusLabel = ``;
-            // statusLabel = `Winner: ${NAMES[pIdx]} playing ${winners[0].heroes?.name}`;
-        } else if (winners.length === 0 && explicitLosers.length > 0 && explicitLosers.length === game.game_players.length) {
-        } else if (isDraw) {
-            // A draw is identified when there are no winners and every participant is explicitly marked as a loser.
-            statusImg = "images/draw.png"; // Placeholder path
-            statusLabel = "Draw";
-        }
+        
+        const statusLabel = (winners.length > 0 || isDraw) ? "" : "In Progress";
 
         const canManage = isAdmin() || game.last_updated_by === currentUser?.id;
         const gameActions = canManage ? `
