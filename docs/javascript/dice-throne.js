@@ -1836,6 +1836,7 @@ function renderGamesList() {
         const explicitLosers = game.game_players.filter(p => p.is_winner === false); // Players explicitly marked as not winning
         let statusImg = "images/in_progress.png"; // Placeholder path
         let statusLabel = "In Progress";
+        const isDraw = winners.length === 0 && explicitLosers.length > 0 && explicitLosers.length === game.game_players.length;
 
         if (winners.length === 1) {
             const pIdx = parseInt(winners[0].player_id.substring(1)) - 1;
@@ -1843,6 +1844,7 @@ function renderGamesList() {
             statusLabel = ``;
             // statusLabel = `Winner: ${NAMES[pIdx]} playing ${winners[0].heroes?.name}`;
         } else if (winners.length === 0 && explicitLosers.length > 0 && explicitLosers.length === game.game_players.length) {
+        } else if (isDraw) {
             // A draw is identified when there are no winners and every participant is explicitly marked as a loser.
             statusImg = "images/draw.png"; // Placeholder path
             statusLabel = "Draw";
@@ -1865,18 +1867,26 @@ function renderGamesList() {
 
             // const isWinner = gp.is_winner === true;
             let boxStyle = gp.is_winner
-                ? "border: 2px solid #28a745; background: rgba(40, 167, 69, 0.1); filter: brightness(1.3);"   // win
+                ? "position: relative; border: 2px solid #28a745; background-color: color-mix(in srgb, #28a745, transparent 65%); filter: brightness(1.3);"   // win
                 : gp.is_winner === false
                     ? "border: 1px solid transparent; filter: brightness(0.70);"  // loss
                     : "border: 1px solid #d32f2f;";  // not finished
 
-            // If this hero matches the search, add an accent border to highlight the player
+            // If this hero matches the search, add an accent border and a 25% tint background to highlight the player
             if (isSearchMatch) {
-                boxStyle += ' border: 2px solid var(--accent);';
+                boxStyle += ' border: 2px solid var(--accent); background-color: color-mix(in srgb, var(--accent), transparent 65%);';
+            }
+
+            let overlayHtml = '';
+            if (gp.is_winner) {
+                overlayHtml = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-12deg) scaleX(1.3); color: #28a745; font-weight: 900; font-size: 2.2rem; opacity: 1; pointer-events: none; z-index: 10; text-shadow: 2px 2px 4px rgba(0,0,0,0.9); width: 100%; text-align: center; text-transform: uppercase; font-family: Impact, sans-serif; letter-spacing: 1px; white-space: nowrap;">WINNER</div>';
+            } else if (isDraw) {
+                overlayHtml = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-12deg) scaleX(1.3); color: #999; font-weight: 900; font-size: 2.2rem; opacity: 1; pointer-events: none; z-index: 10; text-shadow: 2px 2px 4px rgba(0,0,0,0.9); width: 100%; text-align: center; text-transform: uppercase; font-family: Impact, sans-serif; letter-spacing: 1px; white-space: nowrap;">DRAW</div>';
             }
 
             return `
                 <div class="stat-column" style="${boxStyle}">
+                    ${overlayHtml}
                     <div class="player-tag" style="background-color: var(--p${pIdx + 1}); margin-bottom: 8px; width: 100%; box-sizing: border-box;">${NAMES[pIdx]}</div>
                     <a href="${getHeroLink(heroSlug)}" target="_blank" style="display: block;">
                         <img src="${getImgUrl(heroSlug)}" style="width: 40px; height: 40px; border-radius: 4px; border: 1px solid var(--accent); margin-bottom: 4px;" alt="${heroName}">
