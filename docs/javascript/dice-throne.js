@@ -476,6 +476,7 @@ async function init() {
     renderHeroesList();
     renderPlayersList();
     renderUsersList();
+    renderPlayerGameFilters();
     const initialSort = currentSort;
     currentSort = null;
     setSort(initialSort);
@@ -2057,6 +2058,24 @@ function renderPlayerGameFilters() {
     const container = document.getElementById('player-game-filter-container');
     if (!container || players.length === 0) return;
 
+    // Calculate stats for each player and invitees based on the full game history
+    const playerStats = players.map(() => ({ played: 0, won: 0 }));
+    let inviteePlayed = 0;
+    let inviteeWon = 0;
+
+    games.forEach(game => {
+        game.game_players.forEach(gp => {
+            const pIdx = parseInt(gp.player_id.substring(1)) - 1;
+            if (pIdx >= 0 && pIdx < 4) {
+                playerStats[pIdx].played++;
+                if (gp.is_winner) playerStats[pIdx].won++;
+            } else if (pIdx === 4 || pIdx === 5) {
+                inviteePlayed++;
+                if (gp.is_winner) inviteeWon++;
+            }
+        });
+    });
+
     let html = '';
     // Main 4 players
     for (let i = 0; i < 4; i++) {
@@ -2064,22 +2083,34 @@ function renderPlayerGameFilters() {
         if (!p) continue;
         const isActive = selectedGamePlayerIndex === i;
         html += `
-            <button class="player-filter-btn ${isActive ? 'active' : ''}" 
-                    style="background-color: var(--p${i + 1});" 
-                    onclick="togglePlayerGameFilter(${i})">
-                ${p.name}
-            </button>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                <button class="player-filter-btn ${isActive ? 'active' : ''}" 
+                        style="background-color: var(--p${i + 1});" 
+                        onclick="togglePlayerGameFilter(${i})">
+                    ${p.name}
+                </button>
+                <div style="font-size: 0.8rem; opacity: 0.8; text-align: center; line-height: 1.2;">
+                    Played: ${playerStats[i].played}<br>
+                    Won: ${playerStats[i].won}
+                </div>
+            </div>
         `;
     }
 
     // Invitee button (covers indices 4 and 5)
     const isInviteeActive = selectedGamePlayerIndex === 4;
     html += `
-        <button class="player-filter-btn ${isInviteeActive ? 'active' : ''}" 
-                style="background-color: var(--p5);" 
-                onclick="togglePlayerGameFilter(4)">
-            Invitee
-        </button>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
+            <button class="player-filter-btn ${isInviteeActive ? 'active' : ''}" 
+                    style="background-color: var(--p5);" 
+                    onclick="togglePlayerGameFilter(4)">
+                Invitee
+            </button>
+            <div style="font-size: 0.8rem; opacity: 0.8; text-align: center; line-height: 1.2;">
+                Played: ${inviteePlayed}<br>
+                Won: ${inviteeWon}
+            </div>
+        </div>
     `;
 
     container.innerHTML = html;
