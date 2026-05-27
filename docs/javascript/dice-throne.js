@@ -1888,6 +1888,16 @@ function renderGamesList() {
             // Determine if this player's hero matches the current games search term
             const isSearchMatch = Boolean(searchTerm && heroName.toLowerCase().includes(searchTerm));
 
+            // Determine if this player matches the current player filter
+            let isPlayerFilterMatch = false;
+            if (selectedGamePlayerIndex !== null) {
+                if (selectedGamePlayerIndex >= 0 && selectedGamePlayerIndex <= 3) {
+                    isPlayerFilterMatch = (pIdx === selectedGamePlayerIndex);
+                } else if (selectedGamePlayerIndex === 4) {
+                    isPlayerFilterMatch = (pIdx === 4 || pIdx === 5);
+                }
+            }
+
             // const isWinner = gp.is_winner === true;
             let boxStyle = gp.is_winner
                 ? "position: relative; border: 2px solid #28a745; background-color: color-mix(in srgb, #28a745, transparent 65%); filter: brightness(1.3);"   // win
@@ -1895,8 +1905,8 @@ function renderGamesList() {
                     ? "border: 1px solid transparent; filter: brightness(0.70);"  // loss
                     : "border: 1px solid #d32f2f;";  // not finished
 
-            // If this hero matches the search, add an accent border and a 25% tint background to highlight the player
-            if (isSearchMatch) {
+            // If this hero matches the search or the player filter, add an accent border and a tint background
+            if (isSearchMatch || isPlayerFilterMatch) {
                 boxStyle += ' border: 2px solid var(--accent); background-color: color-mix(in srgb, var(--accent), transparent 65%);';
             }
 
