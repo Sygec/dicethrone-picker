@@ -26,6 +26,8 @@ const isUser = () => !!currentUser;
 const versionLabel = document.getElementById("version-number");
 const container = document.getElementById("changelog-container");
 const modal = document.getElementById("changelog-modal");
+const whatsNewModal = document.getElementById("whats-new-modal");
+const whatsNewContainer = document.getElementById("whats-new-container");
 const closeBtn = document.querySelector(".close-button");
 const loginModal = document.getElementById("login-modal");
 const authBtn = document.getElementById("auth-btn");
@@ -158,7 +160,13 @@ async function initializeApp() {
         cachedChangelog = await response.json();
 
         if (cachedChangelog.length > 0) {
-            versionLabel.innerText = cachedChangelog[0].version;
+            const latestEntry = cachedChangelog[0];
+            versionLabel.innerText = latestEntry.version;
+
+            // Check if user has seen this version already
+            if (localStorage.getItem('lastSeenVersion') !== latestEntry.version) {
+                showWhatsNew(latestEntry);
+            }
         }
 
         // Setup Realtime subscription once after initial load to keep data in sync across clients
@@ -205,6 +213,7 @@ db.auth.onAuthStateChange((event, session) => {
 window.onclick = (event) => {
     if (event.target == modal) closeChangelog();
     if (event.target == loginModal) closeLoginModal();
+    if (event.target == whatsNewModal) closeWhatsNew();
 }
 
 // ****************************************** 
@@ -542,6 +551,32 @@ function openChangelog() {
 function closeChangelog() {
     modal.style.display = "none";
     document.body.style.overflow = "auto"; // Restores background scrolling
+}
+
+// ****************************************** 
+// showWhatsNew(entry)
+// input: entry -> the most recent changelog entry object
+// ****************************************** 
+// Displays a simplified modal showing only the most recent updates.
+// ****************************************** 
+function showWhatsNew(entry) {
+    whatsNewContainer.innerHTML = `
+        <div style="color: black;">
+            <h3>v${entry.version}</h3>
+            <ul style="text-align: left;">
+                ${entry.changes.map(change => `<li>${change}</li>`).join('')}
+            </ul>
+        </div>
+    `;
+    whatsNewModal.style.display = "block";
+    document.body.style.overflow = "hidden";
+    // Save to localStorage so it doesn't show again for this version
+    localStorage.setItem('lastSeenVersion', entry.version);
+}
+
+function closeWhatsNew() {
+    whatsNewModal.style.display = "none";
+    document.body.style.overflow = "auto";
 }
 
 // ****************************************** 
