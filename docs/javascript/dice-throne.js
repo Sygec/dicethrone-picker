@@ -1879,9 +1879,9 @@ function renderGamesList() {
 
             let overlayHtml = '';
             if (gp.is_winner) {
-                overlayHtml = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-12deg) scaleX(1.3); color: #28a745; font-weight: 900; font-size: 2.2rem; opacity: 1; pointer-events: none; z-index: 10; text-shadow: 2px 2px 4px rgba(0,0,0,0.9); width: 100%; text-align: center; text-transform: uppercase; font-family: Impact, sans-serif; letter-spacing: 1px; white-space: nowrap;">WINNER</div>';
+                overlayHtml = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-12deg) scaleX(1.3); color: #28a745; font-weight: 900; font-size: 1.45rem; opacity: 1; pointer-events: none; z-index: 10; text-shadow: 2px 2px 4px rgba(0,0,0,0.9); width: 100%; text-align: center; text-transform: uppercase; font-family: Impact, sans-serif; letter-spacing: 1px; white-space: nowrap;">WINNER</div>';
             } else if (isDraw) {
-                overlayHtml = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-12deg) scaleX(1.3); color: #999; font-weight: 900; font-size: 2.2rem; opacity: 1; pointer-events: none; z-index: 10; text-shadow: 2px 2px 4px rgba(0,0,0,0.9); width: 100%; text-align: center; text-transform: uppercase; font-family: Impact, sans-serif; letter-spacing: 1px; white-space: nowrap;">DRAW</div>';
+                overlayHtml = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-12deg) scaleX(1.3); color: #999; font-weight: 900; font-size: 1.45rem; opacity: 1; pointer-events: none; z-index: 10; text-shadow: 2px 2px 4px rgba(0,0,0,0.9); width: 100%; text-align: center; text-transform: uppercase; font-family: Impact, sans-serif; letter-spacing: 1px; white-space: nowrap;">DRAW</div>';
             }
 
             return `
