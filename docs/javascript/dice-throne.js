@@ -2077,6 +2077,7 @@ function toggleGamesFilterUI() {
 function renderPlayerGameFilters() {
     const container = document.getElementById('player-game-filter-container');
     if (!container || players.length === 0) return;
+    const useHistorical = document.getElementById('use-historical-data')?.checked ?? true;
 
     // Calculate stats for each player and invitees based on the full game history
     const playerStats = players.map(() => ({ played: 0, won: 0 }));
@@ -2084,6 +2085,8 @@ function renderPlayerGameFilters() {
     let inviteeWon = 0;
 
     games.forEach(game => {
+        if (!useHistorical && game.is_historical) return;
+
         game.game_players.forEach(gp => {
             const pIdx = parseInt(gp.player_id.substring(1)) - 1;
             if (pIdx >= 0 && pIdx < 4) {

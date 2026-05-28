@@ -171,6 +171,12 @@
             </div>
 
             <div id="games-filter-section" class="hidden" style="margin-bottom: 20px;">
+                <div class="dropdown-sort-options" style="margin-top: 0; margin-bottom: 10px;">
+                    <label>
+                        <input type="checkbox" id="use-historical-data" checked onchange="renderPlayerGameFilters()">
+                        Use historical data
+                    </label>
+                </div>
                 <div style="display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap: wrap;">
                     <div class="dice-bar" id="player-game-filter-container" style="margin-bottom: 0;"></div>
                     <div id="winner-filter-wrapper" class="hidden">
