@@ -414,7 +414,6 @@ async function init() {
             const pIdx = parseInt(stat.player_id.substring(1)) - 1;
             if (pIdx >= 0 && pIdx < 4) {
                 char.weights[pIdx] = stat.weight;
-                char.playCount[pIdx] = stat.play_count;
             }
         });
 
@@ -428,6 +427,7 @@ async function init() {
             id,
             played_at,
             last_updated_by,
+            is_historical,
             game_players (
                 hero_id,
                 player_id,
@@ -453,28 +453,30 @@ async function init() {
             })
         }));
 
-        // Recalculate lastPlayed based on game history to ensure accuracy (handles legacy data and deletions)
+        // Recalculate stats based on full game history to ensure accuracy 
+        // (Derived from game_players table, includes historical games)
         characters.forEach(char => {
-            for (let i = 0; i < 4; i++) {
-                if (char.playCount[i] === 0) {
-                    char.lastPlayed[i] = "Never";
-                } else {
-                    const pId = `p${i + 1}`;
-                    // Find the most recent game entry for this specific hero and player combo
-                    const lastGame = games.find(g =>
-                        g.game_players.some(gp => gp.hero_id === char.id && gp.player_id === pId)
-                    );
+            char.playCount = [0, 0, 0, 0];
+            char.lastPlayed = ["Never", "Never", "Never", "Never"];
+        });
 
-                    if (lastGame) {
-                        let d = lastGame.played_at || "";
+        games.forEach(game => {
+            game.game_players.forEach(gp => {
+                const pIdx = parseInt(gp.player_id?.substring(1) || '0', 10) - 1;
+                if (pIdx >= 0 && pIdx < 4) {
+                    const char = characters.find(c => c.id === gp.hero_id);
+                    if (!char) return;
+
+                    char.playCount[pIdx]++;
+                    if (char.lastPlayed[pIdx] === "Never") {
+                        let d = game.played_at || "";
                         if (d && !d.includes('T')) d = d.replace(' ', 'T');
                         if (d && !d.includes('Z') && !d.includes('+')) d += 'Z';
-                        char.lastPlayed[i] = new Date(d).toLocaleDateString('en-CA');
-                    } else {
-                        char.lastPlayed[i] = "Unknown";
+                        const dateObj = new Date(d);
+                        char.lastPlayed[pIdx] = dateObj.getFullYear() < 2026 ? "Unknown" : dateObj.toLocaleDateString('en-CA');
                     }
                 }
-            }
+            });
         });
     }
 
@@ -1528,8 +1530,6 @@ async function applyResults() {
                     hero_id: char.id,
                     player_id: `p${pIdx + 1}`,
                     weight: newWeight,
-                    play_count: wasPicked ? (char.playCount[pIdx] || 0) + 1 : (char.playCount[pIdx] || 0),
-                    last_played: wasPicked ? today : (["Never", "Unknown"].includes(char.lastPlayed[pIdx]) ? null : char.lastPlayed[pIdx]),
                     last_updated_by: currentUser.id
                 });
             }
@@ -1823,7 +1823,12 @@ function renderGamesList() {
     const showWinsOnly = document.getElementById('games-winner-only')?.checked || false;
     const searchTerm = (document.getElementById('games-search')?.value || '').toLowerCase().trim();
 
+    const totalVisibleGames = games.filter(g => !g.is_historical).length;
+
     const filteredGames = games.filter(game => {
+        // Exclude historical games from the History list display
+        if (game.is_historical) return false;
+
         // Player filter (if set)
         let playerMatches = true;
         if (selectedGamePlayerIndex !== null) {
@@ -1855,7 +1860,7 @@ function renderGamesList() {
     });
 
     if (countLabel) {
-        countLabel.innerText = `Showing ${filteredGames.length} of ${games.length} games`;
+        countLabel.innerText = `Showing ${filteredGames.length} of ${totalVisibleGames} games`;
     }
 
     container.innerHTML = filteredGames.map(game => {
@@ -2052,34 +2057,6 @@ async function submitWinner(gameId) {
 async function deleteGame(gameId) {
     if (!confirm("Are you sure you want to delete this game record? This cannot be undone.")) return;
 
-    // Find the game in local state to identify participants and heroes
-    const game = games.find(g => g.id == gameId);
-
-    if (game) {
-        const statsUpdates = [];
-        game.game_players.forEach(gp => {
-            const pIdx = parseInt(gp.player_id.substring(1)) - 1;
-            // Play count stats are only tracked for the main 4 players
-            if (pIdx >= 0 && pIdx < 4) {
-                const char = characters.find(c => c.id === gp.hero_id);
-                if (char) {
-                    statsUpdates.push({
-                        hero_id: gp.hero_id,
-                        player_id: gp.player_id,
-                        play_count: Math.max(0, (char.playCount[pIdx] || 0) - 1),
-                        weight: char.weights[pIdx], // Maintain current weight as we don't have historical weights
-                        last_updated_by: currentUser.id
-                    });
-                }
-            }
-        });
-
-        if (statsUpdates.length > 0) {
-            const { error: statsErr } = await db.from('player_hero_stats').upsert(statsUpdates, { onConflict: 'player_id, hero_id' });
-            if (statsErr) console.error("Error updating stats during deletion:", statsErr);
-        }
-    }
-
     const { error } = await db
         .from('games')
         .delete()
@@ -2235,8 +2212,8 @@ function renderList() {
             const idx = parseInt(currentSort[1]);
             valA = (a.lastPlayed && a.lastPlayed[idx]) || "";
             valB = (b.lastPlayed && b.lastPlayed[idx]) || "";
-            if (valA === "Never") valA = "";
-            if (valB === "Never") valB = "";
+            if (valA === "Never" || valA === "Unknown") valA = "";
+            if (valB === "Never" || valB === "Unknown") valB = "";
         }
         else {
             valA = (a[currentSort] || "").toLowerCase();
