@@ -46,7 +46,6 @@ if (loginForm) {
 // ==========================================
 // 3. SUPABASE CONFIGURATION
 // ==========================================
-// const isProd = window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1') && ;
 const isProd = Boolean(
     window.location.hostname === 'sygec.github.io' ||
     window.location.hostname === 'dicethrone-prod.sygec.workers.dev'
@@ -220,7 +219,6 @@ window.onclick = (event) => {
 // Auth UI & Logic
 // ****************************************** 
 function updateAuthUI() {
-    const adminToggle = document.querySelector('.admin-toggle-btn');
     const adminNav = document.querySelector('.bottom-nav .admin-only');
 
     if (currentUser) {
@@ -230,13 +228,10 @@ function updateAuthUI() {
             authBtn.innerText = `Logout (${currentUser.email.split('@')[0]})`;
         }
         authBtn.onclick = handleLogout;
-        // Only show the Admin Section toggle and nav item to admins
-        if (adminToggle) adminToggle.style.display = isAdmin() ? 'block' : 'none';
         if (adminNav) adminNav.style.display = isAdmin() ? 'flex' : 'none';
     } else {
         authBtn.innerText = 'Login';
         authBtn.onclick = openLoginModal;
-        if (adminToggle) adminToggle.style.display = 'none';
         if (adminNav) adminNav.style.display = 'none';
         if (document.getElementById('adminSection')) document.getElementById('adminSection').classList.add('hidden');
         if (actionButtons) actionButtons.style.display = 'none';
@@ -556,12 +551,12 @@ function closeWhatsNew() {
 }
 
 // ****************************************** 
-// toggleRoll()
+// showRoll()
 // input: none
 // ****************************************** 
 // Shows the Roll section and hides all other sections.
 // ****************************************** 
-function toggleRoll() {
+function showRoll() {
     const rs = document.getElementById('rollSection');
     const ds = document.getElementById('dbSection');
     const gs = document.getElementById('gamesSection');
@@ -574,12 +569,12 @@ function toggleRoll() {
 }
 
 // ****************************************** 
-// toggleDatabase()
+// showDatabase()
 // input: none
 // ****************************************** 
 // Toggles the visibility of the Hero Database section.
 // ****************************************** 
-function toggleDatabase() {
+function showDatabase() {
     const rs = document.getElementById('rollSection');
     const ds = document.getElementById('dbSection');
     const gs = document.getElementById('gamesSection');
@@ -592,12 +587,12 @@ function toggleDatabase() {
 }
 
 // ****************************************** 
-// toggleGames()
+// showHistory()
 // input: none
 // ****************************************** 
 // Toggles the visibility of the Games History section.
 // ****************************************** 
-function toggleGames() {
+function showHistory() {
     const rs = document.getElementById('rollSection');
     const ds = document.getElementById('dbSection');
     const gs = document.getElementById('gamesSection');
@@ -611,28 +606,23 @@ function toggleGames() {
 }
 
 // ****************************************** 
-// toggleAdmin()
+// showAdmin()
 // input: none
 // ****************************************** 
 // Toggles the visibility of the Admin section.
 // ****************************************** 
-function toggleAdmin() {
+function showAdmin() {
     if (!isAdmin()) return;
 
     const rs = document.getElementById('rollSection');
     const ds = document.getElementById('dbSection');
     const gs = document.getElementById('gamesSection');
     const as = document.getElementById('adminSection');
-    const b = document.querySelector('.admin-toggle-btn');
-
+    
     rs.classList.add('hidden');
     ds.classList.add('hidden');
     gs.classList.add('hidden');
-    const isHidden = as.classList.toggle('hidden');
-
-    if (b) {
-        b.innerText = isHidden ? '⚠ Show Admin Section' : '⚠ Hide Admin Section';
-    }
+    as.classList.remove('hidden');
 }
 
 // ****************************************** 
@@ -1308,7 +1298,7 @@ function pickCharacters() {
     if (isUser()) document.getElementById('action-buttons').style.display = 'flex';
 
     // Ensure the roll section is visible and scroll to results
-    toggleRoll();
+    showRoll();
     resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -1895,7 +1885,6 @@ function renderGamesList() {
                 }
             }
 
-            // const isWinner = gp.is_winner === true;
             let boxStyle = gp.is_winner
                 ? "position: relative; border: 2px solid #28a745; background-color: color-mix(in srgb, #28a745, transparent 65%); filter: brightness(1.3);"   // win
                 : gp.is_winner === false
@@ -2153,8 +2142,6 @@ function togglePlayerGameFilter(idx) {
     renderGamesList();
 }
 
-// init();
-
 function updateHeroStatsFromHistory() {
     const useHistorical = document.getElementById('db-use-historical-data')?.checked ?? true;
 
@@ -2273,8 +2260,6 @@ function renderList() {
             </div>`;
         }).join('');
 
-        const editBtn = isAdmin() ? `<button class="btn-edit-small" onclick="editChar(${c.originalIndex})" title="Edit Hero">✎</button>` : '';
-
         return `
             <div class="hero-header"><span class="hero-name">${c.name}</span> <span class="group-label">(${c.group || 'Season ?'})</span></div>
             <div class="hero-body">
@@ -2285,7 +2270,6 @@ function renderList() {
                             <img src="images/dice/d${c.complexity}.png" class="complexity-roll" alt="Complexity">
                         </div>
                     </a>
-                    ${editBtn}
                 </div>
                 <div class="hero-details">
                     <div class="dynamic-stats">${statsHtml}</div>

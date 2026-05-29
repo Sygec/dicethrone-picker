@@ -38,7 +38,6 @@
     </div>
     <main class="content">
         <img src="images/banner.png" alt="Dice Throne" style="width: 100%; height: auto;">
-        <!-- <h1>Dice Throne</h1> -->
         <div class="small-text">
             v<button id="version-number" aria-label="View changelog" style="background:none; border:none; color:inherit; font:inherit; cursor:pointer; text-decoration:underline; padding:0;">...</button>
             | <button id="auth-btn" style="background:none; border:none; color:inherit; font:inherit; cursor:pointer; text-decoration:underline; padding:0;">Login</button>
@@ -113,8 +112,6 @@
         </section>
 
         <!-- Hero Database & Stats Section -->
-        <!-- <button type="button" class="db-toggle-btn" id="dbToggleBtn" onclick="toggleDatabase()">📂 Show Hero Database & Stats</button> -->
-
         <section id="dbSection" class="hidden">
             <!-- Search & Filtering -->
             <div class="search-container">
@@ -157,8 +154,6 @@
         </section>
 
         <!-- Games History Section -->
-        <!-- <button type="button" class="db-toggle-btn" id="gamesToggleBtn" onclick="toggleGames()">🎲 Show Games History</button> -->
-
         <section id="gamesSection" class="hidden">
             <div class="search-container" style="margin-top: 15px;">
                     <div class="search-wrapper">
@@ -193,7 +188,7 @@
         </section>
 
         <!-- Admin & Data Management -->
-        <!-- <button type="button" class="admin-toggle-btn" onclick="toggleAdmin()">⚠ Show Admin Section</button> -->
+
         <section id="adminSection" class="hidden">
             <div id="admin-build-info"></div>
 
@@ -277,30 +272,25 @@
                     <div id="usersListContainer" style="margin-top: 15px;"></div>
                 </div>
             </div>
-
-            <!-- <div style="margin-top:20px; border-top: 1px solid #ffffff22; padding-top:15px;">
-                <button type="button" class="btn-danger" onclick="resetAllWeights()">RESET PROBABILITIES TO 100</button>
-                <button type="button" class="btn-danger" onclick="resetAllStats()">RESET PLAY COUNTS & DATES</button>
-            </div> -->
         </section>
     </main>
 
     <!-- Persistent Bottom Navigation -->
     <nav class="bottom-nav">
-    <a href="#randomizer" class="nav-item" onclick="toggleRoll(); return false;">
+    <a href="#randomizer" class="nav-item" onclick="showRoll(); return false;">
         <span class="icon">🎲</span>
         <span class="label">Roll</span>
     </a>
-    <a href="#database" class="nav-item" onclick="toggleDatabase(); return false;">
+    <a href="#database" class="nav-item" onclick="showDatabase(); return false;">
         <span class="icon">🛡️</span>
         <span class="label">Heroes</span>
     </a>
-    <a href="#history" class="nav-item" onclick="toggleGames(); return false;">
+    <a href="#history" class="nav-item" onclick="showHistory(); return false;">
         <span class="icon">📜</span>
         <span class="label">History</span>
     </a>
     <!-- Conditional Admin Icon -->
-    <a href="#admin" class="nav-item admin-only" onclick="toggleAdmin(); return false;">
+    <a href="#admin" class="nav-item admin-only" onclick="showAdmin(); return false;">
         <span class="icon">⚙️</span>
         <span class="label">Admin</span>
     </a>

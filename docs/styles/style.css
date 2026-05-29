@@ -607,7 +607,6 @@
                 width: 100%;
                 cursor: pointer;
                 margin-top: 5px;
-                /*font-size: 0.8rem;*/
         }
 
         .btn-inline {
@@ -638,8 +637,6 @@
                 flex-direction: column;
                 align-items: center;
                 gap: 8px;
-                /* width: 75px; */
-                /* flex-shrink: 0; */
         }
 
         .btn-edit-small {
@@ -724,7 +721,6 @@
         .player-card-mini {
                 display: flex;
                 flex-direction: column;
-                /*flex: 0 0 auto;*/
                 gap: 13px;
                 border-radius: 4px;
                 padding: 5px 3px;
@@ -905,7 +901,6 @@
         display: flex;
         gap: 8px;
         width: 100%;
-        /*margin-top: 10px;*/
         justify-content: space-between;
         }
 
@@ -913,8 +908,6 @@
         .stat-column {
         flex: 1;
         min-width: 0;
-        /* max-width: 120px; */
-        /* box-sizing: border-box; */
         background: rgba(255, 255, 255, 0.05);
         padding: 8px 4px;
         border-radius: 6px;
