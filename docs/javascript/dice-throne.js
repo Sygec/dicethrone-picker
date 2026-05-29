@@ -2052,7 +2052,17 @@ async function deleteGame(gameId) {
 }
 
 function toggleGamesFilterUI() {
-    document.getElementById('games-filter-section').classList.toggle('hidden');
+    const isHidden = document.getElementById('games-filter-section').classList.toggle('hidden');
+    if (isHidden) {
+        selectedGamePlayerIndex = null;
+        const wrapper = document.getElementById('winner-filter-wrapper');
+        const winnerCheckbox = document.getElementById('games-winner-only');
+        if (wrapper) wrapper.classList.add('hidden');
+        if (winnerCheckbox) winnerCheckbox.checked = false;
+
+        renderPlayerGameFilters();
+        renderGamesList();
+    }
 }
 
 function renderPlayerGameFilters() {
