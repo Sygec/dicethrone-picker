@@ -122,7 +122,8 @@
                     <input class="search-bar" type="text" id="hero-search" style="font-size: 16px;" placeholder="Search Heroes or Groups..." oninput="handleSearchInput()" aria-label="Search heroes by name or group">
                     <div class="search-actions">
                         <img src="images/buttons/close.png" id="clear-search" class="search-icon hidden" onclick="clearSearch()" alt="Clear" title="Clear Search">
-                        <img src="images/buttons/sort.png" id="sort-toggle" class="search-icon" onclick="toggleSort()" alt="Sort" title="Toggle Sort Section">
+                        <img src="images/buttons/sort.png" id="sort-toggle" class="search-icon" onclick="toggleSortSection()" alt="Sort" title="Toggle Sort Section">
+                        <img src="images/buttons/filter.png" id="filter-toggle" class="search-icon" onclick="toggleFilterSection()" alt="Filter" title="Toggle Filter Section">
                     </div>
                 </div>
                 <div class="small-text" id="count-stats">
@@ -132,17 +133,14 @@
 
             <div id="sort-section" class="hidden">
                 <div class="sort-controls">
-                    <div class="dropdown-sort-options" style="margin-top: 0; margin-bottom: 10px;">
-                        <label>
-                            <input type="checkbox" id="db-use-historical-data" checked onchange="renderList()">
-                            Include Historical Data
-                        </label>
-                    </div>
                     <div class="sort-row">
                         <div id="player-sort-container" class="player-toggle-zone"></div>
                     </div>
                 </div>
-                <!-- Complexity Filter -->
+            </div>
+
+            <!-- Filter Section -->
+            <div id="filter-section" class="hidden">
                 <div class="dice-filter-section" style="margin-bottom: 20px;">
                     <div class="dice-bar">
                         <img src="images/dice/d1.png" class="dice-icon" id="dice-1" onclick="toggleLevel(1)" title="Level 1">
@@ -155,7 +153,6 @@
                     </div>
                 </div>
             </div>
-
             <div id="heroContainer"></div>
         </section>
 
@@ -180,7 +177,7 @@
                 <div class="dropdown-sort-options" style="margin-top: 0; margin-bottom: 10px;">
                     <label>
                         <input type="checkbox" id="use-historical-data" checked onchange="renderPlayerGameFilters()">
-                        Include Historical Data
+                        Use historical data
                     </label>
                 </div>
                 <div style="display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap: wrap;">

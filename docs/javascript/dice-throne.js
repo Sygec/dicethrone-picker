@@ -636,6 +636,36 @@ function toggleAdmin() {
 }
 
 // ****************************************** 
+// toggleSortSection()
+// input: none
+// ****************************************** 
+// Toggles the visibility of the sorting section and resets sort if hidden.
+// ****************************************** 
+function toggleSortSection() {
+    const sortSection = document.getElementById('sort-section');
+    const isHidden = sortSection.classList.toggle('hidden');
+    if (isHidden) {
+        setSort('name'); // Reset sort to alphabetical when closing
+    }
+}
+
+// ****************************************** 
+// toggleFilterSection()
+// input: none
+// ****************************************** 
+// Toggles the visibility of the filter section and resets filters if hidden.
+// ****************************************** 
+function toggleFilterSection() {
+    const filterSection = document.getElementById('filter-section');
+    const isHidden = filterSection.classList.toggle('hidden');
+    if (isHidden) {
+        activeLevels = new Set([1, 2, 3, 4, 5, 6]); // Reset to all active filters
+        updateDiceVisuals();
+        renderList();
+    }
+}
+
+// ****************************************** 
 // toggleAdminPanel(panelId)
 // input: panelId -> ID of the admin panel content section
 // ****************************************** 
@@ -1738,18 +1768,6 @@ function clearGamesSearch() {
     searchInput.value = '';
     searchInput.focus();
     handleGamesSearchInput();
-}
-
-// ****************************************** 
-// toggleSort()
-// input: none
-// ****************************************** 
-// Toggles the visibility of the sorting and filtering section (sort-section) 
-// by adding or removing the 'hidden' CSS class.
-// ****************************************** 
-function toggleSort() {
-    // Toggles the 'hidden' class: removes it if present, adds it if missing.
-    document.getElementById('sort-section').classList.toggle('hidden');
 }
 
 // ****************************************** 
