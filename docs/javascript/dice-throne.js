@@ -452,32 +452,6 @@ async function init() {
                 return aIdx - bIdx;
             })
         }));
-
-        // Recalculate stats based on full game history to ensure accuracy 
-        // (Derived from game_players table, includes historical games)
-        characters.forEach(char => {
-            char.playCount = [0, 0, 0, 0];
-            char.lastPlayed = ["Never", "Never", "Never", "Never"];
-        });
-
-        games.forEach(game => {
-            game.game_players.forEach(gp => {
-                const pIdx = parseInt(gp.player_id?.substring(1) || '0', 10) - 1;
-                if (pIdx >= 0 && pIdx < 4) {
-                    const char = characters.find(c => c.id === gp.hero_id);
-                    if (!char) return;
-
-                    char.playCount[pIdx]++;
-                    if (char.lastPlayed[pIdx] === "Never") {
-                        let d = game.played_at || "";
-                        if (d && !d.includes('T')) d = d.replace(' ', 'T');
-                        if (d && !d.includes('Z') && !d.includes('+')) d += 'Z';
-                        const dateObj = new Date(d);
-                        char.lastPlayed[pIdx] = dateObj.getFullYear() < 2026 ? "Unknown" : dateObj.toLocaleDateString('en-CA');
-                    }
-                }
-            });
-        });
     }
 
     renderSortControls();
@@ -2163,6 +2137,38 @@ function togglePlayerGameFilter(idx) {
 
 // init();
 
+function updateHeroStatsFromHistory() {
+    const useHistorical = document.getElementById('db-use-historical-data')?.checked ?? true;
+
+    characters.forEach(char => {
+        char.playCount = [0, 0, 0, 0];
+        char.lastPlayed = ["Never", "Never", "Never", "Never"];
+    });
+
+    if (!games) return;
+
+    games.forEach(game => {
+        if (!useHistorical && game.is_historical) return;
+
+        game.game_players.forEach(gp => {
+            const pIdx = parseInt(gp.player_id?.substring(1) || '0', 10) - 1;
+            if (pIdx >= 0 && pIdx < 4) {
+                const char = characters.find(c => c.id === gp.hero_id);
+                if (!char) return;
+
+                char.playCount[pIdx]++;
+                if (char.lastPlayed[pIdx] === "Never") {
+                    let d = game.played_at || "";
+                    if (d && !d.includes('T')) d = d.replace(' ', 'T');
+                    if (d && !d.includes('Z') && !d.includes('+')) d += 'Z';
+                    const dateObj = new Date(d);
+                    char.lastPlayed[pIdx] = dateObj.getFullYear() < 2026 ? "Unknown" : dateObj.toLocaleDateString('en-CA');
+                }
+            }
+        });
+    });
+}
+
 // ****************************************** 
 // renderList()
 // input: none
@@ -2174,6 +2180,8 @@ function togglePlayerGameFilter(idx) {
 function renderList() {
     const container = document.getElementById('heroContainer');
     if (!container) return;
+
+    updateHeroStatsFromHistory();
 
     const searchTerm = document.getElementById('hero-search')?.value.toLowerCase() || "";
     const countLabel = document.getElementById('count-stats');
