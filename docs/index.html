@@ -129,6 +129,12 @@
             </div>
 
             <div id="sort-section" class="hidden">
+                <div class="dropdown-sort-options" style="margin-top: 0; margin-bottom: 10px;">
+                    <label>
+                        <input type="checkbox" id="db-use-historical-data" checked onchange="renderList()">
+                        Include Historical Data
+                    </label>
+                </div>
                 <div class="sort-controls">
                     <div class="sort-row">
                         <div id="player-sort-container" class="player-toggle-zone"></div>
@@ -172,7 +178,7 @@
                 <div class="dropdown-sort-options" style="margin-top: 0; margin-bottom: 10px;">
                     <label>
                         <input type="checkbox" id="use-historical-data" checked onchange="renderPlayerGameFilters()">
-                        Use historical data
+                        Include Historical Data
                     </label>
                 </div>
                 <div style="display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap: wrap;">
