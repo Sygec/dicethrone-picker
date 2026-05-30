@@ -1,5 +1,16 @@
 [
   {
+    "version": "1.6.2.20260529",
+    "changes": [
+      "Historical data now available in Game History sort section",
+      "Historical data now available in Hero Database section",
+      "Filter and Sort are now separate in Hero Database section",
+      "Fixed bug with admin navigation button",
+      "Fixed Game History not resetting when closing filter",
+      "Changed Filter button in Game History"
+    ]
+  },
+  {
     "version": "1.6.1.20260527",
     "changes": [
       "New player stats in game history sort section",

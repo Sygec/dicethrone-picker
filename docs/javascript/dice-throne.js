@@ -20,6 +20,11 @@ let loggedInPlayerIndex = -1;
 const isAdmin = () => currentUser?.app_metadata?.role === 'admin';
 const isUser = () => !!currentUser;
 
+// Weight Constants
+const DEFAULT_HERO_WEIGHT = 250;
+const PICKED_HERO_WEIGHT = 20;
+const WEIGHT_INCREMENT = 10;
+
 // ==========================================
 // 2. DOM ELEMENT REFERENCES
 // ==========================================
@@ -46,7 +51,6 @@ if (loginForm) {
 // ==========================================
 // 3. SUPABASE CONFIGURATION
 // ==========================================
-// const isProd = window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1') && ;
 const isProd = Boolean(
     window.location.hostname === 'sygec.github.io' ||
     window.location.hostname === 'dicethrone-prod.sygec.workers.dev'
@@ -220,7 +224,6 @@ window.onclick = (event) => {
 // Auth UI & Logic
 // ****************************************** 
 function updateAuthUI() {
-    const adminToggle = document.querySelector('.admin-toggle-btn');
     const adminNav = document.querySelector('.bottom-nav .admin-only');
 
     if (currentUser) {
@@ -230,13 +233,10 @@ function updateAuthUI() {
             authBtn.innerText = `Logout (${currentUser.email.split('@')[0]})`;
         }
         authBtn.onclick = handleLogout;
-        // Only show the Admin Section toggle and nav item to admins
-        if (adminToggle) adminToggle.style.display = isAdmin() ? 'block' : 'none';
         if (adminNav) adminNav.style.display = isAdmin() ? 'flex' : 'none';
     } else {
         authBtn.innerText = 'Login';
         authBtn.onclick = openLoginModal;
-        if (adminToggle) adminToggle.style.display = 'none';
         if (adminNav) adminNav.style.display = 'none';
         if (document.getElementById('adminSection')) document.getElementById('adminSection').classList.add('hidden');
         if (actionButtons) actionButtons.style.display = 'none';
@@ -403,7 +403,7 @@ async function init() {
             complexity: hero.complexity,
             group_id: hero.group_id,
             group: hero.groups?.name || "Unknown",
-            weights: [100, 100, 100, 100],
+            weights: Array(4).fill(DEFAULT_HERO_WEIGHT),
             playCount: [0, 0, 0, 0],
             lastPlayed: ["Never", "Never", "Never", "Never"]
         };
@@ -414,7 +414,6 @@ async function init() {
             const pIdx = parseInt(stat.player_id.substring(1)) - 1;
             if (pIdx >= 0 && pIdx < 4) {
                 char.weights[pIdx] = stat.weight;
-                char.playCount[pIdx] = stat.play_count;
             }
         });
 
@@ -428,6 +427,7 @@ async function init() {
             id,
             played_at,
             last_updated_by,
+            is_historical,
             game_players (
                 hero_id,
                 player_id,
@@ -452,30 +452,6 @@ async function init() {
                 return aIdx - bIdx;
             })
         }));
-
-        // Recalculate lastPlayed based on game history to ensure accuracy (handles legacy data and deletions)
-        characters.forEach(char => {
-            for (let i = 0; i < 4; i++) {
-                if (char.playCount[i] === 0) {
-                    char.lastPlayed[i] = "Never";
-                } else {
-                    const pId = `p${i + 1}`;
-                    // Find the most recent game entry for this specific hero and player combo
-                    const lastGame = games.find(g =>
-                        g.game_players.some(gp => gp.hero_id === char.id && gp.player_id === pId)
-                    );
-
-                    if (lastGame) {
-                        let d = lastGame.played_at || "";
-                        if (d && !d.includes('T')) d = d.replace(' ', 'T');
-                        if (d && !d.includes('Z') && !d.includes('+')) d += 'Z';
-                        char.lastPlayed[i] = new Date(d).toLocaleDateString('en-CA');
-                    } else {
-                        char.lastPlayed[i] = "Unknown";
-                    }
-                }
-            }
-        });
     }
 
     renderSortControls();
@@ -580,12 +556,12 @@ function closeWhatsNew() {
 }
 
 // ****************************************** 
-// toggleRoll()
+// showRoll()
 // input: none
 // ****************************************** 
 // Shows the Roll section and hides all other sections.
 // ****************************************** 
-function toggleRoll() {
+function showRoll() {
     const rs = document.getElementById('rollSection');
     const ds = document.getElementById('dbSection');
     const gs = document.getElementById('gamesSection');
@@ -598,12 +574,12 @@ function toggleRoll() {
 }
 
 // ****************************************** 
-// toggleDatabase()
+// showDatabase()
 // input: none
 // ****************************************** 
 // Toggles the visibility of the Hero Database section.
 // ****************************************** 
-function toggleDatabase() {
+function showDatabase() {
     const rs = document.getElementById('rollSection');
     const ds = document.getElementById('dbSection');
     const gs = document.getElementById('gamesSection');
@@ -616,12 +592,12 @@ function toggleDatabase() {
 }
 
 // ****************************************** 
-// toggleGames()
+// showHistory()
 // input: none
 // ****************************************** 
 // Toggles the visibility of the Games History section.
 // ****************************************** 
-function toggleGames() {
+function showHistory() {
     const rs = document.getElementById('rollSection');
     const ds = document.getElementById('dbSection');
     const gs = document.getElementById('gamesSection');
@@ -635,27 +611,52 @@ function toggleGames() {
 }
 
 // ****************************************** 
-// toggleAdmin()
+// showAdmin()
 // input: none
 // ****************************************** 
 // Toggles the visibility of the Admin section.
 // ****************************************** 
-function toggleAdmin() {
+function showAdmin() {
     if (!isAdmin()) return;
 
     const rs = document.getElementById('rollSection');
     const ds = document.getElementById('dbSection');
     const gs = document.getElementById('gamesSection');
     const as = document.getElementById('adminSection');
-    const b = document.querySelector('.admin-toggle-btn');
-
+    
     rs.classList.add('hidden');
     ds.classList.add('hidden');
     gs.classList.add('hidden');
-    const isHidden = as.classList.toggle('hidden');
+    as.classList.remove('hidden');
+}
 
-    if (b) {
-        b.innerText = isHidden ? '⚠ Show Admin Section' : '⚠ Hide Admin Section';
+// ****************************************** 
+// toggleSortSection()
+// input: none
+// ****************************************** 
+// Toggles the visibility of the sorting section and resets sort if hidden.
+// ****************************************** 
+function toggleSortSection() {
+    const sortSection = document.getElementById('sort-section');
+    const isHidden = sortSection.classList.toggle('hidden');
+    if (isHidden) {
+        setSort('name'); // Reset sort to alphabetical when closing
+    }
+}
+
+// ****************************************** 
+// toggleFilterSection()
+// input: none
+// ****************************************** 
+// Toggles the visibility of the filter section and resets filters if hidden.
+// ****************************************** 
+function toggleFilterSection() {
+    const filterSection = document.getElementById('filter-section');
+    const isHidden = filterSection.classList.toggle('hidden');
+    if (isHidden) {
+        activeLevels = new Set([1, 2, 3, 4, 5, 6]); // Reset to all active filters
+        updateDiceVisuals();
+        renderList();
     }
 }
 
@@ -1302,7 +1303,7 @@ function pickCharacters() {
     if (isUser()) document.getElementById('action-buttons').style.display = 'flex';
 
     // Ensure the roll section is visible and scroll to results
-    toggleRoll();
+    showRoll();
     resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -1522,14 +1523,12 @@ async function applyResults() {
             // Long-term stats and weighting are only tracked for the 4 main players (0-3)
             if (pIdx < 4 && playerChoice !== undefined) {
                 const wasPicked = (playerChoice === char.name);
-                const newWeight = wasPicked ? 20 : (char.weights[pIdx] || 100) + 10;
+                const newWeight = wasPicked ? PICKED_HERO_WEIGHT : (char.weights[pIdx] || DEFAULT_HERO_WEIGHT) + WEIGHT_INCREMENT;
 
                 statsUpdates.push({
                     hero_id: char.id,
                     player_id: `p${pIdx + 1}`,
                     weight: newWeight,
-                    play_count: wasPicked ? (char.playCount[pIdx] || 0) + 1 : (char.playCount[pIdx] || 0),
-                    last_played: wasPicked ? today : (["Never", "Unknown"].includes(char.lastPlayed[pIdx]) ? null : char.lastPlayed[pIdx]),
                     last_updated_by: currentUser.id
                 });
             }
@@ -1767,18 +1766,6 @@ function clearGamesSearch() {
 }
 
 // ****************************************** 
-// toggleSort()
-// input: none
-// ****************************************** 
-// Toggles the visibility of the sorting and filtering section (sort-section) 
-// by adding or removing the 'hidden' CSS class.
-// ****************************************** 
-function toggleSort() {
-    // Toggles the 'hidden' class: removes it if present, adds it if missing.
-    document.getElementById('sort-section').classList.toggle('hidden');
-}
-
-// ****************************************** 
 // togglePlayerFilter(index)
 // input: index -> the player index to toggle
 // ****************************************** 
@@ -1823,7 +1810,12 @@ function renderGamesList() {
     const showWinsOnly = document.getElementById('games-winner-only')?.checked || false;
     const searchTerm = (document.getElementById('games-search')?.value || '').toLowerCase().trim();
 
+    const totalVisibleGames = games.filter(g => !g.is_historical).length;
+
     const filteredGames = games.filter(game => {
+        // Exclude historical games from the History list display
+        if (game.is_historical) return false;
+
         // Player filter (if set)
         let playerMatches = true;
         if (selectedGamePlayerIndex !== null) {
@@ -1855,7 +1847,7 @@ function renderGamesList() {
     });
 
     if (countLabel) {
-        countLabel.innerText = `Showing ${filteredGames.length} of ${games.length} games`;
+        countLabel.innerText = `Showing ${filteredGames.length} of ${totalVisibleGames} games`;
     }
 
     container.innerHTML = filteredGames.map(game => {
@@ -1898,7 +1890,6 @@ function renderGamesList() {
                 }
             }
 
-            // const isWinner = gp.is_winner === true;
             let boxStyle = gp.is_winner
                 ? "position: relative; border: 2px solid #28a745; background-color: color-mix(in srgb, #28a745, transparent 65%); filter: brightness(1.3);"   // win
                 : gp.is_winner === false
@@ -2052,34 +2043,6 @@ async function submitWinner(gameId) {
 async function deleteGame(gameId) {
     if (!confirm("Are you sure you want to delete this game record? This cannot be undone.")) return;
 
-    // Find the game in local state to identify participants and heroes
-    const game = games.find(g => g.id == gameId);
-
-    if (game) {
-        const statsUpdates = [];
-        game.game_players.forEach(gp => {
-            const pIdx = parseInt(gp.player_id.substring(1)) - 1;
-            // Play count stats are only tracked for the main 4 players
-            if (pIdx >= 0 && pIdx < 4) {
-                const char = characters.find(c => c.id === gp.hero_id);
-                if (char) {
-                    statsUpdates.push({
-                        hero_id: gp.hero_id,
-                        player_id: gp.player_id,
-                        play_count: Math.max(0, (char.playCount[pIdx] || 0) - 1),
-                        weight: char.weights[pIdx], // Maintain current weight as we don't have historical weights
-                        last_updated_by: currentUser.id
-                    });
-                }
-            }
-        });
-
-        if (statsUpdates.length > 0) {
-            const { error: statsErr } = await db.from('player_hero_stats').upsert(statsUpdates, { onConflict: 'player_id, hero_id' });
-            if (statsErr) console.error("Error updating stats during deletion:", statsErr);
-        }
-    }
-
     const { error } = await db
         .from('games')
         .delete()
@@ -2094,12 +2057,23 @@ async function deleteGame(gameId) {
 }
 
 function toggleGamesFilterUI() {
-    document.getElementById('games-filter-section').classList.toggle('hidden');
+    const isHidden = document.getElementById('games-filter-section').classList.toggle('hidden');
+    if (isHidden) {
+        selectedGamePlayerIndex = null;
+        const wrapper = document.getElementById('winner-filter-wrapper');
+        const winnerCheckbox = document.getElementById('games-winner-only');
+        if (wrapper) wrapper.classList.add('hidden');
+        if (winnerCheckbox) winnerCheckbox.checked = false;
+
+        renderPlayerGameFilters();
+        renderGamesList();
+    }
 }
 
 function renderPlayerGameFilters() {
     const container = document.getElementById('player-game-filter-container');
     if (!container || players.length === 0) return;
+    const useHistorical = document.getElementById('use-historical-data')?.checked ?? true;
 
     // Calculate stats for each player and invitees based on the full game history
     const playerStats = players.map(() => ({ played: 0, won: 0 }));
@@ -2107,6 +2081,8 @@ function renderPlayerGameFilters() {
     let inviteeWon = 0;
 
     games.forEach(game => {
+        if (!useHistorical && game.is_historical) return;
+
         game.game_players.forEach(gp => {
             const pIdx = parseInt(gp.player_id.substring(1)) - 1;
             if (pIdx >= 0 && pIdx < 4) {
@@ -2181,7 +2157,37 @@ function togglePlayerGameFilter(idx) {
     renderGamesList();
 }
 
-// init();
+function updateHeroStatsFromHistory() {
+    const useHistorical = document.getElementById('db-use-historical-data')?.checked ?? true;
+
+    characters.forEach(char => {
+        char.playCount = [0, 0, 0, 0];
+        char.lastPlayed = ["Never", "Never", "Never", "Never"];
+    });
+
+    if (!games) return;
+
+    games.forEach(game => {
+        if (!useHistorical && game.is_historical) return;
+
+        game.game_players.forEach(gp => {
+            const pIdx = parseInt(gp.player_id?.substring(1) || '0', 10) - 1;
+            if (pIdx >= 0 && pIdx < 4) {
+                const char = characters.find(c => c.id === gp.hero_id);
+                if (!char) return;
+
+                char.playCount[pIdx]++;
+                if (char.lastPlayed[pIdx] === "Never") {
+                    let d = game.played_at || "";
+                    if (d && !d.includes('T')) d = d.replace(' ', 'T');
+                    if (d && !d.includes('Z') && !d.includes('+')) d += 'Z';
+                    const dateObj = new Date(d);
+                    char.lastPlayed[pIdx] = dateObj.getFullYear() < 2026 ? "Unknown" : dateObj.toLocaleDateString('en-CA');
+                }
+            }
+        });
+    });
+}
 
 // ****************************************** 
 // renderList()
@@ -2194,6 +2200,8 @@ function togglePlayerGameFilter(idx) {
 function renderList() {
     const container = document.getElementById('heroContainer');
     if (!container) return;
+
+    updateHeroStatsFromHistory();
 
     const searchTerm = document.getElementById('hero-search')?.value.toLowerCase() || "";
     const countLabel = document.getElementById('count-stats');
@@ -2235,8 +2243,8 @@ function renderList() {
             const idx = parseInt(currentSort[1]);
             valA = (a.lastPlayed && a.lastPlayed[idx]) || "";
             valB = (b.lastPlayed && b.lastPlayed[idx]) || "";
-            if (valA === "Never") valA = "";
-            if (valB === "Never") valB = "";
+            if (valA === "Never" || valA === "Unknown") valA = "";
+            if (valB === "Never" || valB === "Unknown") valB = "";
         }
         else {
             valA = (a[currentSort] || "").toLowerCase();
@@ -2267,8 +2275,6 @@ function renderList() {
             </div>`;
         }).join('');
 
-        const editBtn = isAdmin() ? `<button class="btn-edit-small" onclick="editChar(${c.originalIndex})" title="Edit Hero">✎</button>` : '';
-
         return `
             <div class="hero-header"><span class="hero-name">${c.name}</span> <span class="group-label">(${c.group || 'Season ?'})</span></div>
             <div class="hero-body">
@@ -2279,7 +2285,6 @@ function renderList() {
                             <img src="images/dice/d${c.complexity}.png" class="complexity-roll" alt="Complexity">
                         </div>
                     </a>
-                    ${editBtn}
                 </div>
                 <div class="hero-details">
                     <div class="dynamic-stats">${statsHtml}</div>
