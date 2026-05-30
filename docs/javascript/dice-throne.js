@@ -20,6 +20,11 @@ let loggedInPlayerIndex = -1;
 const isAdmin = () => currentUser?.app_metadata?.role === 'admin';
 const isUser = () => !!currentUser;
 
+// Weight Constants
+const DEFAULT_HERO_WEIGHT = 250;
+const PICKED_HERO_WEIGHT = 20;
+const WEIGHT_INCREMENT = 10;
+
 // ==========================================
 // 2. DOM ELEMENT REFERENCES
 // ==========================================
@@ -398,7 +403,7 @@ async function init() {
             complexity: hero.complexity,
             group_id: hero.group_id,
             group: hero.groups?.name || "Unknown",
-            weights: [100, 100, 100, 100],
+            weights: Array(4).fill(DEFAULT_HERO_WEIGHT),
             playCount: [0, 0, 0, 0],
             lastPlayed: ["Never", "Never", "Never", "Never"]
         };
@@ -1518,7 +1523,7 @@ async function applyResults() {
             // Long-term stats and weighting are only tracked for the 4 main players (0-3)
             if (pIdx < 4 && playerChoice !== undefined) {
                 const wasPicked = (playerChoice === char.name);
-                const newWeight = wasPicked ? 20 : (char.weights[pIdx] || 100) + 10;
+                const newWeight = wasPicked ? PICKED_HERO_WEIGHT : (char.weights[pIdx] || DEFAULT_HERO_WEIGHT) + WEIGHT_INCREMENT;
 
                 statsUpdates.push({
                     hero_id: char.id,
