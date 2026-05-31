@@ -390,7 +390,8 @@ async function init() {
             *,
             groups (name),
             player_hero_stats (*)
-        `);
+        `)
+        .order('name', { ascending: true });
 
     if (error) return console.error("Error fetching heroes:", error);
 
