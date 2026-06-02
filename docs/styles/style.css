@@ -199,8 +199,8 @@
                 width: 25px;
                 height: 25px;
                 position: absolute;
-                bottom: -5px;
-                right: -5px;
+                bottom: 10px;
+                right: -4px;
                 z-index: 10;
         }
 
@@ -624,6 +624,7 @@
                 background: var(--card-bg);
                 border-radius: 12px;
                 padding: 10px;
+                padding-bottom: 0px;
                 margin-bottom: 8px;
                 border: 1px solid var(--secondary);
                 display: flex;
@@ -658,8 +659,9 @@
         .hero-header {
                 display: flex;
                 align-items: center;
-                gap: 15px;
-                
+                gap: 10px;
+                cursor: pointer;
+                user-select: none;
                 text-align: left;
                 margin-bottom: -8px;
                 margin-left: 15px;
@@ -676,6 +678,18 @@
                 font-weight: bold;
                 color: var(--accent);
                 display: inline flow-root;
+        }
+
+        .hero-item.collapsed .stat-weight,
+        .hero-item.collapsed .stat-win-rate,
+        .hero-item.collapsed .stat-date-small {
+            display: none;
+        }
+
+        .stat-weight {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 5px;
+        margin-bottom: 2px;
         }
 
         .group-label {
@@ -910,6 +924,7 @@
         min-width: 0;
         background: rgba(255, 255, 255, 0.05);
         padding: 8px 4px;
+        margin-bottom: 10px;
         border-radius: 6px;
         text-align: center;
         display: flex;

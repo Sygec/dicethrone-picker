@@ -405,7 +405,8 @@ async function init() {
             group: hero.groups?.name || "Unknown",
             weights: Array(4).fill(DEFAULT_HERO_WEIGHT),
             playCount: [0, 0, 0, 0],
-            lastPlayed: ["Never", "Never", "Never", "Never"]
+            lastPlayed: ["Never", "Never", "Never", "Never"],
+            winCount: [0, 0, 0, 0] // Initialize winCount for each player
         };
 
         // Map stats from the player_hero_stats table into the arrays by player index
@@ -565,11 +566,13 @@ function showRoll() {
     const rs = document.getElementById('rollSection');
     const ds = document.getElementById('dbSection');
     const gs = document.getElementById('gamesSection');
+    const cs = document.getElementById('collectionSection');
     const as = document.getElementById('adminSection');
 
     rs.classList.remove('hidden');
     ds.classList.add('hidden');
     gs.classList.add('hidden');
+    cs.classList.add('hidden');
     as.classList.add('hidden');
 }
 
@@ -583,11 +586,13 @@ function showDatabase() {
     const rs = document.getElementById('rollSection');
     const ds = document.getElementById('dbSection');
     const gs = document.getElementById('gamesSection');
+    const cs = document.getElementById('collectionSection');
     const as = document.getElementById('adminSection');
 
     rs.classList.add('hidden');
     ds.classList.remove('hidden');
     gs.classList.add('hidden');
+    cs.classList.add('hidden');
     as.classList.add('hidden');
 }
 
@@ -601,13 +606,33 @@ function showHistory() {
     const rs = document.getElementById('rollSection');
     const ds = document.getElementById('dbSection');
     const gs = document.getElementById('gamesSection');
+    const cs = document.getElementById('collectionSection');
     const as = document.getElementById('adminSection');
 
     rs.classList.add('hidden');
     ds.classList.add('hidden');
     gs.classList.remove('hidden');
+    cs.classList.add('hidden');
     as.classList.add('hidden');
     renderGamesList();
+}
+
+// ****************************************** 
+// showCollection()
+// input: none
+// ****************************************** 
+function showCollection() {
+    const rs = document.getElementById('rollSection');
+    const ds = document.getElementById('dbSection');
+    const gs = document.getElementById('gamesSection');
+    const cs = document.getElementById('collectionSection');
+    const as = document.getElementById('adminSection');
+
+    rs.classList.add('hidden');
+    ds.classList.add('hidden');
+    gs.classList.add('hidden');
+    cs.classList.remove('hidden');
+    as.classList.add('hidden');
 }
 
 // ****************************************** 
@@ -622,11 +647,13 @@ function showAdmin() {
     const rs = document.getElementById('rollSection');
     const ds = document.getElementById('dbSection');
     const gs = document.getElementById('gamesSection');
+    const cs = document.getElementById('collectionSection');
     const as = document.getElementById('adminSection');
     
     rs.classList.add('hidden');
     ds.classList.add('hidden');
     gs.classList.add('hidden');
+    cs.classList.add('hidden');
     as.classList.remove('hidden');
 }
 
@@ -640,7 +667,10 @@ function toggleSortSection() {
     const sortSection = document.getElementById('sort-section');
     const isHidden = sortSection.classList.toggle('hidden');
     if (isHidden) {
-        setSort('name'); // Reset sort to alphabetical when closing
+        activePlayerIndices = [0, 1, 2, 3];
+        renderSortControls();
+        currentSort = null;
+        setSort('name');
     }
 }
 
@@ -675,6 +705,22 @@ function toggleAdminPanel(event, panelId) {
     const isHidden = panel.classList.toggle('hidden');
     button.classList.toggle('open', !isHidden);
     button.setAttribute('aria-expanded', String(!isHidden));
+}
+
+function toggleHeroPanel(header) {
+    const item = header.closest('.hero-item');
+    const button = header.querySelector('.panel-toggle');
+    const isNowCollapsed = item.classList.toggle('collapsed');
+    button.classList.toggle('open', !isNowCollapsed);
+    button.setAttribute('aria-expanded', String(!isNowCollapsed));
+}
+
+function toggleHeroPanel(header) {
+    const item = header.closest('.hero-item');
+    const button = header.querySelector('.panel-toggle');
+    const isNowCollapsed = item.classList.toggle('collapsed');
+    button.classList.toggle('open', !isNowCollapsed);
+    button.setAttribute('aria-expanded', String(!isNowCollapsed));
 }
 
 // ****************************************** 
@@ -2163,6 +2209,7 @@ function updateHeroStatsFromHistory() {
     characters.forEach(char => {
         char.playCount = [0, 0, 0, 0];
         char.lastPlayed = ["Never", "Never", "Never", "Never"];
+        char.winCount = [0, 0, 0, 0]; // Initialize winCount
     });
 
     if (!games) return;
@@ -2177,6 +2224,9 @@ function updateHeroStatsFromHistory() {
                 if (!char) return;
 
                 char.playCount[pIdx]++;
+                if (gp.is_winner) {
+                    char.winCount[pIdx]++;
+                }
                 if (char.lastPlayed[pIdx] === "Never") {
                     let d = game.played_at || "";
                     if (d && !d.includes('T')) d = d.replace(' ', 'T');
@@ -2264,30 +2314,40 @@ function renderList() {
             const percentage = totals[p] > 0 ? ((softWeight / totals[p]) * 100).toFixed(2) : '0.00';
             const playCount = (c.playCount && c.playCount[p]) || 0;
             const lastPlayed = (c.lastPlayed && c.lastPlayed[p]) || "Never";
+            const winCount = (c.winCount && c.winCount[p]) || 0;
+            const winRate = playCount > 0 ? ((winCount / playCount) * 100).toFixed(1) : '0.0';
 
             return `
             <div class="stat-column">
                 <div class="player-tag" style="background-color: var(--p${p + 1}); margin-bottom: 8px; width: 100%; box-sizing: border-box;">${NAMES[p]}</div>
                 <div class="stat-main">${percentage}%</div>
-                <div class="stat-sub">(${weight})</div>
-                <div class="stat-sub">Plays: ${playCount}</div>
+                <div class="stat-sub stat-weight">(${weight})</div>
+                <div class="stat-sub stat-plays">Plays: <b>${playCount}</b></div>
+                <div class="stat-sub stat-win-rate">Wins: <b>${winCount}</b></div>
+                <div class="stat-sub stat-win-rate">(${winRate}%)</div>
                 <div class="stat-date-small">${lastPlayed}</div>
             </div>`;
         }).join('');
 
         return `
-            <div class="hero-header"><span class="hero-name">${c.name}</span> <span class="group-label">(${c.group || 'Season ?'})</span></div>
-            <div class="hero-body">
-                <div class="hero-main-info">
-                    <a href="${getHeroLink(c.slug)}" target="_blank">
-                        <div class="char-complexity-db">
-                            <img src="${getImgUrl(c.slug)}" class="char-img-roll" alt="${c.name}">
-                            <img src="images/dice/d${c.complexity}.png" class="complexity-roll" alt="Complexity">
-                        </div>
-                    </a>
+            <div class="hero-item collapsed">
+                <div class="hero-header" onclick="toggleHeroPanel(this)">
+                    <button type="button" class="panel-toggle" aria-expanded="false">V</button>
+                    <span class="hero-name">${c.name}</span>
+                    <span class="group-label">(${c.group || 'Season ?'})</span>
                 </div>
-                <div class="hero-details">
-                    <div class="dynamic-stats">${statsHtml}</div>
+                <div class="hero-body">
+                    <div class="hero-main-info">
+                        <a href="${getHeroLink(c.slug)}" target="_blank">
+                            <div class="char-complexity-db">
+                                <img src="${getImgUrl(c.slug)}" class="char-img-roll" alt="${c.name}">
+                                <img src="images/dice/d${c.complexity}.png" class="complexity-roll" alt="Complexity">
+                            </div>
+                        </a>
+                    </div>
+                    <div class="hero-details">
+                        <div class="dynamic-stats">${statsHtml}</div>
+                    </div>
                 </div>
             </div>`;
     }).join('');
