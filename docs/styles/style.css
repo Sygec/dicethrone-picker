@@ -686,6 +686,12 @@
             display: none;
         }
 
+        .stat-weight {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 5px;
+        margin-bottom: 2px;
+        }
+
         .group-label {
                 font-variant-caps: all-small-caps;
                 font-size: 0.8rem;

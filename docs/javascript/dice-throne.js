@@ -2296,8 +2296,8 @@ function renderList() {
                 <div class="player-tag" style="background-color: var(--p${p + 1}); margin-bottom: 8px; width: 100%; box-sizing: border-box;">${NAMES[p]}</div>
                 <div class="stat-main">${percentage}%</div>
                 <div class="stat-sub stat-weight">(${weight})</div>
-                <div class="stat-sub stat-plays">Plays: ${playCount}</div>
-                <div class="stat-sub stat-win-rate">Wins: ${winCount}</div>
+                <div class="stat-sub stat-plays">Plays: <b>${playCount}</b></div>
+                <div class="stat-sub stat-win-rate">Wins: <b>${winCount}</b></div>
                 <div class="stat-sub stat-win-rate">(${winRate}%)</div>
                 <div class="stat-date-small">${lastPlayed}</div>
             </div>`;
