@@ -566,11 +566,13 @@ function showRoll() {
     const rs = document.getElementById('rollSection');
     const ds = document.getElementById('dbSection');
     const gs = document.getElementById('gamesSection');
+    const cs = document.getElementById('collectionSection');
     const as = document.getElementById('adminSection');
 
     rs.classList.remove('hidden');
     ds.classList.add('hidden');
     gs.classList.add('hidden');
+    cs.classList.add('hidden');
     as.classList.add('hidden');
 }
 
@@ -584,11 +586,13 @@ function showDatabase() {
     const rs = document.getElementById('rollSection');
     const ds = document.getElementById('dbSection');
     const gs = document.getElementById('gamesSection');
+    const cs = document.getElementById('collectionSection');
     const as = document.getElementById('adminSection');
 
     rs.classList.add('hidden');
     ds.classList.remove('hidden');
     gs.classList.add('hidden');
+    cs.classList.add('hidden');
     as.classList.add('hidden');
 }
 
@@ -602,13 +606,33 @@ function showHistory() {
     const rs = document.getElementById('rollSection');
     const ds = document.getElementById('dbSection');
     const gs = document.getElementById('gamesSection');
+    const cs = document.getElementById('collectionSection');
     const as = document.getElementById('adminSection');
 
     rs.classList.add('hidden');
     ds.classList.add('hidden');
     gs.classList.remove('hidden');
+    cs.classList.add('hidden');
     as.classList.add('hidden');
     renderGamesList();
+}
+
+// ****************************************** 
+// showCollection()
+// input: none
+// ****************************************** 
+function showCollection() {
+    const rs = document.getElementById('rollSection');
+    const ds = document.getElementById('dbSection');
+    const gs = document.getElementById('gamesSection');
+    const cs = document.getElementById('collectionSection');
+    const as = document.getElementById('adminSection');
+
+    rs.classList.add('hidden');
+    ds.classList.add('hidden');
+    gs.classList.add('hidden');
+    cs.classList.remove('hidden');
+    as.classList.add('hidden');
 }
 
 // ****************************************** 
@@ -623,11 +647,13 @@ function showAdmin() {
     const rs = document.getElementById('rollSection');
     const ds = document.getElementById('dbSection');
     const gs = document.getElementById('gamesSection');
+    const cs = document.getElementById('collectionSection');
     const as = document.getElementById('adminSection');
     
     rs.classList.add('hidden');
     ds.classList.add('hidden');
     gs.classList.add('hidden');
+    cs.classList.add('hidden');
     as.classList.remove('hidden');
 }
 
