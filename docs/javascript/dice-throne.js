@@ -640,7 +640,10 @@ function toggleSortSection() {
     const sortSection = document.getElementById('sort-section');
     const isHidden = sortSection.classList.toggle('hidden');
     if (isHidden) {
-        setSort('name'); // Reset sort to alphabetical when closing
+        activePlayerIndices = [0, 1, 2, 3];
+        renderSortControls();
+        currentSort = null;
+        setSort('name');
     }
 }
 
