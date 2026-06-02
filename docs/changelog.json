@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.6.3.20260602",
+    "changes": [
+      "New expandable hero panel in Database section"
+    ]
+  },
+  {
     "version": "1.6.2.20260529",
     "changes": [
       "Historical data now available in Game History sort section",
