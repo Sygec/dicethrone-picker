@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.7.0.20260603",
+    "changes": [
+      "New Collection section to track owned heroes and collection stats"
+    ]
+  },
+  {
     "version": "1.6.3.20260602",
     "changes": [
       "New expandable hero panel in Database section"
