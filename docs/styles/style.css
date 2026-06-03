@@ -173,11 +173,6 @@
                 gap: 12px;
                 margin-bottom: 8px;
         }
-
-        .char-complexity-roll {
-                position: relative;
-        }
-
         .char-complexity-db {
                 position: relative;
                 display: flex;
@@ -259,7 +254,7 @@
                 background: #28a745;
                 display: block;
                 padding: 15px;
-                border: none;
+                border: 3px solid transparent;
                 border-radius: 8px;
                 color: white;
                 font-weight: bold;
@@ -271,7 +266,7 @@
                 background: #444444;
                 display: block;
                 padding: 15px;
-                border: none;
+                border: 3px solid transparent;
                 border-radius: 8px;
                 color: white;
                 font-weight: bold;
@@ -282,6 +277,12 @@
                 background: #444 !important;
                 opacity: 0.5;
                 cursor: not-allowed;
+        }
+
+        .btn-confirm.warning {
+                background: #28a745;
+                color: white;
+                border: 3px solid #ffc107;
         }
 
         .search-container {
@@ -684,6 +685,52 @@
         .hero-item.collapsed .stat-win-rate,
         .hero-item.collapsed .stat-date-small {
             display: none;
+        }
+
+        /* Collection View Styles */
+        .collection-group {
+            background: var(--card-bg);
+            border: 1px solid var(--secondary);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .collection-group-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+
+        .collection-heroes-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+            padding-left: 5px;
+        }
+
+        .collection-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+        }
+
+        .collection-item input[type="checkbox"],
+        .collection-group-header input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--accent);
+        }
+
+        .collection-item label,
+        .collection-group-header label {
+            cursor: pointer;
+            user-select: none;
         }
 
         .stat-weight {

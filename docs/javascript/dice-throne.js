@@ -71,6 +71,8 @@ const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const getImgUrl = (slug) => slug ? `https://dice-throne.rulepop.com/heroes/${slug}.webp` : "";
 const getHeroLink = (slug) => `https://dice-throne.rulepop.com/#hero/${slug}`;
 
+const isHeroOwned = (hero) => !!hero?.is_owned;
+
 const escapeHtml = (text) => {
     return String(text || "")
         .replace(/&/g, '&amp;')
@@ -403,6 +405,7 @@ async function init() {
             slug: hero.slug,
             complexity: hero.complexity,
             group_id: hero.group_id,
+            is_owned: hero.is_owned,
             group: hero.groups?.name || "Unknown",
             weights: Array(4).fill(DEFAULT_HERO_WEIGHT),
             playCount: [0, 0, 0, 0],
@@ -464,6 +467,7 @@ async function init() {
     renderPlayersList();
     renderUsersList();
     renderPlayerGameFilters();
+    renderCollectionView();
     const initialSort = currentSort;
     currentSort = null;
     setSort(initialSort);
@@ -634,6 +638,7 @@ function showCollection() {
     gs.classList.add('hidden');
     cs.classList.remove('hidden');
     as.classList.add('hidden');
+    renderCollectionView();
 }
 
 // ****************************************** 
@@ -716,12 +721,103 @@ function toggleHeroPanel(header) {
     button.setAttribute('aria-expanded', String(!isNowCollapsed));
 }
 
-function toggleHeroPanel(header) {
-    const item = header.closest('.hero-item');
-    const button = header.querySelector('.panel-toggle');
-    const isNowCollapsed = item.classList.toggle('collapsed');
-    button.classList.toggle('open', !isNowCollapsed);
-    button.setAttribute('aria-expanded', String(!isNowCollapsed));
+// ****************************************** 
+// renderCollectionView()
+// input: none
+// ****************************************** 
+function renderCollectionView() {
+    const container = document.getElementById('collectionContainer');
+    const countLabel = document.getElementById('collection-count-stats');
+    if (!container) return;
+
+    const totalHeroes = characters.length;
+    const ownedHeroes = characters.filter(isHeroOwned).length;
+
+    if (countLabel) {
+        countLabel.innerText = `Owned ${ownedHeroes} of ${totalHeroes} heroes`;
+    }
+
+    // Sort groups alphabetically by name
+    const sortedGroups = [...groups].sort((a, b) => a.name.localeCompare(b.name));
+
+    container.innerHTML = sortedGroups.map(group => {
+        const groupHeroes = characters
+            .filter(c => c.group_id === group.id)
+            .sort((a, b) => a.name.localeCompare(b.name));
+
+        if (groupHeroes.length === 0) return '';
+
+        // A group is "checked" if all heroes in it are owned
+        const allOwned = groupHeroes.every(isHeroOwned);
+
+        const heroesHtml = groupHeroes.map(h => `
+            <div class="collection-item">
+                <input type="checkbox" id="owned-${h.id}" ${isHeroOwned(h) ? 'checked' : ''} onchange="toggleHeroOwned('${h.id}', this.checked)">
+                <label for="owned-${h.id}">${h.name}</label>
+            </div>
+        `).join('');
+
+        return `
+            <div class="collection-group">
+                <div class="collection-group-header">
+                    <input type="checkbox" id="owned-group-${group.id}" ${allOwned ? 'checked' : ''} onchange="toggleGroupOwned('${group.id}', this.checked)">
+                    <label for="owned-group-${group.id}"><strong>${group.name}</strong></label>
+                </div>
+                <div class="collection-heroes-list">
+                    ${heroesHtml}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function toggleHeroOwned(heroId, isOwned) {
+    // Update local state first for immediate UI feedback
+    const hero = characters.find(h => h.id === heroId);
+    if (hero) hero.is_owned = isOwned;
+    renderCollectionView();
+    renderList();
+    updateDropdownSort(); // Refresh dropdowns in the Roll section
+
+    const { error } = await db
+        .from('heroes')
+        .update({ is_owned: isOwned })
+        .eq('id', heroId);
+
+    if (error) {
+        alert("Error updating ownership: " + error.message);
+        // Revert local state on error
+        if (hero) hero.is_owned = !isOwned;
+        renderCollectionView();
+        updateDropdownSort(); // Revert dropdowns on error
+        renderList();
+    }
+}
+
+async function toggleGroupOwned(groupId, isOwned) {
+    // Update local state for all heroes in the group immediately
+    characters.forEach(h => {
+        if (h.group_id === groupId) h.is_owned = isOwned;
+    });
+    renderCollectionView();
+    renderList();
+    updateDropdownSort(); // Refresh dropdowns in the Roll section
+
+    const { error } = await db
+        .from('heroes')
+        .update({ is_owned: isOwned })
+        .eq('group_id', groupId);
+
+    if (error) {
+        alert("Error updating group ownership: " + error.message);
+        // Revert local state on error
+        characters.forEach(h => {
+            if (h.group_id === groupId) h.is_owned = !isOwned;
+        });
+        renderCollectionView();
+        updateDropdownSort(); // Revert dropdowns on error
+        renderList();
+    }
 }
 
 // ****************************************** 
@@ -745,7 +841,8 @@ async function saveCharacter() {
         slug,
         complexity: complexity ? parseInt(complexity) : null,
         group_id: groupId,
-        last_updated_by: currentUser.id
+        last_updated_by: currentUser.id,
+        is_owned: false // New heroes are not owned by default
     };
 
     const { data: hero, error } = await db
@@ -1315,8 +1412,12 @@ function pickCharacters() {
     const resultsDiv = document.getElementById('results');
     resultsDiv.innerHTML = '';
 
-    // Work with a copy of characters to safely remove heroes as they are assigned
-    let pool = structuredClone(characters);
+    // Filter for owned heroes and create a pool for selection
+    let pool = characters.filter(isHeroOwned).map(c => structuredClone(c));
+
+    if (pool.length < active.length) {
+        return alert(`Not enough owned heroes (${pool.length}) in your collection for ${active.length} players!`);
+    }
 
     active.forEach(pIdx => {
         let selectedName = "";
@@ -1382,13 +1483,18 @@ function getSortedHeroOptions(pIdx, selectedName) {
 
     let totalWeight = 0;
     if (sortMode === 'weight' && pIdx < 4) {
-        characters.forEach(c => totalWeight += getSoftWeight(c, pIdx));
+        // Only calculate total probability for heroes currently in the collection
+        characters.filter(isHeroOwned).forEach(c => totalWeight += getSoftWeight(c, pIdx));
     }
 
     const sortedChars = [...characters].sort((a, b) => {
         if (sortMode === 'name') return a.name.localeCompare(b.name);
 
         if (pIdx < 4) {
+            // When sorting by probability, unowned heroes are treated as having 0 weight and pushed to the bottom
+            const ownedA = isHeroOwned(a);
+            const ownedB = isHeroOwned(b);
+            if (ownedA !== ownedB) return ownedB - ownedA;
             const wA = getSoftWeight(a, pIdx);
             const wB = getSoftWeight(b, pIdx);
             if (wA !== wB) return wB - wA; // Descending weight
@@ -1399,8 +1505,9 @@ function getSortedHeroOptions(pIdx, selectedName) {
     return sortedChars.map(c => {
         let label = c.name;
         if (sortMode === 'weight' && pIdx < 4 && totalWeight > 0) {
+            const owned = isHeroOwned(c);
             const weight = getSoftWeight(c, pIdx);
-            const pct = ((weight / totalWeight) * 100).toFixed(2);
+            const pct = owned ? ((weight / totalWeight) * 100).toFixed(2) : '0.00';
             label += ` (${pct}%)`;
         }
         return `<option value="${c.name}" ${c.name === selectedName ? 'selected' : ''}>${label}</option>`;
@@ -1426,7 +1533,7 @@ function renderPlayerRow(pIdx, selectedName) {
         <div class="player-row">
             <!-- Link to the hero's external page, wrapping the image and complexity icon -->
             <a href="${getHeroLink(charData?.slug)}" target="_blank" id="link-${pIdx}">
-                <div class="char-complexity-roll">
+                <div class="char-complexity-db">
                     <img src="${getImgUrl(charData?.slug)}" class="char-img-roll" id="img-${pIdx}" alt="${selectedName}" title="${selectedName}">
                     <img src="images/dice/d${charData?.complexity}.png" class="complexity-roll" alt="Complexity" id="comp-${pIdx}" title="Complexity: ${charData?.complexity}">
                 </div>
@@ -1493,22 +1600,40 @@ function validateSelection() {
     const dropdowns = document.querySelectorAll('.char-select');
     const names = Array.from(dropdowns).map(d => d.value);
 
-    // Count occurrences of each hero to identify duplicates efficiently
+    // 1. Check for duplicates
     const counts = names.reduce((acc, name) => {
         acc[name] = (acc[name] || 0) + 1;
         return acc;
     }, {});
-
-    // Determine if any hero is selected more than once
     const hasDupes = Object.values(counts).some(count => count > 1);
+
+    // 2. Check for unowned heroes
+    const unownedSelectedHeroes = names.filter(name => {
+        const hero = characters.find(c => c.name === name);
+        return hero && !isHeroOwned(hero);
+    });
+    const hasUnownedHeroes = unownedSelectedHeroes.length > 0;
 
     const confirmBtn = document.getElementById('confirmBtn');
     const errorMsg = document.getElementById('error-msg');
 
-    // Update the "Lock In" button state: visual styling and functional toggle
-    confirmBtn.classList.toggle('disabled', hasDupes);
-    confirmBtn.disabled = hasDupes;
-    errorMsg.style.display = hasDupes ? 'block' : 'none';
+    // Reset button state and error message first
+    confirmBtn.classList.remove('disabled', 'warning');
+    confirmBtn.disabled = false;
+    confirmBtn.innerHTML = 'LOCK IN SESSION'; // Restore original text
+    errorMsg.style.display = 'none';
+
+    if (hasDupes) {
+        confirmBtn.classList.add('disabled');
+        confirmBtn.disabled = true;
+        errorMsg.style.display = 'block';
+        errorMsg.innerText = '⚠ Duplicate hero selected! Each player must have a unique character.';
+    } else if (hasUnownedHeroes) {
+        confirmBtn.classList.add('warning'); // Add new warning class
+        confirmBtn.innerHTML = '⚠️ LOCK IN SESSION'; // Add warning symbol
+        errorMsg.style.display = 'block';
+        errorMsg.innerText = `⚠️ You have selected unowned heroes: ${unownedSelectedHeroes.join(', ')}.`;
+    }
 
     // Individually highlight dropdowns that contain duplicate entries
     dropdowns.forEach(d => {
@@ -1529,6 +1654,23 @@ async function applyResults() {
     if (confirmBtn) {
         confirmBtn.disabled = true;
         confirmBtn.innerText = "Saving...";
+    }
+
+    // Check for unowned heroes before proceeding
+    const selectedHeroNames = Array.from(document.querySelectorAll('.char-select')).map(d => d.value);
+    const unownedSelectedHeroes = selectedHeroNames.filter(name => {
+        const hero = characters.find(c => c.name === name);
+        return hero && !isHeroOwned(hero);
+    });
+
+    if (unownedSelectedHeroes.length > 0) {
+        const unownedHeroNames = unownedSelectedHeroes.join(', ');
+        const confirmation = confirm(`You have selected unowned heroes: ${unownedHeroNames}. Do you want to proceed?`);
+        if (!confirmation) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerText = originalText;
+            return;
+        }
     }
 
     const dropdowns = document.querySelectorAll('.char-select');
@@ -2256,11 +2398,13 @@ function renderList() {
 
     const searchTerm = document.getElementById('hero-search')?.value.toLowerCase() || "";
     const countLabel = document.getElementById('count-stats');
+    const showOwned = document.getElementById('db-show-owned')?.checked ?? true;
+    const showNotOwned = document.getElementById('db-show-not-owned')?.checked ?? false;
 
     // 1. Efficiently calculate totals for the entire pool in a single pass O(N)
     // Now uses soft weights (with play-count penalty) for the pool total
     const totals = [0, 0, 0, 0];
-    characters.forEach(c => {
+    characters.filter(isHeroOwned).forEach(c => {
         for (let i = 0; i < 4; i++) {
             totals[i] += getSoftWeight(c, i);
         }
@@ -2274,7 +2418,8 @@ function renderList() {
             const nameMatch = c.name.toLowerCase().includes(searchTerm);
             const groupMatch = (c.group || "").toLowerCase().includes(searchTerm);
             const complexityMatch = activeLevels.has(Number(c.complexity));
-            return (nameMatch || groupMatch) && complexityMatch;
+            const ownershipMatch = (isHeroOwned(c) && showOwned) || (!isHeroOwned(c) && showNotOwned);
+            return (nameMatch || groupMatch) && complexityMatch && ownershipMatch;
         });
 
     if (countLabel) {
@@ -2312,7 +2457,8 @@ function renderList() {
         const statsHtml = activePlayerIndices.map(p => {
             const weight = (c.weights && c.weights[p]) || 0;
             const softWeight = getSoftWeight(c, p);
-            const percentage = totals[p] > 0 ? ((softWeight / totals[p]) * 100).toFixed(2) : '0.00';
+            const owned = isHeroOwned(c);
+            const percentage = (owned && totals[p] > 0) ? ((softWeight / totals[p]) * 100).toFixed(2) : '0.00';
             const playCount = (c.playCount && c.playCount[p]) || 0;
             const lastPlayed = (c.lastPlayed && c.lastPlayed[p]) || "Never";
             const winCount = (c.winCount && c.winCount[p]) || 0;
