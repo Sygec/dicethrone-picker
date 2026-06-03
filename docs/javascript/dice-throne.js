@@ -1600,22 +1600,40 @@ function validateSelection() {
     const dropdowns = document.querySelectorAll('.char-select');
     const names = Array.from(dropdowns).map(d => d.value);
 
-    // Count occurrences of each hero to identify duplicates efficiently
+    // 1. Check for duplicates
     const counts = names.reduce((acc, name) => {
         acc[name] = (acc[name] || 0) + 1;
         return acc;
     }, {});
-
-    // Determine if any hero is selected more than once
     const hasDupes = Object.values(counts).some(count => count > 1);
+
+    // 2. Check for unowned heroes
+    const unownedSelectedHeroes = names.filter(name => {
+        const hero = characters.find(c => c.name === name);
+        return hero && !isHeroOwned(hero);
+    });
+    const hasUnownedHeroes = unownedSelectedHeroes.length > 0;
 
     const confirmBtn = document.getElementById('confirmBtn');
     const errorMsg = document.getElementById('error-msg');
 
-    // Update the "Lock In" button state: visual styling and functional toggle
-    confirmBtn.classList.toggle('disabled', hasDupes);
-    confirmBtn.disabled = hasDupes;
-    errorMsg.style.display = hasDupes ? 'block' : 'none';
+    // Reset button state and error message first
+    confirmBtn.classList.remove('disabled', 'warning');
+    confirmBtn.disabled = false;
+    confirmBtn.innerHTML = 'LOCK IN SESSION'; // Restore original text
+    errorMsg.style.display = 'none';
+
+    if (hasDupes) {
+        confirmBtn.classList.add('disabled');
+        confirmBtn.disabled = true;
+        errorMsg.style.display = 'block';
+        errorMsg.innerText = '⚠ Duplicate hero selected! Each player must have a unique character.';
+    } else if (hasUnownedHeroes) {
+        confirmBtn.classList.add('warning'); // Add new warning class
+        confirmBtn.innerHTML = '⚠️ LOCK IN SESSION'; // Add warning symbol
+        errorMsg.style.display = 'block';
+        errorMsg.innerText = `⚠️ You have selected unowned heroes: ${unownedSelectedHeroes.join(', ')}.`;
+    }
 
     // Individually highlight dropdowns that contain duplicate entries
     dropdowns.forEach(d => {
@@ -1636,6 +1654,23 @@ async function applyResults() {
     if (confirmBtn) {
         confirmBtn.disabled = true;
         confirmBtn.innerText = "Saving...";
+    }
+
+    // Check for unowned heroes before proceeding
+    const selectedHeroNames = Array.from(document.querySelectorAll('.char-select')).map(d => d.value);
+    const unownedSelectedHeroes = selectedHeroNames.filter(name => {
+        const hero = characters.find(c => c.name === name);
+        return hero && !isHeroOwned(hero);
+    });
+
+    if (unownedSelectedHeroes.length > 0) {
+        const unownedHeroNames = unownedSelectedHeroes.join(', ');
+        const confirmation = confirm(`You have selected unowned heroes: ${unownedHeroNames}. Do you want to proceed?`);
+        if (!confirmation) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerText = originalText;
+            return;
+        }
     }
 
     const dropdowns = document.querySelectorAll('.char-select');

@@ -254,7 +254,7 @@
                 background: #28a745;
                 display: block;
                 padding: 15px;
-                border: none;
+                border: 3px solid transparent;
                 border-radius: 8px;
                 color: white;
                 font-weight: bold;
@@ -266,7 +266,7 @@
                 background: #444444;
                 display: block;
                 padding: 15px;
-                border: none;
+                border: 3px solid transparent;
                 border-radius: 8px;
                 color: white;
                 font-weight: bold;
@@ -277,6 +277,12 @@
                 background: #444 !important;
                 opacity: 0.5;
                 cursor: not-allowed;
+        }
+
+        .btn-confirm.warning {
+                background: #28a745;
+                color: white;
+                border: 3px solid #ffc107;
         }
 
         .search-container {
