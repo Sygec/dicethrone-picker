@@ -1533,7 +1533,7 @@ function renderPlayerRow(pIdx, selectedName) {
         <div class="player-row">
             <!-- Link to the hero's external page, wrapping the image and complexity icon -->
             <a href="${getHeroLink(charData?.slug)}" target="_blank" id="link-${pIdx}">
-                <div class="char-complexity-roll">
+                <div class="char-complexity-db">
                     <img src="${getImgUrl(charData?.slug)}" class="char-img-roll" id="img-${pIdx}" alt="${selectedName}" title="${selectedName}">
                     <img src="images/dice/d${charData?.complexity}.png" class="complexity-roll" alt="Complexity" id="comp-${pIdx}" title="Complexity: ${charData?.complexity}">
                 </div>

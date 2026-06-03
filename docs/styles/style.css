@@ -173,11 +173,6 @@
                 gap: 12px;
                 margin-bottom: 8px;
         }
-
-        .char-complexity-roll {
-                position: relative;
-        }
-
         .char-complexity-db {
                 position: relative;
                 display: flex;
