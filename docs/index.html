@@ -126,6 +126,16 @@
                 <div class="small-text" id="count-stats">
                     Showing 0 of 0 heroes
                 </div>
+                <div class="dropdown-sort-options" style="margin-top: 5px; margin-bottom: 0;">
+                    <label>
+                        <input type="checkbox" id="db-show-owned" checked onchange="renderList()">
+                        Owned
+                    </label>
+                    <label>
+                        <input type="checkbox" id="db-show-not-owned" onchange="renderList()">
+                        Not owned
+                    </label>
+                </div>
             </div>
 
             <div id="sort-section" class="hidden">
@@ -195,10 +205,10 @@
 
         <!-- Collection Section -->
         <section id="collectionSection" class="hidden">
-            <div style="text-align: center; margin-top: 50px; opacity: 0.6;">
-                <h2>Coming soon!!</h2>
-                <p>Track your Dice Throne collection here.</p>
+            <div class="small-text" id="collection-count-stats" style="margin-top: 15px;">
+                Owned 0 of 0 heroes
             </div>
+            <div id="collectionContainer" style="margin-top: 20px;"></div>
         </section>
 
         <!-- Admin & Data Management -->
