@@ -1208,7 +1208,10 @@ function renderPlayersList() {
         const displayDiv = document.createElement('div');
         displayDiv.className = 'player-display';
         displayDiv.innerHTML = `
-            <span class="player-tag" style="background:var(--${player.id})">${escapeHtml(player.name)}</span>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="player-color-dot" style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--${player.id}); border: 1px solid rgba(255,255,255,0.2);"></span>
+                <strong>${escapeHtml(player.name)}</strong>
+            </div>
             <div class="player-actions">
                 <label class="color-picker-button" title="Choose player color">
                     <span>🎨</span>

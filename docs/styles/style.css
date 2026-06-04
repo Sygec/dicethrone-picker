@@ -579,6 +579,7 @@
         input[type="tel"],
         input[type="url"],
         input[type="number"],
+        select,
         textarea {
                 background: #1a1a2e;
                 color: var(--text);
@@ -592,22 +593,24 @@
                 background: var(--accent);
                 color: white;
                 border: none;
-                padding: 12px;
+                padding: 10px;
                 border-radius: 6px;
                 width: 100%;
                 cursor: pointer;
                 font-weight: bold;
+                font-size: 16px;
         }
 
         .btn-cancel {
                 background: #444;
                 color: white;
                 border: none;
-                padding: 8px;
+                padding: 10px;
                 border-radius: 6px;
                 width: 100%;
                 cursor: pointer;
-                /* margin-top: 5px; */
+                font-weight: bold;
+                font-size: 16px;
         }
 
         .btn-inline {
@@ -1035,6 +1038,8 @@
                 background: rgba(255, 255, 255, 0.05);
                 padding: 12px;
                 border-radius: 8px;
+                font-size: 0.85rem;
+                line-height: 1.5;
         }
 
 /* Navigation bar styles */
