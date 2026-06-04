@@ -83,6 +83,20 @@
                     <input name="password" type="password" id="login-password" autocomplete="current-password" placeholder="Password" style="font-size: 16px; padding: 10px; border-radius: 4px; border: 1px solid #ccc; color: var(--text);">
                     <button type="submit" class="btn-save">Sign In</button>
                     <div id="login-error" style="color: var(--danger); font-size: 0.8rem; text-align: center; display: none; margin-top: 5px;"></div>
+                    <button type="button" onclick="handlePasswordReset()" style="background:none; border:none; color:inherit; font:inherit; cursor:pointer; text-decoration:underline; font-size: 0.8rem; text-align: right; width: 100%; margin-top: -5px;">Forgot Password?</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Update Password Modal -->
+        <div id="update-password-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" onclick="closeUpdatePasswordModal()">&times;</span>
+                <h2 style="color: black; margin-top: 0;">Update Password</h2>
+                <form id="update-password-form" autocomplete="off" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                    <input name="new-password" type="password" id="new-password" placeholder="New Password" style="font-size: 16px; padding: 10px; border-radius: 4px; border: 1px solid #ccc; color: var(--text);">
+                    <button type="submit" class="btn-save">Update Password</button>
+                    <div id="update-password-error" style="color: var(--danger); font-size: 0.8rem; text-align: center; display: none; margin-top: 5px;"></div>
                 </form>
             </div>
         </div>

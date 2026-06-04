@@ -39,12 +39,21 @@ const authBtn = document.getElementById("auth-btn");
 const actionButtons = document.getElementById("action-buttons");
 let loginModalKeyHandler = null;
 const loginForm = document.getElementById('login-form');
+const updatePasswordModal = document.getElementById("update-password-modal");
+const updatePasswordForm = document.getElementById("update-password-form");
 
 // If a login form exists, intercept submit and call handleLogin
 if (loginForm) {
     loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
         handleLogin();
+    });
+}
+
+if (updatePasswordForm) {
+    updatePasswordForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        handleUpdatePassword();
     });
 }
 
@@ -212,6 +221,11 @@ closeBtn.onclick = closeChangelog;
 db.auth.onAuthStateChange((event, session) => {
     currentUser = session?.user || null;
     if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') init();
+    
+    if (event === 'PASSWORD_RECOVERY') {
+        openUpdatePasswordModal();
+    }
+    
     updateAuthUI();
     if (event === 'SIGNED_IN') closeLoginModal();
 });
@@ -220,6 +234,7 @@ window.onclick = (event) => {
     if (event.target == modal) closeChangelog();
     if (event.target == loginModal) closeLoginModal();
     if (event.target == whatsNewModal) closeWhatsNew();
+    if (event.target == updatePasswordModal) closeUpdatePasswordModal();
 }
 
 // ****************************************** 
@@ -322,6 +337,64 @@ async function handleLogin() {
     if (error) {
         errorDiv.innerText = error.message;
         errorDiv.style.display = 'block';
+    }
+}
+
+async function handlePasswordReset() {
+    const email = document.getElementById('login-email').value;
+    const errorDiv = document.getElementById('login-error');
+    
+    if (!email) {
+        errorDiv.innerText = "Please enter your email address first to reset password.";
+        errorDiv.style.display = 'block';
+        return;
+    }
+
+    const { error } = await db.auth.resetPasswordForEmail(email);
+
+    if (error) {
+        errorDiv.innerText = error.message;
+        errorDiv.style.display = 'block';
+    } else {
+        errorDiv.innerText = "Password reset email sent. Please check your inbox.";
+        errorDiv.style.color = '#4CAF50';
+        errorDiv.style.display = 'block';
+        setTimeout(() => { errorDiv.style.color = 'var(--danger)'; }, 5000);
+    }
+}
+
+function openUpdatePasswordModal() {
+    updatePasswordModal.style.display = "block";
+    document.getElementById('update-password-error').style.display = 'none';
+    document.body.style.overflow = "hidden";
+}
+
+function closeUpdatePasswordModal() {
+    updatePasswordModal.style.display = "none";
+    document.body.style.overflow = "auto";
+}
+
+async function handleUpdatePassword() {
+    const newPassword = document.getElementById('new-password').value;
+    const errorDiv = document.getElementById('update-password-error');
+
+    if (!newPassword) {
+        errorDiv.innerText = "Please enter a new password.";
+        errorDiv.style.display = 'block';
+        return;
+    }
+
+    const { error } = await db.auth.updateUser({
+        password: newPassword
+    });
+
+    if (error) {
+        errorDiv.innerText = error.message;
+        errorDiv.style.display = 'block';
+    } else {
+        alert("Password updated successfully!");
+        closeUpdatePasswordModal();
+        document.getElementById('new-password').value = '';
     }
 }
 
