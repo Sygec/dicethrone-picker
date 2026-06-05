@@ -14,6 +14,7 @@ let activeGroups = new Set();
 let selectedGamePlayerIndex = null;
 let currentSort = "name";
 let sortAsc = true;
+let currentSortPlayerIndex = 0;
 let editIndex = -1;
 let activePlayerIndices = [0, 1, 2, 3];
 let currentUser = null;
@@ -2031,45 +2032,130 @@ function handlePlayerToggleClick(event, index) {
 // renderSortControls()
 // input: none
 // ******************************************
-// Generates the sorting buttons for Name, Weights, and Dates.
+// Generates the new modern sorting panel including:
+// 1. Column visibility pills
+// 2. Sort field dropdown & Sort direction button
+// 3. Conditional player pill selector
 // ******************************************
 function renderSortControls() {
     const container = document.getElementById("player-sort-container");
-    // Sort controls are only rendered for the main 4 players (indices 0-3)
+    if (!container) return;
+
     const mainPlayerNames = NAMES.slice(0, 4);
 
-    let html = `
-        <div class="player-card-mini">
-            <span class="mini-name"> </span>
-            <div class="mini-actions">
-                <button class="btn-mini-sort" id="sort-name" onclick="setSort('name')">Hero</button>
-                <button class="btn-mini-sort" id="sort-group" onclick="setSort('group')">Group</button>
+    // Parse current sort type and player index if applicable
+    let sortType = "name";
+    if (currentSort === "group") {
+        sortType = "group";
+    } else if (currentSort.startsWith("w")) {
+        sortType = "probability";
+        currentSortPlayerIndex = parseInt(currentSort.substring(1));
+    } else if (currentSort.startsWith("d")) {
+        sortType = "lastPlayed";
+        currentSortPlayerIndex = parseInt(currentSort.substring(1));
+    }
+
+    // 1. Generate column visibility pills
+    const visibilityPillsHtml = mainPlayerNames.map((name, i) => {
+        const isActive = activePlayerIndices.includes(i);
+        const activeClass = isActive ? `active p${i + 1}-color` : "inactive";
+        return `
+            <button type="button" class="pill-toggle ${activeClass}" onclick="togglePlayerFilter(${i})">
+                ${name}
+            </button>
+        `;
+    }).join("");
+
+    // 2. Generate player-specific sorting pills if probability or lastPlayed is active
+    const showPlayerSubSection = (sortType === "probability" || sortType === "lastPlayed");
+    const playerPillsHtml = mainPlayerNames.map((name, i) => {
+        const isActive = (currentSortPlayerIndex === i);
+        const activeClass = isActive ? `active p${i + 1}-color` : "";
+        const isColumnActive = activePlayerIndices.includes(i);
+        const columnStyle = isColumnActive ? "" : "opacity: 0.5;";
+        return `
+            <button type="button" class="pill-toggle ${activeClass}" style="${columnStyle}" onclick="handleSortPlayerChange(${i})">
+                ${name}
+            </button>
+        `;
+    }).join("");
+
+    const directionText = sortAsc ? "Ascending" : "Descending";
+    const directionArrow = sortAsc ? "▲" : "▼";
+
+    container.innerHTML = `
+        <div class="sort-container-new" style="width: 100%; box-sizing: border-box;">
+            <!-- Column Visibility Row -->
+            <div class="panel-row-new">
+                <span class="panel-row-title">Show Player Stats Columns:</span>
+                <div class="pill-group">
+                    ${visibilityPillsHtml}
+                </div>
+            </div>
+
+            <!-- Sort Controls Row -->
+            <div class="panel-row-new">
+                <span class="panel-row-title">Sort Visible Heroes:</span>
+                <div class="sort-controls-new">
+                    <select id="sort-type-select" class="sort-select-new" onchange="handleSortTypeChange(this.value)">
+                        <option value="name" ${sortType === "name" ? "selected" : ""}>Hero Name</option>
+                        <option value="group" ${sortType === "group" ? "selected" : ""}>Group (Season)</option>
+                        <option value="probability" ${sortType === "probability" ? "selected" : ""}>Roll Probability (%)</option>
+                        <option value="lastPlayed" ${sortType === "lastPlayed" ? "selected" : ""}>Last Played Date</option>
+                    </select>
+                    
+                    <button id="sort-direction-btn" class="btn-direction-new" onclick="toggleSortDirection()">
+                        <span id="sort-direction-text">${directionText}</span>
+                        <span id="sort-direction-arrow">${directionArrow}</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Conditional Player Selector Row -->
+            <div id="player-sort-sub-section" class="panel-row-new" style="${showPlayerSubSection ? "" : "display: none;"}">
+                <span class="panel-row-title">For Player:</span>
+                <div class="pill-group">
+                    ${playerPillsHtml}
+                </div>
             </div>
         </div>
     `;
+}
 
-    // Generate interactive player cards that act as visibility toggles and sort triggers
-    html += mainPlayerNames
-        .map((name, i) => {
-            // Identify if the current player index is part of the active stats display
-            const isActive = activePlayerIndices.includes(i);
-            const filterClass = isActive ? "" : "inactive-filter";
+function handleSortTypeChange(value) {
+    if (value === "name") {
+        currentSort = "name";
+    } else if (value === "group") {
+        currentSort = "group";
+    } else if (value === "probability") {
+        currentSort = `w${currentSortPlayerIndex}`;
+    } else if (value === "lastPlayed") {
+        currentSort = `d${currentSortPlayerIndex}`;
+    }
+    
+    // Default sort order (Asc for Name/Group, Desc for Probability/LastPlayed)
+    sortAsc = (value === "name" || value === "group");
 
-            return `
-        <div class="player-card-mini ${filterClass}" style="border-left-color: var(--p${i + 1});">
-            <span class="player-tag-small" style="background:var(--p${i + 1})" onclick="togglePlayerFilter(${i})">${name}</span>
-            <div class="mini-actions">
-                <button class="btn-mini-sort" id="sort-w${i}" 
-                        ${isActive ? `onclick="setSort('w${i}')"` : 'style="pointer-events: none;"'}>%</button>
-                <button class="btn-mini-sort" id="sort-d${i}" 
-                        ${isActive ? `onclick="setSort('d${i}')"` : 'style="pointer-events: none;"'}>&#128197;</button>
-            </div>
-        </div>
-    `;
-        })
-        .join("");
+    renderSortControls();
+    renderList();
+}
 
-    container.innerHTML = html;
+function handleSortPlayerChange(playerIndex) {
+    currentSortPlayerIndex = playerIndex;
+    if (currentSort.startsWith("w")) {
+        currentSort = `w${playerIndex}`;
+    } else if (currentSort.startsWith("d")) {
+        currentSort = `d${playerIndex}`;
+    }
+    
+    renderSortControls();
+    renderList();
+}
+
+function toggleSortDirection() {
+    sortAsc = !sortAsc;
+    renderSortControls();
+    renderList();
 }
 
 // ******************************************
@@ -2284,20 +2370,11 @@ function setSort(key) {
         sortAsc = !key.startsWith("d") && !key.startsWith("w");
     }
 
-    // Reset all sort buttons: remove active class and strip any existing arrows
-    document.querySelectorAll(".btn-mini-sort").forEach((btn) => {
-        btn.classList.remove("active");
-        btn.innerText = btn.innerText.replace(/ [▲▼]/, "");
-    });
-
-    // Highlight the current button and add the appropriate direction arrow
-    const activeBtn = document.getElementById(`sort-${key}`);
-    if (activeBtn) {
-        activeBtn.classList.add("active");
-        activeBtn.innerText += sortAsc ? " ▲" : " ▼";
+    if (key.startsWith("w") || key.startsWith("d")) {
+        currentSortPlayerIndex = parseInt(key.substring(1));
     }
 
-    // Trigger the list refresh with new sorting applied
+    renderSortControls();
     renderList();
 }
 

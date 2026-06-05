@@ -1152,3 +1152,128 @@ textarea {
     margin-left: 80px; /* Push content right to make room for sidebar */
   }
 }
+
+/* ==========================================
+   New Segmented Sorting and Visibility Panel
+   ========================================== */
+.sort-container-new {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.panel-row-new {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.panel-row-title {
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0.8;
+  letter-spacing: 0.5px;
+}
+
+.pill-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill-toggle {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  text-transform: uppercase;
+}
+
+.pill-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.pill-toggle.inactive {
+  opacity: 0.4;
+  filter: grayscale(80%);
+  text-decoration: line-through;
+}
+
+/* Player color specific pills when active */
+.pill-toggle.p1-color.active { background-color: var(--p1); color: #1a1a2e; border-color: var(--p1); }
+.pill-toggle.p2-color.active { background-color: var(--p2); color: #1a1a2e; border-color: var(--p2); }
+.pill-toggle.p3-color.active { background-color: var(--p3); color: #1a1a2e; border-color: var(--p3); }
+.pill-toggle.p4-color.active { background-color: var(--p4); color: #1a1a2e; border-color: var(--p4); }
+
+.sort-controls-new {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.sort-select-new {
+  flex: 1;
+  min-width: 150px;
+  background: #1a1a2e;
+  color: var(--text);
+  border: 1px solid var(--secondary);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.btn-direction-new {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-direction-new:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-direction-new.active {
+  background: var(--accent);
+  color: #121212;
+  border-color: var(--accent);
+}
+
+#player-sort-sub-section {
+  animation: slideDown 0.25s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
