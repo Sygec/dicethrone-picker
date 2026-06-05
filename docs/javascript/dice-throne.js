@@ -10,6 +10,7 @@ let groups = [];
 let authUsers = [];
 let cachedChangelog = null;
 let activeLevels = new Set([1, 2, 3, 4, 5, 6]);
+let activeGroups = new Set();
 let selectedGamePlayerIndex = null;
 let currentSort = "name";
 let sortAsc = true;
@@ -462,6 +463,20 @@ async function init() {
         groups = groupsData;
         populateGroupDropdown();
         renderGroupsList();
+
+        // Initialize or update activeGroups
+        const currentGroupIds = new Set(groups.map(g => g.id));
+        if (activeGroups.size === 0) {
+            groups.forEach((g) => activeGroups.add(g.id));
+        } else {
+            // Remove any IDs that are no longer in the fetched groups
+            for (let id of activeGroups) {
+                if (!currentGroupIds.has(id)) {
+                    activeGroups.delete(id);
+                }
+            }
+        }
+        renderGroupFilters();
     }
 
     // 1. Fetch Players and Map logged-in User
@@ -810,6 +825,8 @@ function toggleFilterSection() {
     if (isHidden) {
         activeLevels = new Set([1, 2, 3, 4, 5, 6]); // Reset to all active filters
         updateDiceVisuals();
+        activeGroups = new Set(groups.map((g) => g.id));
+        updateGroupVisuals();
         renderList();
     }
 }
@@ -2095,8 +2112,87 @@ function updateDiceVisuals() {
     if (allDie) allDie.classList.toggle("active-die", activeLevels.size === 6);
 }
 
+function renderGroupFilters() {
+    const container = document.getElementById("group-filter-bar");
+    if (!container) return;
+
+    let html = groups
+        .map((g) => {
+            const initials = g.name
+                ? g.name.split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase()
+                : "?";
+            const isActive = activeGroups.has(g.id);
+            const activeClass = isActive ? "active-die" : "";
+            
+            return `
+                <span class="dice-icon group-icon ${activeClass}" 
+                     id="group-filter-${g.id}" 
+                     onclick="toggleGroupFilter('${g.id}')" 
+                     title="${escapeHtml(g.name)}"
+                     style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%;">
+                    <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+                        <circle cx="16" cy="16" r="14" fill="var(--secondary)" stroke="var(--accent)" stroke-width="2"/>
+                        <text x="16" y="20" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="var(--text)" text-anchor="middle">${initials}</text>
+                    </svg>
+                </span>`;
+        })
+        .join("");
+
+    const allActive = activeGroups.size === groups.length;
+    const allActiveClass = allActive ? "active-die" : "";
+    html += `
+        <span class="dice-icon group-icon ${allActiveClass}" 
+             id="group-filter-all" 
+             onclick="toggleGroupFilter('all')" 
+             title="All Groups"
+             style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%;">
+            <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+                <circle cx="16" cy="16" r="14" fill="var(--secondary)" stroke="var(--accent)" stroke-width="2"/>
+                <text x="16" y="20" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="var(--text)" text-anchor="middle">ALL</text>
+            </svg>
+        </span>`;
+
+    container.innerHTML = html;
+}
+
+function toggleGroupFilter(groupId) {
+    if (groupId === "all") {
+        if (activeGroups.size === groups.length) {
+            activeGroups.clear();
+        } else {
+            activeGroups = new Set(groups.map((g) => g.id));
+        }
+    } else {
+        if (activeGroups.has(groupId)) {
+            activeGroups.delete(groupId);
+        } else {
+            activeGroups.add(groupId);
+        }
+    }
+    
+    updateGroupVisuals();
+    renderList();
+}
+
+function updateGroupVisuals() {
+    groups.forEach((g) => {
+        const el = document.getElementById(`group-filter-${g.id}`);
+        if (el) {
+            el.classList.toggle("active-die", activeGroups.has(g.id));
+        }
+    });
+
+    const allEl = document.getElementById("group-filter-all");
+    if (allEl) {
+        allEl.classList.toggle("active-die", activeGroups.size === groups.length);
+    }
+}
+
 // Ensure visuals are correct when the page loads
-window.addEventListener("DOMContentLoaded", updateDiceVisuals);
+window.addEventListener("DOMContentLoaded", () => {
+    updateDiceVisuals();
+    updateGroupVisuals();
+});
 
 // ******************************************
 // setSort(key)
@@ -2731,11 +2827,15 @@ function renderList() {
                 .toLowerCase()
                 .includes(searchTerm);
             const complexityMatch = activeLevels.has(Number(c.complexity));
+            const groupFilterMatch = activeGroups.has(c.group_id);
             const ownershipMatch =
                 (isHeroOwned(c) && showOwned) ||
                 (!isHeroOwned(c) && showNotOwned);
             return (
-                (nameMatch || groupMatch) && complexityMatch && ownershipMatch
+                (nameMatch || groupMatch) &&
+                complexityMatch &&
+                groupFilterMatch &&
+                ownershipMatch
             );
         });
 
