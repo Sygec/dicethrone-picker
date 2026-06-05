@@ -2042,7 +2042,8 @@ function renderSortControls() {
         <div class="player-card-mini">
             <span class="mini-name"> </span>
             <div class="mini-actions">
-                <button class="btn-mini-sort" id="sort-name" onclick="setSort('name')">Hero</button> <!-- Button to sort by hero name -->
+                <button class="btn-mini-sort" id="sort-name" onclick="setSort('name')">Hero</button>
+                <button class="btn-mini-sort" id="sort-group" onclick="setSort('group')">Group</button>
             </div>
         </div>
     `;
@@ -2116,39 +2117,90 @@ function renderGroupFilters() {
     const container = document.getElementById("group-filter-bar");
     if (!container) return;
 
+    const searchTerm = document.getElementById("hero-search")?.value.toLowerCase() || "";
+    const showOwned = document.getElementById("db-show-owned")?.checked ?? true;
+    const showNotOwned = document.getElementById("db-show-not-owned")?.checked ?? false;
+
     let html = groups
         .map((g) => {
             const initials = g.name
                 ? g.name.split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase()
                 : "?";
             const isActive = activeGroups.has(g.id);
-            const activeClass = isActive ? "active-die" : "";
+            
+            // Calculate potential matches in this group
+            const potentialMatchesCount = characters.filter((c) => {
+                if (c.group_id !== g.id) return false;
+                const nameMatch = c.name.toLowerCase().includes(searchTerm);
+                const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+                const complexityMatch = activeLevels.has(Number(c.complexity));
+                const ownershipMatch =
+                    (isHeroOwned(c) && showOwned) ||
+                    (!isHeroOwned(c) && showNotOwned);
+                return (nameMatch || groupNameMatch) && complexityMatch && ownershipMatch;
+            }).length;
+
+            const isDisabled = potentialMatchesCount === 0;
+            const activeClass = isActive && !isDisabled ? "active-die" : "";
+            const disabledStyle = isDisabled ? "opacity: 0.15; pointer-events: none;" : "";
             
             return `
                 <span class="dice-icon group-icon ${activeClass}" 
                      id="group-filter-${g.id}" 
-                     onclick="toggleGroupFilter('${g.id}')" 
-                     title="${escapeHtml(g.name)}"
-                     style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%;">
-                    <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
-                        <circle cx="16" cy="16" r="14" fill="var(--secondary)" stroke="var(--accent)" stroke-width="2"/>
-                        <text x="16" y="20" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="var(--text)" text-anchor="middle">${initials}</text>
+                     onclick="${isDisabled ? "" : `toggleGroupFilter('${g.id}')`}" 
+                     title="${escapeHtml(g.name)} (${potentialMatchesCount} heroes)"
+                     style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 4px; overflow: hidden; ${disabledStyle}">
+                    <svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+                        <rect x="2" y="2" width="32" height="32" rx="4" ry="4" fill="var(--secondary)" stroke="var(--accent)" stroke-width="2"/>
+                        <text x="18" y="22" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="var(--text)" text-anchor="middle">${initials}</text>
                     </svg>
                 </span>`;
         })
         .join("");
 
-    const allActive = activeGroups.size === groups.length;
+    // Calculate total active non-disabled groups
+    const activeNonDisabledCount = groups.filter(g => {
+        const potentialMatchesCount = characters.filter((c) => {
+            if (c.group_id !== g.id) return false;
+            const nameMatch = c.name.toLowerCase().includes(searchTerm);
+            const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+            const complexityMatch = activeLevels.has(Number(c.complexity));
+            const ownershipMatch =
+                (isHeroOwned(c) && showOwned) ||
+                (!isHeroOwned(c) && showNotOwned);
+            return (nameMatch || groupNameMatch) && complexityMatch && ownershipMatch;
+        }).length;
+        return potentialMatchesCount > 0 && activeGroups.has(g.id);
+    }).length;
+
+    const totalAvailableGroups = groups.filter(g => {
+        const potentialMatchesCount = characters.filter((c) => {
+            if (c.group_id !== g.id) return false;
+            const nameMatch = c.name.toLowerCase().includes(searchTerm);
+            const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+            const complexityMatch = activeLevels.has(Number(c.complexity));
+            const ownershipMatch =
+                (isHeroOwned(c) && showOwned) ||
+                (!isHeroOwned(c) && showNotOwned);
+            return (nameMatch || groupNameMatch) && complexityMatch && ownershipMatch;
+        }).length;
+        return potentialMatchesCount > 0;
+    });
+
+    const allActive = totalAvailableGroups.length > 0 && activeNonDisabledCount === totalAvailableGroups.length;
     const allActiveClass = allActive ? "active-die" : "";
+    const isAllDisabled = totalAvailableGroups.length === 0;
+    const allDisabledStyle = isAllDisabled ? "opacity: 0.15; pointer-events: none;" : "";
+
     html += `
         <span class="dice-icon group-icon ${allActiveClass}" 
              id="group-filter-all" 
-             onclick="toggleGroupFilter('all')" 
+             onclick="${isAllDisabled ? "" : "toggleGroupFilter('all')"}" 
              title="All Groups"
-             style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%;">
-            <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
-                <circle cx="16" cy="16" r="14" fill="var(--secondary)" stroke="var(--accent)" stroke-width="2"/>
-                <text x="16" y="20" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="var(--text)" text-anchor="middle">ALL</text>
+             style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 4px; overflow: hidden; ${allDisabledStyle}">
+            <svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+                <rect x="2" y="2" width="32" height="32" rx="4" ry="4" fill="var(--secondary)" stroke="var(--accent)" stroke-width="2"/>
+                <text x="18" y="22" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="var(--text)" text-anchor="middle">ALL</text>
             </svg>
         </span>`;
 
@@ -2156,11 +2208,32 @@ function renderGroupFilters() {
 }
 
 function toggleGroupFilter(groupId) {
+    const searchTerm = document.getElementById("hero-search")?.value.toLowerCase() || "";
+    const showOwned = document.getElementById("db-show-owned")?.checked ?? true;
+    const showNotOwned = document.getElementById("db-show-not-owned")?.checked ?? false;
+
+    const totalAvailableGroups = groups.filter(g => {
+        const potentialMatchesCount = characters.filter((c) => {
+            if (c.group_id !== g.id) return false;
+            const nameMatch = c.name.toLowerCase().includes(searchTerm);
+            const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+            const complexityMatch = activeLevels.has(Number(c.complexity));
+            const ownershipMatch =
+                (isHeroOwned(c) && showOwned) ||
+                (!isHeroOwned(c) && showNotOwned);
+            return (nameMatch || groupNameMatch) && complexityMatch && ownershipMatch;
+        }).length;
+        return potentialMatchesCount > 0;
+    });
+
     if (groupId === "all") {
-        if (activeGroups.size === groups.length) {
-            activeGroups.clear();
+        const activeAvailableCount = totalAvailableGroups.filter(g => activeGroups.has(g.id)).length;
+        if (activeAvailableCount === totalAvailableGroups.length) {
+            // Unselect all available
+            totalAvailableGroups.forEach(g => activeGroups.delete(g.id));
         } else {
-            activeGroups = new Set(groups.map((g) => g.id));
+            // Select all available
+            totalAvailableGroups.forEach(g => activeGroups.add(g.id));
         }
     } else {
         if (activeGroups.has(groupId)) {
@@ -2799,6 +2872,8 @@ function renderList() {
     const container = document.getElementById("heroContainer");
     if (!container) return;
 
+    renderGroupFilters();
+
     updateHeroStatsFromHistory();
 
     const searchTerm =
@@ -2857,6 +2932,14 @@ function renderList() {
             valB = (b.lastPlayed && b.lastPlayed[idx]) || "";
             if (valA === "Never" || valA === "Unknown") valA = "";
             if (valB === "Never" || valB === "Unknown") valB = "";
+        } else if (currentSort === "group") {
+            valA = (a.group || "").toLowerCase();
+            valB = (b.group || "").toLowerCase();
+            if (valA === valB) {
+                const nameA = (a.name || "").toLowerCase();
+                const nameB = (b.name || "").toLowerCase();
+                return sortAsc ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+            }
         } else {
             valA = (a[currentSort] || "").toLowerCase();
             valB = (b[currentSort] || "").toLowerCase();
