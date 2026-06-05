@@ -18,6 +18,7 @@ let activePlayerIndices = [0, 1, 2, 3];
 let currentUser = null;
 let loggedInPlayerIndex = -1;
 let isRollActive = false;
+let expandedCollectionGroups = new Set();
 const isAdmin = () => currentUser?.app_metadata?.role === "admin";
 const isUser = () => !!currentUser;
 
@@ -840,6 +841,26 @@ function toggleHeroPanel(header) {
 }
 
 // ******************************************
+// toggleCollectionGroup(groupId, event)
+// input: groupId, event
+// ******************************************
+function toggleCollectionGroup(groupId, event) {
+    if (
+        event.target.tagName === "INPUT" ||
+        event.target.tagName === "LABEL" ||
+        event.target.closest("label")
+    ) {
+        return;
+    }
+    if (expandedCollectionGroups.has(groupId)) {
+        expandedCollectionGroups.delete(groupId);
+    } else {
+        expandedCollectionGroups.add(groupId);
+    }
+    renderCollectionView();
+}
+
+// ******************************************
 // renderCollectionView()
 // input: none
 // ******************************************
@@ -882,11 +903,14 @@ function renderCollectionView() {
                 )
                 .join("");
 
+            const isExpanded = expandedCollectionGroups.has(group.id);
+
             return `
-            <div class="collection-group">
-                <div class="collection-group-header">
-                    <input type="checkbox" id="owned-group-${group.id}" ${allOwned ? "checked" : ""} onchange="toggleGroupOwned('${group.id}', this.checked)">
-                    <label for="owned-group-${group.id}"><strong>${group.name}</strong></label>
+            <div class="collection-group${isExpanded ? "" : " collapsed"}">
+                <div class="collection-group-header" onclick="toggleCollectionGroup('${group.id}', event)" style="cursor: pointer;">
+                    <button type="button" class="panel-toggle${isExpanded ? " open" : ""}" aria-expanded="${isExpanded}">V</button>
+                    <input type="checkbox" id="owned-group-${group.id}" ${allOwned ? "checked" : ""} onchange="toggleGroupOwned('${group.id}', this.checked)" onclick="event.stopPropagation();">
+                    <label for="owned-group-${group.id}" onclick="event.stopPropagation();"><strong>${group.name}</strong></label>
                 </div>
                 <div class="collection-heroes-list">
                     ${heroesHtml}
