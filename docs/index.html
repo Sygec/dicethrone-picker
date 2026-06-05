@@ -1,837 +1,828 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <link rel="manifest" href="manifest.json" />
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dice Throne</title>
+    <head>
+        <link rel="manifest" href="manifest.json" />
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Dice Throne</title>
 
-    <!-- Stylesheets: We will dynamically load either the production or development stylesheet based on the hostname -->
-    <script>
-      // Check if this is Production or Local environment based on hostname
-      window.isProd =
-        window.location.hostname === "sygec.github.io" ||
-        window.location.hostname === "dicethrone-prod.sygec.workers.dev";
-      // Create a new link element
-      const themeLink = document.createElement("link");
-      themeLink.rel = "stylesheet";
-      // Assign the file path based on if this is prod or dev
-      themeLink.href = window.isProd
-        ? "styles/style-prod.css"
-        : "styles/style-dev.css";
-      // Append it to the head
-      document.head.appendChild(themeLink);
-    </script>
-    <!-- Additionnally, link the common stylesheet -->
-    <link rel="stylesheet" type="text/css" href="styles/style.css" />
-  </head>
+        <script>
+            // Check if this is Production or Local environment based on hostname
+            window.isProd =
+                window.location.hostname === "sygec.github.io" ||
+                window.location.hostname ===
+                    "dicethrone-prod.sygec.workers.dev";
+            // Create a new link element
+            const themeLink = document.createElement("link");
+            themeLink.rel = "stylesheet";
+            // Assign the file path based on if this is prod or dev
+            themeLink.href = window.isProd
+                ? "styles/style-prod.css"
+                : "styles/style-dev.css";
+            // Append it to the head
+            document.head.appendChild(themeLink);
+        </script>
+        <!-- Additionnally, link the common stylesheet -->
+        <link rel="stylesheet" type="text/css" href="styles/style.css" />
+    </head>
 
-  <body>
-    <div id="preloader">
-      <div class="dice-container">
-        <div class="dice">
-          <div class="dice-face front">1</div>
-          <div class="dice-face back">6</div>
-          <div class="dice-face right">3</div>
-          <div class="dice-face left">4</div>
-          <div class="dice-face top">5</div>
-          <div class="dice-face bottom">2</div>
-        </div>
-      </div>
-    </div>
-    <main class="content">
-      <img
-        src="images/banner.png"
-        alt="Dice Throne"
-        style="width: 100%; height: auto"
-      />
-      <div class="small-text">
-        v<button
-          id="version-number"
-          aria-label="View changelog"
-          style="
-            background: none;
-            border: none;
-            color: inherit;
-            font: inherit;
-            cursor: pointer;
-            text-decoration: underline;
-            padding: 0;
-          "
-        >
-          ...
-        </button>
-        |
-        <button
-          id="auth-btn"
-          style="
-            background: none;
-            border: none;
-            color: inherit;
-            font: inherit;
-            cursor: pointer;
-            text-decoration: underline;
-            padding: 0;
-          "
-        >
-          Login
-        </button>
-      </div>
-
-      <!-- Changelog Modal -->
-      <div id="changelog-modal" class="modal">
-        <div class="modal-content">
-          <span class="close-button">&times;</span>
-          <h2>Change Log</h2>
-          <hr />
-          <div id="changelog-container"></div>
-        </div>
-      </div>
-
-      <!-- What's New Modal -->
-      <div id="whats-new-modal" class="modal">
-        <div class="modal-content">
-          <span class="close-button" onclick="closeWhatsNew()">&times;</span>
-          <h2 style="color: black; margin-top: 0">What's New?</h2>
-          <div id="whats-new-container"></div>
-          <button
-            type="button"
-            class="btn-save"
-            onclick="closeWhatsNew()"
-            style="margin-top: 20px"
-          >
-            Got it!
-          </button>
-        </div>
-      </div>
-
-      <!-- Winner Selection Modal -->
-      <div id="winner-modal" class="modal">
-        <div class="modal-content">
-          <span class="close-button" onclick="closeWinnerModal()">&times;</span>
-          <h2 style="color: black; margin-top: 0">Select Winner</h2>
-          <div id="winner-selection-container" style="margin: 20px 0"></div>
-          <button type="button" class="btn-save" id="confirm-winner-btn">
-            Confirm Winner
-          </button>
-        </div>
-      </div>
-
-      <!-- Login Modal -->
-      <div id="login-modal" class="modal">
-        <div class="modal-content">
-          <span class="close-button" onclick="closeLoginModal()">&times;</span>
-          <h2 style="color: black; margin-top: 0">Login</h2>
-          <form
-            id="login-form"
-            autocomplete="on"
-            style="
-              display: flex;
-              flex-direction: column;
-              gap: 10px;
-              margin-top: 10px;
-            "
-          >
-            <input
-              name="email"
-              type="email"
-              id="login-email"
-              autocomplete="username"
-              placeholder="Email"
-              style="
-                font-size: 16px;
-                padding: 10px;
-                border-radius: 4px;
-                border: 1px solid #ccc;
-                color: var(--text);
-              "
-            />
-            <input
-              name="password"
-              type="password"
-              id="login-password"
-              autocomplete="current-password"
-              placeholder="Password"
-              style="
-                font-size: 16px;
-                padding: 10px;
-                border-radius: 4px;
-                border: 1px solid #ccc;
-                color: var(--text);
-              "
-            />
-            <button type="submit" class="btn-save">Sign In</button>
-            <div
-              id="login-error"
-              style="
-                color: var(--danger);
-                font-size: 0.8rem;
-                text-align: center;
-                display: none;
-                margin-top: 5px;
-              "
-            ></div>
-            <button
-              type="button"
-              onclick="handlePasswordReset()"
-              style="
-                background: none;
-                border: none;
-                color: inherit;
-                font: inherit;
-                cursor: pointer;
-                text-decoration: underline;
-                font-size: 0.8rem;
-                text-align: right;
-                width: 100%;
-                margin-top: -5px;
-              "
-            >
-              Forgot Password?
-            </button>
-          </form>
-        </div>
-      </div>
-
-      <!-- Update Password Modal -->
-      <div id="update-password-modal" class="modal">
-        <div class="modal-content">
-          <span class="close-button" onclick="closeUpdatePasswordModal()"
-            >&times;</span
-          >
-          <h2 style="color: black; margin-top: 0">Update Password</h2>
-          <form
-            id="update-password-form"
-            autocomplete="off"
-            style="
-              display: flex;
-              flex-direction: column;
-              gap: 10px;
-              margin-top: 10px;
-            "
-          >
-            <input
-              name="new-password"
-              type="password"
-              id="new-password"
-              placeholder="New Password"
-              style="
-                font-size: 16px;
-                padding: 10px;
-                border-radius: 4px;
-                border: 1px solid #ccc;
-                color: var(--text);
-              "
-            />
-            <button type="submit" class="btn-save">Update Password</button>
-            <div
-              id="update-password-error"
-              style="
-                color: var(--danger);
-                font-size: 0.8rem;
-                text-align: center;
-                display: none;
-                margin-top: 5px;
-              "
-            ></div>
-          </form>
-        </div>
-      </div>
-
-      <section id="rollSection">
-        <!-- Player Selection Toggles -->
-        <div class="player-toggle-zone-top" id="player-toggle-zone-top"></div>
-
-        <!-- Action Buttons -->
-        <button id="rollBtn" type="button" onclick="pickCharacters()">
-          ROLL RANDOMIZER
-        </button>
-        <div
-          id="action-buttons"
-          style="display: none; margin-top: 10px; gap: 10px"
-        >
-          <button
-            id="cancelBtn"
-            type="button"
-            class="btn-cancelroll"
-            onclick="cancelRoll()"
-            style="flex: 1"
-          >
-            CANCEL ROLL
-          </button>
-          <button
-            id="confirmBtn"
-            type="button"
-            class="btn-confirm"
-            onclick="applyResults()"
-            style="flex: 2"
-          >
-            LOCK IN SESSION
-          </button>
-        </div>
-
-        <!-- Dropdown Sort Options -->
-        <div class="dropdown-sort-options">
-          <label
-            ><input
-              type="radio"
-              name="dropdownSort"
-              value="name"
-              checked
-              onchange="updateDropdownSort()"
-            />
-            By Name</label
-          >
-          <label
-            ><input
-              type="radio"
-              name="dropdownSort"
-              value="weight"
-              onchange="updateDropdownSort()"
-            />
-            By Percentage</label
-          >
-        </div>
-
-        <!-- Randomizer Results Area -->
-        <section id="results" class="results" aria-live="polite">
-          <p style="text-align: center; opacity: 0.6">
-            Select players and roll.
-          </p>
-        </section>
-
-        <!-- Validation Error Message -->
-        <div id="error-msg" role="alert">
-          ⚠ Duplicate hero selected! Each player must have a unique character.
-        </div>
-      </section>
-
-      <!-- Hero Database & Stats Section -->
-      <section id="dbSection" class="hidden">
-        <!-- Search & Filtering -->
-        <div class="search-container">
-          <div class="search-wrapper">
-            <input
-              class="search-bar"
-              type="text"
-              id="hero-search"
-              style="font-size: 16px"
-              placeholder="Search Heroes or Groups..."
-              oninput="handleSearchInput()"
-              aria-label="Search heroes by name or group"
-            />
-            <div class="search-actions">
-              <img
-                src="images/buttons/close.png"
-                id="clear-search"
-                class="search-icon hidden"
-                onclick="clearSearch()"
-                alt="Clear"
-                title="Clear Search"
-              />
-              <img
-                src="images/buttons/sort.png"
-                id="sort-toggle"
-                class="search-icon"
-                onclick="toggleSortSection()"
-                alt="Sort"
-                title="Toggle Sort Section"
-              />
-              <img
-                src="images/buttons/filter.png"
-                id="filter-toggle"
-                class="search-icon"
-                onclick="toggleFilterSection()"
-                alt="Filter"
-                title="Toggle Filter Section"
-              />
+    <body>
+        <div id="preloader">
+            <div class="dice-container">
+                <div class="dice">
+                    <div class="dice-face front">1</div>
+                    <div class="dice-face back">6</div>
+                    <div class="dice-face right">3</div>
+                    <div class="dice-face left">4</div>
+                    <div class="dice-face top">5</div>
+                    <div class="dice-face bottom">2</div>
+                </div>
             </div>
-          </div>
-          <div class="small-text" id="count-stats">Showing 0 of 0 heroes</div>
-          <div
-            class="dropdown-sort-options"
-            style="margin-top: 5px; margin-bottom: 0"
-          >
-            <label>
-              <input
-                type="checkbox"
-                id="db-show-owned"
-                checked
-                onchange="renderList()"
-              />
-              Owned
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                id="db-show-not-owned"
-                onchange="renderList()"
-              />
-              Not owned
-            </label>
-          </div>
         </div>
-
-        <div id="sort-section" class="hidden">
-          <div
-            class="dropdown-sort-options"
-            style="margin-top: 0; margin-bottom: 10px"
-          >
-            <label>
-              <input
-                type="checkbox"
-                id="db-use-historical-data"
-                checked
-                onchange="renderList()"
-              />
-              Include Historical Data (before May 8th 2026)
-            </label>
-          </div>
-          <div class="sort-controls">
-            <div class="sort-row">
-              <div id="player-sort-container" class="player-toggle-zone"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Filter Section -->
-        <div id="filter-section" class="hidden">
-          <div class="dice-filter-section" style="margin-bottom: 20px">
-            <div class="dice-bar">
-              <img
-                src="images/dice/d1.png"
-                class="dice-icon"
-                id="dice-1"
-                onclick="toggleLevel(1)"
-                title="Level 1"
-              />
-              <img
-                src="images/dice/d2.png"
-                class="dice-icon"
-                id="dice-2"
-                onclick="toggleLevel(2)"
-                title="Level 2"
-              />
-              <img
-                src="images/dice/d3.png"
-                class="dice-icon"
-                id="dice-3"
-                onclick="toggleLevel(3)"
-                title="Level 3"
-              />
-              <img
-                src="images/dice/d4.png"
-                class="dice-icon"
-                id="dice-4"
-                onclick="toggleLevel(4)"
-                title="Level 4"
-              />
-              <img
-                src="images/dice/d5.png"
-                class="dice-icon"
-                id="dice-5"
-                onclick="toggleLevel(5)"
-                title="Level 5"
-              />
-              <img
-                src="images/dice/d6.png"
-                class="dice-icon"
-                id="dice-6"
-                onclick="toggleLevel(6)"
-                title="Level 6"
-              />
-              <img
-                src="images/dice/d_all.png"
-                class="dice-icon"
-                id="dice-all"
-                onclick="toggleLevel('all')"
-                title="All Levels"
-              />
-            </div>
-          </div>
-        </div>
-        <div id="heroContainer"></div>
-      </section>
-
-      <!-- Games History Section -->
-      <section id="gamesSection" class="hidden">
-        <div class="search-container" style="margin-top: 15px">
-          <div class="search-wrapper">
-            <input
-              class="search-bar"
-              type="text"
-              id="games-search"
-              style="font-size: 16px"
-              placeholder="Search games by hero..."
-              oninput="handleGamesSearchInput()"
-              aria-label="Search games"
-            />
-            <div class="search-actions">
-              <img
-                src="images/buttons/close.png"
-                id="clear-games-search"
-                class="search-icon hidden"
-                onclick="clearGamesSearch()"
-                alt="Clear"
-                title="Clear Search"
-              />
-              <img
-                src="images/buttons/filter.png"
-                id="games-filter-toggle"
-                class="search-icon"
-                onclick="toggleGamesFilterUI()"
-                alt="Filter"
-                title="Toggle Player Filters"
-              />
-            </div>
-          </div>
-          <div class="small-text" id="game-count-stats" style="margin-top: 5px">
-            Showing 0 of 0 games
-          </div>
-        </div>
-
-        <div
-          id="games-filter-section"
-          class="hidden"
-          style="margin-bottom: 20px"
-        >
-          <div
-            class="dropdown-sort-options"
-            style="margin-top: 0; margin-bottom: 10px"
-          >
-            <label>
-              <input
-                type="checkbox"
-                id="use-historical-data"
-                checked
-                onchange="renderPlayerGameFilters()"
-              />
-              Include Historical Data (before May 8th 2026)
-            </label>
-          </div>
-          <div
-            style="
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              gap: 15px;
-              flex-wrap: wrap;
-            "
-          >
-            <div
-              class="dice-bar"
-              id="player-game-filter-container"
-              style="margin-bottom: 0"
-            ></div>
-            <div id="winner-filter-wrapper" class="hidden">
-              <input
-                type="checkbox"
-                id="games-winner-only"
-                onchange="renderGamesList()"
-                style="
-                  width: 18px;
-                  height: 18px;
-                  cursor: pointer;
-                  accent-color: var(--accent);
-                "
-              />
-              <label
-                for="games-winner-only"
-                style="cursor: pointer; user-select: none"
-                >Wins Only</label
-              >
-            </div>
-          </div>
-        </div>
-
-        <div id="gamesContainer" style="margin-top: 20px"></div>
-      </section>
-
-      <!-- Collection Section -->
-      <section id="collectionSection" class="hidden">
-        <div
-          class="small-text"
-          id="collection-count-stats"
-          style="margin-top: 15px"
-        >
-          Owned 0 of 0 heroes
-        </div>
-        <div id="collectionContainer" style="margin-top: 20px"></div>
-      </section>
-
-      <!-- Admin & Data Management -->
-
-      <section id="adminSection" class="hidden">
-        <div id="admin-build-info"></div>
-
-        <div class="admin-panel">
-          <div
-            class="panel-header"
-            onclick="toggleAdminPanel(event, 'groupsPanel')"
-          >
-            <h3>Manage Groups</h3>
-            <button type="button" class="panel-toggle" aria-expanded="false">
-              V
-            </button>
-          </div>
-          <div id="groupsPanel" class="panel-content hidden">
-            <div style="margin-bottom: 15px">
-              <button
-                type="button"
-                class="btn-save"
-                id="addGroupBtn"
-                onclick="toggleGroupForm()"
-              >
-                Add Group
-              </button>
-            </div>
-            <div
-              id="groupForm"
-              class="manage-form hidden"
-              style="
-                border-bottom: 1px solid #ffffff22;
-                padding-bottom: 20px;
-                margin-bottom: 20px;
-              "
-            >
-              <h3 style="margin-top: 0; font-size: 1rem; color: var(--accent)">
-                Groups
-              </h3>
-              <div class="form-grid">
-                <input
-                  type="text"
-                  id="groupName"
-                  style="font-size: 16px"
-                  placeholder="Group Name"
-                />
-                <input
-                  type="text"
-                  id="groupType"
-                  style="font-size: 16px"
-                  placeholder="Type (optional)"
-                />
-                <input
-                  type="number"
-                  id="groupOrder"
-                  style="font-size: 16px"
-                  placeholder="Order Index"
-                />
-              </div>
-              <div style="display: flex; gap: 10px">
-                <button
-                  type="button"
-                  class="btn-save"
-                  id="saveGroupBtn"
-                  onclick="saveGroup()"
-                >
-                  Save Group
+        <main class="content">
+            <img
+                src="images/banner.png"
+                alt="Dice Throne"
+                style="width: 100%; height: auto" />
+            <div class="small-text">
+                v<button
+                    id="version-number"
+                    aria-label="View changelog"
+                    style="
+                        background: none;
+                        border: none;
+                        color: inherit;
+                        font: inherit;
+                        cursor: pointer;
+                        text-decoration: underline;
+                        padding: 0;
+                    ">
+                    ...
                 </button>
+                |
                 <button
-                  type="button"
-                  class="btn-cancel"
-                  id="cancelGroupBtn"
-                  onclick="
-                    if (
-                      document.getElementById('groupName').value &&
-                      !confirm('Discard unsaved changes?')
-                    )
-                      return;
-                    resetGroupForm();
-                  "
-                >
-                  Cancel
+                    id="auth-btn"
+                    style="
+                        background: none;
+                        border: none;
+                        color: inherit;
+                        font: inherit;
+                        cursor: pointer;
+                        text-decoration: underline;
+                        padding: 0;
+                    ">
+                    Login
                 </button>
-              </div>
             </div>
-            <div id="groupsListContainer" style="margin-top: 15px"></div>
-          </div>
-        </div>
 
-        <div class="admin-panel">
-          <div
-            class="panel-header"
-            onclick="toggleAdminPanel(event, 'heroesPanel')"
-          >
-            <h3>Manage Heroes</h3>
-            <button type="button" class="panel-toggle" aria-expanded="false">
-              V
-            </button>
-          </div>
-          <div id="heroesPanel" class="panel-content hidden">
-            <div style="margin-bottom: 15px">
-              <button
-                type="button"
-                class="btn-save"
-                id="addHeroBtn"
-                onclick="toggleHeroForm()"
-              >
-                Add Hero
-              </button>
+            <!-- Changelog Modal -->
+            <div id="changelog-modal" class="modal">
+                <div class="modal-content">
+                    <span class="close-button">&times;</span>
+                    <h2>Change Log</h2>
+                    <hr />
+                    <div id="changelog-container"></div>
+                </div>
             </div>
-            <div id="heroForm" class="manage-form hidden">
-              <h3
-                id="formTitle"
-                style="margin-top: 0; font-size: 1rem; color: var(--accent)"
-              >
-                Add New Hero
-              </h3>
-              <div class="form-grid hero-form-grid">
-                <input
-                  type="text"
-                  id="charName"
-                  style="font-size: 16px"
-                  placeholder="Hero Name"
-                />
-                <select
-                  id="charGroup"
-                  style="font-size: 16px"
-                  aria-label="Select group"
-                >
-                  <option value="">-- Select Group --</option>
-                </select>
-                <input
-                  type="text"
-                  id="charSlug"
-                  style="font-size: 16px"
-                  placeholder="Slug (for image)"
-                />
-                <select
-                  id="charComplexity"
-                  style="font-size: 16px"
-                  aria-label="Select complexity"
-                >
-                  <option value="">-- Complexity --</option>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5">5</option>
-                  <option value="6">6</option>
-                </select>
-              </div>
-              <div style="display: flex; gap: 10px">
-                <button
-                  type="button"
-                  class="btn-save"
-                  id="saveBtn"
-                  onclick="saveCharacter()"
-                >
-                  Save Hero
+
+            <!-- What's New Modal -->
+            <div id="whats-new-modal" class="modal">
+                <div class="modal-content">
+                    <span class="close-button" onclick="closeWhatsNew()">
+                        &times;
+                    </span>
+                    <h2 style="color: black; margin-top: 0">What's New?</h2>
+                    <div id="whats-new-container"></div>
+                    <button
+                        type="button"
+                        class="btn-save"
+                        onclick="closeWhatsNew()"
+                        style="margin-top: 20px">
+                        Got it!
+                    </button>
+                </div>
+            </div>
+
+            <!-- Winner Selection Modal -->
+            <div id="winner-modal" class="modal">
+                <div class="modal-content">
+                    <span class="close-button" onclick="closeWinnerModal()"
+                        >&times;</span
+                    >
+                    <h2 style="color: black; margin-top: 0">Select Winner</h2>
+                    <div
+                        id="winner-selection-container"
+                        style="margin: 20px 0"></div>
+                    <button
+                        type="button"
+                        class="btn-save"
+                        id="confirm-winner-btn">
+                        Confirm Winner
+                    </button>
+                </div>
+            </div>
+
+            <!-- Login Modal -->
+            <div id="login-modal" class="modal">
+                <div class="modal-content">
+                    <span class="close-button" onclick="closeLoginModal()"
+                        >&times;</span
+                    >
+                    <h2 style="color: black; margin-top: 0">Login</h2>
+                    <form
+                        id="login-form"
+                        autocomplete="on"
+                        style="
+                            display: flex;
+                            flex-direction: column;
+                            gap: 10px;
+                            margin-top: 10px;
+                        ">
+                        <input
+                            name="email"
+                            type="email"
+                            id="login-email"
+                            autocomplete="username"
+                            placeholder="Email"
+                            style="
+                                font-size: 16px;
+                                padding: 10px;
+                                border-radius: 4px;
+                                border: 1px solid #ccc;
+                                color: var(--text);
+                            " />
+                        <input
+                            name="password"
+                            type="password"
+                            id="login-password"
+                            autocomplete="current-password"
+                            placeholder="Password"
+                            style="
+                                font-size: 16px;
+                                padding: 10px;
+                                border-radius: 4px;
+                                border: 1px solid #ccc;
+                                color: var(--text);
+                            " />
+                        <button type="submit" class="btn-save">Sign In</button>
+                        <div
+                            id="login-error"
+                            style="
+                                color: var(--danger);
+                                font-size: 0.8rem;
+                                text-align: center;
+                                display: none;
+                                margin-top: 5px;
+                            "></div>
+                        <button
+                            type="button"
+                            onclick="handlePasswordReset()"
+                            style="
+                                background: none;
+                                border: none;
+                                color: inherit;
+                                font: inherit;
+                                cursor: pointer;
+                                text-decoration: underline;
+                                font-size: 0.8rem;
+                                text-align: right;
+                                width: 100%;
+                                margin-top: -5px;
+                            ">
+                            Forgot Password?
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Update Password Modal -->
+            <div id="update-password-modal" class="modal">
+                <div class="modal-content">
+                    <span
+                        class="close-button"
+                        onclick="closeUpdatePasswordModal()"
+                        >&times;</span
+                    >
+                    <h2 style="color: black; margin-top: 0">Update Password</h2>
+                    <form
+                        id="update-password-form"
+                        autocomplete="off"
+                        style="
+                            display: flex;
+                            flex-direction: column;
+                            gap: 10px;
+                            margin-top: 10px;
+                        ">
+                        <input
+                            name="new-password"
+                            type="password"
+                            id="new-password"
+                            placeholder="New Password"
+                            style="
+                                font-size: 16px;
+                                padding: 10px;
+                                border-radius: 4px;
+                                border: 1px solid #ccc;
+                                color: var(--text);
+                            " />
+                        <button type="submit" class="btn-save">
+                            Update Password
+                        </button>
+                        <div
+                            id="update-password-error"
+                            style="
+                                color: var(--danger);
+                                font-size: 0.8rem;
+                                text-align: center;
+                                display: none;
+                                margin-top: 5px;
+                            "></div>
+                    </form>
+                </div>
+            </div>
+
+            <section id="rollSection">
+                <!-- Player Selection Toggles -->
+                <div
+                    class="player-toggle-zone-top"
+                    id="player-toggle-zone-top"></div>
+
+                <!-- Action Buttons -->
+                <button id="rollBtn" type="button" onclick="pickCharacters()">
+                    ROLL RANDOMIZER
                 </button>
-                <button
-                  type="button"
-                  class="btn-cancel"
-                  id="cancelHeroBtn"
-                  onclick="
-                    if (
-                      document.getElementById('charName').value &&
-                      !confirm('Discard unsaved changes?')
-                    )
-                      return;
-                    resetForm();
-                  "
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-            <div id="heroesListContainer" style="margin-top: 15px"></div>
-          </div>
-        </div>
+                <div
+                    id="action-buttons"
+                    style="display: none; margin-top: 10px; gap: 10px">
+                    <button
+                        id="cancelBtn"
+                        type="button"
+                        class="btn-cancelroll"
+                        onclick="cancelRoll()"
+                        style="flex: 1">
+                        CANCEL ROLL
+                    </button>
+                    <button
+                        id="confirmBtn"
+                        type="button"
+                        class="btn-confirm"
+                        onclick="applyResults()"
+                        style="flex: 2">
+                        LOCK IN SESSION
+                    </button>
+                </div>
 
-        <div class="admin-panel">
-          <div
-            class="panel-header"
-            onclick="toggleAdminPanel(event, 'playersPanel')"
-          >
-            <h3>Manage Players</h3>
-            <button type="button" class="panel-toggle" aria-expanded="false">
-              V
-            </button>
-          </div>
-          <div id="playersPanel" class="panel-content hidden">
-            <div id="playersListContainer" style="margin-top: 15px"></div>
-          </div>
-        </div>
+                <!-- Dropdown Sort Options -->
+                <div class="dropdown-sort-options">
+                    <label
+                        ><input
+                            type="radio"
+                            name="dropdownSort"
+                            value="name"
+                            checked
+                            onchange="updateDropdownSort()" />
+                        By Name</label
+                    >
+                    <label
+                        ><input
+                            type="radio"
+                            name="dropdownSort"
+                            value="weight"
+                            onchange="updateDropdownSort()" />
+                        By Percentage</label
+                    >
+                </div>
 
-        <div class="admin-panel">
-          <div
-            class="panel-header"
-            onclick="toggleAdminPanel(event, 'usersPanel')"
-          >
-            <h3>Manage Users</h3>
-            <button type="button" class="panel-toggle" aria-expanded="false">
-              V
-            </button>
-          </div>
-          <div id="usersPanel" class="panel-content hidden">
-            <div id="usersListContainer" style="margin-top: 15px"></div>
-          </div>
-        </div>
-      </section>
-    </main>
+                <!-- Randomizer Results Area -->
+                <section id="results" class="results" aria-live="polite">
+                    <p style="text-align: center; opacity: 0.6">
+                        Select players and roll.
+                    </p>
+                </section>
 
-    <!-- Persistent Bottom Navigation -->
-    <nav class="bottom-nav">
-      <a
-        href="#randomizer"
-        class="nav-item"
-        onclick="
-          showRoll();
-          return false;
-        "
-      >
-        <span class="icon">🎲</span>
-        <span class="label">Roll</span>
-      </a>
-      <a
-        href="#database"
-        class="nav-item"
-        onclick="
-          showDatabase();
-          return false;
-        "
-      >
-        <span class="icon">🛡️</span>
-        <span class="label">Heroes</span>
-      </a>
-      <a
-        href="#history"
-        class="nav-item"
-        onclick="
-          showHistory();
-          return false;
-        "
-      >
-        <span class="icon">📜</span>
-        <span class="label">History</span>
-      </a>
-      <a
-        href="#collection"
-        class="nav-item"
-        onclick="
-          showCollection();
-          return false;
-        "
-      >
-        <span class="icon">📦</span>
-        <span class="label">Collection</span>
-      </a>
-      <!-- Conditional Admin Icon -->
-      <a
-        href="#admin"
-        class="nav-item admin-only"
-        onclick="
-          showAdmin();
-          return false;
-        "
-      >
-        <span class="icon">⚙️</span>
-        <span class="label">Admin</span>
-      </a>
-    </nav>
+                <!-- Validation Error Message -->
+                <div id="error-msg" role="alert">
+                    ⚠ Duplicate hero selected! Each player must have a unique
+                    character.
+                </div>
+            </section>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./javascript/dice-throne.js"></script>
-  </body>
+            <!-- Hero Database & Stats Section -->
+            <section id="dbSection" class="hidden">
+                <!-- Search & Filtering -->
+                <div class="search-container">
+                    <div class="search-wrapper">
+                        <input
+                            class="search-bar"
+                            type="text"
+                            id="hero-search"
+                            style="font-size: 16px"
+                            placeholder="Search Heroes or Groups..."
+                            oninput="handleSearchInput()"
+                            aria-label="Search heroes by name or group" />
+                        <div class="search-actions">
+                            <img
+                                src="images/buttons/close.png"
+                                id="clear-search"
+                                class="search-icon hidden"
+                                onclick="clearSearch()"
+                                alt="Clear"
+                                title="Clear Search" />
+                            <img
+                                src="images/buttons/sort.png"
+                                id="sort-toggle"
+                                class="search-icon"
+                                onclick="toggleSortSection()"
+                                alt="Sort"
+                                title="Toggle Sort Section" />
+                            <img
+                                src="images/buttons/filter.png"
+                                id="filter-toggle"
+                                class="search-icon"
+                                onclick="toggleFilterSection()"
+                                alt="Filter"
+                                title="Toggle Filter Section" />
+                        </div>
+                    </div>
+                    <div class="small-text" id="count-stats">
+                        Showing 0 of 0 heroes
+                    </div>
+                    <div
+                        class="dropdown-sort-options"
+                        style="margin-top: 5px; margin-bottom: 0">
+                        <label>
+                            <input
+                                type="checkbox"
+                                id="db-show-owned"
+                                checked
+                                onchange="renderList()" />
+                            Owned
+                        </label>
+                        <label>
+                            <input
+                                type="checkbox"
+                                id="db-show-not-owned"
+                                onchange="renderList()" />
+                            Not owned
+                        </label>
+                    </div>
+                </div>
+
+                <div id="sort-section" class="hidden">
+                    <div
+                        class="dropdown-sort-options"
+                        style="margin-top: 0; margin-bottom: 10px">
+                        <label>
+                            <input
+                                type="checkbox"
+                                id="db-use-historical-data"
+                                checked
+                                onchange="renderList()" />
+                            Include Historical Data (before May 8th 2026)
+                        </label>
+                    </div>
+                    <div class="sort-controls">
+                        <div class="sort-row">
+                            <div
+                                id="player-sort-container"
+                                class="player-toggle-zone"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Section -->
+                <div id="filter-section" class="hidden">
+                    <div
+                        class="dice-filter-section"
+                        style="margin-bottom: 20px">
+                        <div class="dice-bar">
+                            <img
+                                src="images/dice/d1.png"
+                                class="dice-icon"
+                                id="dice-1"
+                                onclick="toggleLevel(1)"
+                                title="Level 1" />
+                            <img
+                                src="images/dice/d2.png"
+                                class="dice-icon"
+                                id="dice-2"
+                                onclick="toggleLevel(2)"
+                                title="Level 2" />
+                            <img
+                                src="images/dice/d3.png"
+                                class="dice-icon"
+                                id="dice-3"
+                                onclick="toggleLevel(3)"
+                                title="Level 3" />
+                            <img
+                                src="images/dice/d4.png"
+                                class="dice-icon"
+                                id="dice-4"
+                                onclick="toggleLevel(4)"
+                                title="Level 4" />
+                            <img
+                                src="images/dice/d5.png"
+                                class="dice-icon"
+                                id="dice-5"
+                                onclick="toggleLevel(5)"
+                                title="Level 5" />
+                            <img
+                                src="images/dice/d6.png"
+                                class="dice-icon"
+                                id="dice-6"
+                                onclick="toggleLevel(6)"
+                                title="Level 6" />
+                            <img
+                                src="images/dice/d_all.png"
+                                class="dice-icon"
+                                id="dice-all"
+                                onclick="toggleLevel('all')"
+                                title="All Levels" />
+                        </div>
+                    </div>
+                </div>
+                <div id="heroContainer"></div>
+            </section>
+
+            <!-- Games History Section -->
+            <section id="gamesSection" class="hidden">
+                <div class="search-container" style="margin-top: 15px">
+                    <div class="search-wrapper">
+                        <input
+                            class="search-bar"
+                            type="text"
+                            id="games-search"
+                            style="font-size: 16px"
+                            placeholder="Search games by hero..."
+                            oninput="handleGamesSearchInput()"
+                            aria-label="Search games" />
+                        <div class="search-actions">
+                            <img
+                                src="images/buttons/close.png"
+                                id="clear-games-search"
+                                class="search-icon hidden"
+                                onclick="clearGamesSearch()"
+                                alt="Clear"
+                                title="Clear Search" />
+                            <img
+                                src="images/buttons/filter.png"
+                                id="games-filter-toggle"
+                                class="search-icon"
+                                onclick="toggleGamesFilterUI()"
+                                alt="Filter"
+                                title="Toggle Player Filters" />
+                        </div>
+                    </div>
+                    <div
+                        class="small-text"
+                        id="game-count-stats"
+                        style="margin-top: 5px">
+                        Showing 0 of 0 games
+                    </div>
+                </div>
+
+                <div
+                    id="games-filter-section"
+                    class="hidden"
+                    style="margin-bottom: 20px">
+                    <div
+                        class="dropdown-sort-options"
+                        style="margin-top: 0; margin-bottom: 10px">
+                        <label>
+                            <input
+                                type="checkbox"
+                                id="use-historical-data"
+                                checked
+                                onchange="renderPlayerGameFilters()" />
+                            Include Historical Data (before May 8th 2026)
+                        </label>
+                    </div>
+                    <div
+                        style="
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 15px;
+                            flex-wrap: wrap;
+                        ">
+                        <div
+                            class="dice-bar"
+                            id="player-game-filter-container"
+                            style="margin-bottom: 0"></div>
+                        <div id="winner-filter-wrapper" class="hidden">
+                            <input
+                                type="checkbox"
+                                id="games-winner-only"
+                                onchange="renderGamesList()"
+                                style="
+                                    width: 18px;
+                                    height: 18px;
+                                    cursor: pointer;
+                                    accent-color: var(--accent);
+                                " />
+                            <label
+                                for="games-winner-only"
+                                style="cursor: pointer; user-select: none"
+                                >Wins Only</label
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <div id="gamesContainer" style="margin-top: 20px"></div>
+            </section>
+
+            <!-- Collection Section -->
+            <section id="collectionSection" class="hidden">
+                <div
+                    class="small-text"
+                    id="collection-count-stats"
+                    style="margin-top: 15px">
+                    Owned 0 of 0 heroes
+                </div>
+                <div id="collectionContainer" style="margin-top: 20px"></div>
+            </section>
+
+            <!-- Admin & Data Management -->
+
+            <section id="adminSection" class="hidden">
+                <div id="admin-build-info"></div>
+
+                <div class="admin-panel">
+                    <div
+                        class="panel-header"
+                        onclick="toggleAdminPanel(event, 'groupsPanel')">
+                        <h3>Manage Groups</h3>
+                        <button
+                            type="button"
+                            class="panel-toggle"
+                            aria-expanded="false">
+                            V
+                        </button>
+                    </div>
+                    <div id="groupsPanel" class="panel-content hidden">
+                        <div style="margin-bottom: 15px">
+                            <button
+                                type="button"
+                                class="btn-save"
+                                id="addGroupBtn"
+                                onclick="toggleGroupForm()">
+                                Add Group
+                            </button>
+                        </div>
+                        <div
+                            id="groupForm"
+                            class="manage-form hidden"
+                            style="
+                                border-bottom: 1px solid #ffffff22;
+                                padding-bottom: 20px;
+                                margin-bottom: 20px;
+                            ">
+                            <h3
+                                style="
+                                    margin-top: 0;
+                                    font-size: 1rem;
+                                    color: var(--accent);
+                                ">
+                                Groups
+                            </h3>
+                            <div class="form-grid">
+                                <input
+                                    type="text"
+                                    id="groupName"
+                                    style="font-size: 16px"
+                                    placeholder="Group Name" />
+                                <input
+                                    type="text"
+                                    id="groupType"
+                                    style="font-size: 16px"
+                                    placeholder="Type (optional)" />
+                                <input
+                                    type="number"
+                                    id="groupOrder"
+                                    style="font-size: 16px"
+                                    placeholder="Order Index" />
+                            </div>
+                            <div style="display: flex; gap: 10px">
+                                <button
+                                    type="button"
+                                    class="btn-save"
+                                    id="saveGroupBtn"
+                                    onclick="saveGroup()">
+                                    Save Group
+                                </button>
+                                <button
+                                    type="button"
+                                    class="btn-cancel"
+                                    id="cancelGroupBtn"
+                                    onclick="
+                                        if (
+                                            document.getElementById('groupName')
+                                                .value &&
+                                            !confirm('Discard unsaved changes?')
+                                        )
+                                            return;
+                                        resetGroupForm();
+                                    ">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                        <div
+                            id="groupsListContainer"
+                            style="margin-top: 15px"></div>
+                    </div>
+                </div>
+
+                <div class="admin-panel">
+                    <div
+                        class="panel-header"
+                        onclick="toggleAdminPanel(event, 'heroesPanel')">
+                        <h3>Manage Heroes</h3>
+                        <button
+                            type="button"
+                            class="panel-toggle"
+                            aria-expanded="false">
+                            V
+                        </button>
+                    </div>
+                    <div id="heroesPanel" class="panel-content hidden">
+                        <div style="margin-bottom: 15px">
+                            <button
+                                type="button"
+                                class="btn-save"
+                                id="addHeroBtn"
+                                onclick="toggleHeroForm()">
+                                Add Hero
+                            </button>
+                        </div>
+                        <div id="heroForm" class="manage-form hidden">
+                            <h3
+                                id="formTitle"
+                                style="
+                                    margin-top: 0;
+                                    font-size: 1rem;
+                                    color: var(--accent);
+                                ">
+                                Add New Hero
+                            </h3>
+                            <div class="form-grid hero-form-grid">
+                                <input
+                                    type="text"
+                                    id="charName"
+                                    style="font-size: 16px"
+                                    placeholder="Hero Name" />
+                                <select
+                                    id="charGroup"
+                                    style="font-size: 16px"
+                                    aria-label="Select group">
+                                    <option value="">-- Select Group --</option>
+                                </select>
+                                <input
+                                    type="text"
+                                    id="charSlug"
+                                    style="font-size: 16px"
+                                    placeholder="Slug (for image)" />
+                                <select
+                                    id="charComplexity"
+                                    style="font-size: 16px"
+                                    aria-label="Select complexity">
+                                    <option value="">-- Complexity --</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; gap: 10px">
+                                <button
+                                    type="button"
+                                    class="btn-save"
+                                    id="saveBtn"
+                                    onclick="saveCharacter()">
+                                    Save Hero
+                                </button>
+                                <button
+                                    type="button"
+                                    class="btn-cancel"
+                                    id="cancelHeroBtn"
+                                    onclick="
+                                        if (
+                                            document.getElementById('charName')
+                                                .value &&
+                                            !confirm('Discard unsaved changes?')
+                                        )
+                                            return;
+                                        resetForm();
+                                    ">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                        <div
+                            id="heroesListContainer"
+                            style="margin-top: 15px"></div>
+                    </div>
+                </div>
+
+                <div class="admin-panel">
+                    <div
+                        class="panel-header"
+                        onclick="toggleAdminPanel(event, 'playersPanel')">
+                        <h3>Manage Players</h3>
+                        <button
+                            type="button"
+                            class="panel-toggle"
+                            aria-expanded="false">
+                            V
+                        </button>
+                    </div>
+                    <div id="playersPanel" class="panel-content hidden">
+                        <div
+                            id="playersListContainer"
+                            style="margin-top: 15px"></div>
+                    </div>
+                </div>
+
+                <div class="admin-panel">
+                    <div
+                        class="panel-header"
+                        onclick="toggleAdminPanel(event, 'usersPanel')">
+                        <h3>Manage Users</h3>
+                        <button
+                            type="button"
+                            class="panel-toggle"
+                            aria-expanded="false">
+                            V
+                        </button>
+                    </div>
+                    <div id="usersPanel" class="panel-content hidden">
+                        <div
+                            id="usersListContainer"
+                            style="margin-top: 15px"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Persistent Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a
+                href="#randomizer"
+                class="nav-item"
+                onclick="
+                    showRoll();
+                    return false;
+                ">
+                <span class="icon">🎲</span>
+                <span class="label">Roll</span>
+            </a>
+            <a
+                href="#database"
+                class="nav-item"
+                onclick="
+                    showDatabase();
+                    return false;
+                ">
+                <span class="icon">🛡️</span>
+                <span class="label">Heroes</span>
+            </a>
+            <a
+                href="#history"
+                class="nav-item"
+                onclick="
+                    showHistory();
+                    return false;
+                ">
+                <span class="icon">📜</span>
+                <span class="label">History</span>
+            </a>
+            <a
+                href="#collection"
+                class="nav-item"
+                onclick="
+                    showCollection();
+                    return false;
+                ">
+                <span class="icon">📦</span>
+                <span class="label">Collection</span>
+            </a>
+            <!-- Conditional Admin Icon -->
+            <a
+                href="#admin"
+                class="nav-item admin-only"
+                onclick="
+                    showAdmin();
+                    return false;
+                ">
+                <span class="icon">⚙️</span>
+                <span class="label">Admin</span>
+            </a>
+        </nav>
+
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <script src="./javascript/dice-throne.js"></script>
+    </body>
 </html>
