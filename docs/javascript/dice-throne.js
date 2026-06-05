@@ -2038,8 +2038,11 @@ function handlePlayerToggleClick(event, index) {
 // 3. Conditional player pill selector
 // ******************************************
 function renderSortControls() {
-    const container = document.getElementById("player-sort-container");
+    const container = document.getElementById("sort-section");
     if (!container) return;
+
+    // Preserve historical data checkbox state before replacing HTML
+    const useHistorical = document.getElementById("db-use-historical-data")?.checked ?? true;
 
     const mainPlayerNames = NAMES.slice(0, 4);
 
@@ -2084,39 +2087,51 @@ function renderSortControls() {
     const directionArrow = sortAsc ? "▲" : "▼";
 
     container.innerHTML = `
-        <div class="sort-container-new" style="width: 100%; box-sizing: border-box;">
-            <!-- Column Visibility Row -->
-            <div class="panel-row-new">
-                <span class="panel-row-title">Show Player Stats Columns:</span>
-                <div class="pill-group">
-                    ${visibilityPillsHtml}
-                </div>
+        <!-- Historical Data Row -->
+        <div class="panel-row-new">
+            <div class="dropdown-sort-options" style="margin: 0; justify-content: flex-start;">
+                <label style="cursor: pointer; user-select: none;">
+                    <input
+                        type="checkbox"
+                        id="db-use-historical-data"
+                        ${useHistorical ? "checked" : ""}
+                        onchange="renderList()" />
+                    Include Historical Data (before May 8th 2026)
+                </label>
             </div>
+        </div>
 
-            <!-- Sort Controls Row -->
-            <div class="panel-row-new">
-                <span class="panel-row-title">Sort Visible Heroes:</span>
-                <div class="sort-controls-new">
-                    <select id="sort-type-select" class="sort-select-new" onchange="handleSortTypeChange(this.value)">
-                        <option value="name" ${sortType === "name" ? "selected" : ""}>Hero Name</option>
-                        <option value="group" ${sortType === "group" ? "selected" : ""}>Group (Season)</option>
-                        <option value="probability" ${sortType === "probability" ? "selected" : ""}>Roll Probability (%)</option>
-                        <option value="lastPlayed" ${sortType === "lastPlayed" ? "selected" : ""}>Last Played Date</option>
-                    </select>
-                    
-                    <button id="sort-direction-btn" class="btn-direction-new" onclick="toggleSortDirection()">
-                        <span id="sort-direction-text">${directionText}</span>
-                        <span id="sort-direction-arrow">${directionArrow}</span>
-                    </button>
-                </div>
+        <!-- Column Visibility Row -->
+        <div class="panel-row-new">
+            <span class="panel-row-title">Show Player Stats Columns:</span>
+            <div class="pill-group">
+                ${visibilityPillsHtml}
             </div>
+        </div>
 
-            <!-- Conditional Player Selector Row -->
-            <div id="player-sort-sub-section" class="panel-row-new" style="${showPlayerSubSection ? "" : "display: none;"}">
-                <span class="panel-row-title">For Player:</span>
-                <div class="pill-group">
-                    ${playerPillsHtml}
-                </div>
+        <!-- Sort Controls Row -->
+        <div class="panel-row-new">
+            <span class="panel-row-title">Sort Visible Heroes:</span>
+            <div class="sort-controls-new">
+                <select id="sort-type-select" class="sort-select-new" onchange="handleSortTypeChange(this.value)">
+                    <option value="name" ${sortType === "name" ? "selected" : ""}>Hero Name</option>
+                    <option value="group" ${sortType === "group" ? "selected" : ""}>Group (Season)</option>
+                    <option value="probability" ${sortType === "probability" ? "selected" : ""}>Roll Probability (%)</option>
+                    <option value="lastPlayed" ${sortType === "lastPlayed" ? "selected" : ""}>Last Played Date</option>
+                </select>
+                
+                <button id="sort-direction-btn" class="btn-direction-new" onclick="toggleSortDirection()">
+                    <span id="sort-direction-text">${directionText}</span>
+                    <span id="sort-direction-arrow">${directionArrow}</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Conditional Player Selector Row -->
+        <div id="player-sort-sub-section" class="panel-row-new" style="${showPlayerSubSection ? "" : "display: none;"}">
+            <span class="panel-row-title">For Player:</span>
+            <div class="pill-group">
+                ${playerPillsHtml}
             </div>
         </div>
     `;

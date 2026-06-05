@@ -368,26 +368,8 @@
                     </div>
                 </div>
 
-                <div id="sort-section" class="hidden">
-                    <div
-                        class="dropdown-sort-options"
-                        style="margin-top: 0; margin-bottom: 10px">
-                        <label>
-                            <input
-                                type="checkbox"
-                                id="db-use-historical-data"
-                                checked
-                                onchange="renderList()" />
-                            Include Historical Data (before May 8th 2026)
-                        </label>
-                    </div>
-                    <div class="sort-controls">
-                        <div class="sort-row">
-                            <div
-                                id="player-sort-container"
-                                class="player-toggle-zone"></div>
-                        </div>
-                    </div>
+                <div id="sort-section" class="sort-container-new hidden" style="width: 100%; box-sizing: border-box;">
+                    <!-- Content rendered dynamically via renderSortControls() -->
                 </div>
 
                 <!-- Filter Section -->
