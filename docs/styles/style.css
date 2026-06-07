@@ -1,3 +1,8 @@
+/* Inherit typography across form controls to ensure identical display on Android and iOS */
+input, select, textarea, button {
+  font-family: inherit;
+}
+
 /* 1. Full-screen overlay for the loader */
 #preloader {
   position: fixed;
@@ -100,12 +105,18 @@
   width: 100%;
 }
 
+h1, h2, h3, .hero-name {
+  font-family: 'Cinzel', 'Times New Roman', Georgia, serif;
+  letter-spacing: 1px;
+}
+
 h1 {
   text-align: center;
   color: var(--accent);
-  letter-spacing: 2px;
+  letter-spacing: 2.5px;
   text-transform: uppercase;
   margin: 0px;
+  font-weight: 800;
 }
 
 .small-text {
