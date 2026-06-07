@@ -291,18 +291,81 @@ h1 {
     gap: 5px;
 }
 
-.p-chk {
+.player-card {
+    position: relative;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    padding: 14px 10px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1.5px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
     cursor: pointer;
+    user-select: none;
+    transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+    text-align: center;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-.p-chk input {
-    width: 22px;
-    height: 22px;
-    accent-color: var(--accent);
+.player-card input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    margin: 0;
+    pointer-events: none;
+}
+
+.player-card-name {
+    font-family: "Outfit", sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45);
+    transition: all 0.25s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+@media (hover: hover) {
+    .player-card:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.25);
+        transform: translateY(-1px);
+    }
+}
+
+.player-card:has(input:checked) {
+    background: color-mix(in srgb, var(--player-color) 24%, rgba(255, 255, 255, 0.02));
+    border: 2px solid var(--player-color);
+    box-shadow: 
+        0 0 15px rgba(0, 0, 0, 0.4),
+        0 0 22px var(--player-color),
+        inset 0 0 10px var(--player-color);
+    transform: scale(1.02);
+}
+
+@media (hover: hover) {
+    .player-card:has(input:checked):hover {
+        transform: translateY(-1px) scale(1.04);
+        box-shadow: 
+            0 0 26px var(--player-color),
+            inset 0 0 12px var(--player-color);
+    }
+}
+
+.player-card:has(input:checked) .player-card-name {
+    color: #ffffff;
+    text-shadow: 0 0 10px var(--player-color);
+}
+
+.player-card:active {
+    transform: scale(0.95) !important;
+    transition: transform 0.08s ease;
 }
 
 .results {
@@ -508,20 +571,11 @@ main > section:not(.hidden) {
 
 /* 5. Desktop-only Hover Rules (Protected by media query to prevent stuck states on iOS/Android) */
 @media (hover: hover) {
-    #rollBtn:hover:not(:disabled),
     .btn-save:hover:not(:disabled) {
         transform: translateY(-2px) scale(1.02);
         box-shadow:
             0 8px 25px var(--accent-glow),
             0 0 15px var(--accent-glow);
-        filter: brightness(1.15);
-    }
-
-    .btn-confirm:hover:not(.disabled) {
-        transform: translateY(-2px) scale(1.02);
-        box-shadow:
-            0 8px 25px rgba(40, 167, 69, 0.45),
-            0 0 15px rgba(40, 167, 69, 0.35);
         filter: brightness(1.15);
     }
 }
@@ -530,7 +584,7 @@ main > section:not(.hidden) {
 #rollBtn:active,
 .btn-confirm:active,
 .btn-save:active {
-    transform: translateY(1px) scale(0.97);
+    transform: translateY(1px) scale(0.95);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
     filter: brightness(0.95);
     transition: all 0.05s ease;
@@ -552,14 +606,14 @@ main > section:not(.hidden) {
         rgba(255, 255, 255, 0) 100%
     );
     transform: skewX(-20deg);
-    animation: shine 4s infinite ease-in-out;
+    animation: shine 3s infinite ease-in-out;
 }
 
 @keyframes shine {
     0% {
         left: -150%;
     }
-    30% {
+    35% {
         left: 150%;
     }
     100% {

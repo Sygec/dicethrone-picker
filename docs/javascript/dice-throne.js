@@ -311,9 +311,9 @@ function renderPlayerToggles() {
         .map((p, i) => {
             const isChecked = i < 4 ? "checked" : "";
             return `
-            <label class="p-chk">
-                <span class="player-tag" style="background:var(--${p.id})">${p.name}</span>
+            <label class="player-card" style="--player-color: var(--${p.id})">
                 <input type="checkbox" id="use${i}" ${isChecked} onclick="handlePlayerToggleClick(event, ${i})">
+                <span class="player-card-name">${p.name}</span>
             </label>`;
         })
         .join("");
