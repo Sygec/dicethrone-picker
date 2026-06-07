@@ -1,3 +1,9 @@
+:root {
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+  --glass-blur: 16px;
+}
+
 /* Inherit typography across form controls to ensure identical display on Android and iOS */
 input, select, textarea, button {
   font-family: inherit;
@@ -168,7 +174,8 @@ h1 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  border: 1px solid var(--secondary);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
 }
 
 .player-toggle-zone {
@@ -198,7 +205,8 @@ h1 {
   padding: 15px;
   border-radius: 15px;
   margin-bottom: 25px;
-  border: 2px solid var(--secondary);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
 }
 
 .player-row {
@@ -410,15 +418,17 @@ h1 {
   padding: 15px;
   border-radius: 12px;
   margin-bottom: 20px;
-  border: 1px solid var(--secondary);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
 }
 
 .admin-panel {
   margin-bottom: 20px;
-  border: 1px solid var(--secondary);
+  border: 1px solid var(--glass-border);
   border-radius: 12px;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.04);
+  box-shadow: var(--glass-shadow);
 }
 
 .panel-header {
@@ -670,7 +680,8 @@ textarea {
   padding: 10px;
   padding-bottom: 0px;
   margin-bottom: 8px;
-  border: 1px solid var(--secondary);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
   display: flex;
   gap: 15px;
   position: relative;
@@ -733,10 +744,11 @@ textarea {
 /* Collection View Styles */
 .collection-group {
   background: var(--card-bg);
-  border: 1px solid var(--secondary);
+  border: 1px solid var(--glass-border);
   border-radius: 12px;
   padding: 15px;
   margin-bottom: 20px;
+  box-shadow: var(--glass-shadow);
 }
 
 .collection-group.collapsed .collection-heroes-list {
@@ -1221,24 +1233,37 @@ textarea {
   top: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.6); /* Black w/ opacity */
-  color: black;
+  background-color: rgba(0, 0, 0, 0.75); /* Black w/ opacity */
+  color: var(--text);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
 }
 
 /* Modal Content Box */
 .modal-content {
-  background-color: #fefefe;
+  background-color: var(--card-bg);
+  color: var(--text);
   margin: 10% auto;
   padding: 25px;
-  border-radius: 8px;
+  border-radius: 12px;
   width: 60%;
   max-width: 500px;
   position: relative;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
   max-height: 80vh; /* Limits height to 80% of the screen height */
   overflow-y: auto; /* Adds a scrollbar only if content is too long */
   display: flex;
   flex-direction: column;
+}
+
+.modal-content h2 {
+  color: var(--accent) !important;
+}
+
+.modal-content label {
+  color: var(--text) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 /* The Close Button (X) */
@@ -1253,7 +1278,7 @@ textarea {
 }
 
 .close-button:hover {
-  color: #000;
+  color: #fff;
 }
 
 /* Mobile Optimization */
@@ -1433,6 +1458,7 @@ textarea {
   border-radius: 12px;
   padding: 15px;
   margin-bottom: 20px;
+  box-shadow: var(--glass-shadow);
 }
 
 .panel-row-new {
@@ -1552,10 +1578,11 @@ textarea {
 /* DB Accordions */
 .db-accordion {
   margin-bottom: 12px;
-  border: 1px solid var(--secondary);
+  border: 1px solid var(--glass-border);
   border-radius: 12px;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.03);
+  box-shadow: var(--glass-shadow);
 }
 
 .db-accordion-header {
@@ -1632,5 +1659,22 @@ textarea {
 
 .collection-group-header .panel-toggle {
   margin-left: auto;
+}
+
+/* Glassmorphism activation for modern Android & iOS browsers */
+@supports (backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px)) {
+  .player-toggle-zone-top,
+  .results,
+  .manage-form,
+  .admin-panel,
+  .hero-body,
+  .collection-group,
+  .sort-container-new,
+  .db-accordion,
+  .modal-content {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+    backdrop-filter: blur(var(--glass-blur)) !important;
+    -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
+  }
 }
 
