@@ -293,18 +293,26 @@ h1 {
   color: white;
   font-weight: bold;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .btn-confirm {
   background: #28a745;
   display: block;
   padding: 15px;
-  border: 3px solid transparent;
+  border: 3px solid rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   color: white;
   font-weight: bold;
   margin-top: 0;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
 }
 
 .btn-cancelroll {
@@ -328,6 +336,98 @@ h1 {
   background: #28a745;
   color: white;
   border: 3px solid #ffc107;
+}
+
+/* 1. Touch delay elimination for responsive tap feedback on mobile devices */
+button, select, input, .nav-item, .segmented-pill, .panel-header, .panel-toggle {
+  touch-action: manipulation;
+}
+
+/* 2. Native-feeling slide-up section entry transitions */
+main > section:not(.hidden) {
+  animation: sectionEntry 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes sectionEntry {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 3. Bottom nav icon spring interaction */
+.nav-item .icon {
+  transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: inline-block;
+}
+.nav-item:active .icon {
+  transform: scale(0.85);
+}
+
+/* 4. Idle breathing glow for the primary trigger button */
+@keyframes breathingGlow {
+  0% {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.05), 0 0 0 0 var(--accent-glow);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.05), 0 0 14px 4px var(--accent-glow);
+  }
+  100% {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.05), 0 0 0 0 var(--accent-glow);
+  }
+}
+#rollBtn {
+  animation: breathingGlow 3s infinite ease-in-out;
+}
+
+/* 5. Desktop-only Hover Rules (Protected by media query to prevent stuck states on iOS/Android) */
+@media (hover: hover) {
+  #rollBtn:hover:not(:disabled), .btn-save:hover:not(:disabled) {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 25px var(--accent-glow), 0 0 15px var(--accent-glow);
+    filter: brightness(1.15);
+  }
+
+  .btn-confirm:hover:not(.disabled) {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.45), 0 0 15px rgba(40, 167, 69, 0.35);
+    filter: brightness(1.15);
+  }
+}
+
+/* 6. Touch-active pressed states (Tactile feedback) */
+#rollBtn:active, .btn-confirm:active, .btn-save:active {
+  transform: translateY(1px) scale(0.97);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  filter: brightness(0.95);
+  transition: all 0.05s ease;
+}
+
+#rollBtn::after, .btn-confirm::after, .btn-save::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-20deg);
+  animation: shine 4s infinite ease-in-out;
+}
+
+@keyframes shine {
+  0% { left: -150%; }
+  30% { left: 150%; }
+  100% { left: 150%; }
 }
 
 .search-container {
@@ -649,6 +749,10 @@ textarea {
   cursor: pointer;
   font-weight: bold;
   font-size: 16px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .btn-cancel {
