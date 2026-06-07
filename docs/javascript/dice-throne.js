@@ -2900,14 +2900,24 @@ async function selectWinner(gameId) {
     const container = document.getElementById("winner-selection-container");
     const confirmBtn = document.getElementById("confirm-winner-btn");
 
+    const winners = game.game_players.filter((p) => p.is_winner === true);
+    const explicitLosers = game.game_players.filter(
+        (p) => p.is_winner === false,
+    );
+    const isDraw =
+        winners.length === 0 &&
+        explicitLosers.length > 0 &&
+        explicitLosers.length === game.game_players.length;
+
     // Build a list of radio buttons for each participant
     let optionsHtml = game.game_players
         .map((gp, i) => {
             const pIdx = parseInt(gp.player_id.substring(1)) - 1;
             const heroName = gp.heroes?.name || "Unknown";
+            const isChecked = gp.is_winner === true ? "checked" : "";
             return `
             <label style="display: flex; align-items: center; gap: 15px; padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; color: black;">
-                <input type="radio" name="winner-choice" value="${gp.player_id}" style="width: 20px; height: 20px; accent-color: var(--accent);">
+                <input type="radio" name="winner-choice" value="${gp.player_id}" ${isChecked} style="width: 20px; height: 20px; accent-color: var(--accent);">
                 <div>
                     <div style="font-weight: bold;">${NAMES[pIdx]}</div>
                     <div style="font-size: 0.8rem; opacity: 0.7;">${heroName}</div>
@@ -2917,10 +2927,11 @@ async function selectWinner(gameId) {
         })
         .join("");
 
+    const isDrawChecked = isDraw ? "checked" : "";
     // Add Draw Option
     optionsHtml += `
         <label style="display: flex; align-items: center; gap: 15px; padding: 12px; cursor: pointer; color: black; background: rgba(0,0,0,0.05); border-radius: 0 0 8px 8px;">
-            <input type="radio" name="winner-choice" value="draw" style="width: 20px; height: 20px; accent-color: var(--accent);">
+            <input type="radio" name="winner-choice" value="draw" ${isDrawChecked} style="width: 20px; height: 20px; accent-color: var(--accent);">
             <div>
                 <div style="font-weight: bold;">🤝 Draw</div>
                 <div style="font-size: 0.8rem; opacity: 0.7;">No winner for this match</div>
