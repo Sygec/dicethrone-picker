@@ -931,10 +931,15 @@ function renderCollectionView() {
         countLabel.innerText = `Owned ${ownedHeroes} of ${totalHeroes} heroes`;
     }
 
-    // Sort groups alphabetically by name
-    const sortedGroups = [...groups].sort((a, b) =>
-        a.name.localeCompare(b.name),
-    );
+    // Sort groups using the order_index value
+    const sortedGroups = [...groups].sort((a, b) => {
+        const orderA = a.order_index ?? Number.MAX_SAFE_INTEGER;
+        const orderB = b.order_index ?? Number.MAX_SAFE_INTEGER;
+        if (orderA !== orderB) {
+            return orderA - orderB;
+        }
+        return a.name.localeCompare(b.name);
+    });
 
     container.innerHTML = sortedGroups
         .map((group) => {
@@ -964,7 +969,10 @@ function renderCollectionView() {
             <div class="collection-group${isExpanded ? "" : " collapsed"}">
                 <div class="collection-group-header" onclick="toggleCollectionGroup('${group.id}', event)" style="cursor: pointer;">
                     <input type="checkbox" id="owned-group-${group.id}" ${allOwned ? "checked" : ""} onchange="toggleGroupOwned('${group.id}', this.checked)" onclick="event.stopPropagation();">
-                    <label for="owned-group-${group.id}" onclick="event.stopPropagation();"><strong>${group.name}</strong></label>
+                    <label for="owned-group-${group.id}" onclick="event.stopPropagation();">
+                        <strong>${group.name}</strong>
+                        ${group.year ? ` <span style="opacity: 0.6; font-size: 0.85em;">(${group.year})</span>` : ""}
+                    </label>
                     <button type="button" class="panel-toggle${isExpanded ? " open" : ""}" aria-expanded="${isExpanded}">V</button>
                 </div>
                 <div class="collection-heroes-list">
@@ -1168,6 +1176,7 @@ function renderGroupsList() {
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px;">
                 <div>
                     <strong>${escapeHtml(g.name)}</strong>
+                    ${g.year ? ` <span style="opacity: 0.6;">(${g.year})</span>` : ""}
                     ${g.type ? ` <span style="opacity: 0.6;">(${escapeHtml(g.type)})</span>` : ""}
                 </div>
                 <div style="display: flex; gap: 5px;">
@@ -1180,6 +1189,7 @@ function renderGroupsList() {
                     <input type="text" id="groupName-${g.id}" placeholder="Group Name" value="${escapeHtml(g.name)}">
                     <input type="text" id="groupType-${g.id}" placeholder="Type (optional)" value="${escapeHtml(g.type || "")}">
                     <input type="number" id="groupOrder-${g.id}" placeholder="Order Index" value="${g.order_index ?? ""}">
+                    <input type="number" id="groupYear-${g.id}" placeholder="Release Year" value="${g.year ?? ""}">
                 </div>
                 <div style="display: flex; gap: 10px;">
                     <button type="button" class="btn-save" onclick="saveGroupInline('${g.id}')">Save</button>
@@ -1319,6 +1329,7 @@ async function saveGroup() {
     const name = document.getElementById("groupName").value.trim();
     const type = document.getElementById("groupType").value.trim();
     const order_index = document.getElementById("groupOrder").value.trim();
+    const year = document.getElementById("groupYear").value.trim();
 
     if (!name) return alert("Group name is required");
 
@@ -1326,6 +1337,7 @@ async function saveGroup() {
         name,
         type: type || null,
         order_index: order_index ? parseInt(order_index) : null,
+        year: year ? parseInt(year) : null,
         is_active: true,
     };
 
@@ -1368,6 +1380,8 @@ function editGroup(groupId) {
     document.getElementById(`groupType-${groupId}`).value = group.type || "";
     document.getElementById(`groupOrder-${groupId}`).value =
         group.order_index || "";
+    document.getElementById(`groupYear-${groupId}`).value =
+        group.year || "";
     panel.classList.remove("hidden");
 }
 
@@ -1387,6 +1401,9 @@ async function saveGroupInline(groupId) {
     const order_index = document
         .getElementById(`groupOrder-${groupId}`)
         .value.trim();
+    const year = document
+        .getElementById(`groupYear-${groupId}`)
+        .value.trim();
 
     if (!name) return alert("Group name is required");
 
@@ -1397,6 +1414,7 @@ async function saveGroupInline(groupId) {
             name,
             type: type || null,
             order_index: order_index ? parseInt(order_index) : null,
+            year: year ? parseInt(year) : null,
             is_active: true,
         })
         .select()
@@ -1417,6 +1435,7 @@ function resetGroupForm() {
     document.getElementById("groupName").value = "";
     document.getElementById("groupType").value = "";
     document.getElementById("groupOrder").value = "";
+    document.getElementById("groupYear").value = "";
 
     const form = document.getElementById("groupForm");
     const button = document.getElementById("addGroupBtn");
