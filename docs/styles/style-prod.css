@@ -22,10 +22,12 @@ html {
 }
 
 body {
+  margin: 0;
   font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background-color: transparent;
   color: var(--text);
   padding: 5px;
+  padding-top: calc(5px + env(safe-area-inset-top));
   display: flex;
   flex-direction: column;
   align-items: center;
