@@ -497,6 +497,35 @@ h1 {
     min-width: 130px;
 }
 
+@media (max-width: 480px) {
+    .player-row {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        grid-template-rows: auto auto;
+        gap: 12px;
+        padding: 12px 14px;
+    }
+    
+    .hero-link-container {
+        grid-column: 1;
+        grid-row: 1;
+        align-self: center;
+    }
+    
+    .hero-info-container {
+        grid-column: 2;
+        grid-row: 1;
+        justify-content: center;
+    }
+    
+    .hero-select-container {
+        grid-column: 1 / span 2;
+        grid-row: 2;
+        width: 100%;
+        min-width: 0;
+    }
+}
+
 /* Scramble & Staggered Reveal Animations */
 .player-row.randomizing {
     animation: pulsateBorder 1.2s infinite ease-in-out;
