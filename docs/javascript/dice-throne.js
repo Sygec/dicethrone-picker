@@ -21,6 +21,7 @@ let currentUser = null;
 let loggedInPlayerIndex = -1;
 let isRollActive = false;
 let expandedCollectionGroups = new Set();
+let scrambleIntervals = {};
 const isAdmin = () => currentUser?.app_metadata?.role === "admin";
 const isUser = () => !!currentUser;
 
@@ -121,6 +122,28 @@ const getPlayerColor = (player) => {
 const setPlayerColorVariable = (playerId, color) => {
     document.documentElement.style.setProperty(`--${playerId}`, color);
 };
+
+function getHeroProbabilityText(charData, pIdx) {
+    if (!charData) return "0.00%";
+    const ownedCount = characters.filter(isHeroOwned).length;
+    if (ownedCount === 0) return "0.00%";
+    
+    if (pIdx >= 4) {
+        return `${(100 / ownedCount).toFixed(2)}%`;
+    }
+    
+    let totalWeight = 0;
+    characters
+        .filter(isHeroOwned)
+        .forEach((c) => (totalWeight += getSoftWeight(c, pIdx)));
+        
+    if (totalWeight === 0) return "0.00%";
+    
+    const owned = isHeroOwned(charData);
+    const weight = getSoftWeight(charData, pIdx);
+    const pct = owned ? ((weight / totalWeight) * 100).toFixed(2) : "0.00";
+    return `${pct}%`;
+}
 
 async function handlePlayerColorChange(playerId, input) {
     const player = players.find((p) => p.id === playerId);
@@ -1659,17 +1682,19 @@ function getSoftWeight(hero, userIndex) {
 // Invitees (4-5) are assigned purely at random.
 // ******************************************
 function pickCharacters() {
-    // Identify active players and randomize the order of selection
+    // Identify active players
     const active = NAMES.map((_, i) => i)
-        .filter((i) => document.getElementById(`use${i}`).checked)
-        .sort(() => Math.random() - 0.5);
+        .filter((i) => document.getElementById(`use${i}`).checked);
 
     if (active.length === 0) return alert("Select players!");
+
+    // Shuffle active array to decide selection order (fairness)
+    const selectionOrder = [...active].sort(() => Math.random() - 0.5);
 
     const resultsDiv = document.getElementById("results");
     resultsDiv.innerHTML = "";
 
-    // Filter for owned heroes and create a pool for selection
+    // Pool of owned heroes
     let pool = characters.filter(isHeroOwned).map((c) => structuredClone(c));
 
     if (pool.length < active.length) {
@@ -1678,16 +1703,18 @@ function pickCharacters() {
         );
     }
 
-    active.forEach((pIdx) => {
-        let selectedName = "";
+    // Map to hold calculated results for each player
+    const rollResults = {};
+
+    // Run selection in randomized order
+    selectionOrder.forEach((pIdx) => {
+        let selectedHero = null;
 
         if (pIdx >= 4) {
-            // Purely random selection for invitee slots
             const r = Math.floor(Math.random() * pool.length);
-            selectedName = pool[r]?.name;
+            selectedHero = pool[r];
             pool.splice(r, 1);
         } else {
-            // Weighted selection for main players (0-3) using soft weights
             const activePool = pool.filter((c) => c.weights[pIdx] > 0);
             const totalEffectiveWeight = activePool.reduce(
                 (sum, c) => sum + getSoftWeight(c, pIdx),
@@ -1695,13 +1722,12 @@ function pickCharacters() {
             );
 
             let random = Math.random() * totalEffectiveWeight;
-
             for (const hero of activePool) {
                 const weight = getSoftWeight(hero, pIdx);
                 if (random < weight) {
-                    selectedName = hero.name;
+                    selectedHero = hero;
                     pool.splice(
-                        pool.findIndex((p) => p.name === selectedName),
+                        pool.findIndex((p) => p.name === hero.name),
                         1,
                     );
                     break;
@@ -1709,17 +1735,77 @@ function pickCharacters() {
                 random -= weight;
             }
         }
-        renderPlayerRow(pIdx, selectedName);
+        rollResults[pIdx] = selectedHero;
     });
 
-    validateSelection();
-    if (isUser())
-        document.getElementById("action-buttons").style.display = "flex";
+    // Disable Roll Button
+    const rollBtn = document.getElementById("rollBtn");
+    if (rollBtn) {
+        rollBtn.disabled = true;
+        rollBtn.style.opacity = "0.6";
+        rollBtn.style.cursor = "not-allowed";
+    }
+    
+    // Hide Action Buttons container while scrambling
+    const actionButtons = document.getElementById("action-buttons");
+    if (actionButtons) actionButtons.style.display = "none";
+
+    isRollActive = false; // Will set to true once all resolved
+
+    // Render all panels in sequential player index order in "randomizing" state
+    const sortedActive = [...active].sort((a, b) => a - b);
+    
+    sortedActive.forEach((pIdx) => {
+        renderPlayerRowSkeleton(pIdx);
+    });
 
     // Ensure the roll section is visible and scroll to results
     showRoll();
     resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
-    isRollActive = true;
+
+    // Pool of all owned heroes for the cycling scrambler
+    const ownedHeroes = characters.filter(isHeroOwned);
+
+    // Start scrambling for all panels
+    sortedActive.forEach((pIdx) => {
+        startPanelScramble(pIdx, ownedHeroes);
+    });
+
+    // Staggered reveal sequence
+    let currentRevealIndex = 0;
+    
+    function revealNext() {
+        if (currentRevealIndex >= selectionOrder.length) {
+            // All revealed!
+            validateSelection();
+            if (isUser()) {
+                if (actionButtons) actionButtons.style.display = "flex";
+            }
+            if (rollBtn) {
+                rollBtn.disabled = false;
+                rollBtn.style.opacity = "1";
+                rollBtn.style.cursor = "pointer";
+            }
+            isRollActive = true;
+            return;
+        }
+
+        const pIdx = selectionOrder[currentRevealIndex];
+        const finalHero = rollResults[pIdx];
+
+        // Randomize duration between 0.5s to 1.0s (e.g. 700ms) for the current panel
+        const duration = 500 + Math.random() * 500;
+        
+        setTimeout(() => {
+            stopPanelScramble(pIdx, finalHero);
+            currentRevealIndex++;
+            // Pause before revealing the next (e.g. 400ms)
+            setTimeout(revealNext, 400);
+        }, duration);
+    }
+
+    // Start the staggered reveal chain
+    revealNext();
 }
 
 // ******************************************
@@ -1795,61 +1881,180 @@ function getSortedHeroOptions(pIdx, selectedName) {
 // ******************************************
 // Renders the HTML result for a specific player's randomized character.
 // ******************************************
-function renderPlayerRow(pIdx, selectedName) {
-    const charData = characters.find((c) => c.name === selectedName);
+function renderPlayerRowSkeleton(pIdx) {
     const resultsDiv = document.getElementById("results");
-
-    // Retrieve play statistics for the current player and selected character
-    const plays = (charData?.playCount && charData.playCount[pIdx]) || 0;
-    const last = (charData?.lastPlayed && charData.lastPlayed[pIdx]) || "Never";
-
-    // Append the HTML for the player's row to the results container
+    
     resultsDiv.innerHTML += `
-        <div class="player-row">
-            <!-- Link to the hero's external page, wrapping the image and complexity icon -->
-            <a href="${getHeroLink(charData?.slug)}" target="_blank" id="link-${pIdx}">
+        <div class="player-row randomizing" id="player-row-${pIdx}" style="--player-color: var(--p${pIdx + 1}); border-color: var(--p${pIdx + 1});">
+            <a href="#" target="_blank" id="link-${pIdx}" class="hero-link-container">
                 <div class="char-complexity-db">
-                    <img src="${getImgUrl(charData?.slug)}" class="char-img-roll" id="img-${pIdx}" alt="${selectedName}" title="${selectedName}">
-                    <img src="images/dice/d${charData?.complexity}.png" class="complexity-roll" alt="Complexity" id="comp-${pIdx}" title="Complexity: ${charData?.complexity}">
+                    <img src="" class="char-img-roll scramble-img" id="img-${pIdx}" alt="Randomizing" title="Randomizing">
+                    <div class="complexity-placeholder" id="comp-placeholder-${pIdx}">?</div>
+                    <img src="" class="complexity-roll hidden" alt="Complexity" id="comp-${pIdx}">
                 </div>
             </a>
-            <div style="flex:1">
-                <!-- Player tag and conditional display of play stats for main players -->
-                <div style="margin-bottom:5px; display:flex; justify-content:space-between; align-items:center;">
-                    <span class="player-tag" style="background:var(--p${pIdx + 1})">${NAMES[pIdx]}</span>
-                    ${pIdx < 4 ? `<div class="roll-stats"><span>Plays: <b>${plays}</b></span><span>Last: <b>${last}</b></span></div>` : ""}
+            
+            <div class="hero-info-container" id="info-container-${pIdx}">
+                <div class="hero-header-row">
+                    <span class="player-name-caps" style="color: var(--player-color);">${NAMES[pIdx].toUpperCase()}</span>
+                    <span class="hero-name-divider">:</span>
+                    <span class="hero-name-title scramble-text" id="hero-name-title-${pIdx}">ROLLING...</span>
                 </div>
-                <!-- Dropdown for manual hero selection -->
-                <select class="char-select" data-player="${pIdx}" onchange="handleDropdownChange(this)">
-                    ${getSortedHeroOptions(pIdx, selectedName)}
+                
+                <div class="hero-meta-row scramble-hidden opacity-0">
+                    <span class="hero-group-label" id="hero-group-${pIdx}">Group</span>
+                    <span class="hero-prob-label" id="hero-prob-${pIdx}">Prob: --</span>
+                </div>
+                
+                <div class="hero-stats-row scramble-hidden opacity-0" id="stats-row-${pIdx}">
+                    <span>Plays: --</span>
+                    <span>Last: --</span>
+                </div>
+            </div>
+            
+            <div class="hero-select-container scramble-hidden opacity-0" id="select-container-${pIdx}">
+                <select class="char-select" data-player="${pIdx}" id="select-${pIdx}" onchange="handleDropdownChange(this)">
+                    <!-- Options populated later on resolve -->
                 </select>
             </div>
-        </div>`;
+        </div>
+    `;
 }
 
-// ******************************************
-// handleDropdownChange(el)
-// input: el -> the select element that changed
-// ******************************************
-// Updates the visual results and stats for a player when their
-// hero is manually changed via dropdown.
-// ******************************************
+function startPanelScramble(pIdx, ownedHeroes) {
+    if (ownedHeroes.length === 0) return;
+    
+    const imgEl = document.getElementById(`img-${pIdx}`);
+    const nameEl = document.getElementById(`hero-name-title-${pIdx}`);
+    
+    scrambleIntervals[pIdx] = setInterval(() => {
+        const randomHero = ownedHeroes[Math.floor(Math.random() * ownedHeroes.length)];
+        if (imgEl) imgEl.src = getImgUrl(randomHero.slug);
+        if (nameEl) {
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$%&*";
+            let scrambleStr = "";
+            for (let k = 0; k < 8; k++) {
+                scrambleStr += chars[Math.floor(Math.random() * chars.length)];
+            }
+            nameEl.innerText = scrambleStr;
+        }
+    }, 70);
+}
+
+function stopPanelScramble(pIdx, finalHero) {
+    if (scrambleIntervals[pIdx]) {
+        clearInterval(scrambleIntervals[pIdx]);
+        delete scrambleIntervals[pIdx];
+    }
+    
+    const rowEl = document.getElementById(`player-row-${pIdx}`);
+    if (rowEl) {
+        rowEl.classList.remove("randomizing");
+        rowEl.classList.add("revealed");
+    }
+
+    const imgEl = document.getElementById(`img-${pIdx}`);
+    const nameEl = document.getElementById(`hero-name-title-${pIdx}`);
+    const compImg = document.getElementById(`comp-${pIdx}`);
+    const compPlaceholder = document.getElementById(`comp-placeholder-${pIdx}`);
+    
+    if (finalHero) {
+        if (imgEl) {
+            imgEl.src = getImgUrl(finalHero.slug);
+            imgEl.alt = finalHero.name;
+            imgEl.title = finalHero.name;
+            imgEl.classList.remove("scramble-img");
+        }
+        if (nameEl) {
+            nameEl.innerText = finalHero.name;
+            nameEl.classList.remove("scramble-text");
+        }
+        if (compImg) {
+            compImg.src = `images/dice/d${finalHero.complexity}.png`;
+            compImg.title = `Complexity: ${finalHero.complexity}`;
+            compImg.classList.remove("hidden");
+        }
+        if (compPlaceholder) {
+            compPlaceholder.style.display = "none";
+        }
+        
+        // Populate group
+        const groupEl = document.getElementById(`hero-group-${pIdx}`);
+        if (groupEl) {
+            groupEl.innerText = finalHero.group || "Unknown";
+        }
+        
+        // Populate prob
+        const probEl = document.getElementById(`hero-prob-${pIdx}`);
+        if (probEl) {
+            probEl.innerHTML = `Prob: <b>${getHeroProbabilityText(finalHero, pIdx)}</b>`;
+        }
+        
+        // Populate stats
+        const statsRow = document.getElementById(`stats-row-${pIdx}`);
+        if (statsRow && pIdx < 4) {
+            const plays = finalHero.playCount[pIdx] || 0;
+            const last = finalHero.lastPlayed[pIdx] || "Never";
+            statsRow.innerHTML = `
+                <span>Plays: <b>${plays}</b></span>
+                <span>Last: <b>${last}</b></span>
+            `;
+        }
+        
+        // Populate link
+        const linkEl = document.getElementById(`link-${pIdx}`);
+        if (linkEl) {
+            linkEl.href = getHeroLink(finalHero.slug);
+        }
+        
+        // Populate dropdown
+        const selectEl = document.getElementById(`select-${pIdx}`);
+        if (selectEl) {
+            selectEl.innerHTML = getSortedHeroOptions(pIdx, finalHero.name);
+        }
+    }
+    
+    // Fade in all hidden sections for this player row
+    const hiddenContainers = rowEl?.querySelectorAll(".scramble-hidden");
+    hiddenContainers?.forEach((c) => {
+        c.classList.remove("opacity-0");
+        c.classList.add("fade-in-resolve");
+    });
+}
+
 function handleDropdownChange(el) {
     const pIdx = parseInt(el.dataset.player);
     const char = characters.find((c) => c.name === el.value);
 
     if (!char) return;
 
-    // Update the visual assets: portrait, complexity dice, and wiki link
+    // Update portrait, complexity dice, and wiki link
     document.getElementById(`img-${pIdx}`).src = getImgUrl(char.slug);
-    document.getElementById(`comp-${pIdx}`).src =
-        `images/dice/d${char.complexity}.png`;
-    document.getElementById(`link-${pIdx}`).href = getHeroLink(char.slug);
+    const compImg = document.getElementById(`comp-${pIdx}`);
+    if (compImg) {
+        compImg.src = `images/dice/d${char.complexity}.png`;
+        compImg.title = `Complexity: ${char.complexity}`;
+    }
+    
+    const linkEl = document.getElementById(`link-${pIdx}`);
+    if (linkEl) {
+        linkEl.href = getHeroLink(char.slug);
+    }
 
-    // Locate the stats container within the current player's row
-    const statsDiv = el.closest(".player-row").querySelector(".roll-stats");
+    // Update hero name title, group, and probability
+    const nameTitle = document.getElementById(`hero-name-title-${pIdx}`);
+    if (nameTitle) nameTitle.innerText = char.name;
+
+    const groupEl = document.getElementById(`hero-group-${pIdx}`);
+    if (groupEl) groupEl.innerText = char.group || "Unknown";
+
+    const probEl = document.getElementById(`hero-prob-${pIdx}`);
+    if (probEl) {
+        probEl.innerHTML = `Prob: <b>${getHeroProbabilityText(char, pIdx)}</b>`;
+    }
 
     // Update play history only for the main 4 players
+    const statsDiv = document.getElementById(`stats-row-${pIdx}`);
     if (statsDiv && pIdx < 4) {
         const playCount = char.playCount?.[pIdx] || 0;
         const lastPlayed = char.lastPlayed?.[pIdx] || "Never";
