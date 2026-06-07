@@ -17,10 +17,15 @@
   --p6: #a2a2a2;
 }
 
+html {
+  background-color: var(--bg-dark);
+}
+
 body {
+  margin: 0;
   border-top: 4px solid var(--accent);
   font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: var(--bg-dark);
+  background-color: transparent;
   color: var(--text);
   padding: 5px;
   display: flex;
@@ -33,8 +38,8 @@ body::before {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  right: 0;
+  bottom: 0;
   z-index: -1;
   pointer-events: none;
   background-image: radial-gradient(circle at 50% 25%, var(--bg-highlight) 0%, var(--bg-dark) 100%);
