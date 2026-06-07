@@ -1886,36 +1886,36 @@ function renderPlayerRowSkeleton(pIdx) {
     
     resultsDiv.innerHTML += `
         <div class="player-row randomizing" id="player-row-${pIdx}" style="--player-color: var(--p${pIdx + 1}); border-color: var(--p${pIdx + 1});">
-            <a href="#" target="_blank" id="link-${pIdx}" class="hero-link-container">
-                <div class="char-complexity-db">
-                    <img src="" class="char-img-roll scramble-img" id="img-${pIdx}" alt="Randomizing" title="Randomizing">
-                    <div class="complexity-placeholder" id="comp-placeholder-${pIdx}">?</div>
-                    <img src="" class="complexity-roll hidden" alt="Complexity" id="comp-${pIdx}">
-                </div>
-            </a>
+            <!-- Background Image -->
+            <img src="" class="char-bg-img scramble-img" id="bg-img-${pIdx}" alt="Randomizing">
             
-            <div class="hero-info-container" id="info-container-${pIdx}">
-                <div class="hero-header-row">
-                    <span class="player-name-caps" style="color: var(--player-color);">${NAMES[pIdx].toUpperCase()}</span>
-                    <span class="hero-name-divider">:</span>
-                    <span class="hero-name-title scramble-text" id="hero-name-title-${pIdx}">ROLLING...</span>
+            <div class="player-row-content">
+                <!-- Hero Details -->
+                <div class="hero-info-container" id="info-container-${pIdx}">
+                    <div class="hero-header-row">
+                        <div class="hero-header-left">
+                            <span class="player-name-caps" style="color: var(--player-color);">${NAMES[pIdx].toUpperCase()}</span>
+                            <span class="hero-name-divider">:</span>
+                            <span class="hero-name-title scramble-text" id="hero-name-title-${pIdx}">ROLLING...</span>
+                        </div>
+                        <span class="hero-group-label scramble-hidden opacity-0" id="hero-group-${pIdx}">Group</span>
+                    </div>
+                    
+                    <div class="hero-stats-row scramble-hidden opacity-0" id="stats-row-${pIdx}">
+                        <span>Plays: --</span>
+                        <span class="stats-divider">|</span>
+                        <span>Last: --</span>
+                        <span class="stats-divider">|</span>
+                        <span id="hero-prob-${pIdx}">Prob: --</span>
+                    </div>
                 </div>
                 
-                <div class="hero-meta-row scramble-hidden opacity-0">
-                    <span class="hero-group-label" id="hero-group-${pIdx}">Group</span>
-                    <span class="hero-prob-label" id="hero-prob-${pIdx}">Prob: --</span>
+                <!-- Dropdown Selector -->
+                <div class="hero-select-container scramble-hidden opacity-0" id="select-container-${pIdx}">
+                    <select class="char-select" data-player="${pIdx}" id="select-${pIdx}" onchange="handleDropdownChange(this)">
+                        <!-- Options populated later on resolve -->
+                    </select>
                 </div>
-                
-                <div class="hero-stats-row scramble-hidden opacity-0" id="stats-row-${pIdx}">
-                    <span>Plays: --</span>
-                    <span>Last: --</span>
-                </div>
-            </div>
-            
-            <div class="hero-select-container scramble-hidden opacity-0" id="select-container-${pIdx}">
-                <select class="char-select" data-player="${pIdx}" id="select-${pIdx}" onchange="handleDropdownChange(this)">
-                    <!-- Options populated later on resolve -->
-                </select>
             </div>
         </div>
     `;
@@ -1924,12 +1924,12 @@ function renderPlayerRowSkeleton(pIdx) {
 function startPanelScramble(pIdx, ownedHeroes) {
     if (ownedHeroes.length === 0) return;
     
-    const imgEl = document.getElementById(`img-${pIdx}`);
+    const bgImgEl = document.getElementById(`bg-img-${pIdx}`);
     const nameEl = document.getElementById(`hero-name-title-${pIdx}`);
     
     scrambleIntervals[pIdx] = setInterval(() => {
         const randomHero = ownedHeroes[Math.floor(Math.random() * ownedHeroes.length)];
-        if (imgEl) imgEl.src = getImgUrl(randomHero.slug);
+        if (bgImgEl) bgImgEl.src = getImgUrl(randomHero.slug);
         if (nameEl) {
             const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$%&*";
             let scrambleStr = "";
@@ -1953,29 +1953,18 @@ function stopPanelScramble(pIdx, finalHero) {
         rowEl.classList.add("revealed");
     }
 
-    const imgEl = document.getElementById(`img-${pIdx}`);
+    const bgImgEl = document.getElementById(`bg-img-${pIdx}`);
     const nameEl = document.getElementById(`hero-name-title-${pIdx}`);
-    const compImg = document.getElementById(`comp-${pIdx}`);
-    const compPlaceholder = document.getElementById(`comp-placeholder-${pIdx}`);
     
     if (finalHero) {
-        if (imgEl) {
-            imgEl.src = getImgUrl(finalHero.slug);
-            imgEl.alt = finalHero.name;
-            imgEl.title = finalHero.name;
-            imgEl.classList.remove("scramble-img");
+        if (bgImgEl) {
+            bgImgEl.src = getImgUrl(finalHero.slug);
+            bgImgEl.alt = finalHero.name;
+            bgImgEl.classList.remove("scramble-img");
         }
         if (nameEl) {
             nameEl.innerText = finalHero.name;
             nameEl.classList.remove("scramble-text");
-        }
-        if (compImg) {
-            compImg.src = `images/dice/d${finalHero.complexity}.png`;
-            compImg.title = `Complexity: ${finalHero.complexity}`;
-            compImg.classList.remove("hidden");
-        }
-        if (compPlaceholder) {
-            compPlaceholder.style.display = "none";
         }
         
         // Populate group
@@ -1984,27 +1973,23 @@ function stopPanelScramble(pIdx, finalHero) {
             groupEl.innerText = finalHero.group || "Unknown";
         }
         
-        // Populate prob
-        const probEl = document.getElementById(`hero-prob-${pIdx}`);
-        if (probEl) {
-            probEl.innerHTML = `Prob: <b>${getHeroProbabilityText(finalHero, pIdx)}</b>`;
-        }
-        
-        // Populate stats
+        // Populate stats line (Plays, Last, Prob combined)
         const statsRow = document.getElementById(`stats-row-${pIdx}`);
-        if (statsRow && pIdx < 4) {
-            const plays = finalHero.playCount[pIdx] || 0;
-            const last = finalHero.lastPlayed[pIdx] || "Never";
-            statsRow.innerHTML = `
-                <span>Plays: <b>${plays}</b></span>
-                <span>Last: <b>${last}</b></span>
-            `;
-        }
-        
-        // Populate link
-        const linkEl = document.getElementById(`link-${pIdx}`);
-        if (linkEl) {
-            linkEl.href = getHeroLink(finalHero.slug);
+        if (statsRow) {
+            const probText = `Prob: <b>${getHeroProbabilityText(finalHero, pIdx)}</b>`;
+            if (pIdx < 4) {
+                const plays = finalHero.playCount[pIdx] || 0;
+                const last = finalHero.lastPlayed[pIdx] || "Never";
+                statsRow.innerHTML = `
+                    <span>Plays: <b>${plays}</b></span>
+                    <span class="stats-divider">|</span>
+                    <span>Last: <b>${last}</b></span>
+                    <span class="stats-divider">|</span>
+                    <span>${probText}</span>
+                `;
+            } else {
+                statsRow.innerHTML = `<span>${probText}</span>`;
+            }
         }
         
         // Populate dropdown
@@ -2028,41 +2013,37 @@ function handleDropdownChange(el) {
 
     if (!char) return;
 
-    // Update portrait, complexity dice, and wiki link
-    document.getElementById(`img-${pIdx}`).src = getImgUrl(char.slug);
-    const compImg = document.getElementById(`comp-${pIdx}`);
-    if (compImg) {
-        compImg.src = `images/dice/d${char.complexity}.png`;
-        compImg.title = `Complexity: ${char.complexity}`;
-    }
-    
-    const linkEl = document.getElementById(`link-${pIdx}`);
-    if (linkEl) {
-        linkEl.href = getHeroLink(char.slug);
+    // Update background image
+    const bgImgEl = document.getElementById(`bg-img-${pIdx}`);
+    if (bgImgEl) {
+        bgImgEl.src = getImgUrl(char.slug);
+        bgImgEl.alt = char.name;
     }
 
-    // Update hero name title, group, and probability
+    // Update hero name title and group
     const nameTitle = document.getElementById(`hero-name-title-${pIdx}`);
     if (nameTitle) nameTitle.innerText = char.name;
 
     const groupEl = document.getElementById(`hero-group-${pIdx}`);
     if (groupEl) groupEl.innerText = char.group || "Unknown";
 
-    const probEl = document.getElementById(`hero-prob-${pIdx}`);
-    if (probEl) {
-        probEl.innerHTML = `Prob: <b>${getHeroProbabilityText(char, pIdx)}</b>`;
-    }
-
-    // Update play history only for the main 4 players
+    // Update combined stats row
     const statsDiv = document.getElementById(`stats-row-${pIdx}`);
-    if (statsDiv && pIdx < 4) {
-        const playCount = char.playCount?.[pIdx] || 0;
-        const lastPlayed = char.lastPlayed?.[pIdx] || "Never";
-
-        statsDiv.innerHTML = `
-            <span>Plays: <b>${playCount}</b></span>
-            <span>Last: <b>${lastPlayed}</b></span>
-        `;
+    if (statsDiv) {
+        const probText = `Prob: <b>${getHeroProbabilityText(char, pIdx)}</b>`;
+        if (pIdx < 4) {
+            const playCount = char.playCount?.[pIdx] || 0;
+            const lastPlayed = char.lastPlayed?.[pIdx] || "Never";
+            statsDiv.innerHTML = `
+                <span>Plays: <b>${playCount}</b></span>
+                <span class="stats-divider">|</span>
+                <span>Last: <b>${lastPlayed}</b></span>
+                <span class="stats-divider">|</span>
+                <span>${probText}</span>
+            `;
+        } else {
+            statsDiv.innerHTML = `<span>${probText}</span>`;
+        }
     }
 
     // Refresh duplicate detection UI
