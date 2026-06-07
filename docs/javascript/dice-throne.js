@@ -233,6 +233,7 @@ function hidePreloader() {
     if (!preloader) return;
 
     preloader.classList.add("fade-out");
+    document.body.classList.add("loaded");
     preloader.addEventListener("animationend", () => preloader.remove(), {
         once: true,
     });
@@ -466,7 +467,7 @@ async function init() {
         renderGroupsList();
 
         // Initialize or update activeGroups
-        const currentGroupIds = new Set(groups.map(g => g.id));
+        const currentGroupIds = new Set(groups.map((g) => g.id));
         if (activeGroups.size === 0) {
             groups.forEach((g) => activeGroups.add(g.id));
         } else {
@@ -902,7 +903,7 @@ function setOwnershipFilter(filterState) {
     const pills = {
         owned: document.getElementById("pill-show-owned"),
         unowned: document.getElementById("pill-show-not-owned"),
-        all: document.getElementById("pill-show-all")
+        all: document.getElementById("pill-show-all"),
     };
 
     Object.keys(pills).forEach((key) => {
@@ -1380,8 +1381,7 @@ function editGroup(groupId) {
     document.getElementById(`groupType-${groupId}`).value = group.type || "";
     document.getElementById(`groupOrder-${groupId}`).value =
         group.order_index || "";
-    document.getElementById(`groupYear-${groupId}`).value =
-        group.year || "";
+    document.getElementById(`groupYear-${groupId}`).value = group.year || "";
     panel.classList.remove("hidden");
 }
 
@@ -1401,9 +1401,7 @@ async function saveGroupInline(groupId) {
     const order_index = document
         .getElementById(`groupOrder-${groupId}`)
         .value.trim();
-    const year = document
-        .getElementById(`groupYear-${groupId}`)
-        .value.trim();
+    const year = document.getElementById(`groupYear-${groupId}`).value.trim();
 
     if (!name) return alert("Group name is required");
 
@@ -2098,7 +2096,8 @@ function renderSortControls() {
     if (!container) return;
 
     // Preserve historical data checkbox state before replacing HTML
-    const useHistorical = document.getElementById("db-use-historical-data")?.checked ?? true;
+    const useHistorical =
+        document.getElementById("db-use-historical-data")?.checked ?? true;
 
     const mainPlayerNames = NAMES.slice(0, 4);
 
@@ -2115,29 +2114,36 @@ function renderSortControls() {
     }
 
     // 1. Generate column visibility pills
-    const visibilityPillsHtml = mainPlayerNames.map((name, i) => {
-        const isActive = activePlayerIndices.includes(i);
-        const activeClass = isActive ? `active p${i + 1}-color` : "inactive";
-        return `
+    const visibilityPillsHtml = mainPlayerNames
+        .map((name, i) => {
+            const isActive = activePlayerIndices.includes(i);
+            const activeClass = isActive
+                ? `active p${i + 1}-color`
+                : "inactive";
+            return `
             <button type="button" class="pill-toggle ${activeClass}" onclick="togglePlayerFilter(${i})">
                 ${name}
             </button>
         `;
-    }).join("");
+        })
+        .join("");
 
     // 2. Generate player-specific sorting pills if probability or lastPlayed is active
-    const showPlayerSubSection = (sortType === "probability" || sortType === "lastPlayed");
-    const playerPillsHtml = mainPlayerNames.map((name, i) => {
-        const isActive = (currentSortPlayerIndex === i);
-        const activeClass = isActive ? `active p${i + 1}-color` : "";
-        const isColumnActive = activePlayerIndices.includes(i);
-        const columnStyle = isColumnActive ? "" : "opacity: 0.5;";
-        return `
+    const showPlayerSubSection =
+        sortType === "probability" || sortType === "lastPlayed";
+    const playerPillsHtml = mainPlayerNames
+        .map((name, i) => {
+            const isActive = currentSortPlayerIndex === i;
+            const activeClass = isActive ? `active p${i + 1}-color` : "";
+            const isColumnActive = activePlayerIndices.includes(i);
+            const columnStyle = isColumnActive ? "" : "opacity: 0.5;";
+            return `
             <button type="button" class="pill-toggle ${activeClass}" style="${columnStyle}" onclick="handleSortPlayerChange(${i})">
                 ${name}
             </button>
         `;
-    }).join("");
+        })
+        .join("");
 
     const directionText = sortAsc ? "Ascending" : "Descending";
     const directionArrow = sortAsc ? "▲" : "▼";
@@ -2203,9 +2209,9 @@ function handleSortTypeChange(value) {
     } else if (value === "lastPlayed") {
         currentSort = `d${currentSortPlayerIndex}`;
     }
-    
+
     // Default sort order (Asc for Name/Group, Desc for Probability/LastPlayed)
-    sortAsc = (value === "name" || value === "group");
+    sortAsc = value === "name" || value === "group";
 
     renderSortControls();
     renderList();
@@ -2218,7 +2224,7 @@ function handleSortPlayerChange(playerIndex) {
     } else if (currentSort.startsWith("d")) {
         currentSort = `d${playerIndex}`;
     }
-    
+
     renderSortControls();
     renderList();
 }
@@ -2263,9 +2269,11 @@ function renderComplexityFilters() {
     const container = document.getElementById("complexity-filter-bar");
     if (!container) return;
 
-    const searchTerm = document.getElementById("hero-search")?.value.toLowerCase() || "";
+    const searchTerm =
+        document.getElementById("hero-search")?.value.toLowerCase() || "";
     const showOwned = document.getElementById("db-show-owned")?.checked ?? true;
-    const showNotOwned = document.getElementById("db-show-not-owned")?.checked ?? false;
+    const showNotOwned =
+        document.getElementById("db-show-not-owned")?.checked ?? false;
 
     let html = "";
 
@@ -2275,12 +2283,18 @@ function renderComplexityFilters() {
         const potentialMatchesCount = characters.filter((c) => {
             if (Number(c.complexity) !== i) return false;
             const nameMatch = c.name.toLowerCase().includes(searchTerm);
-            const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+            const groupNameMatch = (c.group || "")
+                .toLowerCase()
+                .includes(searchTerm);
             const groupFilterMatch = activeGroups.has(c.group_id);
             const ownershipMatch =
                 (isHeroOwned(c) && showOwned) ||
                 (!isHeroOwned(c) && showNotOwned);
-            return (nameMatch || groupNameMatch) && groupFilterMatch && ownershipMatch;
+            return (
+                (nameMatch || groupNameMatch) &&
+                groupFilterMatch &&
+                ownershipMatch
+            );
         }).length;
 
         const isDisabled = potentialMatchesCount === 0;
@@ -2300,12 +2314,15 @@ function renderComplexityFilters() {
     // 2. Generate the 'ALL' card
     const totalMatchingHeroes = characters.filter((c) => {
         const nameMatch = c.name.toLowerCase().includes(searchTerm);
-        const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+        const groupNameMatch = (c.group || "")
+            .toLowerCase()
+            .includes(searchTerm);
         const groupFilterMatch = activeGroups.has(c.group_id);
         const ownershipMatch =
-            (isHeroOwned(c) && showOwned) ||
-            (!isHeroOwned(c) && showNotOwned);
-        return (nameMatch || groupNameMatch) && groupFilterMatch && ownershipMatch;
+            (isHeroOwned(c) && showOwned) || (!isHeroOwned(c) && showNotOwned);
+        return (
+            (nameMatch || groupNameMatch) && groupFilterMatch && ownershipMatch
+        );
     }).length;
 
     const isAllDisabled = totalMatchingHeroes === 0;
@@ -2333,7 +2350,12 @@ function getGroupThemeClass(groupName) {
     if (name.includes("adventures")) return "group-adventures";
     if (name.includes("solo")) return "group-solo";
     if (name.includes("outcast")) return "group-outcast";
-    if (name.includes("santa") || name.includes("krampus") || name.includes("svk")) return "group-svk";
+    if (
+        name.includes("santa") ||
+        name.includes("krampus") ||
+        name.includes("svk")
+    )
+        return "group-svk";
     if (name.includes("vanguard")) return "group-vanguard";
     return "group-default";
 }
@@ -2344,17 +2366,23 @@ function getGroupAbbreviation(name) {
     if (cleanName.includes("season 1")) return "S1";
     if (cleanName.includes("season 2")) return "S2";
     if (cleanName.includes("marvel")) return "MRVL";
-    if (cleanName.includes("x-men") || cleanName.includes("xmen")) return "XMEN";
+    if (cleanName.includes("x-men") || cleanName.includes("xmen"))
+        return "XMEN";
     if (cleanName.includes("adventure")) return "ADV";
-    if (cleanName.includes("santa") && cleanName.includes("krampus")) return "SvK";
+    if (cleanName.includes("santa") && cleanName.includes("krampus"))
+        return "SvK";
     if (cleanName.includes("solo")) return "SOLO";
     if (cleanName.includes("outcast")) return "OUTC";
     if (cleanName.includes("vanguard")) return "VNGD";
-    
+
     // Fallback: first letter of each word up to 3 chars, or first 3 chars if single word
     const words = name.split(/\s+/);
     if (words.length > 1) {
-        return words.map(w => w[0]).join("").toUpperCase().substring(0, 3);
+        return words
+            .map((w) => w[0])
+            .join("")
+            .toUpperCase()
+            .substring(0, 3);
     }
     return name.substring(0, 3).toUpperCase();
 }
@@ -2363,31 +2391,39 @@ function renderGroupFilters() {
     const container = document.getElementById("group-filter-bar");
     if (!container) return;
 
-    const searchTerm = document.getElementById("hero-search")?.value.toLowerCase() || "";
+    const searchTerm =
+        document.getElementById("hero-search")?.value.toLowerCase() || "";
     const showOwned = document.getElementById("db-show-owned")?.checked ?? true;
-    const showNotOwned = document.getElementById("db-show-not-owned")?.checked ?? false;
+    const showNotOwned =
+        document.getElementById("db-show-not-owned")?.checked ?? false;
 
     let html = groups
         .map((g) => {
             const initials = getGroupAbbreviation(g.name);
             const isActive = activeGroups.has(g.id);
             const themeClass = getGroupThemeClass(g.name);
-            
+
             // Calculate potential matches in this group
             const potentialMatchesCount = characters.filter((c) => {
                 if (c.group_id !== g.id) return false;
                 const nameMatch = c.name.toLowerCase().includes(searchTerm);
-                const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+                const groupNameMatch = (c.group || "")
+                    .toLowerCase()
+                    .includes(searchTerm);
                 const complexityMatch = activeLevels.has(Number(c.complexity));
                 const ownershipMatch =
                     (isHeroOwned(c) && showOwned) ||
                     (!isHeroOwned(c) && showNotOwned);
-                return (nameMatch || groupNameMatch) && complexityMatch && ownershipMatch;
+                return (
+                    (nameMatch || groupNameMatch) &&
+                    complexityMatch &&
+                    ownershipMatch
+                );
             }).length;
 
             const isDisabled = potentialMatchesCount === 0;
             const activeClass = isActive && !isDisabled ? "active-die" : "";
-            
+
             return `
                 <div class="group-badge-card ${themeClass} ${activeClass} ${isDisabled ? "disabled" : ""}" 
                      id="group-filter-${g.id}" 
@@ -2400,47 +2436,64 @@ function renderGroupFilters() {
         .join("");
 
     // Calculate total active non-disabled groups
-    const activeNonDisabledCount = groups.filter(g => {
+    const activeNonDisabledCount = groups.filter((g) => {
         const potentialMatchesCount = characters.filter((c) => {
             if (c.group_id !== g.id) return false;
             const nameMatch = c.name.toLowerCase().includes(searchTerm);
-            const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+            const groupNameMatch = (c.group || "")
+                .toLowerCase()
+                .includes(searchTerm);
             const complexityMatch = activeLevels.has(Number(c.complexity));
             const ownershipMatch =
                 (isHeroOwned(c) && showOwned) ||
                 (!isHeroOwned(c) && showNotOwned);
-            return (nameMatch || groupNameMatch) && complexityMatch && ownershipMatch;
+            return (
+                (nameMatch || groupNameMatch) &&
+                complexityMatch &&
+                ownershipMatch
+            );
         }).length;
         return potentialMatchesCount > 0 && activeGroups.has(g.id);
     }).length;
 
-    const totalAvailableGroups = groups.filter(g => {
+    const totalAvailableGroups = groups.filter((g) => {
         const potentialMatchesCount = characters.filter((c) => {
             if (c.group_id !== g.id) return false;
             const nameMatch = c.name.toLowerCase().includes(searchTerm);
-            const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+            const groupNameMatch = (c.group || "")
+                .toLowerCase()
+                .includes(searchTerm);
             const complexityMatch = activeLevels.has(Number(c.complexity));
             const ownershipMatch =
                 (isHeroOwned(c) && showOwned) ||
                 (!isHeroOwned(c) && showNotOwned);
-            return (nameMatch || groupNameMatch) && complexityMatch && ownershipMatch;
+            return (
+                (nameMatch || groupNameMatch) &&
+                complexityMatch &&
+                ownershipMatch
+            );
         }).length;
         return potentialMatchesCount > 0;
     });
 
-    const allActive = totalAvailableGroups.length > 0 && activeNonDisabledCount === totalAvailableGroups.length;
+    const allActive =
+        totalAvailableGroups.length > 0 &&
+        activeNonDisabledCount === totalAvailableGroups.length;
     const allActiveClass = allActive ? "active-die" : "";
     const isAllDisabled = totalAvailableGroups.length === 0;
 
     // Calculate total matching heroes across all groups
     const totalMatchingHeroes = characters.filter((c) => {
         const nameMatch = c.name.toLowerCase().includes(searchTerm);
-        const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+        const groupNameMatch = (c.group || "")
+            .toLowerCase()
+            .includes(searchTerm);
         const complexityMatch = activeLevels.has(Number(c.complexity));
         const ownershipMatch =
-            (isHeroOwned(c) && showOwned) ||
-            (!isHeroOwned(c) && showNotOwned);
-        return (nameMatch || groupNameMatch) && complexityMatch && ownershipMatch;
+            (isHeroOwned(c) && showOwned) || (!isHeroOwned(c) && showNotOwned);
+        return (
+            (nameMatch || groupNameMatch) && complexityMatch && ownershipMatch
+        );
     }).length;
 
     html += `
@@ -2456,32 +2509,42 @@ function renderGroupFilters() {
 }
 
 function toggleGroupFilter(groupId) {
-    const searchTerm = document.getElementById("hero-search")?.value.toLowerCase() || "";
+    const searchTerm =
+        document.getElementById("hero-search")?.value.toLowerCase() || "";
     const showOwned = document.getElementById("db-show-owned")?.checked ?? true;
-    const showNotOwned = document.getElementById("db-show-not-owned")?.checked ?? false;
+    const showNotOwned =
+        document.getElementById("db-show-not-owned")?.checked ?? false;
 
-    const totalAvailableGroups = groups.filter(g => {
+    const totalAvailableGroups = groups.filter((g) => {
         const potentialMatchesCount = characters.filter((c) => {
             if (c.group_id !== g.id) return false;
             const nameMatch = c.name.toLowerCase().includes(searchTerm);
-            const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+            const groupNameMatch = (c.group || "")
+                .toLowerCase()
+                .includes(searchTerm);
             const complexityMatch = activeLevels.has(Number(c.complexity));
             const ownershipMatch =
                 (isHeroOwned(c) && showOwned) ||
                 (!isHeroOwned(c) && showNotOwned);
-            return (nameMatch || groupNameMatch) && complexityMatch && ownershipMatch;
+            return (
+                (nameMatch || groupNameMatch) &&
+                complexityMatch &&
+                ownershipMatch
+            );
         }).length;
         return potentialMatchesCount > 0;
     });
 
     if (groupId === "all") {
-        const activeAvailableCount = totalAvailableGroups.filter(g => activeGroups.has(g.id)).length;
+        const activeAvailableCount = totalAvailableGroups.filter((g) =>
+            activeGroups.has(g.id),
+        ).length;
         if (activeAvailableCount === totalAvailableGroups.length) {
             // Unselect all available
-            totalAvailableGroups.forEach(g => activeGroups.delete(g.id));
+            totalAvailableGroups.forEach((g) => activeGroups.delete(g.id));
         } else {
             // Select all available
-            totalAvailableGroups.forEach(g => activeGroups.add(g.id));
+            totalAvailableGroups.forEach((g) => activeGroups.add(g.id));
         }
     } else {
         if (activeGroups.has(groupId)) {
@@ -2490,7 +2553,7 @@ function toggleGroupFilter(groupId) {
             activeGroups.add(groupId);
         }
     }
-    
+
     updateGroupVisuals();
     renderList();
 }
@@ -2505,7 +2568,10 @@ function updateGroupVisuals() {
 
     const allEl = document.getElementById("group-filter-all");
     if (allEl) {
-        allEl.classList.toggle("active-die", activeGroups.size === groups.length);
+        allEl.classList.toggle(
+            "active-die",
+            activeGroups.size === groups.length,
+        );
     }
 }
 
@@ -3178,7 +3244,9 @@ function renderList() {
             if (valA === valB) {
                 const nameA = (a.name || "").toLowerCase();
                 const nameB = (b.name || "").toLowerCase();
-                return sortAsc ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+                return sortAsc
+                    ? nameA.localeCompare(nameB)
+                    : nameB.localeCompare(nameA);
             }
         } else {
             valA = (a[currentSort] || "").toLowerCase();
