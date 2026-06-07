@@ -242,7 +242,7 @@ function hidePreloader() {
 // 6. EVENT LISTENERS
 // ==========================================
 window.addEventListener("DOMContentLoaded", initializeApp);
-window.addEventListener("DOMContentLoaded", updateDiceVisuals);
+window.addEventListener("DOMContentLoaded", renderComplexityFilters);
 versionLabel.onclick = openChangelog;
 closeBtn.onclick = closeChangelog;
 
@@ -2228,27 +2228,30 @@ function toggleLevel(level) {
     }
 
     // Update icon visuals and refresh the hero list display
-    updateDiceVisuals();
+    renderComplexityFilters();
     renderList();
 }
 
 // ******************************************
-// updateDiceVisuals()
+// renderComplexityFilters()
 // input: none
 // ******************************************
-// Synchronizes the dice icon styling with the current
-// active filter state (activeLevels set).
+// Generates the complexity level filter cards dynamically, including:
+// 1. Level cards 1 through 6 with 2D dice icons and live hero counts
+// 2. An 'ALL' card that highlights when all levels are active
 // ******************************************
-function updateDiceVisuals() {
+function renderComplexityFilters() {
+    const container = document.getElementById("complexity-filter-bar");
+    if (!container) return;
+
     const searchTerm = document.getElementById("hero-search")?.value.toLowerCase() || "";
     const showOwned = document.getElementById("db-show-owned")?.checked ?? true;
     const showNotOwned = document.getElementById("db-show-not-owned")?.checked ?? false;
 
-    // Update the active state for numeric dice 1 through 6
-    for (let i = 1; i <= 6; i++) {
-        const die = document.getElementById(`dice-${i}`);
-        if (!die) continue;
+    let html = "";
 
+    // 1. Generate numeric dice 1 through 6
+    for (let i = 1; i <= 6; i++) {
         // Calculate potential matches for this complexity level
         const potentialMatchesCount = characters.filter((c) => {
             if (Number(c.complexity) !== i) return false;
@@ -2263,43 +2266,43 @@ function updateDiceVisuals() {
 
         const isDisabled = potentialMatchesCount === 0;
         const isActive = activeLevels.has(i);
+        const activeClass = isActive && !isDisabled ? "active-die" : "";
 
-        // Toggle active styling and apply disabled styling/pointer events
-        die.classList.toggle("active-die", isActive && !isDisabled);
-        if (isDisabled) {
-            die.style.cssText = "opacity: 0.15; pointer-events: none;";
-            die.title = `Level ${i} (0 heroes)`;
-        } else {
-            die.style.cssText = "";
-            die.title = `Level ${i} (${potentialMatchesCount} heroes)`;
-        }
+        html += `
+            <div class="group-badge-card group-complexity ${activeClass} ${isDisabled ? "disabled" : ""}" 
+                 id="dice-${i}" 
+                 onclick="${isDisabled ? "" : `toggleLevel(${i})`}" 
+                 title="Level ${i} (${potentialMatchesCount} heroes)">
+                <img src="images/dice/d${i}.png" class="complexity-dice-img" alt="Level ${i}">
+                <span class="group-badge-count">${potentialMatchesCount}</span>
+            </div>`;
     }
 
-    // The 'ALL' icon is highlighted only if all 6 levels are active
-    const allDie = document.getElementById("dice-all");
-    if (allDie) {
-        const totalMatches = characters.filter((c) => {
-            const nameMatch = c.name.toLowerCase().includes(searchTerm);
-            const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
-            const groupFilterMatch = activeGroups.has(c.group_id);
-            const ownershipMatch =
-                (isHeroOwned(c) && showOwned) ||
-                (!isHeroOwned(c) && showNotOwned);
-            return (nameMatch || groupNameMatch) && groupFilterMatch && ownershipMatch;
-        }).length;
+    // 2. Generate the 'ALL' card
+    const totalMatchingHeroes = characters.filter((c) => {
+        const nameMatch = c.name.toLowerCase().includes(searchTerm);
+        const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+        const groupFilterMatch = activeGroups.has(c.group_id);
+        const ownershipMatch =
+            (isHeroOwned(c) && showOwned) ||
+            (!isHeroOwned(c) && showNotOwned);
+        return (nameMatch || groupNameMatch) && groupFilterMatch && ownershipMatch;
+    }).length;
 
-        const isAllDisabled = totalMatches === 0;
-        const allActive = activeLevels.size === 6;
+    const isAllDisabled = totalMatchingHeroes === 0;
+    const allActive = activeLevels.size === 6;
+    const allActiveClass = allActive && !isAllDisabled ? "active-die" : "";
 
-        allDie.classList.toggle("active-die", allActive && !isAllDisabled);
-        if (isAllDisabled) {
-            allDie.style.cssText = "opacity: 0.15; pointer-events: none;";
-            allDie.title = "All Levels (0 heroes)";
-        } else {
-            allDie.style.cssText = "";
-            allDie.title = "All Levels";
-        }
-    }
+    html += `
+        <div class="group-badge-card group-complexity group-complexity-all ${allActiveClass} ${isAllDisabled ? "disabled" : ""}" 
+             id="dice-all" 
+             onclick="${isAllDisabled ? "" : "toggleLevel('all')"}" 
+             title="All Levels (${totalMatchingHeroes} heroes)">
+            <img src="images/dice/d_all.png" class="complexity-dice-img" alt="All">
+            <span class="group-badge-count">${totalMatchingHeroes}</span>
+        </div>`;
+
+    container.innerHTML = html;
 }
 
 function getGroupThemeClass(groupName) {
@@ -2310,6 +2313,9 @@ function getGroupThemeClass(groupName) {
     if (name.includes("x-men") || name.includes("xmen")) return "group-xmen";
     if (name.includes("adventures")) return "group-adventures";
     if (name.includes("solo")) return "group-solo";
+    if (name.includes("outcast")) return "group-outcast";
+    if (name.includes("santa") || name.includes("krampus") || name.includes("svk")) return "group-svk";
+    if (name.includes("vanguard")) return "group-vanguard";
     return "group-default";
 }
 
@@ -2323,6 +2329,8 @@ function getGroupAbbreviation(name) {
     if (cleanName.includes("adventure")) return "ADV";
     if (cleanName.includes("santa") && cleanName.includes("krampus")) return "SvK";
     if (cleanName.includes("solo")) return "SOLO";
+    if (cleanName.includes("outcast")) return "OUTC";
+    if (cleanName.includes("vanguard")) return "VNGD";
     
     // Fallback: first letter of each word up to 3 chars, or first 3 chars if single word
     const words = name.split(/\s+/);
@@ -2484,7 +2492,7 @@ function updateGroupVisuals() {
 
 // Ensure visuals are correct when the page loads
 window.addEventListener("DOMContentLoaded", () => {
-    updateDiceVisuals();
+    renderComplexityFilters();
     updateGroupVisuals();
 });
 
@@ -3085,7 +3093,7 @@ function renderList() {
     if (!container) return;
 
     renderGroupFilters();
-    updateDiceVisuals();
+    renderComplexityFilters();
 
     updateHeroStatsFromHistory();
 

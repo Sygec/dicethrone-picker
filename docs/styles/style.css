@@ -960,7 +960,9 @@ textarea {
 /* Condense initials for 4-letter groups to maintain the uniform 52px card width */
 .group-badge-card.group-marvel .group-badge-initials,
 .group-badge-card.group-xmen .group-badge-initials,
-.group-badge-card.group-solo .group-badge-initials {
+.group-badge-card.group-solo .group-badge-initials,
+.group-badge-card.group-outcast .group-badge-initials,
+.group-badge-card.group-vanguard .group-badge-initials {
   font-size: 0.72rem;
   letter-spacing: -0.5px;
 }
@@ -1053,6 +1055,39 @@ textarea {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
+/* Outcast: Deep Indigo / Orchid Purple Gradient */
+.group-badge-card.group-outcast.active-die {
+  background: linear-gradient(135deg, #1c0c3a, #5e35b1);
+  box-shadow: 0 0 12px rgba(94, 53, 177, 0.4);
+}
+.group-badge-card.group-outcast.active-die .group-badge-initials,
+.group-badge-card.group-outcast.active-die .group-badge-count {
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* Santa vs Krampus: Festive Forest Green & Crimson Red Gradient */
+.group-badge-card.group-svk.active-die {
+  background: linear-gradient(135deg, #0f3d1e, #a31d1d);
+  box-shadow: 0 0 12px rgba(163, 29, 29, 0.4);
+}
+.group-badge-card.group-svk.active-die .group-badge-initials,
+.group-badge-card.group-svk.active-die .group-badge-count {
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* Vanguard: Deep Navy & Sapphire Cyan Gradient */
+.group-badge-card.group-vanguard.active-die {
+  background: linear-gradient(135deg, #0d1e3d, #00b4d8);
+  box-shadow: 0 0 12px rgba(0, 180, 216, 0.4);
+}
+.group-badge-card.group-vanguard.active-die .group-badge-initials,
+.group-badge-card.group-vanguard.active-die .group-badge-count {
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
 /* All / Default */
 .group-badge-card.group-all.active-die {
   background: linear-gradient(135deg, rgba(255,255,255,0.05), var(--accent));
@@ -1063,6 +1098,39 @@ textarea {
 }
 .group-badge-card.group-all.active-die .group-badge-count {
   color: rgba(0, 0, 0, 0.65);
+}
+
+/* Complexity Card Badge Overrides */
+.complexity-dice-img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  margin-bottom: 2px;
+  opacity: 0.55;
+  filter: grayscale(100%) brightness(0.9);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.group-badge-card.group-complexity:hover:not(.disabled) .complexity-dice-img {
+  opacity: 0.85;
+  filter: grayscale(50%) brightness(1);
+}
+
+.group-badge-card.group-complexity.active-die .complexity-dice-img {
+  opacity: 1;
+  filter: grayscale(0%) brightness(1.1);
+  transform: scale(1.05);
+}
+
+/* Active State: Amber & Gold Gradient with Neon Glow */
+.group-badge-card.group-complexity.active-die {
+  background: linear-gradient(135deg, #3a220c, var(--accent));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.group-badge-card.group-complexity.active-die .group-badge-count {
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 .dice-icon {
