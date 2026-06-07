@@ -328,104 +328,95 @@
                                 onclick="clearSearch()"
                                 alt="Clear"
                                 title="Clear Search" />
-                            <img
-                                src="images/buttons/sort.png"
-                                id="sort-toggle"
-                                class="search-icon"
-                                onclick="toggleSortSection()"
-                                alt="Sort"
-                                title="Toggle Sort Section" />
-                            <img
-                                src="images/buttons/filter.png"
-                                id="filter-toggle"
-                                class="search-icon"
-                                onclick="toggleFilterSection()"
-                                alt="Filter"
-                                title="Toggle Filter Section" />
                         </div>
                     </div>
                     <div class="small-text" id="count-stats">
                         Showing 0 of 0 heroes
                     </div>
-                    <div
-                        class="dropdown-sort-options"
-                        style="margin-top: 5px; margin-bottom: 0">
-                        <label>
-                            <input
-                                type="checkbox"
-                                id="db-show-owned"
-                                checked
-                                onchange="renderList()" />
-                            Owned
-                        </label>
-                        <label>
-                            <input
-                                type="checkbox"
-                                id="db-show-not-owned"
-                                onchange="renderList()" />
-                            Not owned
-                        </label>
+                    
+                    <!-- Segmented Pill Control for Ownership -->
+                    <div class="ownership-segmented-control">
+                        <button type="button" class="segmented-pill active" id="pill-show-owned" onclick="setOwnershipFilter('owned')">Owned</button>
+                        <button type="button" class="segmented-pill" id="pill-show-not-owned" onclick="setOwnershipFilter('unowned')">Unowned</button>
+                        <button type="button" class="segmented-pill" id="pill-show-all" onclick="setOwnershipFilter('all')">All</button>
+                    </div>
+
+                    <!-- Hidden inputs for backward compatibility with JS queries -->
+                    <input type="checkbox" id="db-show-owned" checked style="display: none;" onchange="renderList()" />
+                    <input type="checkbox" id="db-show-not-owned" style="display: none;" onchange="renderList()" />
+                </div>
+
+                <!-- Sorting Accordion -->
+                <div class="db-accordion">
+                    <div class="db-accordion-header" onclick="toggleSortSection()">
+                        <span>Sorting Options</span>
+                        <button type="button" class="panel-toggle" id="sort-panel-toggle">V</button>
+                    </div>
+                    <div id="sort-section" class="db-accordion-content sort-container-new hidden" style="width: 100%; box-sizing: border-box;">
+                        <!-- Content rendered dynamically via renderSortControls() -->
                     </div>
                 </div>
 
-                <div id="sort-section" class="sort-container-new hidden" style="width: 100%; box-sizing: border-box;">
-                    <!-- Content rendered dynamically via renderSortControls() -->
-                </div>
-
-                <!-- Filter Section -->
-                <div id="filter-section" class="sort-container-new hidden" style="width: 100%; box-sizing: border-box;">
-                    <!-- Complexity Row -->
-                    <div class="panel-row-new">
-                        <span class="panel-row-title">Complexity Level:</span>
-                        <div class="dice-bar" style="margin-top: 5px;">
-                            <img
-                                src="images/dice/d1.png"
-                                class="dice-icon"
-                                id="dice-1"
-                                onclick="toggleLevel(1)"
-                                title="Level 1" />
-                            <img
-                                src="images/dice/d2.png"
-                                class="dice-icon"
-                                id="dice-2"
-                                onclick="toggleLevel(2)"
-                                title="Level 2" />
-                            <img
-                                src="images/dice/d3.png"
-                                class="dice-icon"
-                                id="dice-3"
-                                onclick="toggleLevel(3)"
-                                title="Level 3" />
-                            <img
-                                src="images/dice/d4.png"
-                                class="dice-icon"
-                                id="dice-4"
-                                onclick="toggleLevel(4)"
-                                title="Level 4" />
-                            <img
-                                src="images/dice/d5.png"
-                                class="dice-icon"
-                                id="dice-5"
-                                onclick="toggleLevel(5)"
-                                title="Level 5" />
-                            <img
-                                src="images/dice/d6.png"
-                                class="dice-icon"
-                                id="dice-6"
-                                onclick="toggleLevel(6)"
-                                title="Level 6" />
-                            <img
-                                src="images/dice/d_all.png"
-                                class="dice-icon"
-                                id="dice-all"
-                                onclick="toggleLevel('all')"
-                                title="All Levels" />
+                <!-- Filtering Accordion -->
+                <div class="db-accordion">
+                    <div class="db-accordion-header" onclick="toggleFilterSection()">
+                        <span>Filtering Options</span>
+                        <button type="button" class="panel-toggle" id="filter-panel-toggle">V</button>
+                    </div>
+                    <div id="filter-section" class="db-accordion-content sort-container-new hidden" style="width: 100%; box-sizing: border-box;">
+                        <!-- Complexity Row -->
+                        <div class="panel-row-new">
+                            <span class="panel-row-title">Complexity Level:</span>
+                            <div class="filter-bar-track" style="margin-top: 5px;">
+                                <img
+                                    src="images/dice/d1.png"
+                                    class="dice-icon"
+                                    id="dice-1"
+                                    onclick="toggleLevel(1)"
+                                    title="Level 1" />
+                                <img
+                                    src="images/dice/d2.png"
+                                    class="dice-icon"
+                                    id="dice-2"
+                                    onclick="toggleLevel(2)"
+                                    title="Level 2" />
+                                <img
+                                    src="images/dice/d3.png"
+                                    class="dice-icon"
+                                    id="dice-3"
+                                    onclick="toggleLevel(3)"
+                                    title="Level 3" />
+                                <img
+                                    src="images/dice/d4.png"
+                                    class="dice-icon"
+                                    id="dice-4"
+                                    onclick="toggleLevel(4)"
+                                    title="Level 4" />
+                                <img
+                                    src="images/dice/d5.png"
+                                    class="dice-icon"
+                                    id="dice-5"
+                                    onclick="toggleLevel(5)"
+                                    title="Level 5" />
+                                <img
+                                    src="images/dice/d6.png"
+                                    class="dice-icon"
+                                    id="dice-6"
+                                    onclick="toggleLevel(6)"
+                                    title="Level 6" />
+                                <img
+                                    src="images/dice/d_all.png"
+                                    class="dice-icon"
+                                    id="dice-all"
+                                    onclick="toggleLevel('all')"
+                                    title="All Levels" />
+                            </div>
                         </div>
-                    </div>
-                    <!-- Groups/Seasons Row -->
-                    <div class="panel-row-new">
-                        <span class="panel-row-title">Hero Group / Season:</span>
-                        <div class="dice-bar" id="group-filter-bar" style="margin-top: 5px; flex-wrap: wrap;"></div>
+                        <!-- Groups/Seasons Row -->
+                        <div class="panel-row-new">
+                            <span class="panel-row-title">Hero Group / Season:</span>
+                            <div class="filter-bar-track" id="group-filter-bar" style="margin-top: 5px; flex-wrap: wrap;"></div>
+                        </div>
                     </div>
                 </div>
                 <div id="heroContainer"></div>

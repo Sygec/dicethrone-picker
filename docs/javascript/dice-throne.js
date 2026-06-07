@@ -805,12 +805,12 @@ function showAdmin() {
 // ******************************************
 function toggleSortSection() {
     const sortSection = document.getElementById("sort-section");
+    const button = document.getElementById("sort-panel-toggle");
+    if (!sortSection) return;
     const isHidden = sortSection.classList.toggle("hidden");
-    if (isHidden) {
-        activePlayerIndices = [0, 1, 2, 3];
-        renderSortControls();
-        currentSort = null;
-        setSort("name");
+    if (button) {
+        button.classList.toggle("open", !isHidden);
+        button.setAttribute("aria-expanded", String(!isHidden));
     }
 }
 
@@ -818,17 +818,16 @@ function toggleSortSection() {
 // toggleFilterSection()
 // input: none
 // ******************************************
-// Toggles the visibility of the filter section and resets filters if hidden.
+// Toggles the visibility of the filter section visually.
 // ******************************************
 function toggleFilterSection() {
     const filterSection = document.getElementById("filter-section");
+    const button = document.getElementById("filter-panel-toggle");
+    if (!filterSection) return;
     const isHidden = filterSection.classList.toggle("hidden");
-    if (isHidden) {
-        activeLevels = new Set([1, 2, 3, 4, 5, 6]); // Reset to all active filters
-        updateDiceVisuals();
-        activeGroups = new Set(groups.map((g) => g.id));
-        updateGroupVisuals();
-        renderList();
+    if (button) {
+        button.classList.toggle("open", !isHidden);
+        button.setAttribute("aria-expanded", String(!isHidden));
     }
 }
 
@@ -879,6 +878,44 @@ function toggleCollectionGroup(groupId, event) {
 }
 
 // ******************************************
+// setOwnershipFilter(filterState)
+// input: filterState ('owned', 'unowned', 'all')
+// ******************************************
+function setOwnershipFilter(filterState) {
+    const showOwnedCheckbox = document.getElementById("db-show-owned");
+    const showNotOwnedCheckbox = document.getElementById("db-show-not-owned");
+
+    if (showOwnedCheckbox && showNotOwnedCheckbox) {
+        if (filterState === "owned") {
+            showOwnedCheckbox.checked = true;
+            showNotOwnedCheckbox.checked = false;
+        } else if (filterState === "unowned") {
+            showOwnedCheckbox.checked = false;
+            showNotOwnedCheckbox.checked = true;
+        } else {
+            showOwnedCheckbox.checked = true;
+            showNotOwnedCheckbox.checked = true;
+        }
+    }
+
+    // Update segmented pill active class
+    const pills = {
+        owned: document.getElementById("pill-show-owned"),
+        unowned: document.getElementById("pill-show-not-owned"),
+        all: document.getElementById("pill-show-all")
+    };
+
+    Object.keys(pills).forEach((key) => {
+        const pill = pills[key];
+        if (pill) {
+            pill.classList.toggle("active", key === filterState);
+        }
+    });
+
+    renderList();
+}
+
+// ******************************************
 // renderCollectionView()
 // input: none
 // ******************************************
@@ -926,9 +963,9 @@ function renderCollectionView() {
             return `
             <div class="collection-group${isExpanded ? "" : " collapsed"}">
                 <div class="collection-group-header" onclick="toggleCollectionGroup('${group.id}', event)" style="cursor: pointer;">
-                    <button type="button" class="panel-toggle${isExpanded ? " open" : ""}" aria-expanded="${isExpanded}">V</button>
                     <input type="checkbox" id="owned-group-${group.id}" ${allOwned ? "checked" : ""} onchange="toggleGroupOwned('${group.id}', this.checked)" onclick="event.stopPropagation();">
                     <label for="owned-group-${group.id}" onclick="event.stopPropagation();"><strong>${group.name}</strong></label>
+                    <button type="button" class="panel-toggle${isExpanded ? " open" : ""}" aria-expanded="${isExpanded}">V</button>
                 </div>
                 <div class="collection-heroes-list">
                     ${heroesHtml}
@@ -2203,15 +2240,96 @@ function toggleLevel(level) {
 // active filter state (activeLevels set).
 // ******************************************
 function updateDiceVisuals() {
+    const searchTerm = document.getElementById("hero-search")?.value.toLowerCase() || "";
+    const showOwned = document.getElementById("db-show-owned")?.checked ?? true;
+    const showNotOwned = document.getElementById("db-show-not-owned")?.checked ?? false;
+
     // Update the active state for numeric dice 1 through 6
     for (let i = 1; i <= 6; i++) {
         const die = document.getElementById(`dice-${i}`);
-        if (die) die.classList.toggle("active-die", activeLevels.has(i));
+        if (!die) continue;
+
+        // Calculate potential matches for this complexity level
+        const potentialMatchesCount = characters.filter((c) => {
+            if (Number(c.complexity) !== i) return false;
+            const nameMatch = c.name.toLowerCase().includes(searchTerm);
+            const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+            const groupFilterMatch = activeGroups.has(c.group_id);
+            const ownershipMatch =
+                (isHeroOwned(c) && showOwned) ||
+                (!isHeroOwned(c) && showNotOwned);
+            return (nameMatch || groupNameMatch) && groupFilterMatch && ownershipMatch;
+        }).length;
+
+        const isDisabled = potentialMatchesCount === 0;
+        const isActive = activeLevels.has(i);
+
+        // Toggle active styling and apply disabled styling/pointer events
+        die.classList.toggle("active-die", isActive && !isDisabled);
+        if (isDisabled) {
+            die.style.cssText = "opacity: 0.15; pointer-events: none;";
+            die.title = `Level ${i} (0 heroes)`;
+        } else {
+            die.style.cssText = "";
+            die.title = `Level ${i} (${potentialMatchesCount} heroes)`;
+        }
     }
 
     // The 'ALL' icon is highlighted only if all 6 levels are active
     const allDie = document.getElementById("dice-all");
-    if (allDie) allDie.classList.toggle("active-die", activeLevels.size === 6);
+    if (allDie) {
+        const totalMatches = characters.filter((c) => {
+            const nameMatch = c.name.toLowerCase().includes(searchTerm);
+            const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+            const groupFilterMatch = activeGroups.has(c.group_id);
+            const ownershipMatch =
+                (isHeroOwned(c) && showOwned) ||
+                (!isHeroOwned(c) && showNotOwned);
+            return (nameMatch || groupNameMatch) && groupFilterMatch && ownershipMatch;
+        }).length;
+
+        const isAllDisabled = totalMatches === 0;
+        const allActive = activeLevels.size === 6;
+
+        allDie.classList.toggle("active-die", allActive && !isAllDisabled);
+        if (isAllDisabled) {
+            allDie.style.cssText = "opacity: 0.15; pointer-events: none;";
+            allDie.title = "All Levels (0 heroes)";
+        } else {
+            allDie.style.cssText = "";
+            allDie.title = "All Levels";
+        }
+    }
+}
+
+function getGroupThemeClass(groupName) {
+    const name = (groupName || "").toLowerCase();
+    if (name.includes("season 1") || name.includes("s1")) return "group-s1";
+    if (name.includes("season 2") || name.includes("s2")) return "group-s2";
+    if (name.includes("marvel")) return "group-marvel";
+    if (name.includes("x-men") || name.includes("xmen")) return "group-xmen";
+    if (name.includes("adventures")) return "group-adventures";
+    if (name.includes("solo")) return "group-solo";
+    return "group-default";
+}
+
+function getGroupAbbreviation(name) {
+    if (!name) return "?";
+    const cleanName = name.trim().toLowerCase();
+    if (cleanName.includes("season 1")) return "S1";
+    if (cleanName.includes("season 2")) return "S2";
+    if (cleanName.includes("marvel")) return "MRVL";
+    if (cleanName.includes("x-men") || cleanName.includes("xmen")) return "XMEN";
+    if (cleanName.includes("adventure")) return "ADV";
+    if (cleanName.includes("santa") && cleanName.includes("krampus")) return "SvK";
+    if (cleanName.includes("solo")) return "SOLO";
+    
+    // Fallback: first letter of each word up to 3 chars, or first 3 chars if single word
+    const words = name.split(/\s+/);
+    if (words.length > 1) {
+        return words.map(w => w[0]).join("").toUpperCase().substring(0, 3);
+    }
+    return name.substring(0, 3).toUpperCase();
 }
 
 function renderGroupFilters() {
@@ -2224,10 +2342,9 @@ function renderGroupFilters() {
 
     let html = groups
         .map((g) => {
-            const initials = g.name
-                ? g.name.split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase()
-                : "?";
+            const initials = getGroupAbbreviation(g.name);
             const isActive = activeGroups.has(g.id);
+            const themeClass = getGroupThemeClass(g.name);
             
             // Calculate potential matches in this group
             const potentialMatchesCount = characters.filter((c) => {
@@ -2243,19 +2360,15 @@ function renderGroupFilters() {
 
             const isDisabled = potentialMatchesCount === 0;
             const activeClass = isActive && !isDisabled ? "active-die" : "";
-            const disabledStyle = isDisabled ? "opacity: 0.15; pointer-events: none;" : "";
             
             return `
-                <span class="dice-icon group-icon ${activeClass}" 
+                <div class="group-badge-card ${themeClass} ${activeClass} ${isDisabled ? "disabled" : ""}" 
                      id="group-filter-${g.id}" 
                      onclick="${isDisabled ? "" : `toggleGroupFilter('${g.id}')`}" 
-                     title="${escapeHtml(g.name)} (${potentialMatchesCount} heroes)"
-                     style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 4px; overflow: hidden; ${disabledStyle}">
-                    <svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
-                        <rect x="2" y="2" width="32" height="32" rx="4" ry="4" fill="var(--secondary)" stroke="var(--accent)" stroke-width="2"/>
-                        <text x="18" y="22" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="var(--text)" text-anchor="middle">${initials}</text>
-                    </svg>
-                </span>`;
+                     title="${escapeHtml(g.name)} (${potentialMatchesCount} heroes)">
+                    <span class="group-badge-initials">${initials}</span>
+                    <span class="group-badge-count">${potentialMatchesCount}</span>
+                </div>`;
         })
         .join("");
 
@@ -2291,19 +2404,26 @@ function renderGroupFilters() {
     const allActive = totalAvailableGroups.length > 0 && activeNonDisabledCount === totalAvailableGroups.length;
     const allActiveClass = allActive ? "active-die" : "";
     const isAllDisabled = totalAvailableGroups.length === 0;
-    const allDisabledStyle = isAllDisabled ? "opacity: 0.15; pointer-events: none;" : "";
+
+    // Calculate total matching heroes across all groups
+    const totalMatchingHeroes = characters.filter((c) => {
+        const nameMatch = c.name.toLowerCase().includes(searchTerm);
+        const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+        const complexityMatch = activeLevels.has(Number(c.complexity));
+        const ownershipMatch =
+            (isHeroOwned(c) && showOwned) ||
+            (!isHeroOwned(c) && showNotOwned);
+        return (nameMatch || groupNameMatch) && complexityMatch && ownershipMatch;
+    }).length;
 
     html += `
-        <span class="dice-icon group-icon ${allActiveClass}" 
+        <div class="group-badge-card group-all ${allActiveClass} ${isAllDisabled ? "disabled" : ""}" 
              id="group-filter-all" 
              onclick="${isAllDisabled ? "" : "toggleGroupFilter('all')"}" 
-             title="All Groups"
-             style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 4px; overflow: hidden; ${allDisabledStyle}">
-            <svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
-                <rect x="2" y="2" width="32" height="32" rx="4" ry="4" fill="var(--secondary)" stroke="var(--accent)" stroke-width="2"/>
-                <text x="18" y="22" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="var(--text)" text-anchor="middle">ALL</text>
-            </svg>
-        </span>`;
+             title="All Groups">
+            <span class="group-badge-initials">ALL</span>
+            <span class="group-badge-count">${totalMatchingHeroes}</span>
+        </div>`;
 
     container.innerHTML = html;
 }
@@ -2965,6 +3085,7 @@ function renderList() {
     if (!container) return;
 
     renderGroupFilters();
+    updateDiceVisuals();
 
     updateHeroStatsFromHistory();
 

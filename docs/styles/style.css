@@ -876,6 +876,195 @@ textarea {
   justify-content: center;
 }
 
+/* Unified bar track container for complexity and groups */
+.filter-bar-track {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 6px 10px;
+  width: fit-content;
+  margin: 5px auto 0 auto;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Complexity Specific Styling inside the track */
+.filter-bar-track .dice-icon {
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  opacity: 0.2;
+  filter: grayscale(100%) brightness(0.8);
+  transition: all 0.2s ease;
+  padding: 2px;
+  border-radius: 4px;
+  transform: none; /* Keep flat flow */
+}
+
+.filter-bar-track .dice-icon:hover {
+  opacity: 0.5;
+  filter: grayscale(100%) brightness(1);
+}
+
+/* Active State: Highlight with theme accent tint and glow */
+.filter-bar-track .dice-icon.active-die {
+  opacity: 1;
+  filter: grayscale(0%) brightness(1);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+/* Group Filter Badge Cards */
+.group-badge-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  user-select: none;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.group-badge-card:hover:not(.disabled) {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-2px);
+}
+
+.group-badge-card.disabled {
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+.group-badge-initials {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.75);
+  letter-spacing: 0.5px;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+/* Condense initials for 4-letter groups to maintain the uniform 52px card width */
+.group-badge-card.group-marvel .group-badge-initials,
+.group-badge-card.group-xmen .group-badge-initials,
+.group-badge-card.group-solo .group-badge-initials {
+  font-size: 0.72rem;
+  letter-spacing: -0.5px;
+}
+
+.group-badge-count {
+  font-size: 0.6rem;
+  font-weight: bold;
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1;
+}
+
+/* Active State Styles - Tactile, glowing backgrounds with brand gradients */
+.group-badge-card.active-die {
+  border-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.group-badge-card.active-die .group-badge-initials {
+  color: #ffffff;
+}
+
+.group-badge-card.active-die .group-badge-count {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Season 1: Emerald Green Gradient */
+.group-badge-card.group-s1.active-die {
+  background: linear-gradient(135deg, #0d3b25, #2ec4b6);
+  box-shadow: 0 0 12px rgba(46, 196, 182, 0.4);
+}
+.group-badge-card.group-s1.active-die .group-badge-initials,
+.group-badge-card.group-s1.active-die .group-badge-count {
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* Season 2: Crimson & Gold Gradient */
+.group-badge-card.group-s2.active-die {
+  background: linear-gradient(135deg, #4a150b, #ff9f1c);
+  box-shadow: 0 0 12px rgba(255, 159, 28, 0.4);
+}
+.group-badge-card.group-s2.active-die .group-badge-initials,
+.group-badge-card.group-s2.active-die .group-badge-count {
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* Marvel: Navy & Ruby Red Gradient */
+.group-badge-card.group-marvel.active-die {
+  background: linear-gradient(135deg, #0f1c3f, #e94560);
+  box-shadow: 0 0 12px rgba(233, 69, 96, 0.4);
+}
+.group-badge-card.group-marvel.active-die .group-badge-initials,
+.group-badge-card.group-marvel.active-die .group-badge-count {
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* X-Men: Deep Steel & Electric Yellow Gradient */
+.group-badge-card.group-xmen.active-die {
+  background: linear-gradient(135deg, #111b2d, #f1c40f);
+  box-shadow: 0 0 12px rgba(241, 196, 15, 0.4);
+}
+.group-badge-card.group-xmen.active-die .group-badge-initials {
+  color: #ffffff;
+}
+.group-badge-card.group-xmen.active-die .group-badge-count {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Adventures: Twilight Purple Gradient */
+.group-badge-card.group-adventures.active-die {
+  background: linear-gradient(135deg, #1a0b2e, #9b59b6);
+  box-shadow: 0 0 12px rgba(155, 89, 182, 0.4);
+}
+.group-badge-card.group-adventures.active-die .group-badge-initials,
+.group-badge-card.group-adventures.active-die .group-badge-count {
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* Solo: Deep Steel Slate Gradient */
+.group-badge-card.group-solo.active-die {
+  background: linear-gradient(135deg, #1e272e, #485460);
+  box-shadow: 0 0 12px rgba(72, 84, 96, 0.4);
+}
+.group-badge-card.group-solo.active-die .group-badge-initials,
+.group-badge-card.group-solo.active-die .group-badge-count {
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* All / Default */
+.group-badge-card.group-all.active-die {
+  background: linear-gradient(135deg, rgba(255,255,255,0.05), var(--accent));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+.group-badge-card.group-all.active-die .group-badge-initials {
+  color: #121212;
+}
+.group-badge-card.group-all.active-die .group-badge-count {
+  color: rgba(0, 0, 0, 0.65);
+}
+
 .dice-icon {
   width: 32px;
   /* Base size */
@@ -1275,5 +1464,94 @@ textarea {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* ==========================================
+   Accordion & Segmented Pill Styles
+   ========================================== */
+
+/* DB Accordions */
+.db-accordion {
+  margin-bottom: 12px;
+  border: 1px solid var(--secondary);
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.db-accordion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.05);
+  user-select: none;
+  font-weight: bold;
+  font-size: 0.9rem;
+  color: var(--text);
+  transition: background-color 0.2s ease;
+}
+
+.db-accordion-header:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.db-accordion-content {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.1);
+  margin-bottom: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* Ownership Segmented Control (Tabs) */
+.ownership-segmented-control {
+  display: flex;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--secondary);
+  border-radius: 8px;
+  padding: 3px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+
+.segmented-pill {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.segmented-pill:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.segmented-pill.active {
+  background: var(--accent);
+  color: #121212;
+}
+
+/* Accordion Header for Collection view */
+.collection-group-header {
+  cursor: pointer;
+  justify-content: space-between !important;
+  user-select: none;
+  transition: background-color 0.2s ease;
+}
+
+.collection-group-header:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.collection-group-header .panel-toggle {
+  margin-left: auto;
 }
 
