@@ -2161,13 +2161,7 @@ textarea {
     flex-direction: column;
 }
 
-/* Lower the hero select modal content by 50px */
-#hero-select-modal {
-    align-items: flex-start;
-}
-#hero-select-modal .modal-content {
-    margin-top: 50px;
-}
+
 
 
 
