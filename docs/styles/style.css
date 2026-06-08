@@ -2159,11 +2159,11 @@ textarea {
     overflow: hidden; /* Let inner grid scroll instead */
     display: flex;
     flex-direction: column;
+}#changelog-container,
+#whats-new-container {
+    overflow-y: auto;
+    flex: 1;
 }
-
-
-
-
 
 .modal-content h2 {
     color: var(--accent) !important;
