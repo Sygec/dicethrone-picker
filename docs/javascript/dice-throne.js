@@ -17,6 +17,14 @@ let sortAsc = true;
 let currentSortPlayerIndex = 0;
 let editIndex = -1;
 let activePlayerIndices = [0, 1, 2, 3];
+let currentDrawerMode = 'sort-filter';
+let stagedSort = "";
+let stagedSortAsc = true;
+let stagedSortPlayerIndex = 0;
+let stagedLevels = new Set();
+let stagedGroups = new Set();
+let stagedPlayerIndices = [];
+let stagedUseHistorical = true;
 let currentUser = null;
 let loggedInPlayerIndex = -1;
 let isRollActive = false;
@@ -268,7 +276,6 @@ function hidePreloader() {
 // 6. EVENT LISTENERS
 // ==========================================
 window.addEventListener("DOMContentLoaded", initializeApp);
-window.addEventListener("DOMContentLoaded", renderComplexityFilters);
 versionLabel.onclick = openChangelog;
 closeBtn.onclick = closeChangelog;
 
@@ -512,7 +519,7 @@ async function init() {
                 }
             }
         }
-        renderGroupFilters();
+        updateActiveFilterBadge();
     }
 
     // 1. Fetch Players and Map logged-in User
@@ -624,7 +631,6 @@ async function init() {
         }));
     }
 
-    renderSortControls();
     renderAdminBuildInfo();
     renderGroupsList();
     renderGamesList();
@@ -1002,6 +1008,8 @@ function renderCollectionView() {
                 .join("");
 
             const isExpanded = expandedCollectionGroups.has(group.id);
+            const totalGroup = groupHeroes.length;
+            const ownedGroup = groupHeroes.filter(isHeroOwned).length;
 
             return `
             <div class="collection-group${isExpanded ? "" : " collapsed"}">
@@ -1010,6 +1018,8 @@ function renderCollectionView() {
                     <label for="owned-group-${group.id}" onclick="event.stopPropagation();">
                         <strong>${group.name}</strong>
                         ${group.year ? ` <span style="opacity: 0.6; font-size: 0.85em;">(${group.year})</span>` : ""}
+                        <span class="stats-divider" style="margin: 0 8px;">|</span>
+                        <span style="opacity: 0.6; font-size: 0.85em;">Owned: <strong style="color: #fff;">${ownedGroup}</strong>/<strong style="color: #fff;">${totalGroup}</strong></span>
                     </label>
                     <button type="button" class="panel-toggle${isExpanded ? " open" : ""}" aria-expanded="${isExpanded}">V</button>
                 </div>
@@ -2371,263 +2381,301 @@ function handlePlayerToggleClick(event, index) {
     }
 }
 
-// ******************************************
-// renderSortControls()
-// input: none
-// ******************************************
-// Generates the new modern sorting panel including:
-// 1. Column visibility pills
-// 2. Sort field dropdown & Sort direction button
-// 3. Conditional player pill selector
-// ******************************************
-function renderSortControls() {
-    const container = document.getElementById("sort-section");
-    if (!container) return;
 
-    // Preserve historical data checkbox state before replacing HTML
-    const useHistorical =
-        document.getElementById("db-use-historical-data")?.checked ?? true;
+function openSortFilterDrawer() {
+    currentDrawerMode = 'sort-filter';
+    const drawer = document.getElementById("sort-filter-drawer");
+    const title = document.getElementById("drawer-title-text");
+    const footer = document.getElementById("drawer-footer-content");
+    if (!drawer) return;
 
-    const mainPlayerNames = NAMES.slice(0, 4);
+    title.innerText = "Sort & Filter";
+    footer.style.display = "flex";
 
-    // Parse current sort type and player index if applicable
-    let sortType = "name";
-    if (currentSort === "group") {
-        sortType = "group";
-    } else if (currentSort.startsWith("w")) {
-        sortType = "probability";
-        currentSortPlayerIndex = parseInt(currentSort.substring(1));
-    } else if (currentSort.startsWith("d")) {
-        sortType = "lastPlayed";
-        currentSortPlayerIndex = parseInt(currentSort.substring(1));
+    // Stage current states
+    stagedSort = currentSort;
+    stagedSortAsc = sortAsc;
+    stagedSortPlayerIndex = currentSortPlayerIndex;
+    stagedLevels = new Set(activeLevels);
+    stagedGroups = new Set(activeGroups);
+
+    renderDrawerBody();
+    drawer.classList.add("open");
+}
+
+function openColumnsDrawer() {
+    currentDrawerMode = 'columns';
+    const drawer = document.getElementById("sort-filter-drawer");
+    const title = document.getElementById("drawer-title-text");
+    const footer = document.getElementById("drawer-footer-content");
+    if (!drawer) return;
+
+    title.innerText = "Columns & Historical Data";
+    footer.style.display = "flex";
+
+    // Stage current states
+    stagedPlayerIndices = [...activePlayerIndices];
+    stagedUseHistorical = document.getElementById("db-use-historical-data")?.checked ?? true;
+
+    renderDrawerBody();
+    drawer.classList.add("open");
+}
+
+function closeDrawer(event = null, force = false) {
+    if (event && event.target !== event.currentTarget && !force) return;
+    const drawer = document.getElementById("sort-filter-drawer");
+    if (drawer) {
+        drawer.classList.remove("open");
     }
+}
 
-    // 1. Generate column visibility pills
-    const visibilityPillsHtml = mainPlayerNames
-        .map((name, i) => {
-            const isActive = activePlayerIndices.includes(i);
-            const activeClass = isActive
-                ? `active p${i + 1}-color`
-                : "inactive";
-            return `
-            <button type="button" class="pill-toggle ${activeClass}" onclick="togglePlayerFilter(${i})">
-                ${name}
-            </button>
+function renderDrawerBody() {
+    const body = document.getElementById("drawer-body-content");
+    if (!body) return;
+
+    if (currentDrawerMode === 'sort-filter') {
+        body.innerHTML = `
+            <!-- Sorting Controls -->
+            <div class="panel-row-new">
+                <span class="panel-row-title" style="font-weight: 700;">Sort Visible Heroes:</span>
+                <div class="sort-controls-new" style="margin-top: 10px;">
+                    <select id="drawer-sort-type-select" class="sort-select-new" onchange="handleDrawerSortTypeChange(this.value)">
+                        <option value="name">Hero Name</option>
+                        <option value="group">Group (Season)</option>
+                        <option value="probability">Roll Probability (%)</option>
+                        <option value="lastPlayed">Last Played Date</option>
+                    </select>
+                    
+                    <button type="button" id="drawer-sort-direction-btn" class="btn-direction-new" onclick="toggleDrawerSortDirection()">
+                        <span id="drawer-sort-direction-text">Ascending</span>
+                        <span id="drawer-sort-direction-arrow">▲</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Conditional Player Selector Row -->
+            <div id="drawer-player-sort-sub-section" class="panel-row-new" style="display: none;">
+                <span class="panel-row-title">For Player:</span>
+                <div class="pill-group" id="drawer-player-sort-pills" style="margin-top: 10px;"></div>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 10px 0;">
+
+            <!-- Complexity Filters -->
+            <div class="panel-row-new">
+                <span class="panel-row-title" style="font-weight: 700;">Complexity Level:</span>
+                <div class="filter-bar-track" id="drawer-complexity-filter-bar" style="margin-top: 10px; flex-wrap: wrap;"></div>
+            </div>
+
+            <!-- Season Filters -->
+            <div class="panel-row-new">
+                <span class="panel-row-title" style="font-weight: 700; margin-bottom: 8px; display: block;">Hero Group / Season:</span>
+                <div class="group-filter-grid-container" id="drawer-group-filter-bar"></div>
+            </div>
         `;
-        })
-        .join("");
 
-    // 2. Generate player-specific sorting pills if probability or lastPlayed is active
-    const showPlayerSubSection =
-        sortType === "probability" || sortType === "lastPlayed";
-    const playerPillsHtml = mainPlayerNames
-        .map((name, i) => {
-            const isActive = currentSortPlayerIndex === i;
-            const activeClass = isActive ? `active p${i + 1}-color` : "";
-            const isColumnActive = activePlayerIndices.includes(i);
-            const columnStyle = isColumnActive ? "" : "opacity: 0.5;";
-            return `
-            <button type="button" class="pill-toggle ${activeClass}" style="${columnStyle}" onclick="handleSortPlayerChange(${i})">
-                ${name}
-            </button>
-        `;
-        })
-        .join("");
+        // Parse sorting
+        let sortType = "name";
+        if (stagedSort === "group") {
+            sortType = "group";
+        } else if (stagedSort.startsWith("w")) {
+            sortType = "probability";
+            stagedSortPlayerIndex = parseInt(stagedSort.substring(1));
+        } else if (stagedSort.startsWith("d")) {
+            sortType = "lastPlayed";
+            stagedSortPlayerIndex = parseInt(stagedSort.substring(1));
+        }
 
-    const directionText = sortAsc ? "Ascending" : "Descending";
-    const directionArrow = sortAsc ? "▲" : "▼";
+        const select = document.getElementById("drawer-sort-type-select");
+        if (select) select.value = sortType;
 
-    container.innerHTML = `
-        <!-- Historical Data Row -->
-        <div class="panel-row-new">
-            <div class="dropdown-sort-options" style="margin: 0; justify-content: flex-start;">
-                <label style="cursor: pointer; user-select: none;">
-                    <input
-                        type="checkbox"
-                        id="db-use-historical-data"
-                        ${useHistorical ? "checked" : ""}
-                        onchange="renderList()" />
-                    Include Historical Data (before May 8th 2026)
-                </label>
-            </div>
-        </div>
+        updateDrawerSortDirectionUI();
+        updateDrawerPlayerSortPillsUI();
+        renderDrawerComplexityFilters();
+        renderDrawerGroupFilters();
 
-        <!-- Column Visibility Row -->
-        <div class="panel-row-new">
-            <span class="panel-row-title">Show Player Stats Columns:</span>
-            <div class="pill-group">
-                ${visibilityPillsHtml}
-            </div>
-        </div>
-
-        <!-- Sort Controls Row -->
-        <div class="panel-row-new">
-            <span class="panel-row-title">Sort Visible Heroes:</span>
-            <div class="sort-controls-new">
-                <select id="sort-type-select" class="sort-select-new" onchange="handleSortTypeChange(this.value)">
-                    <option value="name" ${sortType === "name" ? "selected" : ""}>Hero Name</option>
-                    <option value="group" ${sortType === "group" ? "selected" : ""}>Group (Season)</option>
-                    <option value="probability" ${sortType === "probability" ? "selected" : ""}>Roll Probability (%)</option>
-                    <option value="lastPlayed" ${sortType === "lastPlayed" ? "selected" : ""}>Last Played Date</option>
-                </select>
-                
-                <button id="sort-direction-btn" class="btn-direction-new" onclick="toggleSortDirection()">
-                    <span id="sort-direction-text">${directionText}</span>
-                    <span id="sort-direction-arrow">${directionArrow}</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Conditional Player Selector Row -->
-        <div id="player-sort-sub-section" class="panel-row-new" style="${showPlayerSubSection ? "" : "display: none;"}">
-            <span class="panel-row-title">For Player:</span>
-            <div class="pill-group">
-                ${playerPillsHtml}
-            </div>
-        </div>
-    `;
-}
-
-function handleSortTypeChange(value) {
-    if (value === "name") {
-        currentSort = "name";
-    } else if (value === "group") {
-        currentSort = "group";
-    } else if (value === "probability") {
-        currentSort = `w${currentSortPlayerIndex}`;
-    } else if (value === "lastPlayed") {
-        currentSort = `d${currentSortPlayerIndex}`;
-    }
-
-    // Default sort order (Asc for Name/Group, Desc for Probability/LastPlayed)
-    sortAsc = value === "name" || value === "group";
-
-    renderSortControls();
-    renderList();
-}
-
-function handleSortPlayerChange(playerIndex) {
-    currentSortPlayerIndex = playerIndex;
-    if (currentSort.startsWith("w")) {
-        currentSort = `w${playerIndex}`;
-    } else if (currentSort.startsWith("d")) {
-        currentSort = `d${playerIndex}`;
-    }
-
-    renderSortControls();
-    renderList();
-}
-
-function toggleSortDirection() {
-    sortAsc = !sortAsc;
-    renderSortControls();
-    renderList();
-}
-
-// ******************************************
-// toggleLevel(level)
-// input: level -> dice number or 'all'
-// ******************************************
-// Manages the complexity filter Set and triggers UI updates.
-// ******************************************
-function toggleLevel(level) {
-    if (level === "all") {
-        // Toggle: if all 6 levels are active, clear filters; otherwise, select all levels
-        activeLevels =
-            activeLevels.size === 6 ? new Set() : new Set([1, 2, 3, 4, 5, 6]);
     } else {
-        // Standard Sets lack a native .toggle() method; manually toggle existence
-        if (activeLevels.has(level)) activeLevels.delete(level);
-        else activeLevels.add(level);
-    }
+        // Render Column Toggles and Historical checkbox
+        const mainPlayerNames = NAMES.slice(0, 4);
+        const visibilityPillsHtml = mainPlayerNames
+            .map((name, i) => {
+                const isActive = stagedPlayerIndices.includes(i);
+                const activeClass = isActive ? `active p${i + 1}-color` : "inactive";
+                return `
+                <button type="button" class="pill-toggle ${activeClass}" onclick="toggleDrawerPlayerFilter(${i})">
+                    ${name}
+                </button>
+            `;
+            })
+            .join("");
 
-    // Update icon visuals and refresh the hero list display
-    renderComplexityFilters();
-    renderList();
+        body.innerHTML = `
+            <div class="panel-row-new">
+                <span class="panel-row-title" style="font-weight: 700; margin-bottom: 10px; display: block;">Show Player Stats Columns:</span>
+                <div class="pill-group">
+                    ${visibilityPillsHtml}
+                </div>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 10px 0;">
+
+            <div class="panel-row-new">
+                <div class="dropdown-sort-options" style="margin: 0; justify-content: flex-start;">
+                    <label style="cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px;">
+                        <input
+                            type="checkbox"
+                            id="drawer-use-historical-data"
+                            ${stagedUseHistorical ? "checked" : ""}
+                            onchange="stagedUseHistorical = this.checked"
+                            style="width: 18px; height: 18px;" />
+                        Include Historical Data (before May 8th 2026)
+                    </label>
+                </div>
+            </div>
+        `;
+    }
 }
 
-// ******************************************
-// renderComplexityFilters()
-// input: none
-// ******************************************
-// Generates the complexity level filter cards dynamically, including:
-// 1. Level cards 1 through 6 with 2D dice icons and live hero counts
-// 2. An 'ALL' card that highlights when all levels are active
-// ******************************************
-function renderComplexityFilters() {
-    const container = document.getElementById("complexity-filter-bar");
+function handleDrawerSortTypeChange(value) {
+    if (value === "name") {
+        stagedSort = "name";
+    } else if (value === "group") {
+        stagedSort = "group";
+    } else if (value === "probability") {
+        stagedSort = `w${stagedSortPlayerIndex}`;
+    } else if (value === "lastPlayed") {
+        stagedSort = `d${stagedSortPlayerIndex}`;
+    }
+
+    stagedSortAsc = value === "name" || value === "group";
+    updateDrawerSortDirectionUI();
+    updateDrawerPlayerSortPillsUI();
+}
+
+function toggleDrawerSortDirection() {
+    stagedSortAsc = !stagedSortAsc;
+    updateDrawerSortDirectionUI();
+}
+
+function updateDrawerSortDirectionUI() {
+    const dirText = document.getElementById("drawer-sort-direction-text");
+    const dirArrow = document.getElementById("drawer-sort-direction-arrow");
+    if (dirText && dirArrow) {
+        dirText.innerText = stagedSortAsc ? "Ascending" : "Descending";
+        dirArrow.innerText = stagedSortAsc ? "▲" : "▼";
+    }
+}
+
+function updateDrawerPlayerSortPillsUI() {
+    const subSection = document.getElementById("drawer-player-sort-sub-section");
+    const pillsContainer = document.getElementById("drawer-player-sort-pills");
+    if (!subSection || !pillsContainer) return;
+
+    const showPlayers = stagedSort.startsWith("w") || stagedSort.startsWith("d");
+    subSection.style.display = showPlayers ? "block" : "none";
+
+    if (showPlayers) {
+        const mainPlayerNames = NAMES.slice(0, 4);
+        pillsContainer.innerHTML = mainPlayerNames
+            .map((name, i) => {
+                const isActive = stagedSortPlayerIndex === i;
+                const activeClass = isActive ? `active p${i + 1}-color` : "";
+                const isColumnActive = activePlayerIndices.includes(i);
+                const columnStyle = isColumnActive ? "" : "opacity: 0.5;";
+                return `
+                <button type="button" class="pill-toggle ${activeClass}" style="${columnStyle}" onclick="handleDrawerSortPlayerChange(${i})">
+                    ${name}
+                </button>
+            `;
+            })
+            .join("");
+    }
+}
+
+function handleDrawerSortPlayerChange(playerIndex) {
+    stagedSortPlayerIndex = playerIndex;
+    if (stagedSort.startsWith("w")) {
+        stagedSort = `w${playerIndex}`;
+    } else if (stagedSort.startsWith("d")) {
+        stagedSort = `d${playerIndex}`;
+    }
+    updateDrawerPlayerSortPillsUI();
+}
+
+function toggleDrawerPlayerFilter(playerIndex) {
+    const idx = stagedPlayerIndices.indexOf(playerIndex);
+    if (idx > -1) {
+        stagedPlayerIndices.splice(idx, 1);
+    } else {
+        stagedPlayerIndices.push(playerIndex);
+    }
+    renderDrawerBody();
+}
+
+function renderDrawerComplexityFilters() {
+    const container = document.getElementById("drawer-complexity-filter-bar");
     if (!container) return;
 
-    const searchTerm =
-        document.getElementById("hero-search")?.value.toLowerCase() || "";
+    const searchTerm = document.getElementById("hero-search")?.value.toLowerCase() || "";
     const showOwned = document.getElementById("db-show-owned")?.checked ?? true;
-    const showNotOwned =
-        document.getElementById("db-show-not-owned")?.checked ?? false;
+    const showNotOwned = document.getElementById("db-show-not-owned")?.checked ?? false;
 
     let html = "";
-
-    // 1. Generate numeric dice 1 through 6
     for (let i = 1; i <= 6; i++) {
-        // Calculate potential matches for this complexity level
         const potentialMatchesCount = characters.filter((c) => {
             if (Number(c.complexity) !== i) return false;
             const nameMatch = c.name.toLowerCase().includes(searchTerm);
-            const groupNameMatch = (c.group || "")
-                .toLowerCase()
-                .includes(searchTerm);
-            const groupFilterMatch = activeGroups.has(c.group_id);
-            const ownershipMatch =
-                (isHeroOwned(c) && showOwned) ||
-                (!isHeroOwned(c) && showNotOwned);
-            return (
-                (nameMatch || groupNameMatch) &&
-                groupFilterMatch &&
-                ownershipMatch
-            );
+            const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+            const groupFilterMatch = stagedGroups.has(c.group_id);
+            const ownershipMatch = (isHeroOwned(c) && showOwned) || (!isHeroOwned(c) && showNotOwned);
+            return (nameMatch || groupNameMatch) && groupFilterMatch && ownershipMatch;
         }).length;
 
         const isDisabled = potentialMatchesCount === 0;
-        const isActive = activeLevels.has(i);
+        const isActive = stagedLevels.has(i);
         const activeClass = isActive && !isDisabled ? "active-die" : "";
 
         html += `
             <div class="group-badge-card group-complexity ${activeClass} ${isDisabled ? "disabled" : ""}" 
-                 id="dice-${i}" 
-                 onclick="${isDisabled ? "" : `toggleLevel(${i})`}" 
+                 onclick="${isDisabled ? "" : `toggleDrawerLevel(${i})`}" 
                  title="Level ${i} (${potentialMatchesCount} heroes)">
                 <img src="images/dice/d${i}.png" class="complexity-dice-img" alt="Level ${i}">
                 <span class="group-badge-count">${potentialMatchesCount}</span>
             </div>`;
     }
 
-    // 2. Generate the 'ALL' card
     const totalMatchingHeroes = characters.filter((c) => {
         const nameMatch = c.name.toLowerCase().includes(searchTerm);
-        const groupNameMatch = (c.group || "")
-            .toLowerCase()
-            .includes(searchTerm);
-        const groupFilterMatch = activeGroups.has(c.group_id);
-        const ownershipMatch =
-            (isHeroOwned(c) && showOwned) || (!isHeroOwned(c) && showNotOwned);
-        return (
-            (nameMatch || groupNameMatch) && groupFilterMatch && ownershipMatch
-        );
+        const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+        const groupFilterMatch = stagedGroups.has(c.group_id);
+        const ownershipMatch = (isHeroOwned(c) && showOwned) || (!isHeroOwned(c) && showNotOwned);
+        return (nameMatch || groupNameMatch) && groupFilterMatch && ownershipMatch;
     }).length;
 
     const isAllDisabled = totalMatchingHeroes === 0;
-    const allActive = activeLevels.size === 6;
+    const allActive = stagedLevels.size === 6;
     const allActiveClass = allActive && !isAllDisabled ? "active-die" : "";
 
     html += `
         <div class="group-badge-card group-complexity group-complexity-all ${allActiveClass} ${isAllDisabled ? "disabled" : ""}" 
-             id="dice-all" 
-             onclick="${isAllDisabled ? "" : "toggleLevel('all')"}" 
+             onclick="${isAllDisabled ? "" : "toggleDrawerLevel('all')"}" 
              title="All Levels (${totalMatchingHeroes} heroes)">
             <img src="images/dice/d_all.png" class="complexity-dice-img" alt="All">
             <span class="group-badge-count">${totalMatchingHeroes}</span>
         </div>`;
 
     container.innerHTML = html;
+}
+
+function toggleDrawerLevel(level) {
+    if (level === "all") {
+        stagedLevels = stagedLevels.size === 6 ? new Set() : new Set([1, 2, 3, 4, 5, 6]);
+    } else {
+        if (stagedLevels.has(level)) stagedLevels.delete(level);
+        else stagedLevels.add(level);
+    }
+    renderDrawerComplexityFilters();
+    renderDrawerGroupFilters();
 }
 
 function getGroupThemeClass(groupName) {
@@ -2676,38 +2724,27 @@ function getGroupAbbreviation(name) {
     return name.substring(0, 3).toUpperCase();
 }
 
-function renderGroupFilters() {
-    const container = document.getElementById("group-filter-bar");
+function renderDrawerGroupFilters() {
+    const container = document.getElementById("drawer-group-filter-bar");
     if (!container) return;
 
-    const searchTerm =
-        document.getElementById("hero-search")?.value.toLowerCase() || "";
+    const searchTerm = document.getElementById("hero-search")?.value.toLowerCase() || "";
     const showOwned = document.getElementById("db-show-owned")?.checked ?? true;
-    const showNotOwned =
-        document.getElementById("db-show-not-owned")?.checked ?? false;
+    const showNotOwned = document.getElementById("db-show-not-owned")?.checked ?? false;
 
     let html = groups
         .map((g) => {
             const initials = getGroupAbbreviation(g.name);
-            const isActive = activeGroups.has(g.id);
+            const isActive = stagedGroups.has(g.id);
             const themeClass = getGroupThemeClass(g.name);
 
-            // Calculate potential matches in this group
             const potentialMatchesCount = characters.filter((c) => {
                 if (c.group_id !== g.id) return false;
                 const nameMatch = c.name.toLowerCase().includes(searchTerm);
-                const groupNameMatch = (c.group || "")
-                    .toLowerCase()
-                    .includes(searchTerm);
-                const complexityMatch = activeLevels.has(Number(c.complexity));
-                const ownershipMatch =
-                    (isHeroOwned(c) && showOwned) ||
-                    (!isHeroOwned(c) && showNotOwned);
-                return (
-                    (nameMatch || groupNameMatch) &&
-                    complexityMatch &&
-                    ownershipMatch
-                );
+                const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+                const complexityMatch = stagedLevels.has(Number(c.complexity));
+                const ownershipMatch = (isHeroOwned(c) && showOwned) || (!isHeroOwned(c) && showNotOwned);
+                return (nameMatch || groupNameMatch) && complexityMatch && ownershipMatch;
             }).length;
 
             const isDisabled = potentialMatchesCount === 0;
@@ -2715,8 +2752,7 @@ function renderGroupFilters() {
 
             return `
                 <div class="group-badge-card ${themeClass} ${activeClass} ${isDisabled ? "disabled" : ""}" 
-                     id="group-filter-${g.id}" 
-                     onclick="${isDisabled ? "" : `toggleGroupFilter('${g.id}')`}" 
+                     onclick="${isDisabled ? "" : `toggleDrawerGroupFilter('${g.id}')`}" 
                      title="${escapeHtml(g.name)} (${potentialMatchesCount} heroes)">
                     <span class="group-badge-initials">${initials}</span>
                     <span class="group-badge-count">${potentialMatchesCount}</span>
@@ -2724,150 +2760,107 @@ function renderGroupFilters() {
         })
         .join("");
 
-    // Calculate total active non-disabled groups
-    const activeNonDisabledCount = groups.filter((g) => {
-        const potentialMatchesCount = characters.filter((c) => {
-            if (c.group_id !== g.id) return false;
-            const nameMatch = c.name.toLowerCase().includes(searchTerm);
-            const groupNameMatch = (c.group || "")
-                .toLowerCase()
-                .includes(searchTerm);
-            const complexityMatch = activeLevels.has(Number(c.complexity));
-            const ownershipMatch =
-                (isHeroOwned(c) && showOwned) ||
-                (!isHeroOwned(c) && showNotOwned);
-            return (
-                (nameMatch || groupNameMatch) &&
-                complexityMatch &&
-                ownershipMatch
-            );
-        }).length;
-        return potentialMatchesCount > 0 && activeGroups.has(g.id);
-    }).length;
-
-    const totalAvailableGroups = groups.filter((g) => {
-        const potentialMatchesCount = characters.filter((c) => {
-            if (c.group_id !== g.id) return false;
-            const nameMatch = c.name.toLowerCase().includes(searchTerm);
-            const groupNameMatch = (c.group || "")
-                .toLowerCase()
-                .includes(searchTerm);
-            const complexityMatch = activeLevels.has(Number(c.complexity));
-            const ownershipMatch =
-                (isHeroOwned(c) && showOwned) ||
-                (!isHeroOwned(c) && showNotOwned);
-            return (
-                (nameMatch || groupNameMatch) &&
-                complexityMatch &&
-                ownershipMatch
-            );
-        }).length;
-        return potentialMatchesCount > 0;
-    });
-
-    const allActive =
-        totalAvailableGroups.length > 0 &&
-        activeNonDisabledCount === totalAvailableGroups.length;
-    const allActiveClass = allActive ? "active-die" : "";
-    const isAllDisabled = totalAvailableGroups.length === 0;
-
-    // Calculate total matching heroes across all groups
     const totalMatchingHeroes = characters.filter((c) => {
         const nameMatch = c.name.toLowerCase().includes(searchTerm);
-        const groupNameMatch = (c.group || "")
-            .toLowerCase()
-            .includes(searchTerm);
-        const complexityMatch = activeLevels.has(Number(c.complexity));
-        const ownershipMatch =
-            (isHeroOwned(c) && showOwned) || (!isHeroOwned(c) && showNotOwned);
-        return (
-            (nameMatch || groupNameMatch) && complexityMatch && ownershipMatch
-        );
+        const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+        const complexityMatch = stagedLevels.has(Number(c.complexity));
+        const ownershipMatch = (isHeroOwned(c) && showOwned) || (!isHeroOwned(c) && showNotOwned);
+        return (nameMatch || groupNameMatch) && complexityMatch && ownershipMatch;
     }).length;
 
-    html += `
+    const isAllDisabled = totalMatchingHeroes === 0;
+    const allActive = stagedGroups.size === groups.length;
+    const allActiveClass = allActive && !isAllDisabled ? "active-die" : "";
+
+    const allHtml = `
         <div class="group-badge-card group-all ${allActiveClass} ${isAllDisabled ? "disabled" : ""}" 
-             id="group-filter-all" 
-             onclick="${isAllDisabled ? "" : "toggleGroupFilter('all')"}" 
-             title="All Groups">
+             onclick="${isAllDisabled ? "" : "toggleDrawerGroupFilter('all')"}" 
+             title="All Groups" style="height: 100%;">
             <span class="group-badge-initials">ALL</span>
             <span class="group-badge-count">${totalMatchingHeroes}</span>
         </div>`;
 
-    container.innerHTML = html;
+    container.innerHTML = `
+        <div class="seasons-grid-left">
+            ${html}
+        </div>
+        <div class="all-column-right">
+            ${allHtml}
+        </div>
+    `;
 }
 
-function toggleGroupFilter(groupId) {
-    const searchTerm =
-        document.getElementById("hero-search")?.value.toLowerCase() || "";
-    const showOwned = document.getElementById("db-show-owned")?.checked ?? true;
-    const showNotOwned =
-        document.getElementById("db-show-not-owned")?.checked ?? false;
-
-    const totalAvailableGroups = groups.filter((g) => {
-        const potentialMatchesCount = characters.filter((c) => {
-            if (c.group_id !== g.id) return false;
-            const nameMatch = c.name.toLowerCase().includes(searchTerm);
-            const groupNameMatch = (c.group || "")
-                .toLowerCase()
-                .includes(searchTerm);
-            const complexityMatch = activeLevels.has(Number(c.complexity));
-            const ownershipMatch =
-                (isHeroOwned(c) && showOwned) ||
-                (!isHeroOwned(c) && showNotOwned);
-            return (
-                (nameMatch || groupNameMatch) &&
-                complexityMatch &&
-                ownershipMatch
-            );
-        }).length;
-        return potentialMatchesCount > 0;
-    });
-
+function toggleDrawerGroupFilter(groupId) {
     if (groupId === "all") {
-        const activeAvailableCount = totalAvailableGroups.filter((g) =>
-            activeGroups.has(g.id),
-        ).length;
-        if (activeAvailableCount === totalAvailableGroups.length) {
-            // Unselect all available
-            totalAvailableGroups.forEach((g) => activeGroups.delete(g.id));
+        if (stagedGroups.size === groups.length) {
+            stagedGroups.clear();
         } else {
-            // Select all available
-            totalAvailableGroups.forEach((g) => activeGroups.add(g.id));
+            groups.forEach((g) => stagedGroups.add(g.id));
         }
     } else {
-        if (activeGroups.has(groupId)) {
-            activeGroups.delete(groupId);
+        if (stagedGroups.has(groupId)) {
+            stagedGroups.delete(groupId);
         } else {
-            activeGroups.add(groupId);
+            stagedGroups.add(groupId);
         }
     }
+    renderDrawerComplexityFilters();
+    renderDrawerGroupFilters();
+}
 
-    updateGroupVisuals();
+function resetFilters() {
+    if (currentDrawerMode === 'sort-filter') {
+        stagedSort = "name";
+        stagedSortAsc = true;
+        stagedSortPlayerIndex = 0;
+        stagedLevels = new Set([1, 2, 3, 4, 5, 6]);
+        stagedGroups = new Set(groups.map((g) => g.id));
+        renderDrawerBody();
+    } else {
+        stagedPlayerIndices = [0, 1, 2, 3];
+        stagedUseHistorical = true;
+        renderDrawerBody();
+    }
+}
+
+function applyAndCloseDrawer() {
+    if (currentDrawerMode === 'sort-filter') {
+        currentSort = stagedSort;
+        sortAsc = stagedSortAsc;
+        currentSortPlayerIndex = stagedSortPlayerIndex;
+        activeLevels = new Set(stagedLevels);
+        activeGroups = new Set(stagedGroups);
+    } else {
+        activePlayerIndices = [...stagedPlayerIndices];
+        const histCheck = document.getElementById("db-use-historical-data");
+        if (histCheck) histCheck.checked = stagedUseHistorical;
+    }
+
+    updateActiveFilterBadge();
+    closeDrawer(null, true);
     renderList();
 }
 
-function updateGroupVisuals() {
-    groups.forEach((g) => {
-        const el = document.getElementById(`group-filter-${g.id}`);
-        if (el) {
-            el.classList.toggle("active-die", activeGroups.has(g.id));
-        }
-    });
+function updateActiveFilterBadge() {
+    const badge = document.getElementById("filter-active-badge");
+    if (!badge) return;
 
-    const allEl = document.getElementById("group-filter-all");
-    if (allEl) {
-        allEl.classList.toggle(
-            "active-die",
-            activeGroups.size === groups.length,
-        );
+    let activeCount = 0;
+    if (currentSort !== "name" || !sortAsc) activeCount++;
+    if (activeLevels.size !== 6) activeCount++;
+    if (activeGroups.size !== groups.length) activeCount++;
+
+    if (activeCount > 0) {
+        badge.innerText = activeCount;
+        badge.style.display = "inline-block";
+    } else {
+        badge.style.display = "none";
     }
 }
 
 // Ensure visuals are correct when the page loads
 window.addEventListener("DOMContentLoaded", () => {
-    renderComplexityFilters();
-    updateGroupVisuals();
+    updateActiveFilterBadge();
     setTimeout(updateSegmentedHighlights, 50);
 });
 
@@ -2913,7 +2906,7 @@ function setSort(key) {
         currentSortPlayerIndex = parseInt(key.substring(1));
     }
 
-    renderSortControls();
+    updateActiveFilterBadge();
     renderList();
 }
 
@@ -3006,7 +2999,7 @@ function togglePlayerFilter(index) {
         }
     }
 
-    renderSortControls();
+    updateActiveFilterBadge();
     // Re-apply sort highlight and trigger list update without toggling direction
     const activeKey = currentSort;
     currentSort = null;
@@ -3498,9 +3491,6 @@ function updateHeroStatsFromHistory() {
 function renderList() {
     const container = document.getElementById("heroContainer");
     if (!container) return;
-
-    renderGroupFilters();
-    renderComplexityFilters();
 
     updateHeroStatsFromHistory();
 

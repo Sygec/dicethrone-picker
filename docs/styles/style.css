@@ -939,7 +939,7 @@ main > section:not(.hidden) {
 }
 
 .search-container {
-    margin-bottom: 30px;
+    margin-bottom: 10px;
     margin-top: 15px;
     text-align: center;
 }
@@ -1794,6 +1794,7 @@ textarea {
 .filter-bar-track {
     display: flex;
     gap: 6px;
+    column-gap: 1px;
     align-items: center;
     justify-content: center;
     background: rgba(255, 255, 255, 0.03);
@@ -1838,11 +1839,11 @@ textarea {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 52px;
+    width: 48px;
     height: 48px;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    border-radius: 4px;
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
@@ -2012,43 +2013,67 @@ textarea {
     box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 40%, transparent);
 }
 .group-badge-card.group-all.active-die .group-badge-initials {
-    color: #121212;
+    color: #ffffff;
 }
 .group-badge-card.group-all.active-die .group-badge-count {
-    color: rgba(0, 0, 0, 0.65);
+    color: rgba(255, 255, 255, 0.85);
 }
 
-/* Complexity Card Badge Overrides */
+/* Complexity Card Badge Overrides to make dice grow/shrink & greyscale on one line */
+.group-badge-card.group-complexity {
+    width: 36px;
+    height: 48px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0 2px;
+    overflow: visible; /* Prevent scale cutoff */
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .complexity-dice-img {
-    width: 22px;
-    height: 22px;
-    object-fit: contain;
-    margin-bottom: 2px;
-    opacity: 0.55;
-    filter: grayscale(100%) brightness(0.9);
+    width: 32px;
+    height: 32px;
+    object-fit: contain; /* Do not crop the asset */
+    margin-bottom: 0px;
+    opacity: 0.35;
+    filter: grayscale(100%) brightness(0.85);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    box-sizing: border-box;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .group-badge-card.group-complexity:hover:not(.disabled) .complexity-dice-img {
-    opacity: 0.85;
-    filter: grayscale(50%) brightness(1);
+    opacity: 0.65;
+    filter: grayscale(50%) brightness(0.95);
+    border-color: rgba(255, 255, 255, 0.4);
 }
 
 .group-badge-card.group-complexity.active-die .complexity-dice-img {
     opacity: 1;
     filter: grayscale(0%) brightness(1.1);
-    transform: scale(1.05);
+    transform: scale(1.35);
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.25);
 }
 
-/* Active State: Amber & Gold Gradient with Neon Glow */
+/* Hide background changes for complexity dice active states */
 .group-badge-card.group-complexity.active-die {
-    background: linear-gradient(135deg, #3a220c, var(--accent));
-    box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 45%, transparent);
+    background: transparent;
+    box-shadow: none;
+}
+
+.group-badge-card.group-complexity .group-badge-count {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.45);
+    margin-top: 10px;
+    transition: color 0.25s;
 }
 
 .group-badge-card.group-complexity.active-die .group-badge-count {
     color: #ffffff;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    font-weight: 800;
 }
 
 .dice-icon {
@@ -2559,7 +2584,7 @@ body.loaded .bottom-nav {
     border-radius: 8px;
     padding: 3px;
     margin-top: 10px;
-    margin-bottom: 15px;
+    margin-bottom: 0;
     position: relative;
 }
 
@@ -2632,3 +2657,225 @@ body.loaded .bottom-nav {
         -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
     }
 }
+
+/* -------------------------------------------------- */
+/* Premium Sort & Filter Action Bar & Drawer Styles  */
+/* -------------------------------------------------- */
+
+.filter-action-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.btn-action-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-action-trigger:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--accent);
+    transform: translateY(-1px);
+}
+
+.btn-action-trigger:active {
+    transform: scale(0.97);
+}
+
+.btn-action-trigger .action-icon {
+    font-size: 1.1rem;
+}
+
+.btn-action-trigger .active-badge {
+    background: var(--accent);
+    color: #121212;
+    font-size: 0.75rem;
+    font-weight: 800;
+    border-radius: 10px;
+    padding: 1px 6px;
+    margin-left: 4px;
+}
+
+/* Bottom Sheet Drawer Overlay */
+.drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0);
+    z-index: 1000;
+    visibility: hidden;
+    opacity: 0;
+    transition: background-color 0.35s ease, opacity 0.35s ease, visibility 0.35s ease;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+.drawer-overlay.open {
+    visibility: visible;
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.65);
+}
+
+/* Bottom Sheet Container */
+.drawer-sheet {
+    width: 100%;
+    max-width: 550px;
+    background: rgba(18, 19, 24, 0.98);
+    border-top: 2px solid rgba(255, 204, 0, 0.25);
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.85);
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+    transform: translateY(100%);
+    transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+    padding-bottom: env(safe-area-inset-bottom, 15px);
+}
+
+@supports (backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px)) {
+    .drawer-sheet {
+        background-color: rgba(20, 22, 28, 0.82) !important;
+        backdrop-filter: blur(24px) !important;
+        -webkit-backdrop-filter: blur(24px) !important;
+    }
+}
+
+.drawer-overlay.open .drawer-sheet {
+    transform: translateY(0);
+}
+
+/* Header */
+.drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.drawer-title {
+    font-family: "Outfit", sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+}
+
+.drawer-close-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1.8rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.drawer-close-btn:hover {
+    color: #ffffff;
+}
+
+/* Body */
+.drawer-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Footer Control Row */
+.drawer-footer {
+    display: flex;
+    gap: 12px;
+    padding: 16px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.btn-drawer-reset {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1.5px solid rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-drawer-reset:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-drawer-apply {
+    flex: 2;
+    background: var(--accent);
+    border: none;
+    color: #121212;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-drawer-apply:hover {
+    background: #ffd633;
+    box-shadow: 0 0 14px rgba(255, 204, 0, 0.35);
+}
+
+/* 2x4 Season Grid Layout with Standalone ALL bar */
+.group-filter-grid-container {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+    justify-content: center; /* Center the layout in the drawer */
+    width: fit-content;
+    margin: 0 auto;
+}
+
+.seasons-grid-left {
+    display: grid;
+    grid-template-columns: repeat(4, 48px); /* Force exact 48px square cells */
+    gap: 0;
+    row-gap: 0;
+    column-gap: 0;
+}
+
+.all-column-right {
+    display: flex;
+    flex-direction: column;
+    width: 48px; /* Force exact 48px square width */
+}
+
+.seasons-grid-left .group-badge-card {
+    width: 100%; /* Fill grid cell width */
+}
+

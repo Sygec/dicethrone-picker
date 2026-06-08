@@ -196,88 +196,25 @@
                         onchange="renderList()" />
                 </div>
 
-                <!-- Sorting Accordion -->
-                <div class="db-accordion">
-                    <div
-                        class="db-accordion-header"
-                        onclick="toggleSortSection()">
-                        <span>Sorting Options</span>
-                        <button
-                            type="button"
-                            class="panel-toggle"
-                            id="sort-panel-toggle">
-                            <svg
-                                class="panel-chevron"
-                                viewBox="0 0 24 24"
-                                width="14"
-                                height="14"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="3"
-                                stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </button>
-                    </div>
-                    <div
-                        id="sort-section"
-                        class="db-accordion-content sort-container-new hidden"
-                        style="width: 100%; box-sizing: border-box">
-                        <!-- Content rendered dynamically via renderSortControls() -->
-                    </div>
+                <!-- Filter & Sort Action Bar -->
+                <div class="filter-action-bar" style="margin-top: 8px; margin-bottom: 12px;">
+                    <button
+                        type="button"
+                        class="btn-action-trigger"
+                        id="btn-trigger-sort-filter"
+                        onclick="openSortFilterDrawer()">
+                        <span class="action-icon">⚙️</span> Sort & Filter
+                        <span class="active-badge" id="filter-active-badge">0</span>
+                    </button>
+                    <button
+                        type="button"
+                        class="btn-action-trigger"
+                        id="btn-trigger-columns"
+                        onclick="openColumnsDrawer()">
+                        <span class="action-icon">👥</span> Columns
+                    </button>
                 </div>
 
-                <!-- Filtering Accordion -->
-                <div class="db-accordion">
-                    <div
-                        class="db-accordion-header"
-                        onclick="toggleFilterSection()">
-                        <span>Filtering Options</span>
-                        <button
-                            type="button"
-                            class="panel-toggle"
-                            id="filter-panel-toggle">
-                            <svg
-                                class="panel-chevron"
-                                viewBox="0 0 24 24"
-                                width="14"
-                                height="14"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="3"
-                                stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </button>
-                    </div>
-                    <div
-                        id="filter-section"
-                        class="db-accordion-content sort-container-new hidden"
-                        style="width: 100%; box-sizing: border-box">
-                        <!-- Complexity Row -->
-                        <div class="panel-row-new">
-                            <span class="panel-row-title"
-                                >Complexity Level:</span
-                            >
-                            <div
-                                class="filter-bar-track"
-                                id="complexity-filter-bar"
-                                style="margin-top: 5px; flex-wrap: wrap"></div>
-                        </div>
-                        <!-- Groups/Seasons Row -->
-                        <div class="panel-row-new">
-                            <span class="panel-row-title"
-                                >Hero Group / Season:</span
-                            >
-                            <div
-                                class="filter-bar-track"
-                                id="group-filter-bar"
-                                style="margin-top: 5px; flex-wrap: wrap"></div>
-                        </div>
-                    </div>
-                </div>
                 <div id="heroContainer"></div>
             </section>
 
@@ -905,6 +842,23 @@
                 <div
                     id="hero-select-options-container"
                     class="hero-select-grid"></div>
+            </div>
+        </div>
+
+        <!-- Premium Bottom Drawer for Sorting and Filtering -->
+        <div id="sort-filter-drawer" class="drawer-overlay" onclick="closeDrawer(event)">
+            <div class="drawer-sheet" onclick="event.stopPropagation()">
+                <div class="drawer-header">
+                    <span class="drawer-title" id="drawer-title-text">Sort & Filter</span>
+                    <button type="button" class="drawer-close-btn" onclick="closeDrawer(null, true)">&times;</button>
+                </div>
+                <div class="drawer-body" id="drawer-body-content">
+                    <!-- Loaded dynamically -->
+                </div>
+                <div class="drawer-footer" id="drawer-footer-content">
+                    <button type="button" class="btn-drawer-reset" onclick="resetFilters()">Reset All</button>
+                    <button type="button" class="btn-drawer-apply" onclick="applyAndCloseDrawer()">Apply</button>
+                </div>
             </div>
         </div>
 
