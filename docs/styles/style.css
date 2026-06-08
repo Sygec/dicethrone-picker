@@ -1309,7 +1309,7 @@ textarea {
     width: 120%;
     height: 120%;
     object-fit: cover;
-    object-position: center 30%;
+    object-position: center 40%;
     z-index: 0;
     opacity: 0.25;
     pointer-events: none;
@@ -1382,6 +1382,8 @@ textarea {
 .hero-item.collapsed .stat-card-new {
     padding: 6px 10px;
     gap: 4px;
+    flex: 1;
+    min-width: 0;
 }
 
 .hero-item.collapsed .mini-stats-grid,
@@ -1413,7 +1415,7 @@ textarea {
 
 .hero-body {
     border-top: 1px solid rgba(255, 255, 255, 0.08);
-    background: transparent;
+    background: rgba(0, 0, 0, 0.20);
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -1551,7 +1553,7 @@ textarea {
 }
 
 .stat-card-new {
-    background: rgba(6, 7, 9, 0.7);
+    background: rgba(6, 7, 9, 0.75);
     border: 2px solid; /* Border color applied dynamically in JS */
     border-radius: 12px;
     padding: 12px;
@@ -2657,7 +2659,6 @@ body.loaded .bottom-nav {
     .results,
     .manage-form,
     .admin-panel,
-    .hero-body,
     .collection-group,
     .sort-container-new,
     .db-accordion,
