@@ -689,7 +689,7 @@ function openChangelog() {
         )
         .join("");
 
-    modal.style.display = "block"; // Show the modal
+    modal.style.display = "flex"; // Show the modal
     document.body.style.overflow = "hidden"; // Prevent background scrolling when modal is open
 }
 
