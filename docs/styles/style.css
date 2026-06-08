@@ -1292,7 +1292,7 @@ textarea {
 .hero-item {
     position: relative;
     background: #0f1013; /* Solid dark background to display the artwork clearly */
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.25);
     border-radius: 14px;
     margin-bottom: 12px;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -1317,7 +1317,7 @@ textarea {
 }
 
 .hero-item:hover {
-    border-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.45);
 }
 
 .hero-header {
@@ -1326,7 +1326,7 @@ textarea {
     align-items: center;
     padding: 14px 20px;
     cursor: pointer;
-    background: rgba(0, 0, 0, 0.25); /* Subtle dark overlay for contrast */
+    /* background: rgba(0, 0, 0, 0.25); Subtle dark overlay for contrast */
     margin: 0;
     transition: background-color 0.2s ease;
     user-select: none;
@@ -1403,14 +1403,15 @@ textarea {
     display: none;
 }
 
-.hero-item:not(.collapsed) .collapsed-plays-label {
-    display: none;
-}
-
 .collapsed-plays-label {
+    display: none;
     font-size: 0.65rem;
     opacity: 0.75;
     margin-top: 1px;
+}
+
+.hero-item.collapsed .collapsed-plays-label {
+    display: inline-block;
 }
 
 .hero-body {
@@ -1488,55 +1489,13 @@ textarea {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Complexity Dice Glows by Season (Only when card is expanded) */
-.hero-item:not(.collapsed) .char-complexity-db.group-s1 .complexity-roll {
-    border-color: #2ec4b6;
-    box-shadow: 0 0 12px rgba(46, 196, 182, 0.85), 0 3px 6px rgba(0, 0, 0, 0.4);
-}
-.hero-item:not(.collapsed) .char-complexity-db.group-s2 .complexity-roll {
-    border-color: #ff9f1c;
-    box-shadow: 0 0 12px rgba(255, 159, 28, 0.85), 0 3px 6px rgba(0, 0, 0, 0.4);
-}
-.hero-item:not(.collapsed) .char-complexity-db.group-marvel .complexity-roll {
-    border-color: #e94560;
-    box-shadow: 0 0 12px rgba(233, 69, 96, 0.85), 0 3px 6px rgba(0, 0, 0, 0.4);
-}
-.hero-item:not(.collapsed) .char-complexity-db.group-xmen .complexity-roll {
-    border-color: #f1c40f;
-    box-shadow: 0 0 12px rgba(241, 196, 15, 0.85), 0 3px 6px rgba(0, 0, 0, 0.4);
-}
-.hero-item:not(.collapsed) .char-complexity-db.group-adventures .complexity-roll {
-    border-color: #9b59b6;
-    box-shadow: 0 0 12px rgba(155, 89, 182, 0.85), 0 3px 6px rgba(0, 0, 0, 0.4);
-}
-.hero-item:not(.collapsed) .char-complexity-db.group-solo .complexity-roll {
-    border-color: #485460;
-    box-shadow: 0 0 12px rgba(72, 84, 96, 0.85), 0 3px 6px rgba(0, 0, 0, 0.4);
-}
-.hero-item:not(.collapsed) .char-complexity-db.group-outcast .complexity-roll {
-    border-color: #5e35b1;
-    box-shadow: 0 0 12px rgba(94, 53, 177, 0.85), 0 3px 6px rgba(0, 0, 0, 0.4);
-}
-.hero-item:not(.collapsed) .char-complexity-db.group-svk .complexity-roll {
-    border-color: #a31d1d;
-    box-shadow: 0 0 12px rgba(163, 29, 29, 0.85), 0 3px 6px rgba(0, 0, 0, 0.4);
-}
-.hero-item:not(.collapsed) .char-complexity-db.group-vanguard .complexity-roll {
-    border-color: #00b4d8;
-    box-shadow: 0 0 12px rgba(0, 180, 216, 0.85), 0 3px 6px rgba(0, 0, 0, 0.4);
-}
-
 /* Detailed Stats Board Layout */
-.dynamic-stats {
-    transition: all 0.3s ease;
-}
-
-/* Expanded Grid (2x2) */
-.hero-item:not(.collapsed) .dynamic-stats {
+.hero-item .dynamic-stats {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 15px;
     width: 100%;
+    transition: all 0.3s ease;
 }
 
 /* Collapsed Row Layout */
