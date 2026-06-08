@@ -3,7 +3,10 @@
     <head>
         <link rel="manifest" href="manifest.json" />
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
         <title>Dice Throne</title>
 
         <script>
@@ -241,56 +244,58 @@
                 </div>
             </div>
 
+            <!-- Hero Selection Modal -->
+            <div id="hero-select-modal" class="modal">
+                <div class="modal-content">
+                    <span class="close-button" onclick="closeHeroSelectModal()">&times;</span>
+                    <h2 id="hero-select-modal-title" style="margin-top: 0;">Select Hero</h2>
+                    
+                    <!-- Search Input inside Modal -->
+                    <input type="text" id="hero-select-search" class="search-bar" style="margin-bottom: 10px; font-size: 16px;" placeholder="Search hero or season..." oninput="filterHeroSelectOptions()">
+                    
+                    <!-- Segmented Control for Sorting inside Modal -->
+                    <div class="segmented-control">
+                        <button type="button" class="segmented-pill active" id="modal-sort-name" onclick="setModalSort('name')">By Name</button>
+                        <button type="button" class="segmented-pill" id="modal-sort-weight" onclick="setModalSort('weight')">By Probability</button>
+                    </div>
+                    
+                    <!-- Option Grid/List -->
+                    <div id="hero-select-options-container" class="hero-select-grid"></div>
+                </div>
+            </div>
+
+
             <section id="rollSection">
                 <!-- Player Selection Toggles -->
                 <div
                     class="player-toggle-zone-top"
                     id="player-toggle-zone-top"></div>
 
-                <!-- Action Buttons -->
-                <button id="rollBtn" type="button" onclick="pickCharacters()">
-                    ROLL RANDOMIZER
-                </button>
-                <div
-                    id="action-buttons"
-                    style="display: none; margin-top: 10px; gap: 10px">
-                    <button
-                        id="cancelBtn"
-                        type="button"
-                        class="btn-cancelroll"
-                        onclick="cancelRoll()"
-                        style="flex: 1">
-                        CANCEL ROLL
+                <!-- Action Controls Wrapper -->
+                <div class="roll-controls-wrapper" style="margin-bottom: 15px;">
+                    <button id="rollBtn" type="button" onclick="pickCharacters()">
+                        ROLL RANDOMIZER
                     </button>
-                    <button
-                        id="confirmBtn"
-                        type="button"
-                        class="btn-confirm"
-                        onclick="applyResults()"
-                        style="flex: 2">
-                        LOCK IN SESSION
-                    </button>
-                </div>
-
-                <!-- Dropdown Sort Options -->
-                <div class="dropdown-sort-options">
-                    <label
-                        ><input
-                            type="radio"
-                            name="dropdownSort"
-                            value="name"
-                            checked
-                            onchange="updateDropdownSort()" />
-                        By Name</label
-                    >
-                    <label
-                        ><input
-                            type="radio"
-                            name="dropdownSort"
-                            value="weight"
-                            onchange="updateDropdownSort()" />
-                        By Percentage</label
-                    >
+                    <div
+                        id="action-buttons"
+                        style="display: none; gap: 10px">
+                        <button
+                            id="cancelBtn"
+                            type="button"
+                            class="btn-cancelroll"
+                            onclick="cancelRoll()"
+                            style="flex: 1">
+                            CANCEL ROLL
+                        </button>
+                        <button
+                            id="confirmBtn"
+                            type="button"
+                            class="btn-confirm"
+                            onclick="applyResults()"
+                            style="flex: 2">
+                            LOCK IN SESSION
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Randomizer Results Area -->
@@ -328,104 +333,60 @@
                                 onclick="clearSearch()"
                                 alt="Clear"
                                 title="Clear Search" />
-                            <img
-                                src="images/buttons/sort.png"
-                                id="sort-toggle"
-                                class="search-icon"
-                                onclick="toggleSortSection()"
-                                alt="Sort"
-                                title="Toggle Sort Section" />
-                            <img
-                                src="images/buttons/filter.png"
-                                id="filter-toggle"
-                                class="search-icon"
-                                onclick="toggleFilterSection()"
-                                alt="Filter"
-                                title="Toggle Filter Section" />
                         </div>
                     </div>
                     <div class="small-text" id="count-stats">
                         Showing 0 of 0 heroes
                     </div>
-                    <div
-                        class="dropdown-sort-options"
-                        style="margin-top: 5px; margin-bottom: 0">
-                        <label>
-                            <input
-                                type="checkbox"
-                                id="db-show-owned"
-                                checked
-                                onchange="renderList()" />
-                            Owned
-                        </label>
-                        <label>
-                            <input
-                                type="checkbox"
-                                id="db-show-not-owned"
-                                onchange="renderList()" />
-                            Not owned
-                        </label>
+                    
+                    <!-- Segmented Pill Control for Ownership -->
+                    <div class="ownership-segmented-control">
+                        <button type="button" class="segmented-pill active" id="pill-show-owned" onclick="setOwnershipFilter('owned')">Owned</button>
+                        <button type="button" class="segmented-pill" id="pill-show-not-owned" onclick="setOwnershipFilter('unowned')">Unowned</button>
+                        <button type="button" class="segmented-pill" id="pill-show-all" onclick="setOwnershipFilter('all')">All</button>
+                    </div>
+
+                    <!-- Hidden inputs for backward compatibility with JS queries -->
+                    <input type="checkbox" id="db-show-owned" checked style="display: none;" onchange="renderList()" />
+                    <input type="checkbox" id="db-show-not-owned" style="display: none;" onchange="renderList()" />
+                </div>
+
+                <!-- Sorting Accordion -->
+                <div class="db-accordion">
+                    <div class="db-accordion-header" onclick="toggleSortSection()">
+                        <span>Sorting Options</span>
+                        <button type="button" class="panel-toggle" id="sort-panel-toggle">
+                            <svg class="panel-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="sort-section" class="db-accordion-content sort-container-new hidden" style="width: 100%; box-sizing: border-box;">
+                        <!-- Content rendered dynamically via renderSortControls() -->
                     </div>
                 </div>
 
-                <div id="sort-section" class="sort-container-new hidden" style="width: 100%; box-sizing: border-box;">
-                    <!-- Content rendered dynamically via renderSortControls() -->
-                </div>
-
-                <!-- Filter Section -->
-                <div id="filter-section" class="sort-container-new hidden" style="width: 100%; box-sizing: border-box;">
-                    <!-- Complexity Row -->
-                    <div class="panel-row-new">
-                        <span class="panel-row-title">Complexity Level:</span>
-                        <div class="dice-bar" style="margin-top: 5px;">
-                            <img
-                                src="images/dice/d1.png"
-                                class="dice-icon"
-                                id="dice-1"
-                                onclick="toggleLevel(1)"
-                                title="Level 1" />
-                            <img
-                                src="images/dice/d2.png"
-                                class="dice-icon"
-                                id="dice-2"
-                                onclick="toggleLevel(2)"
-                                title="Level 2" />
-                            <img
-                                src="images/dice/d3.png"
-                                class="dice-icon"
-                                id="dice-3"
-                                onclick="toggleLevel(3)"
-                                title="Level 3" />
-                            <img
-                                src="images/dice/d4.png"
-                                class="dice-icon"
-                                id="dice-4"
-                                onclick="toggleLevel(4)"
-                                title="Level 4" />
-                            <img
-                                src="images/dice/d5.png"
-                                class="dice-icon"
-                                id="dice-5"
-                                onclick="toggleLevel(5)"
-                                title="Level 5" />
-                            <img
-                                src="images/dice/d6.png"
-                                class="dice-icon"
-                                id="dice-6"
-                                onclick="toggleLevel(6)"
-                                title="Level 6" />
-                            <img
-                                src="images/dice/d_all.png"
-                                class="dice-icon"
-                                id="dice-all"
-                                onclick="toggleLevel('all')"
-                                title="All Levels" />
+                <!-- Filtering Accordion -->
+                <div class="db-accordion">
+                    <div class="db-accordion-header" onclick="toggleFilterSection()">
+                        <span>Filtering Options</span>
+                        <button type="button" class="panel-toggle" id="filter-panel-toggle">
+                            <svg class="panel-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="filter-section" class="db-accordion-content sort-container-new hidden" style="width: 100%; box-sizing: border-box;">
+                        <!-- Complexity Row -->
+                        <div class="panel-row-new">
+                            <span class="panel-row-title">Complexity Level:</span>
+                            <div class="filter-bar-track" id="complexity-filter-bar" style="margin-top: 5px; flex-wrap: wrap;"></div>
                         </div>
-                    </div>
-                    <!-- Groups/Seasons Row -->
-                    <div class="panel-row-new">
-                        <span class="panel-row-title">Hero Group / Season:</span>
-                        <div class="dice-bar" id="group-filter-bar" style="margin-top: 5px; flex-wrap: wrap;"></div>
+                        <!-- Groups/Seasons Row -->
+                        <div class="panel-row-new">
+                            <span class="panel-row-title">Hero Group / Season:</span>
+                            <div class="filter-bar-track" id="group-filter-bar" style="margin-top: 5px; flex-wrap: wrap;"></div>
+                        </div>
                     </div>
                 </div>
                 <div id="heroContainer"></div>
@@ -544,7 +505,9 @@
                             type="button"
                             class="panel-toggle"
                             aria-expanded="false">
-                            V
+                            <svg class="panel-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
                         </button>
                     </div>
                     <div id="groupsPanel" class="panel-content hidden">
@@ -584,6 +547,11 @@
                                     id="groupOrder"
                                     style="font-size: 16px"
                                     placeholder="Order Index" />
+                                <input
+                                    type="number"
+                                    id="groupYear"
+                                    style="font-size: 16px"
+                                    placeholder="Year (optional)" />
                             </div>
                             <div style="display: flex; gap: 10px">
                                 <button
@@ -625,7 +593,9 @@
                             type="button"
                             class="panel-toggle"
                             aria-expanded="false">
-                            V
+                            <svg class="panel-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
                         </button>
                     </div>
                     <div id="heroesPanel" class="panel-content hidden">
@@ -718,7 +688,9 @@
                             type="button"
                             class="panel-toggle"
                             aria-expanded="false">
-                            V
+                            <svg class="panel-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
                         </button>
                     </div>
                     <div id="playersPanel" class="panel-content hidden">
@@ -737,7 +709,9 @@
                             type="button"
                             class="panel-toggle"
                             aria-expanded="false">
-                            V
+                            <svg class="panel-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
                         </button>
                     </div>
                     <div id="usersPanel" class="panel-content hidden">

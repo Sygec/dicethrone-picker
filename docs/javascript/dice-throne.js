@@ -21,6 +21,9 @@ let currentUser = null;
 let loggedInPlayerIndex = -1;
 let isRollActive = false;
 let expandedCollectionGroups = new Set();
+let scrambleIntervals = {};
+let activeSelectPlayerIdx = null;
+let modalSortMode = "name";
 const isAdmin = () => currentUser?.app_metadata?.role === "admin";
 const isUser = () => !!currentUser;
 
@@ -121,6 +124,28 @@ const getPlayerColor = (player) => {
 const setPlayerColorVariable = (playerId, color) => {
     document.documentElement.style.setProperty(`--${playerId}`, color);
 };
+
+function getHeroProbabilityText(charData, pIdx) {
+    if (!charData) return "0.00%";
+    const ownedCount = characters.filter(isHeroOwned).length;
+    if (ownedCount === 0) return "0.00%";
+
+    if (pIdx >= 4) {
+        return `${(100 / ownedCount).toFixed(2)}%`;
+    }
+
+    let totalWeight = 0;
+    characters
+        .filter(isHeroOwned)
+        .forEach((c) => (totalWeight += getSoftWeight(c, pIdx)));
+
+    if (totalWeight === 0) return "0.00%";
+
+    const owned = isHeroOwned(charData);
+    const weight = getSoftWeight(charData, pIdx);
+    const pct = owned ? ((weight / totalWeight) * 100).toFixed(2) : "0.00";
+    return `${pct}%`;
+}
 
 async function handlePlayerColorChange(playerId, input) {
     const player = players.find((p) => p.id === playerId);
@@ -233,6 +258,7 @@ function hidePreloader() {
     if (!preloader) return;
 
     preloader.classList.add("fade-out");
+    document.body.classList.add("loaded");
     preloader.addEventListener("animationend", () => preloader.remove(), {
         once: true,
     });
@@ -242,7 +268,7 @@ function hidePreloader() {
 // 6. EVENT LISTENERS
 // ==========================================
 window.addEventListener("DOMContentLoaded", initializeApp);
-window.addEventListener("DOMContentLoaded", updateDiceVisuals);
+window.addEventListener("DOMContentLoaded", renderComplexityFilters);
 versionLabel.onclick = openChangelog;
 closeBtn.onclick = closeChangelog;
 
@@ -264,7 +290,15 @@ window.onclick = (event) => {
     if (event.target == loginModal) closeLoginModal();
     if (event.target == whatsNewModal) closeWhatsNew();
     if (event.target == updatePasswordModal) closeUpdatePasswordModal();
+    if (event.target == document.getElementById("hero-select-modal"))
+        closeHeroSelectModal();
 };
+
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+        closeHeroSelectModal();
+    }
+});
 
 // ******************************************
 // Auth UI & Logic
@@ -287,7 +321,8 @@ function updateAuthUI() {
         if (document.getElementById("adminSection"))
             document.getElementById("adminSection").classList.add("hidden");
         if (actionButtons) actionButtons.style.display = "none";
-        if (actionButtons) actionButtons.style.display = "none";
+        const rollBtn = document.getElementById("rollBtn");
+        if (rollBtn) rollBtn.style.display = "block";
     }
 
     // Refresh lists to show/hide edit buttons
@@ -310,9 +345,9 @@ function renderPlayerToggles() {
         .map((p, i) => {
             const isChecked = i < 4 ? "checked" : "";
             return `
-            <label class="p-chk">
-                <span class="player-tag" style="background:var(--${p.id})">${p.name}</span>
+            <label class="player-card" style="--player-color: var(--${p.id})">
                 <input type="checkbox" id="use${i}" ${isChecked} onclick="handlePlayerToggleClick(event, ${i})">
+                <span class="player-card-name">${p.name}</span>
             </label>`;
         })
         .join("");
@@ -466,7 +501,7 @@ async function init() {
         renderGroupsList();
 
         // Initialize or update activeGroups
-        const currentGroupIds = new Set(groups.map(g => g.id));
+        const currentGroupIds = new Set(groups.map((g) => g.id));
         if (activeGroups.size === 0) {
             groups.forEach((g) => activeGroups.add(g.id));
         } else {
@@ -733,6 +768,8 @@ function showDatabase() {
     gs.classList.add("hidden");
     cs.classList.add("hidden");
     as.classList.add("hidden");
+
+    setTimeout(updateSegmentedHighlights, 50);
 }
 
 // ******************************************
@@ -805,12 +842,12 @@ function showAdmin() {
 // ******************************************
 function toggleSortSection() {
     const sortSection = document.getElementById("sort-section");
+    const button = document.getElementById("sort-panel-toggle");
+    if (!sortSection) return;
     const isHidden = sortSection.classList.toggle("hidden");
-    if (isHidden) {
-        activePlayerIndices = [0, 1, 2, 3];
-        renderSortControls();
-        currentSort = null;
-        setSort("name");
+    if (button) {
+        button.classList.toggle("open", !isHidden);
+        button.setAttribute("aria-expanded", String(!isHidden));
     }
 }
 
@@ -818,17 +855,16 @@ function toggleSortSection() {
 // toggleFilterSection()
 // input: none
 // ******************************************
-// Toggles the visibility of the filter section and resets filters if hidden.
+// Toggles the visibility of the filter section visually.
 // ******************************************
 function toggleFilterSection() {
     const filterSection = document.getElementById("filter-section");
+    const button = document.getElementById("filter-panel-toggle");
+    if (!filterSection) return;
     const isHidden = filterSection.classList.toggle("hidden");
-    if (isHidden) {
-        activeLevels = new Set([1, 2, 3, 4, 5, 6]); // Reset to all active filters
-        updateDiceVisuals();
-        activeGroups = new Set(groups.map((g) => g.id));
-        updateGroupVisuals();
-        renderList();
+    if (button) {
+        button.classList.toggle("open", !isHidden);
+        button.setAttribute("aria-expanded", String(!isHidden));
     }
 }
 
@@ -879,6 +915,45 @@ function toggleCollectionGroup(groupId, event) {
 }
 
 // ******************************************
+// setOwnershipFilter(filterState)
+// input: filterState ('owned', 'unowned', 'all')
+// ******************************************
+function setOwnershipFilter(filterState) {
+    const showOwnedCheckbox = document.getElementById("db-show-owned");
+    const showNotOwnedCheckbox = document.getElementById("db-show-not-owned");
+
+    if (showOwnedCheckbox && showNotOwnedCheckbox) {
+        if (filterState === "owned") {
+            showOwnedCheckbox.checked = true;
+            showNotOwnedCheckbox.checked = false;
+        } else if (filterState === "unowned") {
+            showOwnedCheckbox.checked = false;
+            showNotOwnedCheckbox.checked = true;
+        } else {
+            showOwnedCheckbox.checked = true;
+            showNotOwnedCheckbox.checked = true;
+        }
+    }
+
+    // Update segmented pill active class
+    const pills = {
+        owned: document.getElementById("pill-show-owned"),
+        unowned: document.getElementById("pill-show-not-owned"),
+        all: document.getElementById("pill-show-all"),
+    };
+
+    Object.keys(pills).forEach((key) => {
+        const pill = pills[key];
+        if (pill) {
+            pill.classList.toggle("active", key === filterState);
+        }
+    });
+
+    updateSegmentedHighlights();
+    renderList();
+}
+
+// ******************************************
 // renderCollectionView()
 // input: none
 // ******************************************
@@ -894,10 +969,15 @@ function renderCollectionView() {
         countLabel.innerText = `Owned ${ownedHeroes} of ${totalHeroes} heroes`;
     }
 
-    // Sort groups alphabetically by name
-    const sortedGroups = [...groups].sort((a, b) =>
-        a.name.localeCompare(b.name),
-    );
+    // Sort groups using the order_index value
+    const sortedGroups = [...groups].sort((a, b) => {
+        const orderA = a.order_index ?? Number.MAX_SAFE_INTEGER;
+        const orderB = b.order_index ?? Number.MAX_SAFE_INTEGER;
+        if (orderA !== orderB) {
+            return orderA - orderB;
+        }
+        return a.name.localeCompare(b.name);
+    });
 
     container.innerHTML = sortedGroups
         .map((group) => {
@@ -926,9 +1006,12 @@ function renderCollectionView() {
             return `
             <div class="collection-group${isExpanded ? "" : " collapsed"}">
                 <div class="collection-group-header" onclick="toggleCollectionGroup('${group.id}', event)" style="cursor: pointer;">
-                    <button type="button" class="panel-toggle${isExpanded ? " open" : ""}" aria-expanded="${isExpanded}">V</button>
                     <input type="checkbox" id="owned-group-${group.id}" ${allOwned ? "checked" : ""} onchange="toggleGroupOwned('${group.id}', this.checked)" onclick="event.stopPropagation();">
-                    <label for="owned-group-${group.id}" onclick="event.stopPropagation();"><strong>${group.name}</strong></label>
+                    <label for="owned-group-${group.id}" onclick="event.stopPropagation();">
+                        <strong>${group.name}</strong>
+                        ${group.year ? ` <span style="opacity: 0.6; font-size: 0.85em;">(${group.year})</span>` : ""}
+                    </label>
+                    <button type="button" class="panel-toggle${isExpanded ? " open" : ""}" aria-expanded="${isExpanded}">V</button>
                 </div>
                 <div class="collection-heroes-list">
                     ${heroesHtml}
@@ -1131,6 +1214,7 @@ function renderGroupsList() {
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px;">
                 <div>
                     <strong>${escapeHtml(g.name)}</strong>
+                    ${g.year ? ` <span style="opacity: 0.6;">(${g.year})</span>` : ""}
                 </div>
                 <div style="display: flex; gap: 5px;">
                     <button type="button" class="btn-save btn-inline" onclick="editGroup('${g.id}')">Edit</button>
@@ -1141,6 +1225,7 @@ function renderGroupsList() {
                 <div class="form-grid">
                     <input type="text" id="groupName-${g.id}" placeholder="Group Name" value="${escapeHtml(g.name)}">
                     <input type="number" id="groupOrder-${g.id}" placeholder="Order Index" value="${g.order_index ?? ""}">
+                    <input type="number" id="groupYear-${g.id}" placeholder="Release Year" value="${g.year ?? ""}">
                 </div>
                 <div style="display: flex; gap: 10px;">
                     <button type="button" class="btn-save" onclick="saveGroupInline('${g.id}')">Save</button>
@@ -1279,12 +1364,14 @@ async function deleteHero(heroId) {
 async function saveGroup() {
     const name = document.getElementById("groupName").value.trim();
     const order_index = document.getElementById("groupOrder").value.trim();
+    const year = document.getElementById("groupYear").value.trim();
 
     if (!name) return alert("Group name is required");
 
     const groupData = {
         name,
         order_index: order_index ? parseInt(order_index) : null,
+        year: year ? parseInt(year) : null,
         is_active: true,
     };
 
@@ -1326,6 +1413,7 @@ function editGroup(groupId) {
     document.getElementById(`groupName-${groupId}`).value = group.name;
     document.getElementById(`groupOrder-${groupId}`).value =
         group.order_index || "";
+    document.getElementById(`groupYear-${groupId}`).value = group.year || "";
     panel.classList.remove("hidden");
 }
 
@@ -1344,6 +1432,7 @@ async function saveGroupInline(groupId) {
     const order_index = document
         .getElementById(`groupOrder-${groupId}`)
         .value.trim();
+    const year = document.getElementById(`groupYear-${groupId}`).value.trim();
 
     if (!name) return alert("Group name is required");
 
@@ -1353,6 +1442,7 @@ async function saveGroupInline(groupId) {
             id: groupId,
             name,
             order_index: order_index ? parseInt(order_index) : null,
+            year: year ? parseInt(year) : null,
             is_active: true,
         })
         .select()
@@ -1372,6 +1462,7 @@ async function saveGroupInline(groupId) {
 function resetGroupForm() {
     document.getElementById("groupName").value = "";
     document.getElementById("groupOrder").value = "";
+    document.getElementById("groupYear").value = "";
 
     const form = document.getElementById("groupForm");
     const button = document.getElementById("addGroupBtn");
@@ -1597,17 +1688,20 @@ function getSoftWeight(hero, userIndex) {
 // Invitees (4-5) are assigned purely at random.
 // ******************************************
 function pickCharacters() {
-    // Identify active players and randomize the order of selection
-    const active = NAMES.map((_, i) => i)
-        .filter((i) => document.getElementById(`use${i}`).checked)
-        .sort(() => Math.random() - 0.5);
+    // Identify active players
+    const active = NAMES.map((_, i) => i).filter(
+        (i) => document.getElementById(`use${i}`).checked,
+    );
 
     if (active.length === 0) return alert("Select players!");
+
+    // Shuffle active array to decide selection order (fairness)
+    const selectionOrder = [...active].sort(() => Math.random() - 0.5);
 
     const resultsDiv = document.getElementById("results");
     resultsDiv.innerHTML = "";
 
-    // Filter for owned heroes and create a pool for selection
+    // Pool of owned heroes
     let pool = characters.filter(isHeroOwned).map((c) => structuredClone(c));
 
     if (pool.length < active.length) {
@@ -1616,16 +1710,18 @@ function pickCharacters() {
         );
     }
 
-    active.forEach((pIdx) => {
-        let selectedName = "";
+    // Map to hold calculated results for each player
+    const rollResults = {};
+
+    // Run selection in randomized order
+    selectionOrder.forEach((pIdx) => {
+        let selectedHero = null;
 
         if (pIdx >= 4) {
-            // Purely random selection for invitee slots
             const r = Math.floor(Math.random() * pool.length);
-            selectedName = pool[r]?.name;
+            selectedHero = pool[r];
             pool.splice(r, 1);
         } else {
-            // Weighted selection for main players (0-3) using soft weights
             const activePool = pool.filter((c) => c.weights[pIdx] > 0);
             const totalEffectiveWeight = activePool.reduce(
                 (sum, c) => sum + getSoftWeight(c, pIdx),
@@ -1633,13 +1729,12 @@ function pickCharacters() {
             );
 
             let random = Math.random() * totalEffectiveWeight;
-
             for (const hero of activePool) {
                 const weight = getSoftWeight(hero, pIdx);
                 if (random < weight) {
-                    selectedName = hero.name;
+                    selectedHero = hero;
                     pool.splice(
-                        pool.findIndex((p) => p.name === selectedName),
+                        pool.findIndex((p) => p.name === hero.name),
                         1,
                     );
                     break;
@@ -1647,84 +1742,89 @@ function pickCharacters() {
                 random -= weight;
             }
         }
-        renderPlayerRow(pIdx, selectedName);
+        rollResults[pIdx] = selectedHero;
     });
 
-    validateSelection();
-    if (isUser())
-        document.getElementById("action-buttons").style.display = "flex";
+    // Disable Roll Button
+    const rollBtn = document.getElementById("rollBtn");
+    if (rollBtn) {
+        rollBtn.disabled = true;
+        rollBtn.style.opacity = "0.6";
+        rollBtn.style.cursor = "not-allowed";
+    }
+
+    // Hide Action Buttons container while scrambling
+    const actionButtons = document.getElementById("action-buttons");
+    if (actionButtons) actionButtons.style.display = "none";
+
+    isRollActive = false; // Will set to true once all resolved
+
+    // Render all panels in sequential player index order in "randomizing" state
+    const sortedActive = [...active].sort((a, b) => a - b);
+
+    sortedActive.forEach((pIdx) => {
+        renderPlayerRowSkeleton(pIdx);
+    });
 
     // Ensure the roll section is visible and scroll to results
     showRoll();
     resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
-    isRollActive = true;
+
+    // Pool of all owned heroes for the cycling scrambler
+    const ownedHeroes = characters.filter(isHeroOwned);
+
+    // Start scrambling for all panels
+    sortedActive.forEach((pIdx) => {
+        startPanelScramble(pIdx, ownedHeroes);
+    });
+
+    // Staggered reveal sequence
+    let currentRevealIndex = 0;
+
+    function revealNext() {
+        if (currentRevealIndex >= selectionOrder.length) {
+            // All revealed!
+            validateSelection();
+            if (isUser()) {
+                if (actionButtons) actionButtons.style.display = "flex";
+                if (rollBtn) rollBtn.style.display = "none";
+            } else {
+                if (rollBtn) {
+                    rollBtn.disabled = false;
+                    rollBtn.style.opacity = "1";
+                    rollBtn.style.cursor = "pointer";
+                }
+            }
+            isRollActive = true;
+            return;
+        }
+
+        const pIdx = selectionOrder[currentRevealIndex];
+        const finalHero = rollResults[pIdx];
+
+        // Randomize duration between 0.5s to 1.0s (e.g. 700ms) for the current panel
+        const duration = 500 + Math.random() * 500;
+
+        setTimeout(() => {
+            stopPanelScramble(pIdx, finalHero);
+            currentRevealIndex++;
+            // Pause before revealing the next (e.g. 400ms)
+            setTimeout(revealNext, 400);
+        }, duration);
+    }
+
+    // Start the staggered reveal chain
+    revealNext();
 }
 
 // ******************************************
 // updateDropdownSort()
 // input: none
 // ******************************************
-// Refreshes all hero selection dropdowns in the results area
-// based on the selected sort mode (Name vs Percentage).
+// Delegate to validateSelection since dropdowns are replaced by modal
 // ******************************************
 function updateDropdownSort() {
-    const dropdowns = document.querySelectorAll(".results .char-select");
-    dropdowns.forEach((dropdown) => {
-        const pIdx = parseInt(dropdown.dataset.player);
-        const currentVal = dropdown.value;
-        dropdown.innerHTML = getSortedHeroOptions(pIdx, currentVal);
-    });
-}
-
-// ******************************************
-// getSortedHeroOptions(pIdx, selectedName)
-// input: pIdx -> player index, selectedName -> current hero
-// ******************************************
-// Returns HTML option tags for all heroes, sorted by the active
-// mode. Percentage logic is only applied to main players (0-3).
-// ******************************************
-function getSortedHeroOptions(pIdx, selectedName) {
-    const sortMode =
-        document.querySelector('input[name="dropdownSort"]:checked')?.value ||
-        "name";
-
-    let totalWeight = 0;
-    if (sortMode === "weight" && pIdx < 4) {
-        // Only calculate total probability for heroes currently in the collection
-        characters
-            .filter(isHeroOwned)
-            .forEach((c) => (totalWeight += getSoftWeight(c, pIdx)));
-    }
-
-    const sortedChars = [...characters].sort((a, b) => {
-        if (sortMode === "name") return a.name.localeCompare(b.name);
-
-        if (pIdx < 4) {
-            // When sorting by probability, unowned heroes are treated as having 0 weight and pushed to the bottom
-            const ownedA = isHeroOwned(a);
-            const ownedB = isHeroOwned(b);
-            if (ownedA !== ownedB) return ownedB - ownedA;
-            const wA = getSoftWeight(a, pIdx);
-            const wB = getSoftWeight(b, pIdx);
-            if (wA !== wB) return wB - wA; // Descending weight
-        }
-        return a.name.localeCompare(b.name);
-    });
-
-    return sortedChars
-        .map((c) => {
-            let label = c.name;
-            if (sortMode === "weight" && pIdx < 4 && totalWeight > 0) {
-                const owned = isHeroOwned(c);
-                const weight = getSoftWeight(c, pIdx);
-                const pct = owned
-                    ? ((weight / totalWeight) * 100).toFixed(2)
-                    : "0.00";
-                label += ` (${pct}%)`;
-            }
-            return `<option value="${c.name}" ${c.name === selectedName ? "selected" : ""}>${label}</option>`;
-        })
-        .join("");
+    validateSelection();
 }
 
 // ******************************************
@@ -1733,73 +1833,307 @@ function getSortedHeroOptions(pIdx, selectedName) {
 // ******************************************
 // Renders the HTML result for a specific player's randomized character.
 // ******************************************
-function renderPlayerRow(pIdx, selectedName) {
-    const charData = characters.find((c) => c.name === selectedName);
+function renderPlayerRowSkeleton(pIdx) {
     const resultsDiv = document.getElementById("results");
 
-    // Retrieve play statistics for the current player and selected character
-    const plays = (charData?.playCount && charData.playCount[pIdx]) || 0;
-    const last = (charData?.lastPlayed && charData.lastPlayed[pIdx]) || "Never";
-
-    // Append the HTML for the player's row to the results container
     resultsDiv.innerHTML += `
-        <div class="player-row">
-            <!-- Link to the hero's external page, wrapping the image and complexity icon -->
-            <a href="${getHeroLink(charData?.slug)}" target="_blank" id="link-${pIdx}">
-                <div class="char-complexity-db">
-                    <img src="${getImgUrl(charData?.slug)}" class="char-img-roll" id="img-${pIdx}" alt="${selectedName}" title="${selectedName}">
-                    <img src="images/dice/d${charData?.complexity}.png" class="complexity-roll" alt="Complexity" id="comp-${pIdx}" title="Complexity: ${charData?.complexity}">
+        <div class="player-row randomizing" id="player-row-${pIdx}" style="--player-color: var(--p${pIdx + 1}); border-color: var(--p${pIdx + 1});">
+            <!-- Background Image -->
+            <img src="" class="char-bg-img scramble-img" id="bg-img-${pIdx}" alt="Randomizing">
+            
+            <div class="player-row-content">
+                <!-- Hero Details -->
+                <div class="hero-info-container" id="info-container-${pIdx}">
+                    <div class="hero-header-row">
+                        <div class="hero-header-left">
+                            <span class="player-name-caps" style="color: var(--player-color);">${NAMES[pIdx].toUpperCase()}</span>
+                            <span class="hero-name-divider">:</span>
+                            <span class="hero-name-title scramble-text" id="hero-name-title-${pIdx}">ROLLING...</span>
+                        </div>
+                    </div>
+                    
+                    <span class="hero-group-label scramble-hidden opacity-0" id="hero-group-${pIdx}">Group</span>
+                    
+                    <div class="hero-stats-row scramble-hidden opacity-0" id="stats-row-${pIdx}">
+                        <span>Plays: --</span>
+                        <span class="stats-divider">|</span>
+                        <span>Last: --</span>
+                        <span class="stats-divider">|</span>
+                        <span id="hero-prob-${pIdx}">Prob: --</span>
+                    </div>
                 </div>
-            </a>
-            <div style="flex:1">
-                <!-- Player tag and conditional display of play stats for main players -->
-                <div style="margin-bottom:5px; display:flex; justify-content:space-between; align-items:center;">
-                    <span class="player-tag" style="background:var(--p${pIdx + 1})">${NAMES[pIdx]}</span>
-                    ${pIdx < 4 ? `<div class="roll-stats"><span>Plays: <b>${plays}</b></span><span>Last: <b>${last}</b></span></div>` : ""}
+                
+                <!-- Edit Hero Selector Button + Hidden Input -->
+                <div class="hero-select-container scramble-hidden opacity-0" id="select-container-${pIdx}">
+                    <input type="hidden" class="char-select" data-player="${pIdx}" id="select-${pIdx}">
+                    <button class="edit-icon-btn" type="button" onclick="openHeroSelectModal(${pIdx})" aria-label="Select hero">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                    </button>
                 </div>
-                <!-- Dropdown for manual hero selection -->
-                <select class="char-select" data-player="${pIdx}" onchange="handleDropdownChange(this)">
-                    ${getSortedHeroOptions(pIdx, selectedName)}
-                </select>
             </div>
-        </div>`;
+        </div>
+    `;
 }
 
 // ******************************************
-// handleDropdownChange(el)
-// input: el -> the select element that changed
+// Modal Character Picker Logic
 // ******************************************
-// Updates the visual results and stats for a player when their
-// hero is manually changed via dropdown.
-// ******************************************
-function handleDropdownChange(el) {
-    const pIdx = parseInt(el.dataset.player);
-    const char = characters.find((c) => c.name === el.value);
+function openHeroSelectModal(pIdx) {
+    activeSelectPlayerIdx = pIdx;
 
+    const modal = document.getElementById("hero-select-modal");
+    if (!modal) return;
+
+    modal.style.display = "flex";
+    document.body.style.overflow = "hidden"; // Prevent background scroll
+
+    // Set title with player's name
+    const titleEl = document.getElementById("hero-select-modal-title");
+    if (titleEl && NAMES[pIdx]) {
+        titleEl.innerText = `Select Hero for ${NAMES[pIdx]}`;
+    }
+
+    // Reset search
+    const searchInput = document.getElementById("hero-select-search");
+    if (searchInput) {
+        searchInput.value = "";
+    }
+
+    // Reset sorting and render
+    setModalSort("name");
+    setTimeout(updateSegmentedHighlights, 50);
+}
+
+function closeHeroSelectModal() {
+    const modal = document.getElementById("hero-select-modal");
+    if (modal) {
+        modal.style.display = "none";
+    }
+    document.body.style.overflow = ""; // Restore background scroll
+    activeSelectPlayerIdx = null;
+}
+
+function setModalSort(mode) {
+    modalSortMode = mode;
+
+    const namePill = document.getElementById("modal-sort-name");
+    const weightPill = document.getElementById("modal-sort-weight");
+
+    if (namePill) namePill.classList.toggle("active", mode === "name");
+    if (weightPill) weightPill.classList.toggle("active", mode === "weight");
+
+    updateSegmentedHighlights();
+    filterHeroSelectOptions();
+}
+
+function filterHeroSelectOptions() {
+    const searchInput = document.getElementById("hero-select-search");
+    const searchTerm = searchInput ? searchInput.value : "";
+    renderHeroSelectOptions(searchTerm);
+}
+
+function renderHeroSelectOptions(searchTerm = "") {
+    const container = document.getElementById("hero-select-options-container");
+    if (!container) return;
+
+    const pIdx = activeSelectPlayerIdx;
+    if (pIdx === null) return;
+
+    // Filter owned heroes (and match search term)
+    let owned = characters.filter((c) => isHeroOwned(c));
+
+    if (searchTerm.trim() !== "") {
+        const term = searchTerm.toLowerCase().trim();
+        owned = owned.filter((c) => {
+            const nameMatch = c.name.toLowerCase().includes(term);
+            const groupMatch = (c.group || "").toLowerCase().includes(term);
+            return nameMatch || groupMatch;
+        });
+    }
+
+    let totalWeight = 0;
+    if (modalSortMode === "weight" && pIdx < 4) {
+        owned.forEach((c) => (totalWeight += getSoftWeight(c, pIdx)));
+    }
+
+    // Sort owned heroes depending on modalSortMode
+    owned.sort((a, b) => {
+        if (modalSortMode === "weight" && pIdx < 4) {
+            const wA = getSoftWeight(a, pIdx);
+            const wB = getSoftWeight(b, pIdx);
+            if (wA !== wB) return wB - wA; // Descending weight
+        }
+        return a.name.localeCompare(b.name);
+    });
+
+    const currentVal = document.getElementById(`select-${pIdx}`)?.value;
+
+    if (owned.length === 0) {
+        container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #888; padding: 20px;">No matching owned heroes found.</div>`;
+        return;
+    }
+
+    container.innerHTML = owned
+        .map((c) => {
+            const isSelected = c.name === currentVal;
+            let pctLabel = "";
+            if (modalSortMode === "weight" && pIdx < 4 && totalWeight > 0) {
+                const weight = getSoftWeight(c, pIdx);
+                const pct = ((weight / totalWeight) * 100).toFixed(1);
+                pctLabel = `<div class="hero-select-card-pct">${pct}%</div>`;
+            }
+
+            return `
+            <div class="hero-select-card ${isSelected ? "selected" : ""}" onclick="selectHeroForPlayer('${c.name.replace(/'/g, "\\'")}')">
+                <img src="${getImgUrl(c.slug)}" class="hero-select-card-img" alt="${c.name}">
+                <div class="hero-select-card-name">${c.name}</div>
+                ${pctLabel}
+            </div>
+        `;
+        })
+        .join("");
+}
+
+function selectHeroForPlayer(heroName) {
+    const pIdx = activeSelectPlayerIdx;
+    if (pIdx === null) return;
+
+    const char = characters.find((c) => c.name === heroName);
     if (!char) return;
 
-    // Update the visual assets: portrait, complexity dice, and wiki link
-    document.getElementById(`img-${pIdx}`).src = getImgUrl(char.slug);
-    document.getElementById(`comp-${pIdx}`).src =
-        `images/dice/d${char.complexity}.png`;
-    document.getElementById(`link-${pIdx}`).href = getHeroLink(char.slug);
+    // Update hidden input value
+    const selectEl = document.getElementById(`select-${pIdx}`);
+    if (selectEl) {
+        selectEl.value = char.name;
+    }
 
-    // Locate the stats container within the current player's row
-    const statsDiv = el.closest(".player-row").querySelector(".roll-stats");
+    // Update background image
+    const bgImgEl = document.getElementById(`bg-img-${pIdx}`);
+    if (bgImgEl) {
+        bgImgEl.src = getImgUrl(char.slug);
+        bgImgEl.alt = char.name;
+    }
 
-    // Update play history only for the main 4 players
-    if (statsDiv && pIdx < 4) {
-        const playCount = char.playCount?.[pIdx] || 0;
-        const lastPlayed = char.lastPlayed?.[pIdx] || "Never";
+    // Update hero name title and group
+    const nameTitle = document.getElementById(`hero-name-title-${pIdx}`);
+    if (nameTitle) nameTitle.innerText = char.name;
 
-        statsDiv.innerHTML = `
-            <span>Plays: <b>${playCount}</b></span>
-            <span>Last: <b>${lastPlayed}</b></span>
-        `;
+    const groupEl = document.getElementById(`hero-group-${pIdx}`);
+    if (groupEl) groupEl.innerText = char.group || "Unknown";
+
+    // Update combined stats row
+    const statsDiv = document.getElementById(`stats-row-${pIdx}`);
+    if (statsDiv) {
+        const probText = `Prob: <b>${getHeroProbabilityText(char, pIdx)}</b>`;
+        if (pIdx < 4) {
+            const playCount = char.playCount?.[pIdx] || 0;
+            const lastPlayed = char.lastPlayed?.[pIdx] || "Never";
+            statsDiv.innerHTML = `
+                <span>Plays: <b>${playCount}</b></span>
+                <span class="stats-divider">|</span>
+                <span>Last: <b>${lastPlayed}</b></span>
+                <span class="stats-divider">|</span>
+                <span>${probText}</span>
+            `;
+        } else {
+            statsDiv.innerHTML = `<span>${probText}</span>`;
+        }
     }
 
     // Refresh duplicate detection UI
     validateSelection();
+
+    closeHeroSelectModal();
+}
+
+function startPanelScramble(pIdx, ownedHeroes) {
+    if (ownedHeroes.length === 0) return;
+
+    const bgImgEl = document.getElementById(`bg-img-${pIdx}`);
+    const nameEl = document.getElementById(`hero-name-title-${pIdx}`);
+
+    scrambleIntervals[pIdx] = setInterval(() => {
+        const randomHero =
+            ownedHeroes[Math.floor(Math.random() * ownedHeroes.length)];
+        if (bgImgEl) bgImgEl.src = getImgUrl(randomHero.slug);
+        if (nameEl) {
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$%&*";
+            let scrambleStr = "";
+            for (let k = 0; k < 8; k++) {
+                scrambleStr += chars[Math.floor(Math.random() * chars.length)];
+            }
+            nameEl.innerText = scrambleStr;
+        }
+    }, 70);
+}
+
+function stopPanelScramble(pIdx, finalHero) {
+    if (scrambleIntervals[pIdx]) {
+        clearInterval(scrambleIntervals[pIdx]);
+        delete scrambleIntervals[pIdx];
+    }
+
+    const rowEl = document.getElementById(`player-row-${pIdx}`);
+    if (rowEl) {
+        rowEl.classList.remove("randomizing");
+        rowEl.classList.add("revealed");
+    }
+
+    const bgImgEl = document.getElementById(`bg-img-${pIdx}`);
+    const nameEl = document.getElementById(`hero-name-title-${pIdx}`);
+
+    if (finalHero) {
+        if (bgImgEl) {
+            bgImgEl.src = getImgUrl(finalHero.slug);
+            bgImgEl.alt = finalHero.name;
+            bgImgEl.classList.remove("scramble-img");
+        }
+        if (nameEl) {
+            nameEl.innerText = finalHero.name;
+            nameEl.classList.remove("scramble-text");
+        }
+
+        // Populate group
+        const groupEl = document.getElementById(`hero-group-${pIdx}`);
+        if (groupEl) {
+            groupEl.innerText = finalHero.group || "Unknown";
+        }
+
+        // Populate stats line (Plays, Last, Prob combined)
+        const statsRow = document.getElementById(`stats-row-${pIdx}`);
+        if (statsRow) {
+            const probText = `Prob: <b>${getHeroProbabilityText(finalHero, pIdx)}</b>`;
+            if (pIdx < 4) {
+                const plays = finalHero.playCount[pIdx] || 0;
+                const last = finalHero.lastPlayed[pIdx] || "Never";
+                statsRow.innerHTML = `
+                    <span>Plays: <b>${plays}</b></span>
+                    <span class="stats-divider">|</span>
+                    <span>Last: <b>${last}</b></span>
+                    <span class="stats-divider">|</span>
+                    <span>${probText}</span>
+                `;
+            } else {
+                statsRow.innerHTML = `<span>${probText}</span>`;
+            }
+        }
+
+        // Populate hidden input
+        const selectEl = document.getElementById(`select-${pIdx}`);
+        if (selectEl) {
+            selectEl.value = finalHero.name;
+        }
+    }
+
+    // Fade in all hidden sections for this player row
+    const hiddenContainers = rowEl?.querySelectorAll(".scramble-hidden");
+    hiddenContainers?.forEach((c) => {
+        c.classList.remove("opacity-0");
+        c.classList.add("fade-in-resolve");
+    });
 }
 
 // ******************************************
@@ -1850,9 +2184,12 @@ function validateSelection() {
         errorMsg.innerText = `⚠️ You have selected unowned heroes: ${unownedSelectedHeroes.join(", ")}.`;
     }
 
-    // Individually highlight dropdowns that contain duplicate entries
+    // Individually highlight player rows that contain duplicate entries
     dropdowns.forEach((d) => {
-        d.classList.toggle("error", counts[d.value] > 1);
+        const row = d.closest(".player-row");
+        if (row) {
+            row.classList.toggle("error", counts[d.value] > 1);
+        }
     });
 }
 
@@ -1980,6 +2317,13 @@ async function applyResults() {
     await init();
 
     document.getElementById("action-buttons").style.display = "none";
+    const rollBtnEl = document.getElementById("rollBtn");
+    if (rollBtnEl) {
+        rollBtnEl.style.display = "block";
+        rollBtnEl.disabled = false;
+        rollBtnEl.style.opacity = "1";
+        rollBtnEl.style.cursor = "pointer";
+    }
     document.getElementById("results").innerHTML = `
         <p style="color:#28a745; text-align:center; font-weight:bold;">
             Session Logged! Game record created and stats updated.
@@ -1997,6 +2341,13 @@ function cancelRoll() {
     document.getElementById("results").innerHTML =
         '<p style="text-align: center; opacity: 0.6;">Select players and roll.</p>';
     document.getElementById("action-buttons").style.display = "none";
+    const rollBtnEl = document.getElementById("rollBtn");
+    if (rollBtnEl) {
+        rollBtnEl.style.display = "block";
+        rollBtnEl.disabled = false;
+        rollBtnEl.style.opacity = "1";
+        rollBtnEl.style.cursor = "pointer";
+    }
     isRollActive = false;
 }
 
@@ -2034,7 +2385,8 @@ function renderSortControls() {
     if (!container) return;
 
     // Preserve historical data checkbox state before replacing HTML
-    const useHistorical = document.getElementById("db-use-historical-data")?.checked ?? true;
+    const useHistorical =
+        document.getElementById("db-use-historical-data")?.checked ?? true;
 
     const mainPlayerNames = NAMES.slice(0, 4);
 
@@ -2051,29 +2403,36 @@ function renderSortControls() {
     }
 
     // 1. Generate column visibility pills
-    const visibilityPillsHtml = mainPlayerNames.map((name, i) => {
-        const isActive = activePlayerIndices.includes(i);
-        const activeClass = isActive ? `active p${i + 1}-color` : "inactive";
-        return `
+    const visibilityPillsHtml = mainPlayerNames
+        .map((name, i) => {
+            const isActive = activePlayerIndices.includes(i);
+            const activeClass = isActive
+                ? `active p${i + 1}-color`
+                : "inactive";
+            return `
             <button type="button" class="pill-toggle ${activeClass}" onclick="togglePlayerFilter(${i})">
                 ${name}
             </button>
         `;
-    }).join("");
+        })
+        .join("");
 
     // 2. Generate player-specific sorting pills if probability or lastPlayed is active
-    const showPlayerSubSection = (sortType === "probability" || sortType === "lastPlayed");
-    const playerPillsHtml = mainPlayerNames.map((name, i) => {
-        const isActive = (currentSortPlayerIndex === i);
-        const activeClass = isActive ? `active p${i + 1}-color` : "";
-        const isColumnActive = activePlayerIndices.includes(i);
-        const columnStyle = isColumnActive ? "" : "opacity: 0.5;";
-        return `
+    const showPlayerSubSection =
+        sortType === "probability" || sortType === "lastPlayed";
+    const playerPillsHtml = mainPlayerNames
+        .map((name, i) => {
+            const isActive = currentSortPlayerIndex === i;
+            const activeClass = isActive ? `active p${i + 1}-color` : "";
+            const isColumnActive = activePlayerIndices.includes(i);
+            const columnStyle = isColumnActive ? "" : "opacity: 0.5;";
+            return `
             <button type="button" class="pill-toggle ${activeClass}" style="${columnStyle}" onclick="handleSortPlayerChange(${i})">
                 ${name}
             </button>
         `;
-    }).join("");
+        })
+        .join("");
 
     const directionText = sortAsc ? "Ascending" : "Descending";
     const directionArrow = sortAsc ? "▲" : "▼";
@@ -2139,9 +2498,9 @@ function handleSortTypeChange(value) {
     } else if (value === "lastPlayed") {
         currentSort = `d${currentSortPlayerIndex}`;
     }
-    
+
     // Default sort order (Asc for Name/Group, Desc for Probability/LastPlayed)
-    sortAsc = (value === "name" || value === "group");
+    sortAsc = value === "name" || value === "group";
 
     renderSortControls();
     renderList();
@@ -2154,7 +2513,7 @@ function handleSortPlayerChange(playerIndex) {
     } else if (currentSort.startsWith("d")) {
         currentSort = `d${playerIndex}`;
     }
-    
+
     renderSortControls();
     renderList();
 }
@@ -2183,150 +2542,298 @@ function toggleLevel(level) {
     }
 
     // Update icon visuals and refresh the hero list display
-    updateDiceVisuals();
+    renderComplexityFilters();
     renderList();
 }
 
 // ******************************************
-// updateDiceVisuals()
+// renderComplexityFilters()
 // input: none
 // ******************************************
-// Synchronizes the dice icon styling with the current
-// active filter state (activeLevels set).
+// Generates the complexity level filter cards dynamically, including:
+// 1. Level cards 1 through 6 with 2D dice icons and live hero counts
+// 2. An 'ALL' card that highlights when all levels are active
 // ******************************************
-function updateDiceVisuals() {
-    // Update the active state for numeric dice 1 through 6
+function renderComplexityFilters() {
+    const container = document.getElementById("complexity-filter-bar");
+    if (!container) return;
+
+    const searchTerm =
+        document.getElementById("hero-search")?.value.toLowerCase() || "";
+    const showOwned = document.getElementById("db-show-owned")?.checked ?? true;
+    const showNotOwned =
+        document.getElementById("db-show-not-owned")?.checked ?? false;
+
+    let html = "";
+
+    // 1. Generate numeric dice 1 through 6
     for (let i = 1; i <= 6; i++) {
-        const die = document.getElementById(`dice-${i}`);
-        if (die) die.classList.toggle("active-die", activeLevels.has(i));
+        // Calculate potential matches for this complexity level
+        const potentialMatchesCount = characters.filter((c) => {
+            if (Number(c.complexity) !== i) return false;
+            const nameMatch = c.name.toLowerCase().includes(searchTerm);
+            const groupNameMatch = (c.group || "")
+                .toLowerCase()
+                .includes(searchTerm);
+            const groupFilterMatch = activeGroups.has(c.group_id);
+            const ownershipMatch =
+                (isHeroOwned(c) && showOwned) ||
+                (!isHeroOwned(c) && showNotOwned);
+            return (
+                (nameMatch || groupNameMatch) &&
+                groupFilterMatch &&
+                ownershipMatch
+            );
+        }).length;
+
+        const isDisabled = potentialMatchesCount === 0;
+        const isActive = activeLevels.has(i);
+        const activeClass = isActive && !isDisabled ? "active-die" : "";
+
+        html += `
+            <div class="group-badge-card group-complexity ${activeClass} ${isDisabled ? "disabled" : ""}" 
+                 id="dice-${i}" 
+                 onclick="${isDisabled ? "" : `toggleLevel(${i})`}" 
+                 title="Level ${i} (${potentialMatchesCount} heroes)">
+                <img src="images/dice/d${i}.png" class="complexity-dice-img" alt="Level ${i}">
+                <span class="group-badge-count">${potentialMatchesCount}</span>
+            </div>`;
     }
 
-    // The 'ALL' icon is highlighted only if all 6 levels are active
-    const allDie = document.getElementById("dice-all");
-    if (allDie) allDie.classList.toggle("active-die", activeLevels.size === 6);
+    // 2. Generate the 'ALL' card
+    const totalMatchingHeroes = characters.filter((c) => {
+        const nameMatch = c.name.toLowerCase().includes(searchTerm);
+        const groupNameMatch = (c.group || "")
+            .toLowerCase()
+            .includes(searchTerm);
+        const groupFilterMatch = activeGroups.has(c.group_id);
+        const ownershipMatch =
+            (isHeroOwned(c) && showOwned) || (!isHeroOwned(c) && showNotOwned);
+        return (
+            (nameMatch || groupNameMatch) && groupFilterMatch && ownershipMatch
+        );
+    }).length;
+
+    const isAllDisabled = totalMatchingHeroes === 0;
+    const allActive = activeLevels.size === 6;
+    const allActiveClass = allActive && !isAllDisabled ? "active-die" : "";
+
+    html += `
+        <div class="group-badge-card group-complexity group-complexity-all ${allActiveClass} ${isAllDisabled ? "disabled" : ""}" 
+             id="dice-all" 
+             onclick="${isAllDisabled ? "" : "toggleLevel('all')"}" 
+             title="All Levels (${totalMatchingHeroes} heroes)">
+            <img src="images/dice/d_all.png" class="complexity-dice-img" alt="All">
+            <span class="group-badge-count">${totalMatchingHeroes}</span>
+        </div>`;
+
+    container.innerHTML = html;
+}
+
+function getGroupThemeClass(groupName) {
+    const name = (groupName || "").toLowerCase();
+    if (name.includes("season 1") || name.includes("s1")) return "group-s1";
+    if (name.includes("season 2") || name.includes("s2")) return "group-s2";
+    if (name.includes("marvel")) return "group-marvel";
+    if (name.includes("x-men") || name.includes("xmen")) return "group-xmen";
+    if (name.includes("adventures")) return "group-adventures";
+    if (name.includes("solo")) return "group-solo";
+    if (name.includes("outcast")) return "group-outcast";
+    if (
+        name.includes("santa") ||
+        name.includes("krampus") ||
+        name.includes("svk")
+    )
+        return "group-svk";
+    if (name.includes("vanguard")) return "group-vanguard";
+    return "group-default";
+}
+
+function getGroupAbbreviation(name) {
+    if (!name) return "?";
+    const cleanName = name.trim().toLowerCase();
+    if (cleanName.includes("season 1")) return "S1";
+    if (cleanName.includes("season 2")) return "S2";
+    if (cleanName.includes("marvel")) return "MRVL";
+    if (cleanName.includes("x-men") || cleanName.includes("xmen"))
+        return "XMEN";
+    if (cleanName.includes("adventure")) return "ADV";
+    if (cleanName.includes("santa") && cleanName.includes("krampus"))
+        return "SvK";
+    if (cleanName.includes("solo")) return "SOLO";
+    if (cleanName.includes("outcast")) return "OUTC";
+    if (cleanName.includes("vanguard")) return "VNGD";
+
+    // Fallback: first letter of each word up to 3 chars, or first 3 chars if single word
+    const words = name.split(/\s+/);
+    if (words.length > 1) {
+        return words
+            .map((w) => w[0])
+            .join("")
+            .toUpperCase()
+            .substring(0, 3);
+    }
+    return name.substring(0, 3).toUpperCase();
 }
 
 function renderGroupFilters() {
     const container = document.getElementById("group-filter-bar");
     if (!container) return;
 
-    const searchTerm = document.getElementById("hero-search")?.value.toLowerCase() || "";
+    const searchTerm =
+        document.getElementById("hero-search")?.value.toLowerCase() || "";
     const showOwned = document.getElementById("db-show-owned")?.checked ?? true;
-    const showNotOwned = document.getElementById("db-show-not-owned")?.checked ?? false;
+    const showNotOwned =
+        document.getElementById("db-show-not-owned")?.checked ?? false;
 
     let html = groups
         .map((g) => {
-            const initials = g.name
-                ? g.name.split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase()
-                : "?";
+            const initials = getGroupAbbreviation(g.name);
             const isActive = activeGroups.has(g.id);
-            
+            const themeClass = getGroupThemeClass(g.name);
+
             // Calculate potential matches in this group
             const potentialMatchesCount = characters.filter((c) => {
                 if (c.group_id !== g.id) return false;
                 const nameMatch = c.name.toLowerCase().includes(searchTerm);
-                const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+                const groupNameMatch = (c.group || "")
+                    .toLowerCase()
+                    .includes(searchTerm);
                 const complexityMatch = activeLevels.has(Number(c.complexity));
                 const ownershipMatch =
                     (isHeroOwned(c) && showOwned) ||
                     (!isHeroOwned(c) && showNotOwned);
-                return (nameMatch || groupNameMatch) && complexityMatch && ownershipMatch;
+                return (
+                    (nameMatch || groupNameMatch) &&
+                    complexityMatch &&
+                    ownershipMatch
+                );
             }).length;
 
             const isDisabled = potentialMatchesCount === 0;
             const activeClass = isActive && !isDisabled ? "active-die" : "";
-            const disabledStyle = isDisabled ? "opacity: 0.15; pointer-events: none;" : "";
-            
+
             return `
-                <span class="dice-icon group-icon ${activeClass}" 
+                <div class="group-badge-card ${themeClass} ${activeClass} ${isDisabled ? "disabled" : ""}" 
                      id="group-filter-${g.id}" 
                      onclick="${isDisabled ? "" : `toggleGroupFilter('${g.id}')`}" 
-                     title="${escapeHtml(g.name)} (${potentialMatchesCount} heroes)"
-                     style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 4px; overflow: hidden; ${disabledStyle}">
-                    <svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
-                        <rect x="2" y="2" width="32" height="32" rx="4" ry="4" fill="var(--secondary)" stroke="var(--accent)" stroke-width="2"/>
-                        <text x="18" y="22" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="var(--text)" text-anchor="middle">${initials}</text>
-                    </svg>
-                </span>`;
+                     title="${escapeHtml(g.name)} (${potentialMatchesCount} heroes)">
+                    <span class="group-badge-initials">${initials}</span>
+                    <span class="group-badge-count">${potentialMatchesCount}</span>
+                </div>`;
         })
         .join("");
 
     // Calculate total active non-disabled groups
-    const activeNonDisabledCount = groups.filter(g => {
+    const activeNonDisabledCount = groups.filter((g) => {
         const potentialMatchesCount = characters.filter((c) => {
             if (c.group_id !== g.id) return false;
             const nameMatch = c.name.toLowerCase().includes(searchTerm);
-            const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+            const groupNameMatch = (c.group || "")
+                .toLowerCase()
+                .includes(searchTerm);
             const complexityMatch = activeLevels.has(Number(c.complexity));
             const ownershipMatch =
                 (isHeroOwned(c) && showOwned) ||
                 (!isHeroOwned(c) && showNotOwned);
-            return (nameMatch || groupNameMatch) && complexityMatch && ownershipMatch;
+            return (
+                (nameMatch || groupNameMatch) &&
+                complexityMatch &&
+                ownershipMatch
+            );
         }).length;
         return potentialMatchesCount > 0 && activeGroups.has(g.id);
     }).length;
 
-    const totalAvailableGroups = groups.filter(g => {
+    const totalAvailableGroups = groups.filter((g) => {
         const potentialMatchesCount = characters.filter((c) => {
             if (c.group_id !== g.id) return false;
             const nameMatch = c.name.toLowerCase().includes(searchTerm);
-            const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+            const groupNameMatch = (c.group || "")
+                .toLowerCase()
+                .includes(searchTerm);
             const complexityMatch = activeLevels.has(Number(c.complexity));
             const ownershipMatch =
                 (isHeroOwned(c) && showOwned) ||
                 (!isHeroOwned(c) && showNotOwned);
-            return (nameMatch || groupNameMatch) && complexityMatch && ownershipMatch;
+            return (
+                (nameMatch || groupNameMatch) &&
+                complexityMatch &&
+                ownershipMatch
+            );
         }).length;
         return potentialMatchesCount > 0;
     });
 
-    const allActive = totalAvailableGroups.length > 0 && activeNonDisabledCount === totalAvailableGroups.length;
+    const allActive =
+        totalAvailableGroups.length > 0 &&
+        activeNonDisabledCount === totalAvailableGroups.length;
     const allActiveClass = allActive ? "active-die" : "";
     const isAllDisabled = totalAvailableGroups.length === 0;
-    const allDisabledStyle = isAllDisabled ? "opacity: 0.15; pointer-events: none;" : "";
+
+    // Calculate total matching heroes across all groups
+    const totalMatchingHeroes = characters.filter((c) => {
+        const nameMatch = c.name.toLowerCase().includes(searchTerm);
+        const groupNameMatch = (c.group || "")
+            .toLowerCase()
+            .includes(searchTerm);
+        const complexityMatch = activeLevels.has(Number(c.complexity));
+        const ownershipMatch =
+            (isHeroOwned(c) && showOwned) || (!isHeroOwned(c) && showNotOwned);
+        return (
+            (nameMatch || groupNameMatch) && complexityMatch && ownershipMatch
+        );
+    }).length;
 
     html += `
-        <span class="dice-icon group-icon ${allActiveClass}" 
+        <div class="group-badge-card group-all ${allActiveClass} ${isAllDisabled ? "disabled" : ""}" 
              id="group-filter-all" 
              onclick="${isAllDisabled ? "" : "toggleGroupFilter('all')"}" 
-             title="All Groups"
-             style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 4px; overflow: hidden; ${allDisabledStyle}">
-            <svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
-                <rect x="2" y="2" width="32" height="32" rx="4" ry="4" fill="var(--secondary)" stroke="var(--accent)" stroke-width="2"/>
-                <text x="18" y="22" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="var(--text)" text-anchor="middle">ALL</text>
-            </svg>
-        </span>`;
+             title="All Groups">
+            <span class="group-badge-initials">ALL</span>
+            <span class="group-badge-count">${totalMatchingHeroes}</span>
+        </div>`;
 
     container.innerHTML = html;
 }
 
 function toggleGroupFilter(groupId) {
-    const searchTerm = document.getElementById("hero-search")?.value.toLowerCase() || "";
+    const searchTerm =
+        document.getElementById("hero-search")?.value.toLowerCase() || "";
     const showOwned = document.getElementById("db-show-owned")?.checked ?? true;
-    const showNotOwned = document.getElementById("db-show-not-owned")?.checked ?? false;
+    const showNotOwned =
+        document.getElementById("db-show-not-owned")?.checked ?? false;
 
-    const totalAvailableGroups = groups.filter(g => {
+    const totalAvailableGroups = groups.filter((g) => {
         const potentialMatchesCount = characters.filter((c) => {
             if (c.group_id !== g.id) return false;
             const nameMatch = c.name.toLowerCase().includes(searchTerm);
-            const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+            const groupNameMatch = (c.group || "")
+                .toLowerCase()
+                .includes(searchTerm);
             const complexityMatch = activeLevels.has(Number(c.complexity));
             const ownershipMatch =
                 (isHeroOwned(c) && showOwned) ||
                 (!isHeroOwned(c) && showNotOwned);
-            return (nameMatch || groupNameMatch) && complexityMatch && ownershipMatch;
+            return (
+                (nameMatch || groupNameMatch) &&
+                complexityMatch &&
+                ownershipMatch
+            );
         }).length;
         return potentialMatchesCount > 0;
     });
 
     if (groupId === "all") {
-        const activeAvailableCount = totalAvailableGroups.filter(g => activeGroups.has(g.id)).length;
+        const activeAvailableCount = totalAvailableGroups.filter((g) =>
+            activeGroups.has(g.id),
+        ).length;
         if (activeAvailableCount === totalAvailableGroups.length) {
             // Unselect all available
-            totalAvailableGroups.forEach(g => activeGroups.delete(g.id));
+            totalAvailableGroups.forEach((g) => activeGroups.delete(g.id));
         } else {
             // Select all available
-            totalAvailableGroups.forEach(g => activeGroups.add(g.id));
+            totalAvailableGroups.forEach((g) => activeGroups.add(g.id));
         }
     } else {
         if (activeGroups.has(groupId)) {
@@ -2335,7 +2842,7 @@ function toggleGroupFilter(groupId) {
             activeGroups.add(groupId);
         }
     }
-    
+
     updateGroupVisuals();
     renderList();
 }
@@ -2350,15 +2857,40 @@ function updateGroupVisuals() {
 
     const allEl = document.getElementById("group-filter-all");
     if (allEl) {
-        allEl.classList.toggle("active-die", activeGroups.size === groups.length);
+        allEl.classList.toggle(
+            "active-die",
+            activeGroups.size === groups.length,
+        );
     }
 }
 
 // Ensure visuals are correct when the page loads
 window.addEventListener("DOMContentLoaded", () => {
-    updateDiceVisuals();
+    renderComplexityFilters();
     updateGroupVisuals();
+    setTimeout(updateSegmentedHighlights, 50);
 });
+
+function updateSegmentedHighlights() {
+    document
+        .querySelectorAll(".ownership-segmented-control, .segmented-control")
+        .forEach((control) => {
+            const activePill = control.querySelector(".segmented-pill.active");
+            let highlight = control.querySelector(".segmented-highlight");
+            if (!highlight) {
+                highlight = document.createElement("div");
+                highlight.className = "segmented-highlight";
+                control.insertBefore(highlight, control.firstChild);
+            }
+            if (activePill) {
+                highlight.style.width = `${activePill.offsetWidth}px`;
+                highlight.style.transform = `translateX(${activePill.offsetLeft}px)`;
+                highlight.style.height = `${activePill.offsetHeight}px`;
+            }
+        });
+}
+
+window.addEventListener("resize", updateSegmentedHighlights);
 
 // ******************************************
 // setSort(key)
@@ -2679,14 +3211,24 @@ async function selectWinner(gameId) {
     const container = document.getElementById("winner-selection-container");
     const confirmBtn = document.getElementById("confirm-winner-btn");
 
+    const winners = game.game_players.filter((p) => p.is_winner === true);
+    const explicitLosers = game.game_players.filter(
+        (p) => p.is_winner === false,
+    );
+    const isDraw =
+        winners.length === 0 &&
+        explicitLosers.length > 0 &&
+        explicitLosers.length === game.game_players.length;
+
     // Build a list of radio buttons for each participant
     let optionsHtml = game.game_players
         .map((gp, i) => {
             const pIdx = parseInt(gp.player_id.substring(1)) - 1;
             const heroName = gp.heroes?.name || "Unknown";
+            const isChecked = gp.is_winner === true ? "checked" : "";
             return `
             <label style="display: flex; align-items: center; gap: 15px; padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; color: black;">
-                <input type="radio" name="winner-choice" value="${gp.player_id}" style="width: 20px; height: 20px; accent-color: var(--accent);">
+                <input type="radio" name="winner-choice" value="${gp.player_id}" ${isChecked} style="width: 20px; height: 20px; accent-color: var(--accent);">
                 <div>
                     <div style="font-weight: bold;">${NAMES[pIdx]}</div>
                     <div style="font-size: 0.8rem; opacity: 0.7;">${heroName}</div>
@@ -2696,10 +3238,11 @@ async function selectWinner(gameId) {
         })
         .join("");
 
+    const isDrawChecked = isDraw ? "checked" : "";
     // Add Draw Option
     optionsHtml += `
         <label style="display: flex; align-items: center; gap: 15px; padding: 12px; cursor: pointer; color: black; background: rgba(0,0,0,0.05); border-radius: 0 0 8px 8px;">
-            <input type="radio" name="winner-choice" value="draw" style="width: 20px; height: 20px; accent-color: var(--accent);">
+            <input type="radio" name="winner-choice" value="draw" ${isDrawChecked} style="width: 20px; height: 20px; accent-color: var(--accent);">
             <div>
                 <div style="font-weight: bold;">🤝 Draw</div>
                 <div style="font-size: 0.8rem; opacity: 0.7;">No winner for this match</div>
@@ -2957,6 +3500,7 @@ function renderList() {
     if (!container) return;
 
     renderGroupFilters();
+    renderComplexityFilters();
 
     updateHeroStatsFromHistory();
 
@@ -3022,7 +3566,9 @@ function renderList() {
             if (valA === valB) {
                 const nameA = (a.name || "").toLowerCase();
                 const nameB = (b.name || "").toLowerCase();
-                return sortAsc ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+                return sortAsc
+                    ? nameA.localeCompare(nameB)
+                    : nameB.localeCompare(nameA);
             }
         } else {
             valA = (a[currentSort] || "").toLowerCase();
@@ -3056,34 +3602,61 @@ function renderList() {
                             : "0.0";
 
                     return `
-            <div class="stat-column">
-                <div class="player-tag" style="background-color: var(--p${p + 1}); margin-bottom: 8px; width: 100%; box-sizing: border-box;">${NAMES[p]}</div>
-                <div class="stat-main">${percentage}%</div>
-                <div class="stat-sub stat-weight">(${weight})</div>
-                <div class="stat-sub stat-plays">Plays: <b>${playCount}</b></div>
-                <div class="stat-sub stat-win-rate">Wins: <b>${winCount}</b></div>
-                <div class="stat-sub stat-win-rate">(${winRate}%)</div>
-                <div class="stat-date-small">${lastPlayed}</div>
+            <div class="stat-card-new" style="border-color: var(--p${p + 1});">
+                <div class="player-card-header" style="color: var(--p${p + 1});">${NAMES[p]}</div>
+                <div class="prob-gauge-container">
+                    <div class="prob-gauge-header">
+                        <span>Probability</span>
+                        <span>${percentage}%</span>
+                        <span class="collapsed-plays-label">Plays: <b>${playCount}</b></span>
+                    </div>
+                    <div class="prob-gauge-track">
+                        <div class="prob-gauge-fill" style="width: ${percentage}%; background-color: var(--p${p + 1});"></div>
+                    </div>
+                </div>
+                <div class="mini-stats-grid">
+                    <div class="mini-stat-item">
+                        <span class="mini-stat-label">Plays</span>
+                        <span class="mini-stat-value">${playCount}</span>
+                    </div>
+                    <div class="mini-stat-item">
+                        <span class="mini-stat-label">Win Rate</span>
+                        <span class="mini-stat-value">${winRate}%</span>
+                    </div>
+                    <div class="mini-stat-item">
+                        <span class="mini-stat-label">Wins</span>
+                        <span class="mini-stat-value">${winCount}</span>
+                    </div>
+                    <div class="mini-stat-item">
+                        <span class="mini-stat-label">Weight</span>
+                        <span class="mini-stat-value">${weight}</span>
+                    </div>
+                </div>
+                <div class="stat-card-footer">
+                    <span>Last Played:</span>
+                    <span style="font-weight: bold;">${lastPlayed}</span>
+                </div>
             </div>`;
                 })
                 .join("");
 
+            const groupThemeClass = getGroupThemeClass(c.group);
+
             return `
             <div class="hero-item collapsed">
+                <img src="${getImgUrl(c.slug)}" class="char-bg-img" alt="${c.name}">
                 <div class="hero-header" onclick="toggleHeroPanel(this)">
-                    <button type="button" class="panel-toggle" aria-expanded="false">V</button>
-                    <span class="hero-name">${c.name}</span>
-                    <span class="group-label">(${c.group || "Season ?"})</span>
+                    <div style="display: flex; align-items: baseline;">
+                        <span class="hero-name">${c.name}</span>
+                        <span class="group-label">${c.group || "Season ?"}</span>
+                    </div>
+                    <button type="button" class="panel-toggle" aria-expanded="false">
+                        <svg class="panel-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
                 </div>
                 <div class="hero-body">
-                    <div class="hero-main-info">
-                        <a href="${getHeroLink(c.slug)}" target="_blank">
-                            <div class="char-complexity-db">
-                                <img src="${getImgUrl(c.slug)}" class="char-img-roll" alt="${c.name}">
-                                <img src="images/dice/d${c.complexity}.png" class="complexity-roll" alt="Complexity">
-                            </div>
-                        </a>
-                    </div>
                     <div class="hero-details">
                         <div class="dynamic-stats">${statsHtml}</div>
                     </div>
