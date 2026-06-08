@@ -2287,7 +2287,7 @@ textarea {
 
 /* 1. Prevent content from being hidden behind the nav bar */
 .content {
-    padding-bottom: 85px; /* Adjust based on your nav bar height */
+    padding-bottom: calc(66px + env(safe-area-inset-bottom)); /* Dynamic offset based on nav height */
 }
 
 /* 2. The Navigation Bar Container */
@@ -2296,13 +2296,14 @@ textarea {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 75px;
+    height: calc(56px + env(safe-area-inset-bottom));
     background-color: #1a1a1a; /* Dark theme for Dice Throne vibes */
     display: flex;
     justify-content: space-around;
-    align-items: top;
+    align-items: center;
     border-top: 1px solid #333;
     z-index: 1000;
+    box-sizing: border-box;
 
     /* Critical for modern mobile browsers (iOS/Android bars) */
     padding-bottom: env(safe-area-inset-bottom);
@@ -2326,7 +2327,6 @@ body.loaded .bottom-nav {
 
 /* 3. Individual Nav Items */
 .nav-item {
-    margin-top: 5px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -2358,6 +2358,7 @@ body.loaded .bottom-nav {
         justify-content: flex-start;
         padding-top: 30px;
         padding-left: 30px;
+        box-sizing: content-box;
     }
 
     .content {
