@@ -557,11 +557,13 @@ h1 {
 /* Hero Select Grid and Card styles inside Modal */
 .hero-select-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+    grid-auto-rows: max-content;
     gap: 12px;
     margin-top: 15px;
     padding: 4px;
-    max-height: 55vh;
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
 }
 
@@ -1851,22 +1853,24 @@ textarea {
     color: var(--text);
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
+    align-items: center;
+    justify-content: center;
 }
 
 /* Modal Content Box */
 .modal-content {
     background-color: var(--card-bg);
     color: var(--text);
-    margin: 10% auto;
+    margin: 0;
     padding: 25px;
     border-radius: 12px;
-    width: 60%;
+    width: 90%;
     max-width: 500px;
     position: relative;
     border: 1px solid var(--glass-border);
     box-shadow: var(--glass-shadow);
     max-height: 80vh; /* Limits height to 80% of the screen height */
-    overflow-y: auto; /* Adds a scrollbar only if content is too long */
+    overflow: hidden; /* Let inner grid scroll instead */
     display: flex;
     flex-direction: column;
 }
@@ -1898,9 +1902,9 @@ textarea {
 /* Mobile Optimization */
 @media screen and (max-width: 600px) {
     .modal-content {
-        width: 90%; /* Much narrower side margins */
-        margin: 20% auto; /* Brings the modal slightly higher on the screen */
+        width: 92%; /* Narrower side margins on mobile */
         padding: 15px; /* Slightly less padding to save space */
+        max-height: 80vh; /* Limits height to 80% of the screen height */
     }
 
     .close-button {

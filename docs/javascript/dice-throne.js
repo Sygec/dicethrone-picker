@@ -1890,7 +1890,7 @@ function openHeroSelectModal(pIdx) {
     const modal = document.getElementById("hero-select-modal");
     if (!modal) return;
     
-    modal.style.display = "block";
+    modal.style.display = "flex";
     document.body.style.overflow = "hidden"; // Prevent background scroll
     
     // Set title with player's name
