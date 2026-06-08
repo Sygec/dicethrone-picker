@@ -1366,14 +1366,8 @@ textarea {
     flex-direction: column;
     gap: 2px;
 }
-.complexity-single-die {
-    display: flex;
-    align-items: center;
-    margin-left: auto;
-    margin-right: 15px;
-}
 .complexity-dice-bar {
-    display: none;
+    display: flex;
     align-items: center;
     gap: 4px;
     margin-left: auto;
@@ -1386,20 +1380,6 @@ textarea {
 }
 .hero-item:not(.collapsed) .header-title-expanded {
     display: flex;
-}
-.hero-item:not(.collapsed) .complexity-single-die {
-    display: none;
-}
-.hero-item:not(.collapsed) .complexity-dice-bar {
-    display: flex;
-}
-
-/* Complexity Die Details */
-.collapsed-die-img {
-    width: 24px;
-    height: 24px;
-    object-fit: contain;
-    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.3));
 }
 
 .complexity-bar-dice {
@@ -1437,7 +1417,7 @@ textarea {
 
 .collapsed-player-row-simple {
     display: grid;
-    grid-template-columns: 80px 70px 70px 1fr;
+    grid-template-columns: 80px 55px 55px 95px 1fr;
     gap: 8px;
     font-size: 0.8rem;
     font-weight: bold;
@@ -1449,6 +1429,12 @@ textarea {
 .collapsed-player-row-simple:last-child {
     border-bottom: none;
     padding-bottom: 0;
+}
+
+.collapsed-player-recency {
+    text-align: right;
+    font-size: 0.75rem;
+    cursor: help;
 }
 
 .collapsed-player-name {

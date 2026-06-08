@@ -3603,15 +3603,47 @@ function renderList() {
             // Sort descending by probability
             playerStatsList.sort((x, y) => y.percentage - x.percentage);
 
-            // Collapsed View: Highly compressed vertical rows (no date line)
+            // Collapsed View: Highly compressed vertical rows (no date line, has recency dot)
             const collapsedPlayersHtml = playerStatsList
                 .map((item) => {
+                    // Calculate recency dot
+                    let recencyDot = "⚫"; // Default to dark grey (Never)
+                    if (item.lastPlayed && item.lastPlayed === "Unknown") {
+                        recencyDot = "⚪"; // White for Unknown
+                    } else if (item.lastPlayed && item.lastPlayed !== "Never" && item.lastPlayed !== "Unknown") {
+                        try {
+                            let cleanDate = item.lastPlayed.trim();
+                            if (cleanDate && !cleanDate.includes("T")) cleanDate = cleanDate.replace(" ", "T");
+                            if (cleanDate && !cleanDate.includes("Z") && !cleanDate.includes("+")) cleanDate += "Z";
+                            const lastDate = new Date(cleanDate);
+                            if (!isNaN(lastDate.getTime())) {
+                                const today = new Date();
+                                lastDate.setHours(0, 0, 0, 0);
+                                today.setHours(0, 0, 0, 0);
+                                const diffTime = today - lastDate;
+                                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                                if (diffDays <= 15) {
+                                    recencyDot = "🟢"; // Green (last 15 days)
+                                } else if (diffDays <= 60) {
+                                    recencyDot = "🟡"; // Yellow (15-60 days)
+                                } else {
+                                    recencyDot = "🔴"; // Red (more than 60 days)
+                                }
+                            } else {
+                                recencyDot = "⚪"; // White for invalid/unknown dates
+                            }
+                        } catch (e) {
+                            recencyDot = "⚪";
+                        }
+                    }
+
                     return `
                 <div class="collapsed-player-row-simple">
                     <span class="collapsed-player-name" style="color: var(--p${item.p + 1});">${NAMES[item.p]}</span>
                     <span class="collapsed-player-prob">${item.percentageStr}%</span>
                     <span class="collapsed-player-plays">🎲 ${item.playCount}</span>
                     <span class="collapsed-player-wins">🏆 ${item.winCount} <span class="collapsed-player-rate">(${item.winRate}%)</span></span>
+                    <span class="collapsed-player-recency" title="Last played: ${item.lastPlayed}">${recencyDot}</span>
                 </div>`;
                 })
                 .join("");
@@ -3648,10 +3680,9 @@ function renderList() {
                 <img src="${getImgUrl(c.slug)}" class="char-bg-img" alt="${c.name}">
                 
                 <div class="hero-header" onclick="toggleHeroPanel(this)">
-                    <!-- Collapsed Title Layout (Name + Group/Season inline) -->
+                    <!-- Collapsed Title Layout (Only Hero Name) -->
                     <div class="header-title-collapsed">
                         <span class="hero-name">${c.name}</span>
-                        <span class="group-label">${c.group || "Season ?"}</span>
                     </div>
                     
                     <!-- Expanded Title Layout (Stacked) -->
@@ -3660,12 +3691,7 @@ function renderList() {
                         <div class="expanded-group">${c.group || "Season ?"}</div>
                     </div>
                     
-                    <!-- Collapsed Complexity (Single Die) -->
-                    <div class="complexity-single-die" onclick="event.stopPropagation()">
-                        <img src="images/dice/d${complexityVal}.png" class="collapsed-die-img" alt="Complexity ${complexityVal}">
-                    </div>
-                    
-                    <!-- Expanded Complexity (Full Bar) -->
+                    <!-- Complexity (Full Bar in both states) -->
                     <div class="complexity-dice-bar" onclick="event.stopPropagation()">
                         ${complexityDiceHtml}
                     </div>
