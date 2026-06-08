@@ -1855,6 +1855,13 @@ textarea {
     -webkit-backdrop-filter: blur(5px);
     align-items: center;
     justify-content: center;
+    
+    /* Device Safe-Area Notch Protection */
+    padding-top: calc(15px + env(safe-area-inset-top));
+    padding-bottom: calc(15px + env(safe-area-inset-bottom));
+    padding-left: calc(15px + env(safe-area-inset-left));
+    padding-right: calc(15px + env(safe-area-inset-right));
+    box-sizing: border-box;
 }
 
 /* Modal Content Box */
@@ -1869,7 +1876,7 @@ textarea {
     position: relative;
     border: 1px solid var(--glass-border);
     box-shadow: var(--glass-shadow);
-    max-height: 80vh; /* Limits height to 80% of the screen height */
+    max-height: 70vh; /* Limits height to 70% of the screen height */
     overflow: hidden; /* Let inner grid scroll instead */
     display: flex;
     flex-direction: column;
@@ -1904,7 +1911,7 @@ textarea {
     .modal-content {
         width: 92%; /* Narrower side margins on mobile */
         padding: 15px; /* Slightly less padding to save space */
-        max-height: 80vh; /* Limits height to 80% of the screen height */
+        max-height: 70vh; /* Limits height to 70% of the screen height */
     }
 
     .close-button {
