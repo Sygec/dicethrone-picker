@@ -1131,7 +1131,6 @@ function renderGroupsList() {
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px;">
                 <div>
                     <strong>${escapeHtml(g.name)}</strong>
-                    ${g.type ? ` <span style="opacity: 0.6;">(${escapeHtml(g.type)})</span>` : ""}
                 </div>
                 <div style="display: flex; gap: 5px;">
                     <button type="button" class="btn-save btn-inline" onclick="editGroup('${g.id}')">Edit</button>
@@ -1141,7 +1140,6 @@ function renderGroupsList() {
             <div id="groupEditPanel-${g.id}" class="group-edit-panel hidden">
                 <div class="form-grid">
                     <input type="text" id="groupName-${g.id}" placeholder="Group Name" value="${escapeHtml(g.name)}">
-                    <input type="text" id="groupType-${g.id}" placeholder="Type (optional)" value="${escapeHtml(g.type || "")}">
                     <input type="number" id="groupOrder-${g.id}" placeholder="Order Index" value="${g.order_index ?? ""}">
                 </div>
                 <div style="display: flex; gap: 10px;">
@@ -1280,14 +1278,12 @@ async function deleteHero(heroId) {
 // ******************************************
 async function saveGroup() {
     const name = document.getElementById("groupName").value.trim();
-    const type = document.getElementById("groupType").value.trim();
     const order_index = document.getElementById("groupOrder").value.trim();
 
     if (!name) return alert("Group name is required");
 
     const groupData = {
         name,
-        type: type || null,
         order_index: order_index ? parseInt(order_index) : null,
         is_active: true,
     };
@@ -1328,7 +1324,6 @@ function editGroup(groupId) {
 
     activeRow.classList.add("editing");
     document.getElementById(`groupName-${groupId}`).value = group.name;
-    document.getElementById(`groupType-${groupId}`).value = group.type || "";
     document.getElementById(`groupOrder-${groupId}`).value =
         group.order_index || "";
     panel.classList.remove("hidden");
@@ -1346,7 +1341,6 @@ function cancelGroupEdit(groupId) {
 
 async function saveGroupInline(groupId) {
     const name = document.getElementById(`groupName-${groupId}`).value.trim();
-    const type = document.getElementById(`groupType-${groupId}`).value.trim();
     const order_index = document
         .getElementById(`groupOrder-${groupId}`)
         .value.trim();
@@ -1358,7 +1352,6 @@ async function saveGroupInline(groupId) {
         .upsert({
             id: groupId,
             name,
-            type: type || null,
             order_index: order_index ? parseInt(order_index) : null,
             is_active: true,
         })
@@ -1378,7 +1371,6 @@ async function saveGroupInline(groupId) {
 // ******************************************
 function resetGroupForm() {
     document.getElementById("groupName").value = "";
-    document.getElementById("groupType").value = "";
     document.getElementById("groupOrder").value = "";
 
     const form = document.getElementById("groupForm");
