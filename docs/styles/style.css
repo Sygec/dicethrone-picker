@@ -1345,73 +1345,194 @@ textarea {
 }
 
 .hero-item.collapsed .hero-body {
-    padding: 10px 15px;
-    gap: 12px;
-    flex-direction: row;
-    align-items: center;
+    display: none !important;
 }
 
-@media (min-width: 768px) {
-    .hero-item.collapsed .hero-body {
-        flex-direction: row;
-        align-items: center;
-    }
-}
-
-.hero-item.collapsed .char-complexity-db {
-    width: 54px;
-    height: 54px;
-    border-radius: 10px;
-}
-
-.hero-item.collapsed .char-img-roll {
-    border-radius: 8px;
-}
-
-.hero-item.collapsed .complexity-roll {
-    width: 20px;
-    height: 20px;
-    bottom: -4px;
-    right: -4px;
-    border-radius: 4px;
-    padding: 1px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4) !important;
-    border-color: rgba(255, 255, 255, 0.15) !important;
-}
-
-.hero-item.collapsed .stat-card-new {
-    padding: 6px 10px;
-    gap: 4px;
-    flex: 1;
-    min-width: 0;
-}
-
-.hero-item.collapsed .mini-stats-grid,
-.hero-item.collapsed .prob-gauge-track,
-.hero-item.collapsed .stat-card-footer {
-    display: none;
-}
-
-.hero-item.collapsed .prob-gauge-header {
+.hero-item.collapsed .hero-collapsed-info {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    padding: 8px 20px 12px;
+    background: rgba(0, 0, 0, 0.15);
+    border-top: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+/* Header Visibility Toggles */
+.header-title-collapsed {
+    display: flex;
+    align-items: baseline;
+}
+.header-title-expanded {
+    display: none;
+    flex-direction: column;
     gap: 2px;
 }
+.complexity-single-die {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    margin-right: 15px;
+}
+.complexity-dice-bar {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    margin-right: 15px;
+}
 
-.hero-item.collapsed .prob-gauge-header span:first-child {
+/* Expanded state overrides for header */
+.hero-item:not(.collapsed) .header-title-collapsed {
+    display: none;
+}
+.hero-item:not(.collapsed) .header-title-expanded {
+    display: flex;
+}
+.hero-item:not(.collapsed) .complexity-single-die {
+    display: none;
+}
+.hero-item:not(.collapsed) .complexity-dice-bar {
+    display: flex;
+}
+
+/* Complexity Die Details */
+.collapsed-die-img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.3));
+}
+
+.complexity-bar-dice {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    opacity: 0.25;
+    filter: grayscale(85%);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.complexity-bar-dice.active {
+    opacity: 1;
+    filter: none;
+    transform: scale(1.2);
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.5));
+}
+
+/* Expanded Title styling */
+.expanded-name {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+}
+.expanded-group {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Collapsed Players List */
+.hero-collapsed-info {
     display: none;
 }
 
-.collapsed-plays-label {
-    display: none;
-    font-size: 0.65rem;
-    opacity: 0.75;
-    margin-top: 1px;
+.collapsed-player-row-simple {
+    display: grid;
+    grid-template-columns: 80px 70px 70px 1fr;
+    gap: 8px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    align-items: center;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
-.hero-item.collapsed .collapsed-plays-label {
-    display: inline-block;
+.collapsed-player-row-simple:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.collapsed-player-name {
+    font-weight: 800;
+}
+
+.collapsed-player-prob {
+    text-align: right;
+}
+
+.collapsed-player-plays {
+    text-align: right;
+    opacity: 0.9;
+}
+
+.collapsed-player-wins {
+    text-align: right;
+    opacity: 0.9;
+}
+
+.collapsed-player-rate {
+    font-size: 0.7rem;
+    opacity: 0.6;
+    margin-left: 2px;
+}
+
+/* Expanded Players List */
+.expanded-players-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.expanded-player-row {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.expanded-player-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.expanded-player-main {
+    display: grid;
+    grid-template-columns: 80px 70px 70px 1fr;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    align-items: center;
+}
+
+.expanded-player-name {
+    font-weight: 800;
+}
+
+.expanded-player-prob {
+    text-align: right;
+}
+
+.expanded-player-plays {
+    text-align: right;
+    opacity: 0.9;
+}
+
+.expanded-player-wins {
+    text-align: right;
+    opacity: 0.9;
+}
+
+.expanded-player-rate {
+    font-size: 0.7rem;
+    opacity: 0.6;
+    margin-left: 2px;
+}
+
+.expanded-player-date {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 4px;
+    padding-left: 2px;
 }
 
 .hero-body {

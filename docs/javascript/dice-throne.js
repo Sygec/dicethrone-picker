@@ -3570,88 +3570,148 @@ function renderList() {
         return sortAsc ? comparison : -comparison;
     });
 
-    // 4. Generate the HTML efficiently
+    // Generate the HTML efficiently
     container.innerHTML = processedList
         .map((c) => {
-            const statsHtml = activePlayerIndices
-                .map((p) => {
-                    const weight = (c.weights && c.weights[p]) || 0;
-                    const softWeight = getSoftWeight(c, p);
-                    const owned = isHeroOwned(c);
-                    const percentage =
-                        owned && totals[p] > 0
-                            ? ((softWeight / totals[p]) * 100).toFixed(2)
-                            : "0.00";
-                    const playCount = (c.playCount && c.playCount[p]) || 0;
-                    const lastPlayed =
-                        (c.lastPlayed && c.lastPlayed[p]) || "Never";
-                    const winCount = (c.winCount && c.winCount[p]) || 0;
-                    const winRate =
-                        playCount > 0
-                            ? ((winCount / playCount) * 100).toFixed(1)
-                            : "0.0";
+            // Compute player list statistics sorted by probability
+            const playerStatsList = activePlayerIndices.map((p) => {
+                const weight = (c.weights && c.weights[p]) || 0;
+                const softWeight = getSoftWeight(c, p);
+                const owned = isHeroOwned(c);
+                const percentage =
+                    owned && totals[p] > 0
+                        ? ((softWeight / totals[p]) * 100).toFixed(2)
+                        : "0.00";
+                const playCount = (c.playCount && c.playCount[p]) || 0;
+                const lastPlayed = (c.lastPlayed && c.lastPlayed[p]) || "Never";
+                const winCount = (c.winCount && c.winCount[p]) || 0;
+                const winRate =
+                    playCount > 0
+                        ? ((winCount / playCount) * 100).toFixed(1)
+                        : "0.0";
+                return {
+                    p,
+                    percentage: parseFloat(percentage),
+                    percentageStr: percentage,
+                    playCount,
+                    lastPlayed,
+                    winCount,
+                    winRate
+                };
+            });
 
+            // Sort descending by probability
+            playerStatsList.sort((x, y) => y.percentage - x.percentage);
+
+            // Collapsed View: Highly compressed vertical rows (no date line)
+            const collapsedPlayersHtml = playerStatsList
+                .map((item) => {
                     return `
-            <div class="stat-card-new" style="border-color: var(--p${p + 1});">
-                <div class="player-card-header" style="color: var(--p${p + 1});">${NAMES[p]}</div>
-                <div class="prob-gauge-container">
-                    <div class="prob-gauge-header">
-                        <span>Probability</span>
-                        <span>${percentage}%</span>
-                        <span class="collapsed-plays-label">Plays: <b>${playCount}</b></span>
-                    </div>
-                    <div class="prob-gauge-track">
-                        <div class="prob-gauge-fill" style="width: ${percentage}%; background-color: var(--p${p + 1});"></div>
-                    </div>
-                </div>
-                <div class="mini-stats-grid">
-                    <div class="mini-stat-item">
-                        <span class="mini-stat-label">Plays</span>
-                        <span class="mini-stat-value">${playCount}</span>
-                    </div>
-                    <div class="mini-stat-item">
-                        <span class="mini-stat-label">Win Rate</span>
-                        <span class="mini-stat-value">${winRate}%</span>
-                    </div>
-                    <div class="mini-stat-item">
-                        <span class="mini-stat-label">Wins</span>
-                        <span class="mini-stat-value">${winCount}</span>
-                    </div>
-                    <div class="mini-stat-item">
-                        <span class="mini-stat-label">Weight</span>
-                        <span class="mini-stat-value">${weight}</span>
-                    </div>
-                </div>
-                <div class="stat-card-footer">
-                    <span>Last Played:</span>
-                    <span style="font-weight: bold;">${lastPlayed}</span>
-                </div>
-            </div>`;
+                <div class="collapsed-player-row-simple">
+                    <span class="collapsed-player-name" style="color: var(--p${item.p + 1});">${NAMES[item.p]}</span>
+                    <span class="collapsed-player-prob">${item.percentageStr}%</span>
+                    <span class="collapsed-player-plays">🎲 ${item.playCount}</span>
+                    <span class="collapsed-player-wins">🏆 ${item.winCount} <span class="collapsed-player-rate">(${item.winRate}%)</span></span>
+                </div>`;
                 })
                 .join("");
 
-            const groupThemeClass = getGroupThemeClass(c.group);
+            // Expanded View: Vertical rows with date line
+            const expandedPlayersHtml = playerStatsList
+                .map((item) => {
+                    const relativeTime = getDaysAgoString(item.lastPlayed);
+                    return `
+                <div class="expanded-player-row">
+                    <div class="expanded-player-main">
+                        <span class="expanded-player-name" style="color: var(--p${item.p + 1});">${NAMES[item.p]}</span>
+                        <span class="expanded-player-prob">${item.percentageStr}%</span>
+                        <span class="expanded-player-plays">🎲 ${item.playCount}</span>
+                        <span class="expanded-player-wins">🏆 ${item.winCount} <span class="expanded-player-rate">(${item.winRate}%)</span></span>
+                    </div>
+                    <div class="expanded-player-date">
+                        📅 Last played: ${item.lastPlayed}${relativeTime}
+                    </div>
+                </div>`;
+                })
+                .join("");
+
+            const complexityVal = Number(c.complexity) || 1;
+            const complexityDiceHtml = [1, 2, 3, 4, 5, 6]
+                .map((i) => {
+                    const activeClass = i === complexityVal ? "active" : "";
+                    return `<img src="images/dice/d${i}.png" class="complexity-bar-dice ${activeClass}" alt="Level ${i}">`;
+                })
+                .join("");
 
             return `
             <div class="hero-item collapsed">
                 <img src="${getImgUrl(c.slug)}" class="char-bg-img" alt="${c.name}">
+                
                 <div class="hero-header" onclick="toggleHeroPanel(this)">
-                    <div style="display: flex; align-items: baseline;">
+                    <!-- Collapsed Title Layout (Name + Group/Season inline) -->
+                    <div class="header-title-collapsed">
                         <span class="hero-name">${c.name}</span>
                         <span class="group-label">${c.group || "Season ?"}</span>
                     </div>
+                    
+                    <!-- Expanded Title Layout (Stacked) -->
+                    <div class="header-title-expanded">
+                        <div class="expanded-name">${c.name}</div>
+                        <div class="expanded-group">${c.group || "Season ?"}</div>
+                    </div>
+                    
+                    <!-- Collapsed Complexity (Single Die) -->
+                    <div class="complexity-single-die" onclick="event.stopPropagation()">
+                        <img src="images/dice/d${complexityVal}.png" class="collapsed-die-img" alt="Complexity ${complexityVal}">
+                    </div>
+                    
+                    <!-- Expanded Complexity (Full Bar) -->
+                    <div class="complexity-dice-bar" onclick="event.stopPropagation()">
+                        ${complexityDiceHtml}
+                    </div>
+                    
                     <button type="button" class="panel-toggle" aria-expanded="false">
                         <svg class="panel-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="6 9 12 15 18 9"></polyline>
                         </svg>
                     </button>
                 </div>
+                
+                <!-- Collapsed Content -->
+                <div class="hero-collapsed-info">
+                    ${collapsedPlayersHtml}
+                </div>
+                
+                <!-- Expanded Content -->
                 <div class="hero-body">
-                    <div class="hero-details">
-                        <div class="dynamic-stats">${statsHtml}</div>
+                    <div class="expanded-players-list">
+                        ${expandedPlayersHtml}
                     </div>
                 </div>
             </div>`;
         })
         .join("");
+}
+
+// Relative time calculation helper
+function getDaysAgoString(dateString) {
+    if (!dateString || dateString === "Never" || dateString === "Unknown") return "";
+    try {
+        let cleanDate = dateString.trim();
+        if (cleanDate && !cleanDate.includes("T")) cleanDate = cleanDate.replace(" ", "T");
+        if (cleanDate && !cleanDate.includes("Z") && !cleanDate.includes("+")) cleanDate += "Z";
+        const lastDate = new Date(cleanDate);
+        if (isNaN(lastDate.getTime())) return "";
+        const today = new Date();
+        lastDate.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+        const diffTime = today - lastDate;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays < 0) return "";
+        if (diffDays === 0) return " (today)";
+        if (diffDays === 1) return " (yesterday)";
+        return ` (${diffDays} days ago)`;
+    } catch (e) {
+        return "";
+    }
 }
