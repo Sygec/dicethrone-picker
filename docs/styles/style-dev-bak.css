@@ -1,14 +1,14 @@
 :root {
-  --bg: #0d0f13;
+  --bg: #0c0d10;
   --bg-dark: #060709;
-  --bg-highlight: #4a1525;
-  --card-bg: #16213e;
-  --accent: #e94560;
-  --accent-glow: rgba(233, 69, 96, 0.35);
-  --text: #ffffff;
-  --secondary: #0f3460;
-  --danger: #941b2d;
-  --edit: #f39c12;
+  --bg-highlight: #3d2a0d;
+  --card-bg: #1e1e1e;
+  --accent: #ffcc00;
+  --accent-glow: rgba(255, 204, 0, 0.35);
+  --text: #e0e0e0;
+  --secondary: #333333;
+  --danger: #cf6679;
+  --edit: #03dac6;
   --p1: #4ecca3;
   --p2: #45b7d1;
   --p3: #9b59b6;
@@ -23,6 +23,7 @@ html {
 
 body {
   margin: 0;
+  border-top: 4px solid var(--accent);
   font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background-color: transparent;
   color: var(--text);
