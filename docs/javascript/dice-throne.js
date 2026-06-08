@@ -767,6 +767,8 @@ function showDatabase() {
     gs.classList.add("hidden");
     cs.classList.add("hidden");
     as.classList.add("hidden");
+
+    setTimeout(updateSegmentedHighlights, 50);
 }
 
 // ******************************************
@@ -946,6 +948,7 @@ function setOwnershipFilter(filterState) {
         }
     });
 
+    updateSegmentedHighlights();
     renderList();
 }
 
@@ -1907,6 +1910,7 @@ function openHeroSelectModal(pIdx) {
     
     // Reset sorting and render
     setModalSort("name");
+    setTimeout(updateSegmentedHighlights, 50);
 }
 
 function closeHeroSelectModal() {
@@ -1927,6 +1931,7 @@ function setModalSort(mode) {
     if (namePill) namePill.classList.toggle("active", mode === "name");
     if (weightPill) weightPill.classList.toggle("active", mode === "weight");
     
+    updateSegmentedHighlights();
     filterHeroSelectOptions();
 }
 
@@ -2866,7 +2871,27 @@ function updateGroupVisuals() {
 window.addEventListener("DOMContentLoaded", () => {
     renderComplexityFilters();
     updateGroupVisuals();
+    setTimeout(updateSegmentedHighlights, 50);
 });
+
+function updateSegmentedHighlights() {
+    document.querySelectorAll('.ownership-segmented-control, .segmented-control').forEach(control => {
+        const activePill = control.querySelector('.segmented-pill.active');
+        let highlight = control.querySelector('.segmented-highlight');
+        if (!highlight) {
+            highlight = document.createElement('div');
+            highlight.className = 'segmented-highlight';
+            control.insertBefore(highlight, control.firstChild);
+        }
+        if (activePill) {
+            highlight.style.width = `${activePill.offsetWidth}px`;
+            highlight.style.transform = `translateX(${activePill.offsetLeft}px)`;
+            highlight.style.height = `${activePill.offsetHeight}px`;
+        }
+    });
+}
+
+window.addEventListener("resize", updateSegmentedHighlights);
 
 // ******************************************
 // setSort(key)
@@ -3578,34 +3603,61 @@ function renderList() {
                             : "0.0";
 
                     return `
-            <div class="stat-column">
-                <div class="player-tag" style="background-color: var(--p${p + 1}); margin-bottom: 8px; width: 100%; box-sizing: border-box;">${NAMES[p]}</div>
-                <div class="stat-main">${percentage}%</div>
-                <div class="stat-sub stat-weight">(${weight})</div>
-                <div class="stat-sub stat-plays">Plays: <b>${playCount}</b></div>
-                <div class="stat-sub stat-win-rate">Wins: <b>${winCount}</b></div>
-                <div class="stat-sub stat-win-rate">(${winRate}%)</div>
-                <div class="stat-date-small">${lastPlayed}</div>
+            <div class="stat-card-new" style="border-color: var(--p${p + 1});">
+                <div class="player-card-header" style="color: var(--p${p + 1});">${NAMES[p]}</div>
+                <div class="prob-gauge-container">
+                    <div class="prob-gauge-header">
+                        <span>Probability</span>
+                        <span>${percentage}%</span>
+                        <span class="collapsed-plays-label">Plays: <b>${playCount}</b></span>
+                    </div>
+                    <div class="prob-gauge-track">
+                        <div class="prob-gauge-fill" style="width: ${percentage}%; background-color: var(--p${p + 1});"></div>
+                    </div>
+                </div>
+                <div class="mini-stats-grid">
+                    <div class="mini-stat-item">
+                        <span class="mini-stat-label">Plays</span>
+                        <span class="mini-stat-value">${playCount}</span>
+                    </div>
+                    <div class="mini-stat-item">
+                        <span class="mini-stat-label">Win Rate</span>
+                        <span class="mini-stat-value">${winRate}%</span>
+                    </div>
+                    <div class="mini-stat-item">
+                        <span class="mini-stat-label">Wins</span>
+                        <span class="mini-stat-value">${winCount}</span>
+                    </div>
+                    <div class="mini-stat-item">
+                        <span class="mini-stat-label">Weight</span>
+                        <span class="mini-stat-value">${weight}</span>
+                    </div>
+                </div>
+                <div class="stat-card-footer">
+                    <span>Last Played:</span>
+                    <span style="font-weight: bold;">${lastPlayed}</span>
+                </div>
             </div>`;
                 })
                 .join("");
 
+            const groupThemeClass = getGroupThemeClass(c.group);
+
             return `
             <div class="hero-item collapsed">
+                <img src="${getImgUrl(c.slug)}" class="char-bg-img" alt="${c.name}">
                 <div class="hero-header" onclick="toggleHeroPanel(this)">
-                    <button type="button" class="panel-toggle" aria-expanded="false">V</button>
-                    <span class="hero-name">${c.name}</span>
-                    <span class="group-label">(${c.group || "Season ?"})</span>
+                    <div style="display: flex; align-items: baseline;">
+                        <span class="hero-name">${c.name}</span>
+                        <span class="group-label">${c.group || "Season ?"}</span>
+                    </div>
+                    <button type="button" class="panel-toggle" aria-expanded="false">
+                        <svg class="panel-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
                 </div>
                 <div class="hero-body">
-                    <div class="hero-main-info">
-                        <a href="${getHeroLink(c.slug)}" target="_blank">
-                            <div class="char-complexity-db">
-                                <img src="${getImgUrl(c.slug)}" class="char-img-roll" alt="${c.name}">
-                                <img src="images/dice/d${c.complexity}.png" class="complexity-roll" alt="Complexity">
-                            </div>
-                        </a>
-                    </div>
                     <div class="hero-details">
                         <div class="dynamic-stats">${statsHtml}</div>
                     </div>

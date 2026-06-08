@@ -125,7 +125,7 @@ button {
     justify-content: center;
     font-size: 28px;
     font-weight: bold;
-    font-family: "Cinzel", serif;
+    font-family: "Outfit", sans-serif;
     color: var(--accent);
     background: linear-gradient(135deg, #282d37 0%, #15171d 60%, #0a0b0e 100%);
     border: 2px solid var(--accent);
@@ -217,8 +217,9 @@ h1,
 h2,
 h3,
 .hero-name {
-    font-family: "Cinzel", "Times New Roman", Georgia, serif;
-    letter-spacing: 1px;
+    font-family: "Outfit", sans-serif;
+    letter-spacing: 0.5px;
+    font-weight: 700;
 }
 
 h1 {
@@ -552,6 +553,7 @@ h1 {
     padding: 3px;
     margin-top: 10px;
     margin-bottom: 15px;
+    position: relative;
 }
 
 /* Hero Select Grid and Card styles inside Modal */
@@ -1062,16 +1064,17 @@ main > section:not(.hidden) {
     border: none;
     background: transparent;
     color: var(--accent);
-    font-size: 1.1rem;
     cursor: pointer;
-    transform: rotate(-90deg);
-    transition: transform 0.2s ease;
+    transform: rotate(0deg);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 0 5px;
-    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .panel-toggle.open {
-    transform: rotate(0deg);
+    transform: rotate(180deg);
 }
 
 .panel-content {
@@ -1286,25 +1289,369 @@ textarea {
     justify-content: center;
 }
 
-.hero-body {
-    background: var(--card-bg);
-    border-radius: 12px;
-    padding: 10px;
-    padding-bottom: 0px;
-    margin-bottom: 8px;
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow);
-    display: flex;
-    gap: 15px;
+.hero-item {
     position: relative;
+    background: #0f1013; /* Solid dark background to display the artwork clearly */
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    margin-bottom: 12px;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: var(--glass-shadow);
+    overflow: hidden;
+    z-index: 1;
 }
 
-.hero-main-info {
-    padding-top: 8px;
+/* 25% Opacity Background Image matching the roll randomizer */
+.hero-item .char-bg-img {
+    position: absolute;
+    top: -10%;
+    left: -10%;
+    width: 120%;
+    height: 120%;
+    object-fit: cover;
+    object-position: center 30%;
+    z-index: 0;
+    opacity: 0.25;
+    pointer-events: none;
+    transition: opacity 0.5s ease, filter 0.5s ease, transform 0.5s ease;
+}
+
+.hero-item:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.hero-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.25); /* Subtle dark overlay for contrast */
+    margin: 0;
+    transition: background-color 0.2s ease;
+    user-select: none;
+    position: relative;
+    z-index: 2;
+}
+
+.hero-header:hover {
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.hero-name {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--accent);
+}
+
+.hero-item.collapsed .hero-body {
+    padding: 10px 15px;
+    gap: 12px;
+    flex-direction: row;
+    align-items: center;
+}
+
+@media (min-width: 768px) {
+    .hero-item.collapsed .hero-body {
+        flex-direction: row;
+        align-items: center;
+    }
+}
+
+.hero-item.collapsed .char-complexity-db {
+    width: 54px;
+    height: 54px;
+    border-radius: 10px;
+}
+
+.hero-item.collapsed .char-img-roll {
+    border-radius: 8px;
+}
+
+.hero-item.collapsed .complexity-roll {
+    width: 20px;
+    height: 20px;
+    bottom: -4px;
+    right: -4px;
+    border-radius: 4px;
+    padding: 1px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.hero-item.collapsed .stat-card-new {
+    padding: 6px 10px;
+    gap: 4px;
+}
+
+.hero-item.collapsed .mini-stats-grid,
+.hero-item.collapsed .prob-gauge-track,
+.hero-item.collapsed .stat-card-footer {
+    display: none;
+}
+
+.hero-item.collapsed .prob-gauge-header {
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 2px;
+}
+
+.hero-item.collapsed .prob-gauge-header span:first-child {
+    display: none;
+}
+
+.hero-item:not(.collapsed) .collapsed-plays-label {
+    display: none;
+}
+
+.collapsed-plays-label {
+    font-size: 0.65rem;
+    opacity: 0.75;
+    margin-top: 1px;
+}
+
+.hero-body {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: transparent;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    z-index: 2;
+}
+
+@media (min-width: 768px) {
+    .hero-body {
+        flex-direction: row;
+        align-items: flex-start;
+    }
+}
+
+.hero-main-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    min-width: 100px;
+}
+
+.hero-details {
+    flex: 1;
+    width: 100%;
+}
+
+/* Avatar & Complexity Container */
+.char-complexity-db {
+    position: relative;
+    width: 90px;
+    height: 90px;
+    border-radius: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    overflow: visible;
+    background: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.char-img-roll {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+    transition: transform 0.3s ease;
+}
+
+.char-complexity-db:hover .char-img-roll {
+    transform: scale(1.05);
+}
+
+.complexity-roll {
+    position: absolute;
+    bottom: -6px;
+    right: -6px;
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    background: #121212;
+    border-radius: 6px;
+    border: 1.5px solid rgba(255, 255, 255, 0.15);
+    padding: 2px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+    z-index: 3;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Complexity Dice Glows by Season (Only when card is expanded) */
+.hero-item:not(.collapsed) .char-complexity-db.group-s1 .complexity-roll {
+    border-color: #2ec4b6;
+    box-shadow: 0 0 12px rgba(46, 196, 182, 0.85), 0 3px 6px rgba(0, 0, 0, 0.4);
+}
+.hero-item:not(.collapsed) .char-complexity-db.group-s2 .complexity-roll {
+    border-color: #ff9f1c;
+    box-shadow: 0 0 12px rgba(255, 159, 28, 0.85), 0 3px 6px rgba(0, 0, 0, 0.4);
+}
+.hero-item:not(.collapsed) .char-complexity-db.group-marvel .complexity-roll {
+    border-color: #e94560;
+    box-shadow: 0 0 12px rgba(233, 69, 96, 0.85), 0 3px 6px rgba(0, 0, 0, 0.4);
+}
+.hero-item:not(.collapsed) .char-complexity-db.group-xmen .complexity-roll {
+    border-color: #f1c40f;
+    box-shadow: 0 0 12px rgba(241, 196, 15, 0.85), 0 3px 6px rgba(0, 0, 0, 0.4);
+}
+.hero-item:not(.collapsed) .char-complexity-db.group-adventures .complexity-roll {
+    border-color: #9b59b6;
+    box-shadow: 0 0 12px rgba(155, 89, 182, 0.85), 0 3px 6px rgba(0, 0, 0, 0.4);
+}
+.hero-item:not(.collapsed) .char-complexity-db.group-solo .complexity-roll {
+    border-color: #485460;
+    box-shadow: 0 0 12px rgba(72, 84, 96, 0.85), 0 3px 6px rgba(0, 0, 0, 0.4);
+}
+.hero-item:not(.collapsed) .char-complexity-db.group-outcast .complexity-roll {
+    border-color: #5e35b1;
+    box-shadow: 0 0 12px rgba(94, 53, 177, 0.85), 0 3px 6px rgba(0, 0, 0, 0.4);
+}
+.hero-item:not(.collapsed) .char-complexity-db.group-svk .complexity-roll {
+    border-color: #a31d1d;
+    box-shadow: 0 0 12px rgba(163, 29, 29, 0.85), 0 3px 6px rgba(0, 0, 0, 0.4);
+}
+.hero-item:not(.collapsed) .char-complexity-db.group-vanguard .complexity-roll {
+    border-color: #00b4d8;
+    box-shadow: 0 0 12px rgba(0, 180, 216, 0.85), 0 3px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* Detailed Stats Board Layout */
+.dynamic-stats {
+    transition: all 0.3s ease;
+}
+
+/* Expanded Grid (2x2) */
+.hero-item:not(.collapsed) .dynamic-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    width: 100%;
+}
+
+/* Collapsed Row Layout */
+.hero-item.collapsed .dynamic-stats {
+    display: flex;
+    flex-direction: row;
     gap: 8px;
+    width: 100%;
+}
+
+.hero-item.collapsed .hero-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.stat-card-new {
+    background: rgba(6, 7, 9, 0.7);
+    border: 2px solid; /* Border color applied dynamically in JS */
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+    box-sizing: border-box;
+}
+
+.stat-card-new:hover {
+    transform: translateY(-2px);
+}
+
+.player-card-header {
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    padding-bottom: 4px;
+    margin-bottom: 6px;
+}
+
+.hero-item.collapsed .player-card-header {
+    border-bottom: none !important;
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.prob-gauge-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.prob-gauge-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    font-weight: bold;
+    opacity: 0.8;
+}
+
+.prob-gauge-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.prob-gauge-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mini-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.mini-stat-item {
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 8px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.mini-stat-label {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    opacity: 0.5;
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+.mini-stat-value {
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: var(--text);
+}
+
+.stat-card-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 8px;
+    margin-top: 2px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.65rem;
+    opacity: 0.6;
 }
 
 .btn-edit-small {
@@ -1321,36 +1668,6 @@ textarea {
     border-radius: 50%;
     border: none;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.hero-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    user-select: none;
-    text-align: left;
-    margin-bottom: -8px;
-    margin-left: 15px;
-    position: relative;
-    z-index: 2;
-}
-
-.hero-details {
-    flex: 1;
-}
-
-.hero-name {
-    font-size: 1.1rem;
-    font-weight: bold;
-    color: var(--accent);
-    display: inline flow-root;
-}
-
-.hero-item.collapsed .stat-weight,
-.hero-item.collapsed .stat-win-rate,
-.hero-item.collapsed .stat-date-small {
-    display: none;
 }
 
 /* Collection View Styles */
@@ -1417,10 +1734,11 @@ textarea {
 }
 
 .group-label {
-    font-variant-caps: all-small-caps;
-    font-size: 0.8rem;
-    text-align: center;
-    display: inline flow-root;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.6);
+    margin-left: 10px;
+    display: inline-block;
 }
 
 .sort-controls {
@@ -2276,11 +2594,12 @@ body.loaded .bottom-nav {
     padding: 3px;
     margin-top: 10px;
     margin-bottom: 15px;
+    position: relative;
 }
 
 .segmented-pill {
     flex: 1;
-    background: transparent;
+    background: transparent !important;
     border: none;
     color: var(--text);
     padding: 8px 12px;
@@ -2288,20 +2607,32 @@ body.loaded .bottom-nav {
     font-weight: bold;
     border-radius: 6px;
     cursor: pointer;
-    transition:
-        background-color 0.2s,
-        color 0.2s;
+    transition: color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     text-align: center;
     text-transform: uppercase;
+    position: relative;
+    z-index: 2;
 }
 
 .segmented-pill:hover:not(.active) {
-    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
 }
 
 .segmented-pill.active {
+    color: #121212 !important;
+}
+
+.segmented-highlight {
+    position: absolute;
+    top: 3px;
+    left: 0;
+    bottom: 3px;
     background: var(--accent);
-    color: #121212;
+    border-radius: 6px;
+    z-index: 1;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
 }
 
 /* Accordion Header for Collection view */

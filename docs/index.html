@@ -6,7 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
         <title>Dice Throne</title>
 
         <script>
@@ -355,7 +355,11 @@
                 <div class="db-accordion">
                     <div class="db-accordion-header" onclick="toggleSortSection()">
                         <span>Sorting Options</span>
-                        <button type="button" class="panel-toggle" id="sort-panel-toggle">V</button>
+                        <button type="button" class="panel-toggle" id="sort-panel-toggle">
+                            <svg class="panel-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
                     </div>
                     <div id="sort-section" class="db-accordion-content sort-container-new hidden" style="width: 100%; box-sizing: border-box;">
                         <!-- Content rendered dynamically via renderSortControls() -->
@@ -366,7 +370,11 @@
                 <div class="db-accordion">
                     <div class="db-accordion-header" onclick="toggleFilterSection()">
                         <span>Filtering Options</span>
-                        <button type="button" class="panel-toggle" id="filter-panel-toggle">V</button>
+                        <button type="button" class="panel-toggle" id="filter-panel-toggle">
+                            <svg class="panel-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
                     </div>
                     <div id="filter-section" class="db-accordion-content sort-container-new hidden" style="width: 100%; box-sizing: border-box;">
                         <!-- Complexity Row -->
@@ -497,7 +505,9 @@
                             type="button"
                             class="panel-toggle"
                             aria-expanded="false">
-                            V
+                            <svg class="panel-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
                         </button>
                     </div>
                     <div id="groupsPanel" class="panel-content hidden">
@@ -588,7 +598,9 @@
                             type="button"
                             class="panel-toggle"
                             aria-expanded="false">
-                            V
+                            <svg class="panel-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
                         </button>
                     </div>
                     <div id="heroesPanel" class="panel-content hidden">
@@ -681,7 +693,9 @@
                             type="button"
                             class="panel-toggle"
                             aria-expanded="false">
-                            V
+                            <svg class="panel-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
                         </button>
                     </div>
                     <div id="playersPanel" class="panel-content hidden">
@@ -700,7 +714,9 @@
                             type="button"
                             class="panel-toggle"
                             aria-expanded="false">
-                            V
+                            <svg class="panel-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
                         </button>
                     </div>
                     <div id="usersPanel" class="panel-content hidden">
