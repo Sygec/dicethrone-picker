@@ -1853,8 +1853,9 @@ function renderPlayerRowSkeleton(pIdx) {
                             <span class="hero-name-divider">:</span>
                             <span class="hero-name-title scramble-text" id="hero-name-title-${pIdx}">ROLLING...</span>
                         </div>
-                        <span class="hero-group-label scramble-hidden opacity-0" id="hero-group-${pIdx}">Group</span>
                     </div>
+                    
+                    <span class="hero-group-label scramble-hidden opacity-0" id="hero-group-${pIdx}">Group</span>
                     
                     <div class="hero-stats-row scramble-hidden opacity-0" id="stats-row-${pIdx}">
                         <span>Plays: --</span>
