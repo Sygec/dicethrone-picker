@@ -22,6 +22,8 @@ let loggedInPlayerIndex = -1;
 let isRollActive = false;
 let expandedCollectionGroups = new Set();
 let scrambleIntervals = {};
+let activeSelectPlayerIdx = null;
+let modalSortMode = "name";
 const isAdmin = () => currentUser?.app_metadata?.role === "admin";
 const isUser = () => !!currentUser;
 
@@ -288,7 +290,14 @@ window.onclick = (event) => {
     if (event.target == loginModal) closeLoginModal();
     if (event.target == whatsNewModal) closeWhatsNew();
     if (event.target == updatePasswordModal) closeUpdatePasswordModal();
+    if (event.target == document.getElementById("hero-select-modal")) closeHeroSelectModal();
 };
+
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+        closeHeroSelectModal();
+    }
+});
 
 // ******************************************
 // Auth UI & Logic
@@ -311,7 +320,8 @@ function updateAuthUI() {
         if (document.getElementById("adminSection"))
             document.getElementById("adminSection").classList.add("hidden");
         if (actionButtons) actionButtons.style.display = "none";
-        if (actionButtons) actionButtons.style.display = "none";
+        const rollBtn = document.getElementById("rollBtn");
+        if (rollBtn) rollBtn.style.display = "block";
     }
 
     // Refresh lists to show/hide edit buttons
@@ -1780,11 +1790,13 @@ function pickCharacters() {
             validateSelection();
             if (isUser()) {
                 if (actionButtons) actionButtons.style.display = "flex";
-            }
-            if (rollBtn) {
-                rollBtn.disabled = false;
-                rollBtn.style.opacity = "1";
-                rollBtn.style.cursor = "pointer";
+                if (rollBtn) rollBtn.style.display = "none";
+            } else {
+                if (rollBtn) {
+                    rollBtn.disabled = false;
+                    rollBtn.style.opacity = "1";
+                    rollBtn.style.cursor = "pointer";
+                }
             }
             isRollActive = true;
             return;
@@ -1812,67 +1824,10 @@ function pickCharacters() {
 // updateDropdownSort()
 // input: none
 // ******************************************
-// Refreshes all hero selection dropdowns in the results area
-// based on the selected sort mode (Name vs Percentage).
+// Delegate to validateSelection since dropdowns are replaced by modal
 // ******************************************
 function updateDropdownSort() {
-    const dropdowns = document.querySelectorAll(".results .char-select");
-    dropdowns.forEach((dropdown) => {
-        const pIdx = parseInt(dropdown.dataset.player);
-        const currentVal = dropdown.value;
-        dropdown.innerHTML = getSortedHeroOptions(pIdx, currentVal);
-    });
-}
-
-// ******************************************
-// getSortedHeroOptions(pIdx, selectedName)
-// input: pIdx -> player index, selectedName -> current hero
-// ******************************************
-// Returns HTML option tags for all heroes, sorted by the active
-// mode. Percentage logic is only applied to main players (0-3).
-// ******************************************
-function getSortedHeroOptions(pIdx, selectedName) {
-    const sortMode =
-        document.querySelector('input[name="dropdownSort"]:checked')?.value ||
-        "name";
-
-    let totalWeight = 0;
-    if (sortMode === "weight" && pIdx < 4) {
-        // Only calculate total probability for heroes currently in the collection
-        characters
-            .filter(isHeroOwned)
-            .forEach((c) => (totalWeight += getSoftWeight(c, pIdx)));
-    }
-
-    const sortedChars = [...characters].sort((a, b) => {
-        if (sortMode === "name") return a.name.localeCompare(b.name);
-
-        if (pIdx < 4) {
-            // When sorting by probability, unowned heroes are treated as having 0 weight and pushed to the bottom
-            const ownedA = isHeroOwned(a);
-            const ownedB = isHeroOwned(b);
-            if (ownedA !== ownedB) return ownedB - ownedA;
-            const wA = getSoftWeight(a, pIdx);
-            const wB = getSoftWeight(b, pIdx);
-            if (wA !== wB) return wB - wA; // Descending weight
-        }
-        return a.name.localeCompare(b.name);
-    });
-
-    return sortedChars
-        .map((c) => {
-            let label = c.name;
-            if (sortMode === "weight" && pIdx < 4 && totalWeight > 0) {
-                const owned = isHeroOwned(c);
-                const weight = getSoftWeight(c, pIdx);
-                const pct = owned
-                    ? ((weight / totalWeight) * 100).toFixed(2)
-                    : "0.00";
-                label += ` (${pct}%)`;
-            }
-            return `<option value="${c.name}" ${c.name === selectedName ? "selected" : ""}>${label}</option>`;
-        })
-        .join("");
+    validateSelection();
 }
 
 // ******************************************
@@ -1910,15 +1865,186 @@ function renderPlayerRowSkeleton(pIdx) {
                     </div>
                 </div>
                 
-                <!-- Dropdown Selector -->
+                <!-- Edit Hero Selector Button + Hidden Input -->
                 <div class="hero-select-container scramble-hidden opacity-0" id="select-container-${pIdx}">
-                    <select class="char-select" data-player="${pIdx}" id="select-${pIdx}" onchange="handleDropdownChange(this)">
-                        <!-- Options populated later on resolve -->
-                    </select>
+                    <input type="hidden" class="char-select" data-player="${pIdx}" id="select-${pIdx}">
+                    <button class="edit-icon-btn" type="button" onclick="openHeroSelectModal(${pIdx})" aria-label="Select hero">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>
     `;
+}
+
+// ******************************************
+// Modal Character Picker Logic
+// ******************************************
+function openHeroSelectModal(pIdx) {
+    activeSelectPlayerIdx = pIdx;
+    
+    const modal = document.getElementById("hero-select-modal");
+    if (!modal) return;
+    
+    modal.style.display = "block";
+    document.body.style.overflow = "hidden"; // Prevent background scroll
+    
+    // Set title with player's name
+    const titleEl = document.getElementById("hero-select-modal-title");
+    if (titleEl && NAMES[pIdx]) {
+        titleEl.innerText = `Select Hero for ${NAMES[pIdx]}`;
+    }
+    
+    // Reset search
+    const searchInput = document.getElementById("hero-select-search");
+    if (searchInput) {
+        searchInput.value = "";
+    }
+    
+    // Reset sorting and render
+    setModalSort("name");
+}
+
+function closeHeroSelectModal() {
+    const modal = document.getElementById("hero-select-modal");
+    if (modal) {
+        modal.style.display = "none";
+    }
+    document.body.style.overflow = ""; // Restore background scroll
+    activeSelectPlayerIdx = null;
+}
+
+function setModalSort(mode) {
+    modalSortMode = mode;
+    
+    const namePill = document.getElementById("modal-sort-name");
+    const weightPill = document.getElementById("modal-sort-weight");
+    
+    if (namePill) namePill.classList.toggle("active", mode === "name");
+    if (weightPill) weightPill.classList.toggle("active", mode === "weight");
+    
+    filterHeroSelectOptions();
+}
+
+function filterHeroSelectOptions() {
+    const searchInput = document.getElementById("hero-select-search");
+    const searchTerm = searchInput ? searchInput.value : "";
+    renderHeroSelectOptions(searchTerm);
+}
+
+function renderHeroSelectOptions(searchTerm = "") {
+    const container = document.getElementById("hero-select-options-container");
+    if (!container) return;
+    
+    const pIdx = activeSelectPlayerIdx;
+    if (pIdx === null) return;
+
+    // Filter owned heroes (and match search term)
+    let owned = characters.filter((c) => isHeroOwned(c));
+    
+    if (searchTerm.trim() !== "") {
+        const term = searchTerm.toLowerCase().trim();
+        owned = owned.filter((c) => {
+            const nameMatch = c.name.toLowerCase().includes(term);
+            const groupMatch = (c.group || "").toLowerCase().includes(term);
+            return nameMatch || groupMatch;
+        });
+    }
+
+    let totalWeight = 0;
+    if (modalSortMode === "weight" && pIdx < 4) {
+        owned.forEach((c) => (totalWeight += getSoftWeight(c, pIdx)));
+    }
+
+    // Sort owned heroes depending on modalSortMode
+    owned.sort((a, b) => {
+        if (modalSortMode === "weight" && pIdx < 4) {
+            const wA = getSoftWeight(a, pIdx);
+            const wB = getSoftWeight(b, pIdx);
+            if (wA !== wB) return wB - wA; // Descending weight
+        }
+        return a.name.localeCompare(b.name);
+    });
+
+    const currentVal = document.getElementById(`select-${pIdx}`)?.value;
+
+    if (owned.length === 0) {
+        container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #888; padding: 20px;">No matching owned heroes found.</div>`;
+        return;
+    }
+
+    container.innerHTML = owned.map((c) => {
+        const isSelected = (c.name === currentVal);
+        let pctLabel = "";
+        if (modalSortMode === "weight" && pIdx < 4 && totalWeight > 0) {
+            const weight = getSoftWeight(c, pIdx);
+            const pct = ((weight / totalWeight) * 100).toFixed(1);
+            pctLabel = `<div class="hero-select-card-pct">${pct}%</div>`;
+        }
+        
+        return `
+            <div class="hero-select-card ${isSelected ? 'selected' : ''}" onclick="selectHeroForPlayer('${c.name.replace(/'/g, "\\'")}')">
+                <img src="${getImgUrl(c.slug)}" class="hero-select-card-img" alt="${c.name}">
+                <div class="hero-select-card-name">${c.name}</div>
+                ${pctLabel}
+            </div>
+        `;
+    }).join("");
+}
+
+function selectHeroForPlayer(heroName) {
+    const pIdx = activeSelectPlayerIdx;
+    if (pIdx === null) return;
+    
+    const char = characters.find((c) => c.name === heroName);
+    if (!char) return;
+
+    // Update hidden input value
+    const selectEl = document.getElementById(`select-${pIdx}`);
+    if (selectEl) {
+        selectEl.value = char.name;
+    }
+
+    // Update background image
+    const bgImgEl = document.getElementById(`bg-img-${pIdx}`);
+    if (bgImgEl) {
+        bgImgEl.src = getImgUrl(char.slug);
+        bgImgEl.alt = char.name;
+    }
+
+    // Update hero name title and group
+    const nameTitle = document.getElementById(`hero-name-title-${pIdx}`);
+    if (nameTitle) nameTitle.innerText = char.name;
+
+    const groupEl = document.getElementById(`hero-group-${pIdx}`);
+    if (groupEl) groupEl.innerText = char.group || "Unknown";
+
+    // Update combined stats row
+    const statsDiv = document.getElementById(`stats-row-${pIdx}`);
+    if (statsDiv) {
+        const probText = `Prob: <b>${getHeroProbabilityText(char, pIdx)}</b>`;
+        if (pIdx < 4) {
+            const playCount = char.playCount?.[pIdx] || 0;
+            const lastPlayed = char.lastPlayed?.[pIdx] || "Never";
+            statsDiv.innerHTML = `
+                <span>Plays: <b>${playCount}</b></span>
+                <span class="stats-divider">|</span>
+                <span>Last: <b>${lastPlayed}</b></span>
+                <span class="stats-divider">|</span>
+                <span>${probText}</span>
+            `;
+        } else {
+            statsDiv.innerHTML = `<span>${probText}</span>`;
+        }
+    }
+
+    // Refresh duplicate detection UI
+    validateSelection();
+    
+    closeHeroSelectModal();
 }
 
 function startPanelScramble(pIdx, ownedHeroes) {
@@ -1992,10 +2118,10 @@ function stopPanelScramble(pIdx, finalHero) {
             }
         }
         
-        // Populate dropdown
+        // Populate hidden input
         const selectEl = document.getElementById(`select-${pIdx}`);
         if (selectEl) {
-            selectEl.innerHTML = getSortedHeroOptions(pIdx, finalHero.name);
+            selectEl.value = finalHero.name;
         }
     }
     
@@ -2005,49 +2131,6 @@ function stopPanelScramble(pIdx, finalHero) {
         c.classList.remove("opacity-0");
         c.classList.add("fade-in-resolve");
     });
-}
-
-function handleDropdownChange(el) {
-    const pIdx = parseInt(el.dataset.player);
-    const char = characters.find((c) => c.name === el.value);
-
-    if (!char) return;
-
-    // Update background image
-    const bgImgEl = document.getElementById(`bg-img-${pIdx}`);
-    if (bgImgEl) {
-        bgImgEl.src = getImgUrl(char.slug);
-        bgImgEl.alt = char.name;
-    }
-
-    // Update hero name title and group
-    const nameTitle = document.getElementById(`hero-name-title-${pIdx}`);
-    if (nameTitle) nameTitle.innerText = char.name;
-
-    const groupEl = document.getElementById(`hero-group-${pIdx}`);
-    if (groupEl) groupEl.innerText = char.group || "Unknown";
-
-    // Update combined stats row
-    const statsDiv = document.getElementById(`stats-row-${pIdx}`);
-    if (statsDiv) {
-        const probText = `Prob: <b>${getHeroProbabilityText(char, pIdx)}</b>`;
-        if (pIdx < 4) {
-            const playCount = char.playCount?.[pIdx] || 0;
-            const lastPlayed = char.lastPlayed?.[pIdx] || "Never";
-            statsDiv.innerHTML = `
-                <span>Plays: <b>${playCount}</b></span>
-                <span class="stats-divider">|</span>
-                <span>Last: <b>${lastPlayed}</b></span>
-                <span class="stats-divider">|</span>
-                <span>${probText}</span>
-            `;
-        } else {
-            statsDiv.innerHTML = `<span>${probText}</span>`;
-        }
-    }
-
-    // Refresh duplicate detection UI
-    validateSelection();
 }
 
 // ******************************************
@@ -2098,9 +2181,12 @@ function validateSelection() {
         errorMsg.innerText = `⚠️ You have selected unowned heroes: ${unownedSelectedHeroes.join(", ")}.`;
     }
 
-    // Individually highlight dropdowns that contain duplicate entries
+    // Individually highlight player rows that contain duplicate entries
     dropdowns.forEach((d) => {
-        d.classList.toggle("error", counts[d.value] > 1);
+        const row = d.closest(".player-row");
+        if (row) {
+            row.classList.toggle("error", counts[d.value] > 1);
+        }
     });
 }
 
@@ -2228,6 +2314,13 @@ async function applyResults() {
     await init();
 
     document.getElementById("action-buttons").style.display = "none";
+    const rollBtnEl = document.getElementById("rollBtn");
+    if (rollBtnEl) {
+        rollBtnEl.style.display = "block";
+        rollBtnEl.disabled = false;
+        rollBtnEl.style.opacity = "1";
+        rollBtnEl.style.cursor = "pointer";
+    }
     document.getElementById("results").innerHTML = `
         <p style="color:#28a745; text-align:center; font-weight:bold;">
             Session Logged! Game record created and stats updated.
@@ -2245,6 +2338,13 @@ function cancelRoll() {
     document.getElementById("results").innerHTML =
         '<p style="text-align: center; opacity: 0.6;">Select players and roll.</p>';
     document.getElementById("action-buttons").style.display = "none";
+    const rollBtnEl = document.getElementById("rollBtn");
+    if (rollBtnEl) {
+        rollBtnEl.style.display = "block";
+        rollBtnEl.disabled = false;
+        rollBtnEl.style.opacity = "1";
+        rollBtnEl.style.cursor = "pointer";
+    }
     isRollActive = false;
 }
 

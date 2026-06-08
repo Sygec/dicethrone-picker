@@ -406,8 +406,9 @@ h1 {
     width: 120%;
     height: 120%;
     object-fit: cover;
+    object-position: center 40%;
     z-index: 1;
-    opacity: 0.18;
+    opacity: 0.25;
     pointer-events: none;
     transition: opacity 0.5s ease, filter 0.5s ease, transform 0.5s ease;
 }
@@ -505,28 +506,158 @@ h1 {
 }
 
 .hero-select-container {
-    width: 150px;
-    min-width: 130px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    width: 45px;
+}
+
+/* Edit Icon Button styles */
+.edit-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.85);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 0;
+}
+
+.edit-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 204, 0, 0.2);
+}
+
+.edit-icon-btn:active {
+    transform: translateY(0);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Segmented Control wrapper for modal */
+.segmented-control {
+    display: flex;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--secondary);
+    border-radius: 8px;
+    padding: 3px;
+    margin-top: 10px;
+    margin-bottom: 15px;
+}
+
+/* Hero Select Grid and Card styles inside Modal */
+.hero-select-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 12px;
+    margin-top: 15px;
+    padding: 4px;
+    max-height: 55vh;
+    overflow-y: auto;
+}
+
+.hero-select-card {
+    position: relative;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    overflow: hidden;
+}
+
+.hero-select-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.hero-select-card.selected {
+    background: rgba(255, 204, 0, 0.08);
+    border-color: var(--accent);
+    box-shadow: 0 0 10px rgba(255, 204, 0, 0.15);
+}
+
+.hero-select-card.selected:hover {
+    background: rgba(255, 204, 0, 0.12);
+    border-color: var(--accent);
+}
+
+.hero-select-card-img {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    transition: border-color 0.2s;
+    background: #2a2a2a;
+}
+
+.hero-select-card.selected .hero-select-card-img {
+    border-color: var(--accent);
+}
+
+.hero-select-card-name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text);
+    word-break: break-word;
+    line-height: 1.2;
+}
+
+.hero-select-card-pct {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--accent);
+    background: rgba(255, 204, 0, 0.12);
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-top: 2px;
+}
+
+/* Error warning highlight for duplicate player picks */
+.player-row.error {
+    border: 2px solid #ff3b30 !important;
+    box-shadow: 0 0 15px rgba(255, 59, 48, 0.35) !important;
 }
 
 @media (max-width: 480px) {
     .player-row-content {
-        display: grid;
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
         gap: 12px;
     }
     
     .hero-info-container {
-        grid-row: 1;
+        flex: 1;
+        min-width: 0;
     }
     
     .hero-select-container {
-        grid-row: 2;
-        width: 100%;
-        min-width: 0;
+        width: 40px;
+        flex-shrink: 0;
+        display: flex;
+        justify-content: flex-end;
     }
 }
+
 
 /* Scramble & Staggered Reveal Animations */
 .player-row.randomizing {
