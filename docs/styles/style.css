@@ -1531,13 +1531,13 @@ textarea {
     color: rgba(255, 255, 255, 0.85);
     margin-top: 4px;
     padding-left: 2px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
 }
 
 .expanded-player-relative {
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.85);
-    margin-top: 4px;
-    padding-left: 2px;
     display: flex;
     align-items: center;
     gap: 6px;

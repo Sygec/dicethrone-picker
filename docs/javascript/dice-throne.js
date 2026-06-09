@@ -4122,7 +4122,7 @@ function renderList() {
                     const relativeText = getDaysAgoClean(item.lastPlayed);
                     const dot = getRecencyDot(item.lastPlayed);
                     const relativeLine = relativeText
-                        ? `<div class="expanded-player-relative">${dot} ${relativeText}</div>`
+                        ? `<span class="expanded-player-relative">${relativeText} ${dot}</span>`
                         : "";
                     return `
                 <div class="expanded-player-row">
@@ -4133,7 +4133,7 @@ function renderList() {
                         <span class="expanded-player-wins">🏆 ${item.winCount} <span class="expanded-player-rate">(${item.winRate}%)</span></span>
                     </div>
                     <div class="expanded-player-date">
-                        📅 Last played: ${item.lastPlayed}
+                        <span>📅 Last played: ${item.lastPlayed}</span>
                         ${relativeLine}
                     </div>
                 </div>`;
@@ -4193,17 +4193,32 @@ function renderList() {
 }
 
 // Relative time calculation helper
-function getDaysAgoClean(dateString) {
-    if (!dateString || dateString === "Never") return "";
-    if (dateString === "Unknown") return "Date unknown (historical)";
+function parseDateString(dateString) {
+    if (!dateString) return null;
     try {
         let cleanDate = dateString.trim();
         if (cleanDate && !cleanDate.includes("T"))
             cleanDate = cleanDate.replace(" ", "T");
-        if (cleanDate && !cleanDate.includes("Z") && !cleanDate.includes("+"))
+        if (
+            cleanDate &&
+            cleanDate.includes(":") &&
+            !cleanDate.includes("Z") &&
+            !cleanDate.includes("+")
+        )
             cleanDate += "Z";
-        const lastDate = new Date(cleanDate);
-        if (isNaN(lastDate.getTime())) return "";
+        const dateObj = new Date(cleanDate);
+        return isNaN(dateObj.getTime()) ? null : dateObj;
+    } catch (e) {
+        return null;
+    }
+}
+
+function getDaysAgoClean(dateString) {
+    if (!dateString || dateString === "Never") return "";
+    if (dateString === "Unknown") return "Date unknown (historical)";
+    const lastDate = parseDateString(dateString);
+    if (!lastDate) return "";
+    try {
         const today = new Date();
         lastDate.setHours(0, 0, 0, 0);
         today.setHours(0, 0, 0, 0);
@@ -4227,18 +4242,9 @@ function getRecencyDot(lastPlayed) {
         lastPlayed !== "Never" &&
         lastPlayed !== "Unknown"
     ) {
-        try {
-            let cleanDate = lastPlayed.trim();
-            if (cleanDate && !cleanDate.includes("T"))
-                cleanDate = cleanDate.replace(" ", "T");
-            if (
-                cleanDate &&
-                !cleanDate.includes("Z") &&
-                !cleanDate.includes("+")
-            )
-                cleanDate += "Z";
-            const lastDate = new Date(cleanDate);
-            if (!isNaN(lastDate.getTime())) {
+        const lastDate = parseDateString(lastPlayed);
+        if (lastDate) {
+            try {
                 const today = new Date();
                 lastDate.setHours(0, 0, 0, 0);
                 today.setHours(0, 0, 0, 0);
@@ -4253,11 +4259,11 @@ function getRecencyDot(lastPlayed) {
                 } else {
                     recencyDot = "🔴"; // Red (more than 60 days)
                 }
-            } else {
-                recencyDot = "⚪"; // White for invalid/unknown dates
+            } catch (e) {
+                recencyDot = "⚪";
             }
-        } catch (e) {
-            recencyDot = "⚪";
+        } else {
+            recencyDot = "⚪"; // White for invalid/unknown dates
         }
     }
     return recencyDot;
