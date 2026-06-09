@@ -3646,7 +3646,7 @@ function renderGamesList() {
                 ? `
                 <div class="game-card-actions">
                     <button class="btn-game-action" onclick="selectWinner('${game.id}')" title="Select Winner">🏆</button>
-                    <button class="btn-game-action delete" onclick="deleteGame('${game.id}')" title="Delete Game">🗑️</button>
+                    <!-- <button class="btn-game-action delete" onclick="deleteGame('${game.id}')" title="Delete Game">🗑️</button> -->
                 </div>
             `
                 : "";
