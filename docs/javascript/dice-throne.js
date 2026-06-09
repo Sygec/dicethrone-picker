@@ -3498,7 +3498,10 @@ function renderGamesList() {
                         });
                         const pct = heroPlayCount > 0 ? (heroWinCount / heroPlayCount).toFixed(3) : ".000";
                         const pctStr = pct.startsWith("0") ? pct.substring(1) : pct;
-                        statsHtml = `<div class="player-plate-winner-stats">${heroWinCount}🏆 / ${heroPlayCount}🎲 (${pctStr})</div>`;
+                        statsHtml = `
+                            <div class="player-plate-winner-stats">${heroWinCount}🏆 / ${heroPlayCount}🎲</div>
+                            <div class="player-plate-winner-pct">(${pctStr})</div>
+                        `;
                     }
 
                     return `

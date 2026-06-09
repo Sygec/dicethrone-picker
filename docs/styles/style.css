@@ -3309,7 +3309,7 @@ body.loaded .bottom-nav {
     background: #0f1013;
     border: 1.5px solid rgba(255, 255, 255, 0.15);
     border-radius: 10px;
-    overflow: hidden;
+    overflow: visible;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.2s ease, box-shadow 0.2s ease;
     display: flex;
@@ -3335,6 +3335,7 @@ body.loaded .bottom-nav {
     object-position: center 20%;
     opacity: 0.65;
     z-index: 1;
+    border-radius: inherit;
     transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
@@ -3352,6 +3353,7 @@ body.loaded .bottom-nav {
     height: 100%;
     background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.4) 60%, rgba(0, 0, 0, 0) 100%);
     z-index: 2;
+    border-radius: inherit;
     pointer-events: none;
 }
 
@@ -3361,7 +3363,7 @@ body.loaded .bottom-nav {
     top: 6px;
     left: 6px;
     right: 6px;
-    font-size: 0.55rem;
+    font-size: 0.65rem;
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -3387,7 +3389,7 @@ body.loaded .bottom-nav {
 }
 
 .player-plate-hero-name {
-    font-size: 0.65rem;
+    font-size: 0.75rem;
     font-weight: 800;
     color: #ffffff;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
@@ -3485,9 +3487,9 @@ body.loaded .bottom-nav {
 
 .player-plate-crown {
     position: absolute;
-    top: -8px;
-    right: -8px;
-    font-size: 1.25rem;
+    top: -16px;
+    right: -16px;
+    font-size: 2.5rem;
     z-index: 5;
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
     animation: floatCrown 3s infinite ease-in-out;
@@ -3579,7 +3581,7 @@ body.loaded .bottom-nav {
 }
 
 .player-plate-winner-stats {
-    font-size: 0.55rem;
+    font-size: 0.72rem;
     font-weight: 700;
     color: #ffbc00;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
@@ -3588,6 +3590,18 @@ body.loaded .bottom-nav {
     overflow: hidden;
     text-overflow: ellipsis;
     opacity: 0.95;
+}
+
+.player-plate-winner-pct {
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.85);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
 }
 
 /* Responsive adjustments for fitting all players on a single row in mobile viewports */
@@ -3623,7 +3637,7 @@ body.loaded .bottom-nav {
         top: 4px;
         left: 4px;
         right: 4px;
-        font-size: 0.48rem;
+        font-size: 0.55rem;
         padding: 1px;
         border-radius: 2px;
     }
@@ -3633,17 +3647,21 @@ body.loaded .bottom-nav {
     }
 
     .player-plate-hero-name {
-        font-size: 0.52rem;
+        font-size: 0.62rem;
     }
 
     .player-plate-winner-stats {
-        font-size: 0.45rem;
+        font-size: 0.6rem;
+    }
+
+    .player-plate-winner-pct {
+        font-size: 0.55rem;
     }
 
     .player-plate-crown {
-        top: -6px;
-        right: -6px;
-        font-size: 0.95rem;
+        top: -12px;
+        right: -12px;
+        font-size: 1.9rem;
     }
 
     .player-plate-draw-badge {
