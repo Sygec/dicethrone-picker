@@ -2100,11 +2100,11 @@ function renderPlayerRowSkeleton(pIdx) {
                         <div class="hero-header-left">
                             <span class="player-name-caps" style="color: var(--player-color);">${NAMES[pIdx].toUpperCase()}</span>
                             <span class="hero-name-divider">:</span>
-                            <span class="hero-name-title scramble-text" id="hero-name-title-${pIdx}">ROLLING...</span>
+                            <span class="hero-name scramble-text" id="hero-name-title-${pIdx}">ROLLING...</span>
                         </div>
                     </div>
                     
-                    <span class="hero-group-label scramble-hidden opacity-0" id="hero-group-${pIdx}">Group</span>
+                    <span class="expanded-group scramble-hidden opacity-0" id="hero-group-${pIdx}">Group</span>
                     
                     <div class="hero-stats-row scramble-hidden opacity-0" id="stats-row-${pIdx}">
                         <span>Plays: --</span>
@@ -4104,49 +4104,7 @@ function renderList() {
             // Collapsed View: Highly compressed vertical rows (no date line, has recency dot)
             const collapsedPlayersHtml = playerStatsList
                 .map((item) => {
-                    // Calculate recency dot
-                    let recencyDot = "⚫"; // Default to dark grey (Never)
-                    if (item.lastPlayed && item.lastPlayed === "Unknown") {
-                        recencyDot = "🔴"; // Red for Unknown (since it's a historical game played > 60 days ago)
-                    } else if (
-                        item.lastPlayed &&
-                        item.lastPlayed !== "Never" &&
-                        item.lastPlayed !== "Unknown"
-                    ) {
-                        try {
-                            let cleanDate = item.lastPlayed.trim();
-                            if (cleanDate && !cleanDate.includes("T"))
-                                cleanDate = cleanDate.replace(" ", "T");
-                            if (
-                                cleanDate &&
-                                !cleanDate.includes("Z") &&
-                                !cleanDate.includes("+")
-                            )
-                                cleanDate += "Z";
-                            const lastDate = new Date(cleanDate);
-                            if (!isNaN(lastDate.getTime())) {
-                                const today = new Date();
-                                lastDate.setHours(0, 0, 0, 0);
-                                today.setHours(0, 0, 0, 0);
-                                const diffTime = today - lastDate;
-                                const diffDays = Math.floor(
-                                    diffTime / (1000 * 60 * 60 * 24),
-                                );
-                                if (diffDays <= 15) {
-                                    recencyDot = "🟢"; // Green (last 15 days)
-                                } else if (diffDays <= 60) {
-                                    recencyDot = "🟡"; // Yellow (15-60 days)
-                                } else {
-                                    recencyDot = "🔴"; // Red (more than 60 days)
-                                }
-                            } else {
-                                recencyDot = "⚪"; // White for invalid/unknown dates
-                            }
-                        } catch (e) {
-                            recencyDot = "⚪";
-                        }
-                    }
-
+                    const recencyDot = getRecencyDot(item.lastPlayed);
                     return `
                 <div class="collapsed-player-row-simple">
                     <span class="collapsed-player-name" style="color: var(--p${item.p + 1});">${NAMES[item.p]}</span>
@@ -4161,7 +4119,11 @@ function renderList() {
             // Expanded View: Vertical rows with date line
             const expandedPlayersHtml = playerStatsList
                 .map((item) => {
-                    const relativeTime = getDaysAgoString(item.lastPlayed);
+                    const relativeText = getDaysAgoClean(item.lastPlayed);
+                    const dot = getRecencyDot(item.lastPlayed);
+                    const relativeLine = relativeText
+                        ? `<div class="expanded-player-relative">${dot} ${relativeText}</div>`
+                        : "";
                     return `
                 <div class="expanded-player-row">
                     <div class="expanded-player-main">
@@ -4171,7 +4133,8 @@ function renderList() {
                         <span class="expanded-player-wins">🏆 ${item.winCount} <span class="expanded-player-rate">(${item.winRate}%)</span></span>
                     </div>
                     <div class="expanded-player-date">
-                        📅 Last played: ${item.lastPlayed}${relativeTime}
+                        📅 Last played: ${item.lastPlayed}
+                        ${relativeLine}
                     </div>
                 </div>`;
                 })
@@ -4230,9 +4193,9 @@ function renderList() {
 }
 
 // Relative time calculation helper
-function getDaysAgoString(dateString) {
-    if (!dateString || dateString === "Never" || dateString === "Unknown")
-        return "";
+function getDaysAgoClean(dateString) {
+    if (!dateString || dateString === "Never") return "";
+    if (dateString === "Unknown") return "Date unknown (historical)";
     try {
         let cleanDate = dateString.trim();
         if (cleanDate && !cleanDate.includes("T"))
@@ -4247,10 +4210,55 @@ function getDaysAgoString(dateString) {
         const diffTime = today - lastDate;
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
         if (diffDays < 0) return "";
-        if (diffDays === 0) return " (today)";
-        if (diffDays === 1) return " (yesterday)";
-        return ` (${diffDays} days ago)`;
+        if (diffDays === 0) return "today";
+        if (diffDays === 1) return "yesterday";
+        return `${diffDays} days ago`;
     } catch (e) {
         return "";
     }
+}
+
+function getRecencyDot(lastPlayed) {
+    let recencyDot = "⚫"; // Default to dark grey (Never)
+    if (lastPlayed && lastPlayed === "Unknown") {
+        recencyDot = "🔴"; // Red for Unknown (since it's a historical game played > 60 days ago)
+    } else if (
+        lastPlayed &&
+        lastPlayed !== "Never" &&
+        lastPlayed !== "Unknown"
+    ) {
+        try {
+            let cleanDate = lastPlayed.trim();
+            if (cleanDate && !cleanDate.includes("T"))
+                cleanDate = cleanDate.replace(" ", "T");
+            if (
+                cleanDate &&
+                !cleanDate.includes("Z") &&
+                !cleanDate.includes("+")
+            )
+                cleanDate += "Z";
+            const lastDate = new Date(cleanDate);
+            if (!isNaN(lastDate.getTime())) {
+                const today = new Date();
+                lastDate.setHours(0, 0, 0, 0);
+                today.setHours(0, 0, 0, 0);
+                const diffTime = today - lastDate;
+                const diffDays = Math.floor(
+                    diffTime / (1000 * 60 * 60 * 24),
+                );
+                if (diffDays <= 15) {
+                    recencyDot = "🟢"; // Green (last 15 days)
+                } else if (diffDays <= 60) {
+                    recencyDot = "🟡"; // Yellow (15-60 days)
+                } else {
+                    recencyDot = "🔴"; // Red (more than 60 days)
+                }
+            } else {
+                recencyDot = "⚪"; // White for invalid/unknown dates
+            }
+        } catch (e) {
+            recencyDot = "⚪";
+        }
+    }
+    return recencyDot;
 }
