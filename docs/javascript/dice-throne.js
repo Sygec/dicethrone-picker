@@ -575,7 +575,7 @@ async function init() {
 
     // Transform Supabase relational data into the flat array format expected by the app
     characters = data.map((hero) => {
-        const userHeroRecord = hero.user_heroes?.[0];
+        const userHeroRecord = hero.user_heroes?.find((uh) => uh.user_id === currentUser?.id);
         const isOwned = userHeroRecord ? userHeroRecord.is_owned : true; // Default to true if no record exists
 
         const char = {
