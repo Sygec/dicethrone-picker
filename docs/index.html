@@ -704,13 +704,14 @@
                 <span class="close-button" onclick="closeWinnerModal()"
                     >&times;</span
                 >
-                <h2 style="color: black; margin-top: 0">Select Winner</h2>
+                <h2 style="margin-top: 0">Select Winner</h2>
                 <div
                     id="winner-selection-container"
-                    style="margin: 20px 0"></div>
-                <button type="button" class="btn-save" id="confirm-winner-btn">
-                    Confirm Winner
-                </button>
+                    style="margin: 15px 0; overflow-y: auto; flex: 1;"></div>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button type="button" class="btn-cancel" onclick="closeWinnerModal()" style="flex: 1;">Cancel</button>
+                    <button type="button" class="btn-save" id="confirm-winner-btn" style="flex: 1;">Save Result</button>
+                </div>
             </div>
         </div>
 

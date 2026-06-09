@@ -2986,3 +2986,97 @@ body.loaded .bottom-nav {
     width: 100%; /* Fill grid cell width */
 }
 
+/* Winner Selection Modal Grid & Cards */
+.winner-select-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+    margin-top: 15px;
+}
+
+.winner-card {
+    position: relative;
+    background: rgba(255, 255, 255, 0.03);
+    border: 2px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    overflow: hidden;
+}
+
+.winner-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+.winner-card.selected {
+    background: rgba(76, 175, 80, 0.12); /* light green overlay */
+    border-color: #4CAF50; /* green border */
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.35);
+}
+
+.winner-card-img {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    background: #2a2a2a;
+    transition: border-color 0.2s;
+}
+
+.winner-card.selected .winner-card-img {
+    border-color: #4CAF50;
+}
+
+.winner-card-player-name {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.2;
+}
+
+.winner-card-hero-name {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1.2;
+}
+
+/* Draw Option Card */
+.winner-draw-card {
+    grid-column: 1 / -1; /* spans across all columns */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #fff;
+    transition: all 0.2s ease;
+}
+
+.winner-draw-card:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.winner-draw-card.selected {
+    background: rgba(76, 175, 80, 0.12);
+    border-color: #4CAF50;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.35);
+}
+
+

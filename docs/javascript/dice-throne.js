@@ -3438,34 +3438,42 @@ async function selectWinner(gameId) {
         explicitLosers.length > 0 &&
         explicitLosers.length === game.game_players.length;
 
-    // Build a list of radio buttons for each participant
-    let optionsHtml = game.game_players
+    // Build the grid wrapper
+    let optionsHtml = `<div class="winner-select-grid">`;
+
+    // Add cards for each participant
+    optionsHtml += game.game_players
         .map((gp, i) => {
             const pIdx = parseInt(gp.player_id.substring(1)) - 1;
             const heroName = gp.heroes?.name || "Unknown";
-            const isChecked = gp.is_winner === true ? "checked" : "";
+            const heroSlug = gp.heroes?.slug || "";
+            const isSelected = gp.is_winner === true;
+            const isChecked = isSelected ? "checked" : "";
+            const selectedClass = isSelected ? "selected" : "";
             return `
-            <label style="display: flex; align-items: center; gap: 15px; padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; color: black;">
-                <input type="radio" name="winner-choice" value="${gp.player_id}" ${isChecked} style="width: 20px; height: 20px; accent-color: var(--accent);">
-                <div>
-                    <div style="font-weight: bold;">${NAMES[pIdx]}</div>
-                    <div style="font-size: 0.8rem; opacity: 0.7;">${heroName}</div>
-                </div>
-            </label>
+            <div class="winner-card ${selectedClass}" onclick="handleWinnerSelect('${gp.player_id}')">
+                <input type="radio" name="winner-choice" value="${gp.player_id}" ${isChecked} style="display: none;">
+                <img src="${getImgUrl(heroSlug)}" class="winner-card-img" alt="${heroName}">
+                <div class="winner-card-player-name">${NAMES[pIdx]}</div>
+                <div class="winner-card-hero-name">${heroName}</div>
+            </div>
         `;
         })
         .join("");
 
     const isDrawChecked = isDraw ? "checked" : "";
-    // Add Draw Option
+    const drawSelectedClass = isDraw ? "selected" : "";
+    // Add Draw Option at the bottom of the grid
     optionsHtml += `
-        <label style="display: flex; align-items: center; gap: 15px; padding: 12px; cursor: pointer; color: black; background: rgba(0,0,0,0.05); border-radius: 0 0 8px 8px;">
-            <input type="radio" name="winner-choice" value="draw" ${isDrawChecked} style="width: 20px; height: 20px; accent-color: var(--accent);">
-            <div>
-                <div style="font-weight: bold;">🤝 Draw</div>
-                <div style="font-size: 0.8rem; opacity: 0.7;">No winner for this match</div>
+            <div class="winner-draw-card ${drawSelectedClass}" onclick="handleWinnerSelect('draw')">
+                <input type="radio" name="winner-choice" value="draw" ${isDrawChecked} style="display: none;">
+                <span style="font-size: 1.5rem; line-height: 1;">🤝</span>
+                <div style="text-align: left;">
+                    <div class="winner-card-player-name" style="font-size: 0.9rem;">Select a Draw</div>
+                    <div class="winner-card-hero-name" style="font-size: 0.7rem; opacity: 0.7;">No winner for this match</div>
+                </div>
             </div>
-        </label>
+        </div>
     `;
 
     container.innerHTML = optionsHtml;
@@ -3473,8 +3481,28 @@ async function selectWinner(gameId) {
     // Attach the game ID to the button so submitWinner knows which game to update
     confirmBtn.onclick = () => submitWinner(gameId);
 
-    document.getElementById("winner-modal").style.display = "block";
+    document.getElementById("winner-modal").style.display = "flex";
     document.body.style.overflow = "hidden";
+}
+
+// ******************************************
+// handleWinnerSelect(value)
+// ******************************************
+// Updates UI classes and checks corresponding hidden radio input for winner selection.
+// ******************************************
+function handleWinnerSelect(value) {
+    const cards = document.querySelectorAll('.winner-card, .winner-draw-card');
+    cards.forEach(card => {
+        const radio = card.querySelector('input[name="winner-choice"]');
+        if (radio) {
+            if (radio.value === value) {
+                radio.checked = true;
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
+        }
+    });
 }
 
 // ******************************************
@@ -3532,7 +3560,7 @@ async function submitWinner(gameId) {
         alert("Error updating winner: " + err.message);
     } finally {
         btn.disabled = false;
-        btn.innerText = "Confirm Winner";
+        btn.innerText = "Save Result";
     }
 }
 
