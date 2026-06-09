@@ -3612,11 +3612,11 @@ function renderGamesList() {
                     const crownHtml = isHeroWinner ? '<span class="mini-winner-crown">👑</span>' : "";
                     const playerLabel = playerLabelsMap[gp.player_id];
                     return `
-                        <div class="mini-portrait-wrapper ${winnerClass}" title="${heroName}">
+                        <a href="${getHeroLink(heroSlug)}" target="_blank" class="mini-portrait-wrapper ${winnerClass}" title="${heroName}" onclick="event.stopPropagation()">
                             ${crownHtml}
                             <img src="${getImgUrl(heroSlug)}" class="mini-portrait-img" alt="${heroName}">
                             <div class="mini-portrait-pill" style="background-color: var(--p${pIdx + 1});">${playerLabel}</div>
-                        </div>
+                        </a>
                     `;
                 })
                 .join("");
@@ -3717,7 +3717,7 @@ function renderGamesList() {
                     }
 
                     return `
-                    <div class="player-plate ${plateClass}" style="${borderStyle}">
+                    <a href="${getHeroLink(heroSlug)}" target="_blank" class="player-plate ${plateClass}" style="${borderStyle}">
                         <img src="${getImgUrl(heroSlug)}" class="player-plate-bg-art" alt="${heroName}">
                         <div class="player-plate-overlay"></div>
                         ${crownHtml}
@@ -3727,7 +3727,7 @@ function renderGamesList() {
                             <div class="player-plate-hero-name">${heroName}</div>
                             ${statsHtml}
                         </div>
-                    </div>`;
+                    </a>`;
                 });
 
             const playerPlatesHtml = platesArray.join("");

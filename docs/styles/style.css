@@ -268,8 +268,10 @@ h1 {
     min-width: 40px;
 }
 
-.player-tag-small:hover {
-    cursor: pointer;
+@media (hover: hover) {
+    .player-tag-small:hover {
+        cursor: pointer;
+    }
 }
 
 .player-toggle-zone-top {
@@ -538,12 +540,14 @@ h1 {
     padding: 0;
 }
 
-.edit-icon-btn:hover {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: var(--accent);
-    color: var(--accent);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 204, 0, 0.2);
+@media (hover: hover) {
+    .edit-icon-btn:hover {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: var(--accent);
+        color: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 204, 0, 0.2);
+    }
 }
 
 .edit-icon-btn:active {
@@ -592,10 +596,12 @@ h1 {
     overflow: hidden;
 }
 
-.hero-select-card:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.2);
-    transform: translateY(-2px);
+@media (hover: hover) {
+    .hero-select-card:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+    }
 }
 
 .hero-select-card.selected {
@@ -604,9 +610,11 @@ h1 {
     box-shadow: 0 0 10px rgba(255, 204, 0, 0.15);
 }
 
-.hero-select-card.selected:hover {
-    background: rgba(255, 204, 0, 0.12);
-    border-color: var(--accent);
+@media (hover: hover) {
+    .hero-select-card.selected:hover {
+        background: rgba(255, 204, 0, 0.12);
+        border-color: var(--accent);
+    }
 }
 
 .hero-select-card-img {
@@ -986,9 +994,11 @@ main > section:not(.hidden) {
     filter: brightness(0.8);
 }
 
-.search-icon:hover {
-    filter: brightness(1);
-    transform: scale(1.1);
+@media (hover: hover) {
+    .search-icon:hover {
+        filter: brightness(1);
+        transform: scale(1.1);
+    }
 }
 
 .hidden {
@@ -1328,8 +1338,10 @@ textarea {
         transform 0.5s ease;
 }
 
-.hero-item:hover {
-    border-color: rgba(255, 255, 255, 0.45);
+@media (hover: hover) {
+    .hero-item:hover {
+        border-color: rgba(255, 255, 255, 0.45);
+    }
 }
 
 .hero-header {
@@ -1346,8 +1358,10 @@ textarea {
     z-index: 2;
 }
 
-.hero-header:hover {
-    background: rgba(0, 0, 0, 0.4);
+@media (hover: hover) {
+    .hero-header:hover {
+        background: rgba(0, 0, 0, 0.4);
+    }
 }
 
 .hero-name {
@@ -1598,8 +1612,10 @@ textarea {
     transition: transform 0.3s ease;
 }
 
-.char-complexity-db:hover .char-img-roll {
-    transform: scale(1.05);
+@media (hover: hover) {
+    .char-complexity-db:hover .char-img-roll {
+        transform: scale(1.05);
+    }
 }
 
 .complexity-roll {
@@ -1655,8 +1671,10 @@ textarea {
     box-sizing: border-box;
 }
 
-.stat-card-new:hover {
-    transform: translateY(-2px);
+@media (hover: hover) {
+    .stat-card-new:hover {
+        transform: translateY(-2px);
+    }
 }
 
 .player-card-header {
@@ -1950,9 +1968,11 @@ textarea {
     transform: none; /* Keep flat flow */
 }
 
-.filter-bar-track .dice-icon:hover {
-    opacity: 0.5;
-    filter: grayscale(100%) brightness(1);
+@media (hover: hover) {
+    .filter-bar-track .dice-icon:hover {
+        opacity: 0.5;
+        filter: grayscale(100%) brightness(1);
+    }
 }
 
 /* Active State: Highlight with theme accent tint and glow */
@@ -1983,10 +2003,12 @@ textarea {
     box-sizing: border-box;
 }
 
-.group-badge-card:hover:not(.disabled) {
-    border-color: rgba(255, 255, 255, 0.3);
-    background: rgba(255, 255, 255, 0.06);
-    transform: translateY(-2px);
+@media (hover: hover) {
+    .group-badge-card:hover:not(.disabled) {
+        border-color: rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.06);
+        transform: translateY(-2px);
+    }
 }
 
 .group-badge-card.disabled {
@@ -2175,10 +2197,12 @@ textarea {
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.group-badge-card.group-complexity:hover:not(.disabled) .complexity-dice-img {
-    opacity: 0.65;
-    filter: grayscale(50%) brightness(0.95);
-    border-color: rgba(255, 255, 255, 0.4);
+@media (hover: hover) {
+    .group-badge-card.group-complexity:hover:not(.disabled) .complexity-dice-img {
+        opacity: 0.65;
+        filter: grayscale(50%) brightness(0.95);
+        border-color: rgba(255, 255, 255, 0.4);
+    }
 }
 
 .group-badge-card.group-complexity.active-die .complexity-dice-img {
@@ -2221,8 +2245,10 @@ textarea {
     filter: grayscale(100%);
 }
 
-.dice-icon:hover {
-    opacity: 0.6;
+@media (hover: hover) {
+    .dice-icon:hover {
+        opacity: 0.6;
+    }
 }
 
 /* Multi-select Active State */
@@ -2342,8 +2368,10 @@ textarea {
     cursor: pointer;
 }
 
-.close-button:hover {
-    color: #fff;
+@media (hover: hover) {
+    .close-button:hover {
+        color: #fff;
+    }
 }
 
 /* Mobile Optimization */
@@ -2580,9 +2608,11 @@ body.loaded .bottom-nav {
     text-transform: uppercase;
 }
 
-.pill-toggle:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
+@media (hover: hover) {
+    .pill-toggle:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
 }
 
 .pill-toggle.inactive {
@@ -2646,8 +2676,10 @@ body.loaded .bottom-nav {
     transition: all 0.2s ease;
 }
 
-.btn-direction-new:hover {
-    background: rgba(255, 255, 255, 0.1);
+@media (hover: hover) {
+    .btn-direction-new:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
 }
 
 .btn-direction-new.active {
@@ -2699,8 +2731,10 @@ body.loaded .bottom-nav {
     transition: background-color 0.2s ease;
 }
 
-.db-accordion-header:hover {
-    background: rgba(255, 255, 255, 0.08);
+@media (hover: hover) {
+    .db-accordion-header:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
 }
 
 .db-accordion-content {
@@ -2739,8 +2773,10 @@ body.loaded .bottom-nav {
     z-index: 2;
 }
 
-.segmented-pill:hover:not(.active) {
-    color: #ffffff;
+@media (hover: hover) {
+    .segmented-pill:hover:not(.active) {
+        color: #ffffff;
+    }
 }
 
 .segmented-pill.active {
@@ -2769,8 +2805,10 @@ body.loaded .bottom-nav {
     transition: background-color 0.2s ease;
 }
 
-.collection-group-header:hover {
-    background: rgba(255, 255, 255, 0.03);
+@media (hover: hover) {
+    .collection-group-header:hover {
+        background: rgba(255, 255, 255, 0.03);
+    }
 }
 
 .collection-group-header .panel-toggle {
@@ -2824,10 +2862,12 @@ body.loaded .bottom-nav {
     letter-spacing: 0.5px;
 }
 
-.btn-action-trigger:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: var(--accent);
-    transform: translateY(-1px);
+@media (hover: hover) {
+    .btn-action-trigger:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--accent);
+        transform: translateY(-1px);
+    }
 }
 
 .btn-action-trigger:active {
@@ -2931,8 +2971,10 @@ body.loaded .bottom-nav {
     transition: color 0.2s;
 }
 
-.drawer-close-btn:hover {
-    color: #ffffff;
+@media (hover: hover) {
+    .drawer-close-btn:hover {
+        color: #ffffff;
+    }
 }
 
 /* Body */
@@ -2966,9 +3008,11 @@ body.loaded .bottom-nav {
     transition: all 0.2s;
 }
 
-.btn-drawer-reset:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
+@media (hover: hover) {
+    .btn-drawer-reset:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
 }
 
 .btn-drawer-apply {
@@ -2984,9 +3028,11 @@ body.loaded .bottom-nav {
     transition: all 0.2s;
 }
 
-.btn-drawer-apply:hover {
-    background: #ffd633;
-    box-shadow: 0 0 14px rgba(255, 204, 0, 0.35);
+@media (hover: hover) {
+    .btn-drawer-apply:hover {
+        background: #ffd633;
+        box-shadow: 0 0 14px rgba(255, 204, 0, 0.35);
+    }
 }
 
 /* 2x4 Season Grid Layout with Standalone ALL bar */
@@ -3047,10 +3093,12 @@ body.loaded .bottom-nav {
     overflow: hidden;
 }
 
-.winner-card:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.25);
-    transform: translateY(-2px);
+@media (hover: hover) {
+    .winner-card:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.25);
+        transform: translateY(-2px);
+    }
 }
 
 .winner-card.selected {
@@ -3104,9 +3152,11 @@ body.loaded .bottom-nav {
     transition: all 0.2s ease;
 }
 
-.winner-draw-card:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.25);
+@media (hover: hover) {
+    .winner-draw-card:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.25);
+    }
 }
 
 .winner-draw-card.selected {
@@ -3131,9 +3181,11 @@ body.loaded .bottom-nav {
     z-index: 1;
 }
 
-.game-history-card:hover {
-    border-color: rgba(255, 255, 255, 0.25);
-    background: rgba(22, 33, 62, 0.55);
+@media (hover: hover) {
+    .game-history-card:hover {
+        border-color: rgba(255, 255, 255, 0.25);
+        background: rgba(22, 33, 62, 0.55);
+    }
 }
 
 /* 22% opacity background artwork of the winning character (more visible) */
@@ -3154,9 +3206,11 @@ body.loaded .bottom-nav {
         transform 0.5s ease;
 }
 
-.game-history-card:hover .game-card-bg-img {
-    transform: scale(1.03);
-    opacity: 0.28;
+@media (hover: hover) {
+    .game-history-card:hover .game-card-bg-img {
+        transform: scale(1.03);
+        opacity: 0.28;
+    }
 }
 
 /* Accordion Header */
@@ -3173,8 +3227,10 @@ body.loaded .bottom-nav {
     transition: background-color 0.2s ease;
 }
 
-.game-card-header:hover {
-    background: rgba(0, 0, 0, 0.25);
+@media (hover: hover) {
+    .game-card-header:hover {
+        background: rgba(0, 0, 0, 0.25);
+    }
 }
 
 .game-card-title-group {
@@ -3230,9 +3286,11 @@ body.loaded .bottom-nav {
     z-index: 1;
 }
 
-.mini-portrait-wrapper:hover {
-    transform: translateY(-2px);
-    z-index: 12;
+@media (hover: hover) {
+    .mini-portrait-wrapper:hover {
+        transform: translateY(-2px);
+        z-index: 12;
+    }
 }
 
 .mini-portrait-img {
@@ -3358,12 +3416,15 @@ body.loaded .bottom-nav {
     flex-direction: column;
     justify-content: flex-end;
     box-sizing: border-box;
+    text-decoration: none;
 }
 
-.player-plate:hover {
-    transform: translateY(-4px) scale(1.03);
-    border-color: rgba(255, 255, 255, 0.45);
-    z-index: 5;
+@media (hover: hover) {
+    .player-plate:hover {
+        transform: translateY(-4px) scale(1.03);
+        border-color: rgba(255, 255, 255, 0.45);
+        z-index: 5;
+    }
 }
 
 /* Background hero artwork */
@@ -3383,9 +3444,11 @@ body.loaded .bottom-nav {
         transform 0.3s ease;
 }
 
-.player-plate:hover .player-plate-bg-art {
-    transform: scale(1.08);
-    opacity: 0.8;
+@media (hover: hover) {
+    .player-plate:hover .player-plate-bg-art {
+        transform: scale(1.08);
+        opacity: 0.8;
+    }
 }
 
 /* Gradient overlay to ensure text readability */
@@ -3454,17 +3517,21 @@ body.loaded .bottom-nav {
     box-shadow: 0 0 15px rgba(255, 188, 0, 0.45);
 }
 
-.player-plate.winner:hover {
-    border-color: #ffbc00;
-    box-shadow: 0 0 20px rgba(255, 188, 0, 0.65);
+@media (hover: hover) {
+    .player-plate.winner:hover {
+        border-color: #ffbc00;
+        box-shadow: 0 0 20px rgba(255, 188, 0, 0.65);
+    }
 }
 
 .player-plate.winner .player-plate-bg-art {
     opacity: 0.95;
 }
 
-.player-plate.winner:hover .player-plate-bg-art {
-    opacity: 1;
+@media (hover: hover) {
+    .player-plate.winner:hover .player-plate-bg-art {
+        opacity: 1;
+    }
 }
 
 /* Premium holographic shimmer sweep across winner character card */
@@ -3604,9 +3671,11 @@ body.loaded .bottom-nav {
     filter: grayscale(85%);
 }
 
-.player-plate.loser:hover .player-plate-bg-art {
-    opacity: 0.5;
-    filter: grayscale(50%);
+@media (hover: hover) {
+    .player-plate.loser:hover .player-plate-bg-art {
+        opacity: 0.5;
+        filter: grayscale(50%);
+    }
 }
 
 /* Draw Card Styles */
@@ -3664,14 +3733,18 @@ body.loaded .bottom-nav {
     transition: all 0.2s ease;
 }
 
-.btn-game-action:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: scale(1.08);
+@media (hover: hover) {
+    .btn-game-action:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: scale(1.08);
+    }
 }
 
-.btn-game-action.delete:hover {
-    background: var(--danger);
-    border-color: var(--danger);
+@media (hover: hover) {
+    .btn-game-action.delete:hover {
+        background: var(--danger);
+        border-color: var(--danger);
+    }
 }
 
 .player-plate-winner-stats {
