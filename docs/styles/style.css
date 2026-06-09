@@ -341,9 +341,13 @@ h1 {
 }
 
 .player-card:has(input:checked) {
-    background: color-mix(in srgb, var(--player-color) 24%, rgba(255, 255, 255, 0.02));
+    background: color-mix(
+        in srgb,
+        var(--player-color) 24%,
+        rgba(255, 255, 255, 0.02)
+    );
     border: 2px solid var(--player-color);
-    box-shadow: 
+    box-shadow:
         0 0 15px rgba(0, 0, 0, 0.4),
         0 0 22px var(--player-color),
         inset 0 0 10px var(--player-color);
@@ -353,7 +357,7 @@ h1 {
 @media (hover: hover) {
     .player-card:has(input:checked):hover {
         transform: translateY(-1px) scale(1.04);
-        box-shadow: 
+        box-shadow:
             0 0 26px var(--player-color),
             inset 0 0 12px var(--player-color);
     }
@@ -411,7 +415,10 @@ h1 {
     z-index: 1;
     opacity: 0.25;
     pointer-events: none;
-    transition: opacity 0.5s ease, filter 0.5s ease, transform 0.5s ease;
+    transition:
+        opacity 0.5s ease,
+        filter 0.5s ease,
+        transform 0.5s ease;
 }
 
 .player-row-content {
@@ -648,12 +655,12 @@ h1 {
         justify-content: space-between;
         gap: 12px;
     }
-    
+
     .hero-info-container {
         flex: 1;
         min-width: 0;
     }
-    
+
     .hero-select-container {
         width: 40px;
         flex-shrink: 0;
@@ -662,7 +669,6 @@ h1 {
     }
 }
 
-
 /* Scramble & Staggered Reveal Animations */
 .player-row.randomizing {
     animation: pulsateBorder 1.2s infinite ease-in-out;
@@ -670,7 +676,8 @@ h1 {
 }
 
 @keyframes pulsateBorder {
-    0%, 100% {
+    0%,
+    100% {
         border-color: rgba(255, 255, 255, 0.08);
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
@@ -682,7 +689,7 @@ h1 {
 
 .player-row.revealed {
     border: 2px solid var(--player-color);
-    box-shadow: 
+    box-shadow:
         0 0 18px var(--player-color),
         inset 0 0 6px var(--player-color);
     animation: popReveal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
@@ -713,7 +720,9 @@ h1 {
 }
 
 .scramble-hidden {
-    transition: opacity 0.4s ease, transform 0.4s ease;
+    transition:
+        opacity 0.4s ease,
+        transform 0.4s ease;
 }
 
 .opacity-0 {
@@ -1313,7 +1322,10 @@ textarea {
     z-index: 0;
     opacity: 0.25;
     pointer-events: none;
-    transition: opacity 0.5s ease, filter 0.5s ease, transform 0.5s ease;
+    transition:
+        opacity 0.5s ease,
+        filter 0.5s ease,
+        transform 0.5s ease;
 }
 
 .hero-item:hover {
@@ -1523,7 +1535,7 @@ textarea {
 
 .hero-body {
     border-top: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(0, 0, 0, 0.20);
+    background: rgba(0, 0, 0, 0.2);
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -1627,7 +1639,9 @@ textarea {
     flex-direction: column;
     gap: 10px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
-    transition: transform 0.2s ease, border-color 0.2s ease;
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease;
     box-sizing: border-box;
 }
 
@@ -2266,7 +2280,7 @@ textarea {
     -webkit-backdrop-filter: blur(5px);
     align-items: center;
     justify-content: center;
-    
+
     /* Device Safe-Area Notch Protection */
     padding-top: calc(15px + env(safe-area-inset-top));
     padding-bottom: calc(15px + env(safe-area-inset-bottom));
@@ -2291,7 +2305,8 @@ textarea {
     overflow: hidden; /* Let inner grid scroll instead */
     display: flex;
     flex-direction: column;
-}#changelog-container,
+}
+#changelog-container,
 #whats-new-container {
     overflow-y: auto;
     flex: 1;
@@ -2423,7 +2438,9 @@ textarea {
 
 /* 1. Prevent content from being hidden behind the nav bar */
 .content {
-    padding-bottom: calc(66px + env(safe-area-inset-bottom)); /* Dynamic offset based on nav height */
+    padding-bottom: calc(
+        66px + env(safe-area-inset-bottom)
+    ); /* Dynamic offset based on nav height */
 }
 
 /* 2. The Navigation Bar Container */
@@ -2728,8 +2745,9 @@ body.loaded .bottom-nav {
     background: var(--accent);
     border-radius: 6px;
     z-index: 1;
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-                width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition:
+        transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+        width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     pointer-events: none;
 }
 
@@ -2831,7 +2849,10 @@ body.loaded .bottom-nav {
     z-index: 1000;
     visibility: hidden;
     opacity: 0;
-    transition: background-color 0.35s ease, opacity 0.35s ease, visibility 0.35s ease;
+    transition:
+        background-color 0.35s ease,
+        opacity 0.35s ease,
+        visibility 0.35s ease;
     display: flex;
     justify-content: center;
     align-items: flex-end;
@@ -2993,11 +3014,11 @@ body.loaded .bottom-nav {
     gap: 12px;
     margin-bottom: 20px;
     margin-top: 15px;
+    justify-content: center;
 }
 
 .winner-select-grid.two-rows {
     grid-template-columns: repeat(2, minmax(105px, 145px));
-    justify-content: center;
 }
 
 .winner-card {
@@ -3024,7 +3045,7 @@ body.loaded .bottom-nav {
 
 .winner-card.selected {
     background: rgba(76, 175, 80, 0.12); /* light green overlay */
-    border-color: #4CAF50; /* green border */
+    border-color: #4caf50; /* green border */
     box-shadow: 0 0 10px rgba(76, 175, 80, 0.35);
 }
 
@@ -3039,7 +3060,7 @@ body.loaded .bottom-nav {
 }
 
 .winner-card.selected .winner-card-img {
-    border-color: #4CAF50;
+    border-color: #4caf50;
 }
 
 .winner-card-player-name {
@@ -3080,8 +3101,6 @@ body.loaded .bottom-nav {
 
 .winner-draw-card.selected {
     background: rgba(76, 175, 80, 0.12);
-    border-color: #4CAF50;
+    border-color: #4caf50;
     box-shadow: 0 0 10px rgba(76, 175, 80, 0.35);
 }
-
-
