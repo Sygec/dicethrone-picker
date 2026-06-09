@@ -372,7 +372,7 @@ function renderPlayerToggles() {
 // Displays the login modal and prevents background scrolling.
 // ******************************************
 function openLoginModal() {
-    loginModal.style.display = "block";
+    loginModal.style.display = "flex";
     document.getElementById("login-error").style.display = "none";
     document.body.style.overflow = "hidden";
     // Add key handler so Escape cancels (form submit handles Enter)
