@@ -14,3 +14,5 @@ with check (
     auth.uid() = user_id or 
     (((auth.jwt() -> 'app_metadata'::text) ->> 'role'::text) = 'admin'::text)
 );
+
+alter publication supabase_realtime add table "public"."user_heroes";
