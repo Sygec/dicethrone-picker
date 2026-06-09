@@ -26,6 +26,7 @@ let stagedLevels = new Set();
 let stagedGroups = new Set();
 let stagedPlayerIndices = [];
 let stagedUseHistorical = true;
+let dbUseHistorical = true;
 
 // Games History Filters State
 let gamesWinnerOnly = false;
@@ -2655,8 +2656,7 @@ function openColumnsDrawer() {
 
     // Stage current states
     stagedPlayerIndices = [...activePlayerIndices];
-    stagedUseHistorical =
-        document.getElementById("db-use-historical-data")?.checked ?? true;
+    stagedUseHistorical = dbUseHistorical;
 
     renderDrawerBody();
     drawer.classList.add("open");
@@ -3263,8 +3263,7 @@ function applyAndCloseDrawer() {
         renderList();
     } else if (currentDrawerMode === "columns") {
         activePlayerIndices = [...stagedPlayerIndices];
-        const histCheck = document.getElementById("db-use-historical-data");
-        if (histCheck) histCheck.checked = stagedUseHistorical;
+        dbUseHistorical = stagedUseHistorical;
         updateActiveFilterBadge();
         closeDrawer(null, true);
         renderList();
@@ -3941,8 +3940,7 @@ async function deleteGame(gameId) {
 
 
 function updateHeroStatsFromHistory() {
-    const useHistorical =
-        document.getElementById("db-use-historical-data")?.checked ?? true;
+    const useHistorical = dbUseHistorical;
 
     characters.forEach((char) => {
         char.playCount = [0, 0, 0, 0];
@@ -4109,7 +4107,7 @@ function renderList() {
                     // Calculate recency dot
                     let recencyDot = "⚫"; // Default to dark grey (Never)
                     if (item.lastPlayed && item.lastPlayed === "Unknown") {
-                        recencyDot = "⚪"; // White for Unknown
+                        recencyDot = "🔴"; // Red for Unknown (since it's a historical game played > 60 days ago)
                     } else if (
                         item.lastPlayed &&
                         item.lastPlayed !== "Never" &&
