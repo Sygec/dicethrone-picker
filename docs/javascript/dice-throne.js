@@ -1059,6 +1059,12 @@ async function toggleHeroOwned(heroId, isOwned) {
     renderList();
     updateDropdownSort(); // Refresh dropdowns in the Roll section
 
+    // Sync with Admin collections panel if visible
+    const adminCheckbox = document.getElementById(`admin-owned-${currentUser.id}-${heroId}`);
+    if (adminCheckbox) {
+        adminCheckbox.checked = isOwned;
+    }
+
     const { error } = await db
         .from("user_heroes")
         .upsert({
@@ -1074,6 +1080,11 @@ async function toggleHeroOwned(heroId, isOwned) {
         renderCollectionView();
         updateDropdownSort(); // Revert dropdowns on error
         renderList();
+        
+        // Revert admin panel checkbox
+        if (adminCheckbox) {
+            adminCheckbox.checked = !isOwned;
+        }
     }
 }
 
@@ -1085,7 +1096,13 @@ async function toggleGroupOwned(groupId, isOwned) {
 
     // Update local state for all heroes in the group immediately
     characters.forEach((h) => {
-        if (h.group_id === groupId) h.is_owned = isOwned;
+        if (h.group_id === groupId) {
+            h.is_owned = isOwned;
+            const adminCheckbox = document.getElementById(`admin-owned-${currentUser.id}-${h.id}`);
+            if (adminCheckbox) {
+                adminCheckbox.checked = isOwned;
+            }
+        }
     });
     renderCollectionView();
     renderList();
@@ -1773,6 +1790,7 @@ async function renderCollectionsList() {
                         <td style="padding: 8px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
                             <input 
                                 type="checkbox" 
+                                id="admin-owned-${up.user_id}-${hero.id}"
                                 ${isOwned ? "checked" : ""} 
                                 onchange="toggleUserHeroOwned('${up.user_id}', '${hero.id}', this.checked)"
                                 style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent);"
@@ -1818,6 +1836,15 @@ async function renderCollectionsList() {
 // Allows admins to update other users' collection states.
 // ******************************************
 async function toggleUserHeroOwned(userId, heroId, isOwned) {
+    // Sync locally if it's the current user's record
+    if (userId === currentUser?.id) {
+        const hero = characters.find((h) => h.id === heroId);
+        if (hero) hero.is_owned = isOwned;
+        renderCollectionView();
+        renderList();
+        updateDropdownSort(); // Refresh dropdowns in the Roll section
+    }
+
     const { error } = await db
         .from("user_heroes")
         .upsert({
@@ -1828,6 +1855,14 @@ async function toggleUserHeroOwned(userId, heroId, isOwned) {
 
     if (error) {
         alert("Error updating user collection: " + error.message);
+        // Revert local state if it was the current user
+        if (userId === currentUser?.id) {
+            const hero = characters.find((h) => h.id === heroId);
+            if (hero) hero.is_owned = !isOwned;
+            renderCollectionView();
+            renderList();
+            updateDropdownSort();
+        }
         // Refresh to revert UI checkbox state
         renderCollectionsList();
     }
