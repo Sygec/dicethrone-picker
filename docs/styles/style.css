@@ -3104,3 +3104,385 @@ body.loaded .bottom-nav {
     border-color: #4caf50;
     box-shadow: 0 0 10px rgba(76, 175, 80, 0.35);
 }
+
+/* ==========================================
+   Modernized Accordion Games History Styles
+   ========================================== */
+
+.game-history-card {
+    position: relative;
+    background: rgba(22, 33, 62, 0.45);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    margin-bottom: 15px;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: var(--glass-shadow);
+    overflow: hidden;
+    z-index: 1;
+}
+
+.game-history-card:hover {
+    border-color: rgba(255, 255, 255, 0.25);
+    background: rgba(22, 33, 62, 0.55);
+}
+
+/* 22% opacity background artwork of the winning character (more visible) */
+.game-card-bg-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 30%;
+    z-index: 0;
+    opacity: 0.22;
+    filter: saturate(1.2) contrast(1.1);
+    pointer-events: none;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.game-history-card:hover .game-card-bg-img {
+    transform: scale(1.03);
+    opacity: 0.28;
+}
+
+/* Accordion Header */
+.game-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    z-index: 2;
+    background: rgba(0, 0, 0, 0.15);
+    transition: background-color 0.2s ease;
+}
+
+.game-card-header:hover {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.game-card-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.game-card-date {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.5px;
+}
+
+.game-card-status-badge {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #e94560;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.game-card-status-badge.draw-badge {
+    color: #999999;
+}
+
+/* Mini portrait strip in collapsed header */
+.game-card-collapsed-summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+    margin-right: 15px;
+}
+
+.mini-portrait-strip {
+    display: flex;
+    align-items: center;
+}
+
+.mini-portrait-wrapper {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    margin-left: -10px; /* overlap portraits */
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    transition: transform 0.2s, z-index 0.2s;
+    z-index: 1;
+}
+
+.mini-portrait-wrapper:hover {
+    transform: translateY(-2px);
+    z-index: 12;
+}
+
+.mini-portrait-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 1.5px solid var(--glass-border);
+    background: #1a1a2e;
+}
+
+/* Highlight and enlarge winner portrait in collapsed view */
+.mini-portrait-wrapper.winner-highlight {
+    width: 40px;
+    height: 40px;
+    margin-left: 0; /* display first without left overlap */
+    margin-right: 12px; /* push subsequent overlapping portraits with a wider gap */
+    z-index: 10;
+}
+
+.mini-portrait-wrapper.winner-highlight .mini-portrait-img {
+    border: 2px solid #ffbc00; /* Gold border */
+    box-shadow: 0 0 10px rgba(255, 188, 0, 0.7);
+}
+
+.mini-winner-crown {
+    position: absolute;
+    top: -9px;
+    right: -3px;
+    font-size: 0.95rem; /* Larger, more visible crown */
+    z-index: 12;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.8));
+}
+
+.chevron-icon {
+    font-size: 0.8rem;
+    color: var(--accent);
+    transition: transform 0.3s ease;
+    opacity: 0.7;
+}
+
+.game-history-card.expanded .chevron-icon {
+    transform: rotate(180deg);
+}
+
+/* Accordion Body */
+.game-card-body {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.25);
+    padding: 16px;
+    position: relative;
+    z-index: 2;
+    display: none; /* Controlled by JS via expanded class */
+}
+
+.game-history-card.expanded .game-card-body {
+    display: block;
+    animation: slideDownIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideDownIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Player Grid (holds rows of plates) */
+.player-responsive-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    align-items: center;
+}
+
+.player-grid-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+}
+
+/* Individual Player Plates */
+.player-plate {
+    position: relative;
+    background: rgba(6, 7, 9, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+    box-sizing: border-box;
+    flex: 0 0 92px;
+    width: 92px;
+    min-width: 92px;
+    max-width: 92px;
+}
+
+.player-plate:hover {
+    transform: translateY(-2px);
+}
+
+.player-plate-tag {
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    color: #1a1a2e;
+    margin-bottom: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.player-plate-avatar-container {
+    position: relative;
+    margin-bottom: 6px;
+}
+
+.player-plate-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1.5px solid var(--accent);
+    object-fit: cover;
+    background: #15171d;
+    transition: transform 0.2s;
+}
+
+.player-plate-avatar:hover {
+    transform: scale(1.08);
+}
+
+.player-plate-hero-name {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+/* Winner Plate Styles */
+.player-plate.winner {
+    border: 2px solid #28a745;
+    background-color: color-mix(in srgb, #28a745, transparent 75%);
+    box-shadow: 0 0 12px rgba(40, 167, 69, 0.35);
+}
+
+.player-plate.winner .player-plate-avatar {
+    border-color: #28a745;
+    box-shadow: 0 0 6px rgba(40, 167, 69, 0.5);
+}
+
+.player-plate-crown {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    font-size: 1.1rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    animation: floatCrown 3s infinite ease-in-out;
+}
+
+@keyframes floatCrown {
+    0%, 100% { transform: translateY(0) rotate(10deg); }
+    50% { transform: translateY(-2px) rotate(10deg); }
+}
+
+/* Loser Plate Styles */
+.player-plate.loser {
+    opacity: 0.6;
+    filter: grayscale(35%);
+}
+
+.player-plate.loser .player-plate-avatar {
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Draw Plate Styles & Visual Cues */
+.player-plate.draw {
+    opacity: 0.85;
+}
+
+.player-plate.draw .player-plate-avatar {
+    border-color: #999999;
+}
+
+.player-plate-draw-badge {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-12deg);
+    color: #999999;
+    border: 1.5px solid rgba(153, 153, 153, 0.5);
+    background: rgba(15, 16, 19, 0.95);
+    font-family: Impact, sans-serif;
+    font-size: 0.85rem;
+    padding: 2px 8px;
+    letter-spacing: 1px;
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+
+/* VS Separator Divider */
+.vs-divider {
+    font-size: 0.75rem;
+    font-weight: 900;
+    color: #ffffff;
+    opacity: 0.8;
+    font-style: italic;
+    user-select: none;
+    flex-shrink: 0;
+    padding: 0 4px;
+}
+
+/* Card Action Controls Overlay */
+.game-card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    justify-content: flex-end;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 10px;
+    width: 100%;
+}
+
+.btn-game-action {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.btn-game-action:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.08);
+}
+
+.btn-game-action.delete:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+}
+

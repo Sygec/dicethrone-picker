@@ -12,6 +12,7 @@ let cachedChangelog = null;
 let activeLevels = new Set([1, 2, 3, 4, 5, 6]);
 let activeGroups = new Set();
 let selectedGamePlayerIndex = null;
+let expandedGameIds = new Set();
 let currentSort = "name";
 let sortAsc = true;
 let currentSortPlayerIndex = 0;
@@ -3295,6 +3296,17 @@ function renderGamesList() {
 
     const totalVisibleGames = games.filter((g) => !g.is_historical).length;
 
+    // Automatically add all in-progress games to the expanded state
+    games.forEach((game) => {
+        const winners = game.game_players.filter((p) => p.is_winner === true);
+        const explicitLosers = game.game_players.filter((p) => p.is_winner === false);
+        const isDraw = winners.length === 0 && explicitLosers.length > 0 && explicitLosers.length === game.game_players.length;
+        const isInProgress = winners.length === 0 && !isDraw;
+        if (isInProgress) {
+            expandedGameIds.add(game.id);
+        }
+    });
+
     const filteredGames = games.filter((game) => {
         // Exclude historical games from the History list display
         if (game.is_historical) return false;
@@ -3365,31 +3377,78 @@ function renderGamesList() {
                 explicitLosers.length > 0 &&
                 explicitLosers.length === game.game_players.length;
 
-            const statusLabel =
-                winners.length > 0 || isDraw ? "" : "In Progress";
+            const isInProgress = winners.length === 0 && !isDraw;
+            const isExpanded = expandedGameIds.has(game.id);
+            const expandedClass = isExpanded ? "expanded" : "";
+
+            let bgImgHtml = "";
+            if (winners.length > 0 && winners[0].heroes?.slug) {
+                bgImgHtml = `<img src="${getImgUrl(winners[0].heroes.slug)}" class="game-card-bg-img" alt="">`;
+            }
+
+            // Compact collapsed list of player hero portraits (winners first)
+            const sortedPlayersForSummary = [...game.game_players].sort((a, b) => {
+                if (a.is_winner && !b.is_winner) return -1;
+                if (!a.is_winner && b.is_winner) return 1;
+                return 0;
+            });
+
+            const portraitStrip = sortedPlayersForSummary
+                .map((gp) => {
+                    const heroSlug = gp.heroes?.slug || "";
+                    const heroName = gp.heroes?.name || "Unknown";
+                    const isHeroWinner = gp.is_winner === true;
+                    const winnerClass = isHeroWinner ? "winner-highlight" : "";
+                    const crownHtml = isHeroWinner ? '<span class="mini-winner-crown">👑</span>' : "";
+                    return `
+                        <div class="mini-portrait-wrapper ${winnerClass}" title="${heroName}">
+                            ${crownHtml}
+                            <img src="${getImgUrl(heroSlug)}" class="mini-portrait-img" alt="${heroName}">
+                        </div>
+                    `;
+                })
+                .join("");
+
+            const statusLabel = isInProgress 
+                ? '<span class="game-card-status-badge">In Progress</span>' 
+                : isDraw 
+                    ? '<span class="game-card-status-badge draw-badge">Draw</span>' 
+                    : '';
+            const headerHtml = `
+            <div class="game-card-header" onclick="toggleGameExpansion('${game.id}')">
+                <div class="game-card-title-group">
+                    <span class="game-card-date">${dateStr}</span>
+                    ${statusLabel}
+                </div>
+                <div class="game-card-collapsed-summary">
+                    <div class="mini-portrait-strip">
+                        ${portraitStrip}
+                    </div>
+                    <span class="chevron-icon">▼</span>
+                </div>
+            </div>`;
 
             const canManage =
                 isAdmin() || game.last_updated_by === currentUser?.id;
             const gameActions = canManage
                 ? `
-            <button class="btn-edit-small" onclick="selectWinner('${game.id}')" title="Select Winner">🏆</button>
-            <button class="btn-edit-small" onclick="deleteGame('${game.id}')" title="Delete Game" style="color: var(--danger);">🗑️</button>
-        `
+                <div class="game-card-actions">
+                    <button class="btn-game-action" onclick="selectWinner('${game.id}')" title="Select Winner">🏆</button>
+                    <button class="btn-game-action delete" onclick="deleteGame('${game.id}')" title="Delete Game">🗑️</button>
+                </div>
+            `
                 : "";
 
-            const playerCols = game.game_players
+            const platesArray = game.game_players
                 .map((gp) => {
-                    // Map player ID (p1-p6) to internal index (0-5)
                     const pIdx = parseInt(gp.player_id.substring(1)) - 1;
                     const heroName = gp.heroes?.name || "Unknown";
                     const heroSlug = gp.heroes?.slug || "";
-                    // Determine if this player's hero matches the current games search term
                     const isSearchMatch = Boolean(
                         searchTerm &&
                         heroName.toLowerCase().includes(searchTerm),
                     );
 
-                    // Determine if this player matches the current player filter
                     let isPlayerFilterMatch = false;
                     if (selectedGamePlayerIndex !== null) {
                         if (
@@ -3403,52 +3462,76 @@ function renderGamesList() {
                         }
                     }
 
-                    let boxStyle = gp.is_winner
-                        ? "position: relative; border: 2px solid #28a745; background-color: color-mix(in srgb, #28a745, transparent 65%); filter: brightness(1.3);" // win
-                        : gp.is_winner === false
-                          ? "border: 1px solid transparent; filter: brightness(0.70);" // loss
-                          : "border: 1px solid #d32f2f;"; // not finished
-
-                    // If this hero matches the search or the player filter, add an accent border and a tint background
-                    if (isSearchMatch || isPlayerFilterMatch) {
-                        boxStyle +=
-                            " border: 2px solid var(--accent); background-color: color-mix(in srgb, var(--accent), transparent 65%);";
-                    }
-
-                    let overlayHtml = "";
-                    if (gp.is_winner) {
-                        overlayHtml =
-                            '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-12deg) scaleX(1.3); color: #28a745; font-weight: 900; font-size: 1.45rem; opacity: 1; pointer-events: none; z-index: 10; text-shadow: 2px 2px 4px rgba(0,0,0,0.9); width: 100%; text-align: center; text-transform: uppercase; font-family: Impact, sans-serif; letter-spacing: 1px; white-space: nowrap;">WINNER</div>';
+                    let plateClass = "draw";
+                    if (winners.length > 0) {
+                        plateClass = gp.is_winner ? "winner" : "loser";
                     } else if (isDraw) {
-                        overlayHtml =
-                            '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-12deg) scaleX(1.3); color: #999; font-weight: 900; font-size: 1.45rem; opacity: 1; pointer-events: none; z-index: 10; text-shadow: 2px 2px 4px rgba(0,0,0,0.9); width: 100%; text-align: center; text-transform: uppercase; font-family: Impact, sans-serif; letter-spacing: 1px; white-space: nowrap;">DRAW</div>';
+                        plateClass = "draw";
+                    } else {
+                        plateClass = gp.is_winner === false ? "loser" : "draw";
                     }
+
+                    let borderStyle = "";
+                    if (isSearchMatch || isPlayerFilterMatch) {
+                        borderStyle =
+                            "border-color: var(--accent); box-shadow: 0 0 10px var(--accent-glow);";
+                    }
+
+                    const crownHtml = gp.is_winner ? '<div class="player-plate-crown">👑</div>' : "";
+                    const drawBadgeHtml = isDraw ? '<div class="player-plate-draw-badge">DRAW</div>' : "";
 
                     return `
-                <div class="stat-column" style="${boxStyle}">
-                    ${overlayHtml}
-                    <div class="player-tag" style="background-color: var(--p${pIdx + 1}); margin-bottom: 8px; width: 100%; box-sizing: border-box;">${NAMES[pIdx]}</div>
-                    <a href="${getHeroLink(heroSlug)}" target="_blank" style="display: block;">
-                        <img src="${getImgUrl(heroSlug)}" style="width: 40px; height: 40px; border-radius: 4px; border: 1px solid var(--accent); margin-bottom: 4px;" alt="${heroName}">
-                    </a>
-                    <div class="stat-main" style="font-size: 0.7rem;">${heroName}</div>
-                </div>`;
-                })
-                .join("");
+                    <div class="player-plate ${plateClass}" style="${borderStyle}">
+                        ${crownHtml}
+                        ${drawBadgeHtml}
+                        <div class="player-plate-tag" style="background-color: var(--p${pIdx + 1});">${NAMES[pIdx]}</div>
+                        <div class="player-plate-avatar-container">
+                            <a href="${getHeroLink(heroSlug)}" target="_blank" style="display: block;">
+                                <img src="${getImgUrl(heroSlug)}" class="player-plate-avatar" alt="${heroName}">
+                            </a>
+                        </div>
+                        <div class="player-plate-hero-name">${heroName}</div>
+                    </div>`;
+                });
+
+            let playerPlatesHtml = "";
+            if (platesArray.length === 4) {
+                // Row 1: players 1 and 2, plus a trailing VS divider to transition to Row 2
+                const row1 = platesArray.slice(0, 2).join('<div class="vs-divider">VS</div>') + '<div class="vs-divider">VS</div>';
+                // Row 2: players 3 and 4
+                const row2 = platesArray.slice(2, 4).join('<div class="vs-divider">VS</div>');
+                playerPlatesHtml = `
+                    <div class="player-grid-row">${row1}</div>
+                    <div class="player-grid-row">${row2}</div>
+                `;
+            } else if (platesArray.length === 2 || platesArray.length === 3) {
+                const row1 = platesArray.join('<div class="vs-divider">VS</div>');
+                playerPlatesHtml = `<div class="player-grid-row">${row1}</div>`;
+            } else {
+                // Fallback for 1, 5, 6 players
+                if (platesArray.length > 3) {
+                    const mid = Math.ceil(platesArray.length / 2);
+                    const row1 = platesArray.slice(0, mid).join('<div class="vs-divider">VS</div>');
+                    const row2 = platesArray.slice(mid).join('<div class="vs-divider">VS</div>');
+                    playerPlatesHtml = `
+                        <div class="player-grid-row">${row1}</div>
+                        <div class="player-grid-row">${row2}</div>
+                    `;
+                } else {
+                    const row1 = platesArray.join('<div class="vs-divider">VS</div>');
+                    playerPlatesHtml = `<div class="player-grid-row">${row1}</div>`;
+                }
+            }
 
             return `
-            <div class="hero-header">
-                <span class="hero-name">${dateStr}</span>
-                <span class="group-label">${statusLabel}</span>
-            </div>
-            <div class="hero-body" style="margin-bottom: 20px;">
-                <div class="hero-main-info">
-                    <div class="char-complexity-db">
-                        ${gameActions}
+            <div class="game-history-card ${expandedClass}">
+                ${bgImgHtml}
+                ${headerHtml}
+                <div class="game-card-body">
+                    <div class="player-responsive-grid">
+                        ${playerPlatesHtml}
                     </div>
-                </div>
-                <div class="hero-details">
-                    <div class="dynamic-stats">${playerCols}</div>
+                    ${gameActions}
                 </div>
             </div>`;
         })
@@ -3458,6 +3541,15 @@ function renderGamesList() {
         container.innerHTML =
             '<p style="text-align:center; opacity:0.6;">No games recorded yet.</p>';
     }
+}
+
+function toggleGameExpansion(gameId) {
+    if (expandedGameIds.has(gameId)) {
+        expandedGameIds.delete(gameId);
+    } else {
+        expandedGameIds.add(gameId);
+    }
+    renderGamesList();
 }
 
 // ******************************************
