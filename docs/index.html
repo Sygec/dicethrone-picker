@@ -582,6 +582,36 @@
                             style="margin-top: 15px"></div>
                     </div>
                 </div>
+
+                <div class="admin-panel">
+                    <div
+                        class="panel-header"
+                        onclick="toggleAdminPanel(event, 'collectionsPanel')">
+                        <h3>User Collections</h3>
+                        <button
+                            type="button"
+                            class="panel-toggle"
+                            aria-expanded="false">
+                            <svg
+                                class="panel-chevron"
+                                viewBox="0 0 24 24"
+                                width="14"
+                                height="14"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="3"
+                                stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="collectionsPanel" class="panel-content hidden">
+                        <div
+                            id="collectionsListContainer"
+                            style="margin-top: 15px"></div>
+                    </div>
+                </div>
             </section>
         </main>
 

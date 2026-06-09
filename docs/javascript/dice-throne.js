@@ -234,6 +234,11 @@ async function initializeApp() {
         db.channel("schema-db-changes")
             .on(
                 "postgres_changes",
+                { event: "*", schema: "public", table: "user_heroes" },
+                init,
+            )
+            .on(
+                "postgres_changes",
                 { event: "*", schema: "public", table: "player_hero_stats" },
                 init,
             )
@@ -560,7 +565,8 @@ async function init() {
             `
             *,
             groups (name),
-            player_hero_stats (*)
+            player_hero_stats (*),
+            user_heroes (*)
         `,
         )
         .order("name", { ascending: true });
@@ -569,13 +575,16 @@ async function init() {
 
     // Transform Supabase relational data into the flat array format expected by the app
     characters = data.map((hero) => {
+        const userHeroRecord = hero.user_heroes?.[0];
+        const isOwned = userHeroRecord ? userHeroRecord.is_owned : true; // Default to true if no record exists
+
         const char = {
             id: hero.id,
             name: hero.name,
             slug: hero.slug,
             complexity: hero.complexity,
             group_id: hero.group_id,
-            is_owned: hero.is_owned,
+            is_owned: isOwned,
             group: hero.groups?.name || "Unknown",
             weights: Array(4).fill(DEFAULT_HERO_WEIGHT),
             playCount: [0, 0, 0, 0],
@@ -637,6 +646,9 @@ async function init() {
     renderHeroesList();
     renderPlayersList();
     renderUsersList();
+    if (isAdmin()) {
+        renderCollectionsList();
+    }
     renderPlayerGameFilters();
     renderCollectionView();
     const initialSort = currentSort;
@@ -985,6 +997,8 @@ function renderCollectionView() {
         return a.name.localeCompare(b.name);
     });
 
+    const isDisabled = currentUser ? "" : "disabled";
+
     container.innerHTML = sortedGroups
         .map((group) => {
             const groupHeroes = characters
@@ -1000,7 +1014,7 @@ function renderCollectionView() {
                 .map(
                     (h) => `
             <div class="collection-item">
-                <input type="checkbox" id="owned-${h.id}" ${isHeroOwned(h) ? "checked" : ""} onchange="toggleHeroOwned('${h.id}', this.checked)">
+                <input type="checkbox" id="owned-${h.id}" ${isHeroOwned(h) ? "checked" : ""} ${isDisabled} onchange="toggleHeroOwned('${h.id}', this.checked)">
                 <label for="owned-${h.id}">${h.name}</label>
             </div>
         `,
@@ -1014,7 +1028,7 @@ function renderCollectionView() {
             return `
             <div class="collection-group${isExpanded ? "" : " collapsed"}">
                 <div class="collection-group-header" onclick="toggleCollectionGroup('${group.id}', event)" style="cursor: pointer;">
-                    <input type="checkbox" id="owned-group-${group.id}" ${allOwned ? "checked" : ""} onchange="toggleGroupOwned('${group.id}', this.checked)" onclick="event.stopPropagation();">
+                    <input type="checkbox" id="owned-group-${group.id}" ${allOwned ? "checked" : ""} ${isDisabled} onchange="toggleGroupOwned('${group.id}', this.checked)" onclick="event.stopPropagation();">
                     <label for="owned-group-${group.id}" onclick="event.stopPropagation();">
                         <strong>${group.name}</strong>
                         ${group.year ? ` <span style="opacity: 0.6; font-size: 0.85em;">(${group.year})</span>` : ""}
@@ -1033,6 +1047,11 @@ function renderCollectionView() {
 }
 
 async function toggleHeroOwned(heroId, isOwned) {
+    if (!currentUser) {
+        alert("Please log in to manage your collection.");
+        return;
+    }
+
     // Update local state first for immediate UI feedback
     const hero = characters.find((h) => h.id === heroId);
     if (hero) hero.is_owned = isOwned;
@@ -1041,9 +1060,12 @@ async function toggleHeroOwned(heroId, isOwned) {
     updateDropdownSort(); // Refresh dropdowns in the Roll section
 
     const { error } = await db
-        .from("heroes")
-        .update({ is_owned: isOwned })
-        .eq("id", heroId);
+        .from("user_heroes")
+        .upsert({
+            user_id: currentUser.id,
+            hero_id: heroId,
+            is_owned: isOwned
+        });
 
     if (error) {
         alert("Error updating ownership: " + error.message);
@@ -1056,6 +1078,11 @@ async function toggleHeroOwned(heroId, isOwned) {
 }
 
 async function toggleGroupOwned(groupId, isOwned) {
+    if (!currentUser) {
+        alert("Please log in to manage your collection.");
+        return;
+    }
+
     // Update local state for all heroes in the group immediately
     characters.forEach((h) => {
         if (h.group_id === groupId) h.is_owned = isOwned;
@@ -1064,10 +1091,17 @@ async function toggleGroupOwned(groupId, isOwned) {
     renderList();
     updateDropdownSort(); // Refresh dropdowns in the Roll section
 
+    const groupHeroIds = characters
+        .filter((h) => h.group_id === groupId)
+        .map((h) => ({
+            user_id: currentUser.id,
+            hero_id: h.id,
+            is_owned: isOwned
+        }));
+
     const { error } = await db
-        .from("heroes")
-        .update({ is_owned: isOwned })
-        .eq("group_id", groupId);
+        .from("user_heroes")
+        .upsert(groupHeroIds);
 
     if (error) {
         alert("Error updating group ownership: " + error.message);
@@ -1103,7 +1137,6 @@ async function saveCharacter() {
         complexity: complexity ? parseInt(complexity) : null,
         group_id: groupId,
         last_updated_by: currentUser.id,
-        is_owned: false, // New heroes are not owned by default
     };
 
     const { data: hero, error } = await db
@@ -1641,6 +1674,163 @@ function renderUsersList() {
         `;
         container.appendChild(row);
     });
+}
+
+// ******************************************
+// renderCollectionsList()
+// input: none
+// ******************************************
+// Renders the matrix of hero ownership per player for admins.
+// ******************************************
+async function renderCollectionsList() {
+    const container = document.getElementById("collectionsListContainer");
+    if (!container) return;
+
+    container.innerHTML = '<p style="opacity: 0.7; font-style: italic; padding: 10px;">Loading collections...</p>';
+
+    // Fetch all user_heroes records safely
+    let allUserHeroes = [];
+    try {
+        const { data, error } = await db
+            .from("user_heroes")
+            .select("*");
+
+        if (error) {
+            container.innerHTML = `<p style="color: var(--danger); padding: 10px;">Error loading collections: ${escapeHtml(error.message)}</p>`;
+            return;
+        }
+        allUserHeroes = data || [];
+    } catch (e) {
+        container.innerHTML = `<p style="color: var(--danger); padding: 10px;">Error connecting to database: ${escapeHtml(e.message)}</p>`;
+        return;
+    }
+
+    // Build user profiles list to show in the matrix columns
+    const userProfiles = [];
+
+    // 1. Add linked players
+    players.forEach((p) => {
+        if (p.user_id) {
+            userProfiles.push({
+                user_id: p.user_id,
+                name: p.name,
+                isLinked: true
+            });
+        }
+    });
+
+    // 2. Add other users who have records in user_heroes but aren't linked to players
+    allUserHeroes.forEach((row) => {
+        if (!userProfiles.some((up) => up.user_id === row.user_id)) {
+            userProfiles.push({
+                user_id: row.user_id,
+                name: `User (${row.user_id.substring(0, 8)})`,
+                isLinked: false
+            });
+        }
+    });
+
+    // 3. Add the current logged-in user if they aren't already in the list
+    if (currentUser && !userProfiles.some((up) => up.user_id === currentUser.id)) {
+        const linkedPlayer = players.find((p) => p.user_id === currentUser.id);
+        const name = linkedPlayer ? linkedPlayer.name : (currentUser.email ? currentUser.email.split("@")[0] : "Admin");
+        userProfiles.push({
+            user_id: currentUser.id,
+            name: name,
+            isLinked: !!linkedPlayer
+        });
+    }
+
+    if (userProfiles.length === 0) {
+        container.innerHTML = '<p style="opacity: 0.7; font-style: italic; padding: 10px;">No user profiles available.</p>';
+        return;
+    }
+
+    // Build ownership map for easy lookup: key = `${userId}_${heroId}`
+    const ownershipMap = {};
+    allUserHeroes.forEach((row) => {
+        ownershipMap[`${row.user_id}_${row.hero_id}`] = row.is_owned;
+    });
+
+    // Create table wrapper for responsive scrolling
+    const tableWrapper = document.createElement("div");
+    tableWrapper.style.overflowX = "auto";
+    tableWrapper.style.marginTop = "10px";
+
+    // Build header columns: Hero + user profiles
+    const headersHtml = userProfiles
+        .map((up) => `<th style="padding: 10px; font-weight: 600; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem;">${escapeHtml(up.name)}</th>`)
+        .join("");
+
+    // Build rows for each hero
+    const rowsHtml = characters
+        .map((hero) => {
+            const cellsHtml = userProfiles
+                .map((up) => {
+                    const key = `${up.user_id}_${hero.id}`;
+                    const isOwned = ownershipMap[key] !== false; // Default to true if record doesn't exist
+                    return `
+                        <td style="padding: 8px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <input 
+                                type="checkbox" 
+                                ${isOwned ? "checked" : ""} 
+                                onchange="toggleUserHeroOwned('${up.user_id}', '${hero.id}', this.checked)"
+                                style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent);"
+                            >
+                        </td>
+                    `;
+                })
+                .join("");
+
+            return `
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: 500; font-size: 0.9rem;">
+                        ${escapeHtml(hero.name)}
+                    </td>
+                    ${cellsHtml}
+                </tr>
+            `;
+        })
+        .join("");
+
+    tableWrapper.innerHTML = `
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr>
+                    <th style="padding: 10px; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem;">Hero</th>
+                    ${headersHtml}
+                </tr>
+            </thead>
+            <tbody>
+                ${rowsHtml}
+            </tbody>
+        </table>
+    `;
+
+    container.innerHTML = "";
+    container.appendChild(tableWrapper);
+}
+
+// ******************************************
+// toggleUserHeroOwned(userId, heroId, isOwned)
+// input: userId -> UUID of the user, heroId -> UUID of the hero, isOwned -> boolean
+// ******************************************
+// Allows admins to update other users' collection states.
+// ******************************************
+async function toggleUserHeroOwned(userId, heroId, isOwned) {
+    const { error } = await db
+        .from("user_heroes")
+        .upsert({
+            user_id: userId,
+            hero_id: heroId,
+            is_owned: isOwned
+        });
+
+    if (error) {
+        alert("Error updating user collection: " + error.message);
+        // Refresh to revert UI checkbox state
+        renderCollectionsList();
+    }
 }
 
 function toggleGroupForm() {
