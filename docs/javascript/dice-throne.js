@@ -3439,7 +3439,9 @@ async function selectWinner(gameId) {
         explicitLosers.length === game.game_players.length;
 
     // Build the grid wrapper
-    let optionsHtml = `<div class="winner-select-grid">`;
+    const isTwoRows = game.game_players.length > 3;
+    const gridClass = isTwoRows ? "winner-select-grid two-rows" : "winner-select-grid";
+    let optionsHtml = `<div class="${gridClass}">`;
 
     // Add cards for each participant
     optionsHtml += game.game_players

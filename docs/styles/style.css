@@ -2995,6 +2995,11 @@ body.loaded .bottom-nav {
     margin-top: 15px;
 }
 
+.winner-select-grid.two-rows {
+    grid-template-columns: repeat(2, minmax(105px, 145px));
+    justify-content: center;
+}
+
 .winner-card {
     position: relative;
     background: rgba(255, 255, 255, 0.03);
