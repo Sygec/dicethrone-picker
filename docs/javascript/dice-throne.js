@@ -737,7 +737,7 @@ function showWhatsNew(entry) {
             </ul>
         </div>
     `;
-    whatsNewModal.style.display = "block";
+    whatsNewModal.style.display = "flex";
     document.body.style.overflow = "hidden";
     // Save to localStorage so it doesn't show again for this version
     localStorage.setItem("lastSeenVersion", entry.version);
