@@ -739,7 +739,7 @@ function closeChangelog() {
 // ******************************************
 function showWhatsNew(entry) {
     whatsNewContainer.innerHTML = `
-        <div style="color: black;">
+        <div>
             <h3>v${entry.version}</h3>
             <ul style="text-align: left;">
                 ${entry.changes.map((change) => `<li>${change}</li>`).join("")}
