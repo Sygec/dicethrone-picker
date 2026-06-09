@@ -3010,7 +3010,7 @@ body.loaded .bottom-nav {
 /* Winner Selection Modal Grid & Cards */
 .winner-select-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
+    grid-template-columns: repeat(3, 105px);
     gap: 12px;
     margin-bottom: 20px;
     margin-top: 15px;
@@ -3018,7 +3018,7 @@ body.loaded .bottom-nav {
 }
 
 .winner-select-grid.two-rows {
-    grid-template-columns: repeat(2, minmax(105px, 145px));
+    grid-template-columns: repeat(2, 105px);
 }
 
 .winner-card {

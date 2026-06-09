@@ -17,7 +17,7 @@ let sortAsc = true;
 let currentSortPlayerIndex = 0;
 let editIndex = -1;
 let activePlayerIndices = [0, 1, 2, 3];
-let currentDrawerMode = 'sort-filter';
+let currentDrawerMode = "sort-filter";
 let stagedSort = "";
 let stagedSortAsc = true;
 let stagedSortPlayerIndex = 0;
@@ -575,7 +575,9 @@ async function init() {
 
     // Transform Supabase relational data into the flat array format expected by the app
     characters = data.map((hero) => {
-        const userHeroRecord = hero.user_heroes?.find((uh) => uh.user_id === currentUser?.id);
+        const userHeroRecord = hero.user_heroes?.find(
+            (uh) => uh.user_id === currentUser?.id,
+        );
         const isOwned = userHeroRecord ? userHeroRecord.is_owned : true; // Default to true if no record exists
 
         const char = {
@@ -1060,18 +1062,18 @@ async function toggleHeroOwned(heroId, isOwned) {
     updateDropdownSort(); // Refresh dropdowns in the Roll section
 
     // Sync with Admin collections panel if visible
-    const adminCheckbox = document.getElementById(`admin-owned-${currentUser.id}-${heroId}`);
+    const adminCheckbox = document.getElementById(
+        `admin-owned-${currentUser.id}-${heroId}`,
+    );
     if (adminCheckbox) {
         adminCheckbox.checked = isOwned;
     }
 
-    const { error } = await db
-        .from("user_heroes")
-        .upsert({
-            user_id: currentUser.id,
-            hero_id: heroId,
-            is_owned: isOwned
-        });
+    const { error } = await db.from("user_heroes").upsert({
+        user_id: currentUser.id,
+        hero_id: heroId,
+        is_owned: isOwned,
+    });
 
     if (error) {
         alert("Error updating ownership: " + error.message);
@@ -1080,7 +1082,7 @@ async function toggleHeroOwned(heroId, isOwned) {
         renderCollectionView();
         updateDropdownSort(); // Revert dropdowns on error
         renderList();
-        
+
         // Revert admin panel checkbox
         if (adminCheckbox) {
             adminCheckbox.checked = !isOwned;
@@ -1098,7 +1100,9 @@ async function toggleGroupOwned(groupId, isOwned) {
     characters.forEach((h) => {
         if (h.group_id === groupId) {
             h.is_owned = isOwned;
-            const adminCheckbox = document.getElementById(`admin-owned-${currentUser.id}-${h.id}`);
+            const adminCheckbox = document.getElementById(
+                `admin-owned-${currentUser.id}-${h.id}`,
+            );
             if (adminCheckbox) {
                 adminCheckbox.checked = isOwned;
             }
@@ -1113,12 +1117,10 @@ async function toggleGroupOwned(groupId, isOwned) {
         .map((h) => ({
             user_id: currentUser.id,
             hero_id: h.id,
-            is_owned: isOwned
+            is_owned: isOwned,
         }));
 
-    const { error } = await db
-        .from("user_heroes")
-        .upsert(groupHeroIds);
+    const { error } = await db.from("user_heroes").upsert(groupHeroIds);
 
     if (error) {
         alert("Error updating group ownership: " + error.message);
@@ -1703,14 +1705,13 @@ async function renderCollectionsList() {
     const container = document.getElementById("collectionsListContainer");
     if (!container) return;
 
-    container.innerHTML = '<p style="opacity: 0.7; font-style: italic; padding: 10px;">Loading collections...</p>';
+    container.innerHTML =
+        '<p style="opacity: 0.7; font-style: italic; padding: 10px;">Loading collections...</p>';
 
     // Fetch all user_heroes records safely
     let allUserHeroes = [];
     try {
-        const { data, error } = await db
-            .from("user_heroes")
-            .select("*");
+        const { data, error } = await db.from("user_heroes").select("*");
 
         if (error) {
             container.innerHTML = `<p style="color: var(--danger); padding: 10px;">Error loading collections: ${escapeHtml(error.message)}</p>`;
@@ -1731,7 +1732,7 @@ async function renderCollectionsList() {
             userProfiles.push({
                 user_id: p.user_id,
                 name: p.name,
-                isLinked: true
+                isLinked: true,
             });
         }
     });
@@ -1742,24 +1743,32 @@ async function renderCollectionsList() {
             userProfiles.push({
                 user_id: row.user_id,
                 name: `User (${row.user_id.substring(0, 8)})`,
-                isLinked: false
+                isLinked: false,
             });
         }
     });
 
     // 3. Add the current logged-in user if they aren't already in the list
-    if (currentUser && !userProfiles.some((up) => up.user_id === currentUser.id)) {
+    if (
+        currentUser &&
+        !userProfiles.some((up) => up.user_id === currentUser.id)
+    ) {
         const linkedPlayer = players.find((p) => p.user_id === currentUser.id);
-        const name = linkedPlayer ? linkedPlayer.name : (currentUser.email ? currentUser.email.split("@")[0] : "Admin");
+        const name = linkedPlayer
+            ? linkedPlayer.name
+            : currentUser.email
+              ? currentUser.email.split("@")[0]
+              : "Admin";
         userProfiles.push({
             user_id: currentUser.id,
             name: name,
-            isLinked: !!linkedPlayer
+            isLinked: !!linkedPlayer,
         });
     }
 
     if (userProfiles.length === 0) {
-        container.innerHTML = '<p style="opacity: 0.7; font-style: italic; padding: 10px;">No user profiles available.</p>';
+        container.innerHTML =
+            '<p style="opacity: 0.7; font-style: italic; padding: 10px;">No user profiles available.</p>';
         return;
     }
 
@@ -1776,7 +1785,10 @@ async function renderCollectionsList() {
 
     // Build header columns: Hero + user profiles
     const headersHtml = userProfiles
-        .map((up) => `<th style="padding: 10px; font-weight: 600; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem;">${escapeHtml(up.name)}</th>`)
+        .map(
+            (up) =>
+                `<th style="padding: 10px; font-weight: 600; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem;">${escapeHtml(up.name)}</th>`,
+        )
         .join("");
 
     // Build rows for each hero
@@ -1845,13 +1857,11 @@ async function toggleUserHeroOwned(userId, heroId, isOwned) {
         updateDropdownSort(); // Refresh dropdowns in the Roll section
     }
 
-    const { error } = await db
-        .from("user_heroes")
-        .upsert({
-            user_id: userId,
-            hero_id: heroId,
-            is_owned: isOwned
-        });
+    const { error } = await db.from("user_heroes").upsert({
+        user_id: userId,
+        hero_id: heroId,
+        is_owned: isOwned,
+    });
 
     if (error) {
         alert("Error updating user collection: " + error.message);
@@ -2606,9 +2616,8 @@ function handlePlayerToggleClick(event, index) {
     }
 }
 
-
 function openSortFilterDrawer() {
-    currentDrawerMode = 'sort-filter';
+    currentDrawerMode = "sort-filter";
     const drawer = document.getElementById("sort-filter-drawer");
     const title = document.getElementById("drawer-title-text");
     const footer = document.getElementById("drawer-footer-content");
@@ -2629,7 +2638,7 @@ function openSortFilterDrawer() {
 }
 
 function openColumnsDrawer() {
-    currentDrawerMode = 'columns';
+    currentDrawerMode = "columns";
     const drawer = document.getElementById("sort-filter-drawer");
     const title = document.getElementById("drawer-title-text");
     const footer = document.getElementById("drawer-footer-content");
@@ -2640,7 +2649,8 @@ function openColumnsDrawer() {
 
     // Stage current states
     stagedPlayerIndices = [...activePlayerIndices];
-    stagedUseHistorical = document.getElementById("db-use-historical-data")?.checked ?? true;
+    stagedUseHistorical =
+        document.getElementById("db-use-historical-data")?.checked ?? true;
 
     renderDrawerBody();
     drawer.classList.add("open");
@@ -2658,7 +2668,7 @@ function renderDrawerBody() {
     const body = document.getElementById("drawer-body-content");
     if (!body) return;
 
-    if (currentDrawerMode === 'sort-filter') {
+    if (currentDrawerMode === "sort-filter") {
         body.innerHTML = `
             <!-- Sorting Controls -->
             <div class="panel-row-new">
@@ -2718,14 +2728,15 @@ function renderDrawerBody() {
         updateDrawerPlayerSortPillsUI();
         renderDrawerComplexityFilters();
         renderDrawerGroupFilters();
-
     } else {
         // Render Column Toggles and Historical checkbox
         const mainPlayerNames = NAMES.slice(0, 4);
         const visibilityPillsHtml = mainPlayerNames
             .map((name, i) => {
                 const isActive = stagedPlayerIndices.includes(i);
-                const activeClass = isActive ? `active p${i + 1}-color` : "inactive";
+                const activeClass = isActive
+                    ? `active p${i + 1}-color`
+                    : "inactive";
                 return `
                 <button type="button" class="pill-toggle ${activeClass}" onclick="toggleDrawerPlayerFilter(${i})">
                     ${name}
@@ -2792,11 +2803,14 @@ function updateDrawerSortDirectionUI() {
 }
 
 function updateDrawerPlayerSortPillsUI() {
-    const subSection = document.getElementById("drawer-player-sort-sub-section");
+    const subSection = document.getElementById(
+        "drawer-player-sort-sub-section",
+    );
     const pillsContainer = document.getElementById("drawer-player-sort-pills");
     if (!subSection || !pillsContainer) return;
 
-    const showPlayers = stagedSort.startsWith("w") || stagedSort.startsWith("d");
+    const showPlayers =
+        stagedSort.startsWith("w") || stagedSort.startsWith("d");
     subSection.style.display = showPlayers ? "block" : "none";
 
     if (showPlayers) {
@@ -2841,19 +2855,29 @@ function renderDrawerComplexityFilters() {
     const container = document.getElementById("drawer-complexity-filter-bar");
     if (!container) return;
 
-    const searchTerm = document.getElementById("hero-search")?.value.toLowerCase() || "";
+    const searchTerm =
+        document.getElementById("hero-search")?.value.toLowerCase() || "";
     const showOwned = document.getElementById("db-show-owned")?.checked ?? true;
-    const showNotOwned = document.getElementById("db-show-not-owned")?.checked ?? false;
+    const showNotOwned =
+        document.getElementById("db-show-not-owned")?.checked ?? false;
 
     let html = "";
     for (let i = 1; i <= 6; i++) {
         const potentialMatchesCount = characters.filter((c) => {
             if (Number(c.complexity) !== i) return false;
             const nameMatch = c.name.toLowerCase().includes(searchTerm);
-            const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+            const groupNameMatch = (c.group || "")
+                .toLowerCase()
+                .includes(searchTerm);
             const groupFilterMatch = stagedGroups.has(c.group_id);
-            const ownershipMatch = (isHeroOwned(c) && showOwned) || (!isHeroOwned(c) && showNotOwned);
-            return (nameMatch || groupNameMatch) && groupFilterMatch && ownershipMatch;
+            const ownershipMatch =
+                (isHeroOwned(c) && showOwned) ||
+                (!isHeroOwned(c) && showNotOwned);
+            return (
+                (nameMatch || groupNameMatch) &&
+                groupFilterMatch &&
+                ownershipMatch
+            );
         }).length;
 
         const isDisabled = potentialMatchesCount === 0;
@@ -2871,10 +2895,15 @@ function renderDrawerComplexityFilters() {
 
     const totalMatchingHeroes = characters.filter((c) => {
         const nameMatch = c.name.toLowerCase().includes(searchTerm);
-        const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+        const groupNameMatch = (c.group || "")
+            .toLowerCase()
+            .includes(searchTerm);
         const groupFilterMatch = stagedGroups.has(c.group_id);
-        const ownershipMatch = (isHeroOwned(c) && showOwned) || (!isHeroOwned(c) && showNotOwned);
-        return (nameMatch || groupNameMatch) && groupFilterMatch && ownershipMatch;
+        const ownershipMatch =
+            (isHeroOwned(c) && showOwned) || (!isHeroOwned(c) && showNotOwned);
+        return (
+            (nameMatch || groupNameMatch) && groupFilterMatch && ownershipMatch
+        );
     }).length;
 
     const isAllDisabled = totalMatchingHeroes === 0;
@@ -2894,7 +2923,8 @@ function renderDrawerComplexityFilters() {
 
 function toggleDrawerLevel(level) {
     if (level === "all") {
-        stagedLevels = stagedLevels.size === 6 ? new Set() : new Set([1, 2, 3, 4, 5, 6]);
+        stagedLevels =
+            stagedLevels.size === 6 ? new Set() : new Set([1, 2, 3, 4, 5, 6]);
     } else {
         if (stagedLevels.has(level)) stagedLevels.delete(level);
         else stagedLevels.add(level);
@@ -2953,9 +2983,11 @@ function renderDrawerGroupFilters() {
     const container = document.getElementById("drawer-group-filter-bar");
     if (!container) return;
 
-    const searchTerm = document.getElementById("hero-search")?.value.toLowerCase() || "";
+    const searchTerm =
+        document.getElementById("hero-search")?.value.toLowerCase() || "";
     const showOwned = document.getElementById("db-show-owned")?.checked ?? true;
-    const showNotOwned = document.getElementById("db-show-not-owned")?.checked ?? false;
+    const showNotOwned =
+        document.getElementById("db-show-not-owned")?.checked ?? false;
 
     let html = groups
         .map((g) => {
@@ -2966,10 +2998,18 @@ function renderDrawerGroupFilters() {
             const potentialMatchesCount = characters.filter((c) => {
                 if (c.group_id !== g.id) return false;
                 const nameMatch = c.name.toLowerCase().includes(searchTerm);
-                const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+                const groupNameMatch = (c.group || "")
+                    .toLowerCase()
+                    .includes(searchTerm);
                 const complexityMatch = stagedLevels.has(Number(c.complexity));
-                const ownershipMatch = (isHeroOwned(c) && showOwned) || (!isHeroOwned(c) && showNotOwned);
-                return (nameMatch || groupNameMatch) && complexityMatch && ownershipMatch;
+                const ownershipMatch =
+                    (isHeroOwned(c) && showOwned) ||
+                    (!isHeroOwned(c) && showNotOwned);
+                return (
+                    (nameMatch || groupNameMatch) &&
+                    complexityMatch &&
+                    ownershipMatch
+                );
             }).length;
 
             const isDisabled = potentialMatchesCount === 0;
@@ -2987,10 +3027,15 @@ function renderDrawerGroupFilters() {
 
     const totalMatchingHeroes = characters.filter((c) => {
         const nameMatch = c.name.toLowerCase().includes(searchTerm);
-        const groupNameMatch = (c.group || "").toLowerCase().includes(searchTerm);
+        const groupNameMatch = (c.group || "")
+            .toLowerCase()
+            .includes(searchTerm);
         const complexityMatch = stagedLevels.has(Number(c.complexity));
-        const ownershipMatch = (isHeroOwned(c) && showOwned) || (!isHeroOwned(c) && showNotOwned);
-        return (nameMatch || groupNameMatch) && complexityMatch && ownershipMatch;
+        const ownershipMatch =
+            (isHeroOwned(c) && showOwned) || (!isHeroOwned(c) && showNotOwned);
+        return (
+            (nameMatch || groupNameMatch) && complexityMatch && ownershipMatch
+        );
     }).length;
 
     const isAllDisabled = totalMatchingHeroes === 0;
@@ -3034,7 +3079,7 @@ function toggleDrawerGroupFilter(groupId) {
 }
 
 function resetFilters() {
-    if (currentDrawerMode === 'sort-filter') {
+    if (currentDrawerMode === "sort-filter") {
         stagedSort = "name";
         stagedSortAsc = true;
         stagedSortPlayerIndex = 0;
@@ -3049,7 +3094,7 @@ function resetFilters() {
 }
 
 function applyAndCloseDrawer() {
-    if (currentDrawerMode === 'sort-filter') {
+    if (currentDrawerMode === "sort-filter") {
         currentSort = stagedSort;
         sortAsc = stagedSortAsc;
         currentSortPlayerIndex = stagedSortPlayerIndex;
@@ -3439,8 +3484,11 @@ async function selectWinner(gameId) {
         explicitLosers.length === game.game_players.length;
 
     // Build the grid wrapper
-    const isTwoRows = game.game_players.length > 3;
-    const gridClass = isTwoRows ? "winner-select-grid two-rows" : "winner-select-grid";
+    const isTwoRows =
+        game.game_players.length === 4 || game.game_players.length === 2;
+    const gridClass = isTwoRows
+        ? "winner-select-grid two-rows"
+        : "winner-select-grid";
     let optionsHtml = `<div class="${gridClass}">`;
 
     // Add cards for each participant
@@ -3493,15 +3541,15 @@ async function selectWinner(gameId) {
 // Updates UI classes and checks corresponding hidden radio input for winner selection.
 // ******************************************
 function handleWinnerSelect(value) {
-    const cards = document.querySelectorAll('.winner-card, .winner-draw-card');
-    cards.forEach(card => {
+    const cards = document.querySelectorAll(".winner-card, .winner-draw-card");
+    cards.forEach((card) => {
         const radio = card.querySelector('input[name="winner-choice"]');
         if (radio) {
             if (radio.value === value) {
                 radio.checked = true;
-                card.classList.add('selected');
+                card.classList.add("selected");
             } else {
-                card.classList.remove('selected');
+                card.classList.remove("selected");
             }
         }
     });
@@ -3851,7 +3899,7 @@ function renderList() {
                     playCount,
                     lastPlayed,
                     winCount,
-                    winRate
+                    winRate,
                 };
             });
 
@@ -3865,18 +3913,30 @@ function renderList() {
                     let recencyDot = "⚫"; // Default to dark grey (Never)
                     if (item.lastPlayed && item.lastPlayed === "Unknown") {
                         recencyDot = "⚪"; // White for Unknown
-                    } else if (item.lastPlayed && item.lastPlayed !== "Never" && item.lastPlayed !== "Unknown") {
+                    } else if (
+                        item.lastPlayed &&
+                        item.lastPlayed !== "Never" &&
+                        item.lastPlayed !== "Unknown"
+                    ) {
                         try {
                             let cleanDate = item.lastPlayed.trim();
-                            if (cleanDate && !cleanDate.includes("T")) cleanDate = cleanDate.replace(" ", "T");
-                            if (cleanDate && !cleanDate.includes("Z") && !cleanDate.includes("+")) cleanDate += "Z";
+                            if (cleanDate && !cleanDate.includes("T"))
+                                cleanDate = cleanDate.replace(" ", "T");
+                            if (
+                                cleanDate &&
+                                !cleanDate.includes("Z") &&
+                                !cleanDate.includes("+")
+                            )
+                                cleanDate += "Z";
                             const lastDate = new Date(cleanDate);
                             if (!isNaN(lastDate.getTime())) {
                                 const today = new Date();
                                 lastDate.setHours(0, 0, 0, 0);
                                 today.setHours(0, 0, 0, 0);
                                 const diffTime = today - lastDate;
-                                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                                const diffDays = Math.floor(
+                                    diffTime / (1000 * 60 * 60 * 24),
+                                );
                                 if (diffDays <= 15) {
                                     recencyDot = "🟢"; // Green (last 15 days)
                                 } else if (diffDays <= 60) {
@@ -3976,11 +4036,14 @@ function renderList() {
 
 // Relative time calculation helper
 function getDaysAgoString(dateString) {
-    if (!dateString || dateString === "Never" || dateString === "Unknown") return "";
+    if (!dateString || dateString === "Never" || dateString === "Unknown")
+        return "";
     try {
         let cleanDate = dateString.trim();
-        if (cleanDate && !cleanDate.includes("T")) cleanDate = cleanDate.replace(" ", "T");
-        if (cleanDate && !cleanDate.includes("Z") && !cleanDate.includes("+")) cleanDate += "Z";
+        if (cleanDate && !cleanDate.includes("T"))
+            cleanDate = cleanDate.replace(" ", "T");
+        if (cleanDate && !cleanDate.includes("Z") && !cleanDate.includes("+"))
+            cleanDate += "Z";
         const lastDate = new Date(cleanDate);
         if (isNaN(lastDate.getTime())) return "";
         const today = new Date();
