@@ -3386,6 +3386,33 @@ function renderGamesList() {
                 bgImgHtml = `<img src="${getImgUrl(winners[0].heroes.slug)}" class="game-card-bg-img" alt="">`;
             }
 
+            // Generate unique player initials (e.g. S, C, or Sa, Sh for duplicate first letters in the game)
+            const playerNamesMap = {};
+            game.game_players.forEach((gp) => {
+                const pIdx = parseInt(gp.player_id.substring(1)) - 1;
+                let rawName = NAMES[pIdx] || "Unknown";
+                if (rawName.toLowerCase().startsWith("player ") && rawName.length > 7) {
+                    rawName = "P" + rawName.substring(7);
+                }
+                playerNamesMap[gp.player_id] = rawName;
+            });
+
+            const firstLetters = Object.values(playerNamesMap).map((name) =>
+                name.charAt(0).toUpperCase()
+            );
+
+            const playerLabelsMap = {};
+            game.game_players.forEach((gp) => {
+                const name = playerNamesMap[gp.player_id];
+                const firstChar = name.charAt(0).toUpperCase();
+                const count = firstLetters.filter((l) => l === firstChar).length;
+                let label = firstChar;
+                if (count > 1 && name.length > 1) {
+                    label = firstChar + name.charAt(1).toLowerCase();
+                }
+                playerLabelsMap[gp.player_id] = label;
+            });
+
             // Compact collapsed list of player hero portraits (winners first)
             const sortedPlayersForSummary = [...game.game_players].sort((a, b) => {
                 if (a.is_winner && !b.is_winner) return -1;
@@ -3395,15 +3422,18 @@ function renderGamesList() {
 
             const portraitStrip = sortedPlayersForSummary
                 .map((gp) => {
+                    const pIdx = parseInt(gp.player_id.substring(1)) - 1;
                     const heroSlug = gp.heroes?.slug || "";
                     const heroName = gp.heroes?.name || "Unknown";
                     const isHeroWinner = gp.is_winner === true;
                     const winnerClass = isHeroWinner ? "winner-highlight" : "";
                     const crownHtml = isHeroWinner ? '<span class="mini-winner-crown">👑</span>' : "";
+                    const playerLabel = playerLabelsMap[gp.player_id];
                     return `
                         <div class="mini-portrait-wrapper ${winnerClass}" title="${heroName}">
                             ${crownHtml}
                             <img src="${getImgUrl(heroSlug)}" class="mini-portrait-img" alt="${heroName}">
+                            <div class="mini-portrait-pill" style="background-color: var(--p${pIdx + 1});">${playerLabel}</div>
                         </div>
                     `;
                 })
