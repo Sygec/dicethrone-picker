@@ -43,4 +43,5 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background-image: radial-gradient(circle at 50% 25%, var(--bg-highlight) 0%, var(--bg-dark) 100%);
+  opacity: 0.6;
 }
