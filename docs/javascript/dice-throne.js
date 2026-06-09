@@ -2100,7 +2100,7 @@ function renderPlayerRowSkeleton(pIdx) {
                         <div class="hero-header-left">
                             <span class="player-name-caps" style="color: var(--player-color);">${NAMES[pIdx].toUpperCase()}</span>
                             <span class="hero-name-divider">:</span>
-                            <span class="hero-name scramble-text" id="hero-name-title-${pIdx}">ROLLING...</span>
+                            <a href="#" target="_blank" class="hero-name hero-name-link scramble-text" id="hero-name-title-${pIdx}">ROLLING...</a>
                         </div>
                     </div>
                     
@@ -2269,9 +2269,13 @@ function selectHeroForPlayer(heroName) {
         bgImgEl.alt = char.name;
     }
 
-    // Update hero name title and group
     const nameTitle = document.getElementById(`hero-name-title-${pIdx}`);
-    if (nameTitle) nameTitle.innerText = char.name;
+    if (nameTitle) {
+        nameTitle.innerText = char.name;
+        nameTitle.classList.remove("scramble-text");
+        nameTitle.classList.add("resolved");
+        nameTitle.href = getHeroLink(char.slug);
+    }
 
     const groupEl = document.getElementById(`hero-group-${pIdx}`);
     if (groupEl) groupEl.innerText = char.group || "Unknown";
@@ -2346,6 +2350,8 @@ function stopPanelScramble(pIdx, finalHero) {
         if (nameEl) {
             nameEl.innerText = finalHero.name;
             nameEl.classList.remove("scramble-text");
+            nameEl.classList.add("resolved");
+            nameEl.href = getHeroLink(finalHero.slug);
         }
 
         // Populate group
@@ -4155,12 +4161,16 @@ function renderList() {
                 <div class="hero-header" onclick="toggleHeroPanel(this)">
                     <!-- Collapsed Title Layout (Only Hero Name) -->
                     <div class="header-title-collapsed">
-                        <span class="hero-name">${c.name}</span>
+                        <a href="${getHeroLink(c.slug)}" target="_blank" class="hero-name-link" onclick="event.stopPropagation()">
+                            <span class="hero-name">${c.name}</span>
+                        </a>
                     </div>
                     
                     <!-- Expanded Title Layout (Stacked) -->
                     <div class="header-title-expanded">
-                        <div class="expanded-name">${c.name}</div>
+                        <a href="${getHeroLink(c.slug)}" target="_blank" class="hero-name-link" onclick="event.stopPropagation()">
+                            <div class="expanded-name">${c.name}</div>
+                        </a>
                         <div class="expanded-group">${c.group || "Season ?"}</div>
                     </div>
                     

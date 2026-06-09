@@ -222,6 +222,34 @@ h3,
     font-weight: 700;
 }
 
+.hero-name-link {
+    text-decoration: none;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.hero-name.hero-name-link {
+    text-decoration: none;
+    cursor: default;
+    color: inherit;
+    pointer-events: none;
+}
+
+.hero-name.hero-name-link.resolved {
+    cursor: pointer;
+    color: var(--accent) !important;
+    pointer-events: auto;
+}
+
+@media (hover: hover) {
+    .hero-name-link:hover .hero-name,
+    .hero-name-link:hover .expanded-name,
+    .hero-name.hero-name-link.resolved:hover {
+        text-decoration: underline;
+        filter: brightness(1.2);
+    }
+}
+
 h1 {
     text-align: center;
     color: var(--accent);
