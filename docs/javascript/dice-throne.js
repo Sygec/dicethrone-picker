@@ -3615,11 +3615,11 @@ function renderGamesList() {
                     const heroName = gp.heroes?.name || "Unknown";
                     const isHeroWinner = gp.is_winner === true;
                     const winnerClass = isHeroWinner ? "winner-highlight" : "";
-                    const crownHtml = isHeroWinner ? '<span class="mini-winner-crown">👑</span>' : "";
+                    const trophyHtml = isHeroWinner ? '<span class="mini-winner-trophy">🏆</span>' : "";
                     const playerLabel = playerLabelsMap[gp.player_id];
                     return `
                         <a href="${getHeroLink(heroSlug)}" target="_blank" class="mini-portrait-wrapper ${winnerClass}" title="${heroName}" onclick="event.stopPropagation()">
-                            ${crownHtml}
+                            ${trophyHtml}
                             <img src="${getImgUrl(heroSlug)}" class="mini-portrait-img" alt="${heroName}">
                             <div class="mini-portrait-pill" style="background-color: var(--p${pIdx + 1});">${playerLabel}</div>
                         </a>
@@ -3695,7 +3695,7 @@ function renderGamesList() {
                             "box-shadow: 0 0 8px var(--accent), 0 0 20px color-mix(in srgb, var(--accent) 50%, transparent);";
                     }
 
-                    const crownHtml = gp.is_winner ? '<div class="player-plate-crown">👑</div>' : "";
+                    const trophyHtml = gp.is_winner ? '<div class="player-plate-trophy">🏆</div>' : "";
                     const drawBadgeHtml = isDraw ? '<div class="player-plate-draw-badge">DRAW</div>' : "";
 
                     let statsHtml = "";
@@ -3726,7 +3726,7 @@ function renderGamesList() {
                     <a href="${getHeroLink(heroSlug)}" target="_blank" class="player-plate ${plateClass}" style="${borderStyle}">
                         <img src="${getImgUrl(heroSlug)}" class="player-plate-bg-art" alt="${heroName}">
                         <div class="player-plate-overlay"></div>
-                        ${crownHtml}
+                        ${trophyHtml}
                         ${drawBadgeHtml}
                         <div class="player-plate-tag" style="background-color: var(--p${pIdx + 1});">${NAMES[pIdx]}</div>
                         <div class="player-plate-info">

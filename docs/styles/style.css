@@ -3344,11 +3344,11 @@ body.loaded .bottom-nav {
     box-shadow: 0 0 10px rgba(255, 188, 0, 0.7);
 }
 
-.mini-winner-crown {
+.mini-winner-trophy {
     position: absolute;
     top: -9px;
     right: -3px;
-    font-size: 0.95rem; /* Larger, more visible crown */
+    font-size: 0.95rem; /* Larger, more visible trophy */
     z-index: 12;
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8));
 }
@@ -3669,17 +3669,17 @@ body.loaded .bottom-nav {
     }
 }
 
-.player-plate-crown {
+.player-plate-trophy {
     position: absolute;
     top: -16px;
     right: -16px;
     font-size: 2.5rem;
     z-index: 5;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
-    animation: floatCrown 3s infinite ease-in-out;
+    animation: floatTrophy 3s infinite ease-in-out;
 }
 
-@keyframes floatCrown {
+@keyframes floatTrophy {
     0%,
     100% {
         transform: translateY(0) rotate(10deg);
@@ -3857,7 +3857,7 @@ body.loaded .bottom-nav {
         font-size: 0.55rem;
     }
 
-    .player-plate-crown {
+    .player-plate-trophy {
         top: -12px;
         right: -12px;
         font-size: 1.9rem;
