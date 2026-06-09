@@ -220,17 +220,17 @@
 
             <!-- Games History Section -->
             <section id="gamesSection" class="hidden">
-                <div class="search-container" style="margin-top: 15px">
-                    <div class="search-wrapper">
+                <div class="search-container" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+                    <div class="search-wrapper" style="flex: 1;">
                         <input
                             class="search-bar"
                             type="text"
                             id="games-search"
-                            style="font-size: 16px"
+                            style="font-size: 16px; padding-right: 35px;"
                             placeholder="Search games by hero..."
                             oninput="handleGamesSearchInput()"
                             aria-label="Search games" />
-                        <div class="search-actions">
+                        <div class="search-actions" style="right: 10px;">
                             <img
                                 src="images/buttons/close.png"
                                 id="clear-games-search"
@@ -238,69 +238,23 @@
                                 onclick="clearGamesSearch()"
                                 alt="Clear"
                                 title="Clear Search" />
-                            <img
-                                src="images/buttons/filter.png"
-                                id="games-filter-toggle"
-                                class="search-icon"
-                                onclick="toggleGamesFilterUI()"
-                                alt="Filter"
-                                title="Toggle Player Filters" />
                         </div>
                     </div>
-                    <div
-                        class="small-text"
-                        id="game-count-stats"
-                        style="margin-top: 5px">
-                        Showing 0 of 0 games
-                    </div>
+                    <button
+                        type="button"
+                        class="btn-action-trigger"
+                        id="btn-trigger-games-filter"
+                        onclick="openHistoryFilterDrawer()"
+                        style="height: 38px; padding: 0 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                        <span class="action-icon">⚙️</span> Filter
+                        <span class="active-badge" id="games-filter-active-badge" style="display: none;">0</span>
+                    </button>
                 </div>
-
                 <div
-                    id="games-filter-section"
-                    class="hidden"
-                    style="margin-bottom: 20px">
-                    <div
-                        class="dropdown-sort-options"
-                        style="margin-top: 0; margin-bottom: 10px">
-                        <label>
-                            <input
-                                type="checkbox"
-                                id="use-historical-data"
-                                checked
-                                onchange="renderPlayerGameFilters()" />
-                            Include Historical Data (before May 8th 2026)
-                        </label>
-                    </div>
-                    <div
-                        style="
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            gap: 15px;
-                            flex-wrap: wrap;
-                        ">
-                        <div
-                            class="dice-bar"
-                            id="player-game-filter-container"
-                            style="margin-bottom: 0"></div>
-                        <div id="winner-filter-wrapper" class="hidden">
-                            <input
-                                type="checkbox"
-                                id="games-winner-only"
-                                onchange="renderGamesList()"
-                                style="
-                                    width: 18px;
-                                    height: 18px;
-                                    cursor: pointer;
-                                    accent-color: var(--accent);
-                                " />
-                            <label
-                                for="games-winner-only"
-                                style="cursor: pointer; user-select: none"
-                                >Wins Only</label
-                            >
-                        </div>
-                    </div>
+                    class="small-text"
+                    id="game-count-stats"
+                    style="margin-top: 5px">
+                    Showing 0 of 0 games
                 </div>
 
                 <div id="gamesContainer" style="margin-top: 20px"></div>

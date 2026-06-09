@@ -26,6 +26,13 @@ let stagedLevels = new Set();
 let stagedGroups = new Set();
 let stagedPlayerIndices = [];
 let stagedUseHistorical = true;
+
+// Games History Filters State
+let gamesWinnerOnly = false;
+let gamesUseHistorical = true;
+let stagedSelectedGamePlayerIndex = null;
+let stagedGamesWinnerOnly = false;
+let stagedGamesUseHistorical = true;
 let currentUser = null;
 let loggedInPlayerIndex = -1;
 let isRollActive = false;
@@ -557,7 +564,6 @@ async function init() {
         });
         updateAuthUI();
         renderPlayerToggles();
-        renderPlayerGameFilters();
     }
 
     const { data, error } = await db
@@ -652,7 +658,6 @@ async function init() {
     if (isAdmin()) {
         renderCollectionsList();
     }
-    renderPlayerGameFilters();
     renderCollectionView();
     const initialSort = currentSort;
     currentSort = null;
@@ -2657,6 +2662,25 @@ function openColumnsDrawer() {
     drawer.classList.add("open");
 }
 
+function openHistoryFilterDrawer() {
+    currentDrawerMode = "history-filter";
+    const drawer = document.getElementById("sort-filter-drawer");
+    const title = document.getElementById("drawer-title-text");
+    const footer = document.getElementById("drawer-footer-content");
+    if (!drawer) return;
+
+    title.innerText = "Filter History";
+    footer.style.display = "flex";
+
+    // Stage current states
+    stagedSelectedGamePlayerIndex = selectedGamePlayerIndex;
+    stagedGamesWinnerOnly = gamesWinnerOnly;
+    stagedGamesUseHistorical = gamesUseHistorical;
+
+    renderDrawerBody();
+    drawer.classList.add("open");
+}
+
 function closeDrawer(event = null, force = false) {
     if (event && event.target !== event.currentTarget && !force) return;
     const drawer = document.getElementById("sort-filter-drawer");
@@ -2729,7 +2753,7 @@ function renderDrawerBody() {
         updateDrawerPlayerSortPillsUI();
         renderDrawerComplexityFilters();
         renderDrawerGroupFilters();
-    } else {
+    } else if (currentDrawerMode === "columns") {
         // Render Column Toggles and Historical checkbox
         const mainPlayerNames = NAMES.slice(0, 4);
         const visibilityPillsHtml = mainPlayerNames
@@ -2770,7 +2794,135 @@ function renderDrawerBody() {
                 </div>
             </div>
         `;
+    } else if (currentDrawerMode === "history-filter") {
+        renderHistoryFilterDrawerBody(body);
     }
+}
+
+function renderHistoryFilterDrawerBody(body) {
+    const useHistorical = stagedGamesUseHistorical;
+    const playerStats = players.map(() => ({ played: 0, won: 0 }));
+    let inviteePlayed = 0;
+    let inviteeWon = 0;
+
+    if (games) {
+        games.forEach((game) => {
+            if (!useHistorical && game.is_historical) return;
+
+            game.game_players.forEach((gp) => {
+                const pIdx = parseInt(gp.player_id.substring(1)) - 1;
+                if (pIdx >= 0 && pIdx < 4) {
+                    playerStats[pIdx].played++;
+                    if (gp.is_winner) playerStats[pIdx].won++;
+                } else if (pIdx === 4 || pIdx === 5) {
+                    inviteePlayed++;
+                    if (gp.is_winner) inviteeWon++;
+                }
+            });
+        });
+    }
+
+    let playersHtml = "";
+    for (let i = 0; i < 4; i++) {
+        const p = players[i];
+        if (!p) continue;
+        const isActive = stagedSelectedGamePlayerIndex === i;
+        playersHtml += `
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 1;">
+                <button type="button" class="player-filter-btn ${isActive ? "active" : ""}" 
+                        style="background-color: var(--p${i + 1}); width: 100%; min-width: 60px; padding: 8px 4px; font-size: 0.8rem; font-weight: bold; border-radius: 6px;" 
+                        onclick="toggleStagedPlayerGameFilter(${i})">
+                    ${p.name}
+                </button>
+                <div style="font-size: 0.75rem; opacity: 0.8; text-align: center; line-height: 1.2;">
+                    P: ${playerStats[i].played}<br>
+                    W: ${playerStats[i].won}
+                </div>
+            </div>
+        `;
+    }
+
+    const isInviteeActive = stagedSelectedGamePlayerIndex === 4;
+    playersHtml += `
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 1;">
+            <button type="button" class="player-filter-btn ${isInviteeActive ? "active" : ""}" 
+                    style="background-color: var(--p5); width: 100%; min-width: 60px; padding: 8px 4px; font-size: 0.8rem; font-weight: bold; border-radius: 6px;" 
+                    onclick="toggleStagedPlayerGameFilter(4)">
+                Invitee
+            </button>
+            <div style="font-size: 0.75rem; opacity: 0.8; text-align: center; line-height: 1.2;">
+                P: ${inviteePlayed}<br>
+                W: ${inviteeWon}
+            </div>
+        </div>
+    `;
+
+    const showWinnerOnlyCheckbox = stagedSelectedGamePlayerIndex !== null;
+
+    body.innerHTML = `
+        <div class="panel-row-new">
+            <div class="dropdown-sort-options" style="margin: 0; justify-content: flex-start;">
+                <label style="cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px; font-size: 0.9rem;">
+                    <input
+                        type="checkbox"
+                        id="drawer-games-use-historical"
+                        ${useHistorical ? "checked" : ""}
+                        onchange="toggleStagedGamesHistorical(this.checked)"
+                        style="width: 18px; height: 18px;" />
+                    Include Historical Data (before May 8th 2026)
+                </label>
+            </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 10px 0;">
+
+        <div class="panel-row-new">
+            <span class="panel-row-title" style="font-weight: 700; margin-bottom: 10px; display: block;">Filter by Player:</span>
+            <div style="display: flex; justify-content: space-between; gap: 8px; width: 100%;">
+                ${playersHtml}
+            </div>
+        </div>
+
+        <div id="drawer-winner-filter-wrapper" class="panel-row-new ${showWinnerOnlyCheckbox ? "" : "hidden"}" style="margin-top: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <input
+                    type="checkbox"
+                    id="drawer-games-winner-only"
+                    ${stagedGamesWinnerOnly ? "checked" : ""}
+                    onchange="stagedGamesWinnerOnly = this.checked"
+                    style="
+                        width: 18px;
+                        height: 18px;
+                        cursor: pointer;
+                        accent-color: var(--accent);
+                    " />
+                <label
+                    for="drawer-games-winner-only"
+                    style="cursor: pointer; user-select: none; font-size: 0.9rem;"
+                    >Wins Only</label
+                >
+            </div>
+        </div>
+    `;
+}
+
+function toggleStagedPlayerGameFilter(idx) {
+    if (stagedSelectedGamePlayerIndex === idx) {
+        stagedSelectedGamePlayerIndex = null;
+    } else {
+        stagedSelectedGamePlayerIndex = idx;
+    }
+    
+    if (stagedSelectedGamePlayerIndex === null) {
+        stagedGamesWinnerOnly = false;
+    }
+    
+    renderDrawerBody();
+}
+
+function toggleStagedGamesHistorical(checked) {
+    stagedGamesUseHistorical = checked;
+    renderDrawerBody();
 }
 
 function handleDrawerSortTypeChange(value) {
@@ -3087,9 +3239,14 @@ function resetFilters() {
         stagedLevels = new Set([1, 2, 3, 4, 5, 6]);
         stagedGroups = new Set(groups.map((g) => g.id));
         renderDrawerBody();
-    } else {
+    } else if (currentDrawerMode === "columns") {
         stagedPlayerIndices = [0, 1, 2, 3];
         stagedUseHistorical = true;
+        renderDrawerBody();
+    } else if (currentDrawerMode === "history-filter") {
+        stagedSelectedGamePlayerIndex = null;
+        stagedGamesWinnerOnly = false;
+        stagedGamesUseHistorical = true;
         renderDrawerBody();
     }
 }
@@ -3101,15 +3258,24 @@ function applyAndCloseDrawer() {
         currentSortPlayerIndex = stagedSortPlayerIndex;
         activeLevels = new Set(stagedLevels);
         activeGroups = new Set(stagedGroups);
-    } else {
+        updateActiveFilterBadge();
+        closeDrawer(null, true);
+        renderList();
+    } else if (currentDrawerMode === "columns") {
         activePlayerIndices = [...stagedPlayerIndices];
         const histCheck = document.getElementById("db-use-historical-data");
         if (histCheck) histCheck.checked = stagedUseHistorical;
+        updateActiveFilterBadge();
+        closeDrawer(null, true);
+        renderList();
+    } else if (currentDrawerMode === "history-filter") {
+        selectedGamePlayerIndex = stagedSelectedGamePlayerIndex;
+        gamesWinnerOnly = stagedGamesWinnerOnly;
+        gamesUseHistorical = stagedGamesUseHistorical;
+        updateGamesActiveFilterBadge();
+        closeDrawer(null, true);
+        renderGamesList();
     }
-
-    updateActiveFilterBadge();
-    closeDrawer(null, true);
-    renderList();
 }
 
 function updateActiveFilterBadge() {
@@ -3129,9 +3295,27 @@ function updateActiveFilterBadge() {
     }
 }
 
+function updateGamesActiveFilterBadge() {
+    const badge = document.getElementById("games-filter-active-badge");
+    if (!badge) return;
+
+    let activeCount = 0;
+    if (selectedGamePlayerIndex !== null) activeCount++;
+    if (gamesWinnerOnly) activeCount++;
+    if (!gamesUseHistorical) activeCount++;
+
+    if (activeCount > 0) {
+        badge.innerText = activeCount;
+        badge.style.display = "inline-block";
+    } else {
+        badge.style.display = "none";
+    }
+}
+
 // Ensure visuals are correct when the page loads
 window.addEventListener("DOMContentLoaded", () => {
     updateActiveFilterBadge();
+    updateGamesActiveFilterBadge();
     setTimeout(updateSegmentedHighlights, 50);
 });
 
@@ -3288,8 +3472,7 @@ function renderGamesList() {
     const countLabel = document.getElementById("game-count-stats");
     if (!container || !games) return;
 
-    const showWinsOnly =
-        document.getElementById("games-winner-only")?.checked || false;
+    const showWinsOnly = gamesWinnerOnly;
     const searchTerm = (document.getElementById("games-search")?.value || "")
         .toLowerCase()
         .trim();
@@ -3504,7 +3687,7 @@ function renderGamesList() {
                     let borderStyle = "";
                     if (isSearchMatch || isPlayerFilterMatch) {
                         borderStyle =
-                            "border-color: var(--accent); box-shadow: 0 0 10px var(--accent-glow);";
+                            "box-shadow: 0 0 8px var(--accent), 0 0 20px color-mix(in srgb, var(--accent) 50%, transparent);";
                     }
 
                     const crownHtml = gp.is_winner ? '<div class="player-plate-crown">👑</div>' : "";
@@ -3514,7 +3697,7 @@ function renderGamesList() {
                     if (gp.is_winner) {
                         let heroPlayCount = 0;
                         let heroWinCount = 0;
-                        const useHistorical = document.getElementById("use-historical-data")?.checked ?? true;
+                        const useHistorical = gamesUseHistorical;
                         games.forEach((g) => {
                             if (!useHistorical && g.is_historical) return;
                             g.game_players.forEach((otherGp) => {
@@ -3755,112 +3938,7 @@ async function deleteGame(gameId) {
     await init();
 }
 
-function toggleGamesFilterUI() {
-    const isHidden = document
-        .getElementById("games-filter-section")
-        .classList.toggle("hidden");
-    if (isHidden) {
-        selectedGamePlayerIndex = null;
-        const wrapper = document.getElementById("winner-filter-wrapper");
-        const winnerCheckbox = document.getElementById("games-winner-only");
-        if (wrapper) wrapper.classList.add("hidden");
-        if (winnerCheckbox) winnerCheckbox.checked = false;
 
-        renderPlayerGameFilters();
-        renderGamesList();
-    }
-}
-
-function renderPlayerGameFilters() {
-    const container = document.getElementById("player-game-filter-container");
-    if (!container || players.length === 0) return;
-    const useHistorical =
-        document.getElementById("use-historical-data")?.checked ?? true;
-
-    // Calculate stats for each player and invitees based on the full game history
-    const playerStats = players.map(() => ({ played: 0, won: 0 }));
-    let inviteePlayed = 0;
-    let inviteeWon = 0;
-
-    games.forEach((game) => {
-        if (!useHistorical && game.is_historical) return;
-
-        game.game_players.forEach((gp) => {
-            const pIdx = parseInt(gp.player_id.substring(1)) - 1;
-            if (pIdx >= 0 && pIdx < 4) {
-                playerStats[pIdx].played++;
-                if (gp.is_winner) playerStats[pIdx].won++;
-            } else if (pIdx === 4 || pIdx === 5) {
-                inviteePlayed++;
-                if (gp.is_winner) inviteeWon++;
-            }
-        });
-    });
-
-    let html = "";
-    // Main 4 players
-    for (let i = 0; i < 4; i++) {
-        const p = players[i];
-        if (!p) continue;
-        const isActive = selectedGamePlayerIndex === i;
-        html += `
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
-                <button class="player-filter-btn ${isActive ? "active" : ""}" 
-                        style="background-color: var(--p${i + 1});" 
-                        onclick="togglePlayerGameFilter(${i})">
-                    ${p.name}
-                </button>
-                <div style="font-size: 0.8rem; opacity: 0.8; text-align: center; line-height: 1.2;">
-                    Played: ${playerStats[i].played}<br>
-                    Won: ${playerStats[i].won}
-                </div>
-            </div>
-        `;
-    }
-
-    // Invitee button (covers indices 4 and 5)
-    const isInviteeActive = selectedGamePlayerIndex === 4;
-    html += `
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
-            <button class="player-filter-btn ${isInviteeActive ? "active" : ""}" 
-                    style="background-color: var(--p5);" 
-                    onclick="togglePlayerGameFilter(4)">
-                Invitee
-            </button>
-            <div style="font-size: 0.8rem; opacity: 0.8; text-align: center; line-height: 1.2;">
-                Played: ${inviteePlayed}<br>
-                Won: ${inviteeWon}
-            </div>
-        </div>
-    `;
-
-    container.innerHTML = html;
-}
-
-function togglePlayerGameFilter(idx) {
-    if (selectedGamePlayerIndex === idx) {
-        selectedGamePlayerIndex = null;
-    } else {
-        selectedGamePlayerIndex = idx;
-    }
-
-    const wrapper = document.getElementById("winner-filter-wrapper");
-    const winnerCheckbox = document.getElementById("games-winner-only");
-    if (wrapper) {
-        if (
-            selectedGamePlayerIndex !== null &&
-            selectedGamePlayerIndex !== undefined
-        ) {
-            wrapper.classList.remove("hidden");
-        } else {
-            wrapper.classList.add("hidden");
-            if (winnerCheckbox) winnerCheckbox.checked = false;
-        }
-    }
-
-    renderPlayerGameFilters();
-    renderGamesList();
-}
 
 function updateHeroStatsFromHistory() {
     const useHistorical =
