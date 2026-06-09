@@ -3480,48 +3480,42 @@ function renderGamesList() {
                     const crownHtml = gp.is_winner ? '<div class="player-plate-crown">👑</div>' : "";
                     const drawBadgeHtml = isDraw ? '<div class="player-plate-draw-badge">DRAW</div>' : "";
 
+                    let statsHtml = "";
+                    if (gp.is_winner) {
+                        let heroPlayCount = 0;
+                        let heroWinCount = 0;
+                        const useHistorical = document.getElementById("use-historical-data")?.checked ?? true;
+                        games.forEach((g) => {
+                            if (!useHistorical && g.is_historical) return;
+                            g.game_players.forEach((otherGp) => {
+                                if (otherGp.player_id === gp.player_id && otherGp.hero_id === gp.hero_id) {
+                                    heroPlayCount++;
+                                    if (otherGp.is_winner) {
+                                        heroWinCount++;
+                                    }
+                                }
+                            });
+                        });
+                        const pct = heroPlayCount > 0 ? (heroWinCount / heroPlayCount).toFixed(3) : ".000";
+                        const pctStr = pct.startsWith("0") ? pct.substring(1) : pct;
+                        statsHtml = `<div class="player-plate-winner-stats">${heroWinCount}🏆 / ${heroPlayCount}🎲 (${pctStr})</div>`;
+                    }
+
                     return `
                     <div class="player-plate ${plateClass}" style="${borderStyle}">
+                        <img src="${getImgUrl(heroSlug)}" class="player-plate-bg-art" alt="${heroName}">
+                        <div class="player-plate-overlay"></div>
                         ${crownHtml}
                         ${drawBadgeHtml}
                         <div class="player-plate-tag" style="background-color: var(--p${pIdx + 1});">${NAMES[pIdx]}</div>
-                        <div class="player-plate-avatar-container">
-                            <a href="${getHeroLink(heroSlug)}" target="_blank" style="display: block;">
-                                <img src="${getImgUrl(heroSlug)}" class="player-plate-avatar" alt="${heroName}">
-                            </a>
+                        <div class="player-plate-info">
+                            <div class="player-plate-hero-name">${heroName}</div>
+                            ${statsHtml}
                         </div>
-                        <div class="player-plate-hero-name">${heroName}</div>
                     </div>`;
                 });
 
-            let playerPlatesHtml = "";
-            if (platesArray.length === 4) {
-                // Row 1: players 1 and 2, plus a trailing VS divider to transition to Row 2
-                const row1 = platesArray.slice(0, 2).join('<div class="vs-divider">VS</div>') + '<div class="vs-divider">VS</div>';
-                // Row 2: players 3 and 4
-                const row2 = platesArray.slice(2, 4).join('<div class="vs-divider">VS</div>');
-                playerPlatesHtml = `
-                    <div class="player-grid-row">${row1}</div>
-                    <div class="player-grid-row">${row2}</div>
-                `;
-            } else if (platesArray.length === 2 || platesArray.length === 3) {
-                const row1 = platesArray.join('<div class="vs-divider">VS</div>');
-                playerPlatesHtml = `<div class="player-grid-row">${row1}</div>`;
-            } else {
-                // Fallback for 1, 5, 6 players
-                if (platesArray.length > 3) {
-                    const mid = Math.ceil(platesArray.length / 2);
-                    const row1 = platesArray.slice(0, mid).join('<div class="vs-divider">VS</div>');
-                    const row2 = platesArray.slice(mid).join('<div class="vs-divider">VS</div>');
-                    playerPlatesHtml = `
-                        <div class="player-grid-row">${row1}</div>
-                        <div class="player-grid-row">${row2}</div>
-                    `;
-                } else {
-                    const row1 = platesArray.join('<div class="vs-divider">VS</div>');
-                    playerPlatesHtml = `<div class="player-grid-row">${row1}</div>`;
-                }
-            }
+            const playerPlatesHtml = platesArray.join("");
 
             return `
             <div class="game-history-card ${expandedClass}">

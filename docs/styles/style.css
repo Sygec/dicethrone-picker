@@ -3289,110 +3289,207 @@ body.loaded .bottom-nav {
     }
 }
 
-/* Responsive Player Grid (holds rows of plates) */
+/* Responsive Player Grid (holds Hearthstone cards in a row) */
 .player-responsive-grid {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-    width: 100%;
-    align-items: center;
-}
-
-.player-grid-row {
-    display: flex;
-    align-items: center;
     justify-content: center;
-    gap: 8px;
+    align-items: center;
+    gap: 6px;
     width: 100%;
+    flex-wrap: nowrap;
 }
 
-/* Individual Player Plates */
+/* Hearthstone Card Player Plate */
 .player-plate {
     position: relative;
-    background: rgba(6, 7, 9, 0.75);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 10px;
+    aspect-ratio: 2 / 3;
+    flex: 1 1 0;
+    min-width: 65px;
+    max-width: 130px;
+    background: #0f1013;
+    border: 1.5px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.2s ease, box-shadow 0.2s ease;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-    transition: transform 0.2s ease, border-color 0.2s ease;
+    justify-content: flex-end;
     box-sizing: border-box;
-    flex: 0 0 92px;
-    width: 92px;
-    min-width: 92px;
-    max-width: 92px;
 }
 
 .player-plate:hover {
-    transform: translateY(-2px);
+    transform: translateY(-4px) scale(1.03);
+    border-color: rgba(255, 255, 255, 0.45);
+    z-index: 5;
 }
 
+/* Background hero artwork */
+.player-plate-bg-art {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 20%;
+    opacity: 0.65;
+    z-index: 1;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.player-plate:hover .player-plate-bg-art {
+    transform: scale(1.08);
+    opacity: 0.8;
+}
+
+/* Gradient overlay to ensure text readability */
+.player-plate-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.4) 60%, rgba(0, 0, 0, 0) 100%);
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* Player Name Tag (absolute positioned at top) */
 .player-plate-tag {
-    font-size: 0.75rem;
-    font-weight: 800;
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    font-size: 0.55rem;
+    font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    padding: 3px 8px;
-    border-radius: 4px;
+    padding: 2px;
+    border-radius: 3px;
     color: #1a1a2e;
-    margin-bottom: 8px;
-    width: 100%;
-    box-sizing: border-box;
+    text-align: center;
+    z-index: 3;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 
-.player-plate-avatar-container {
+/* Bottom info panel */
+.player-plate-info {
     position: relative;
-    margin-bottom: 6px;
-}
-
-.player-plate-avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    border: 1.5px solid var(--accent);
-    object-fit: cover;
-    background: #15171d;
-    transition: transform 0.2s;
-}
-
-.player-plate-avatar:hover {
-    transform: scale(1.08);
+    z-index: 3;
+    padding: 6px;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .player-plate-hero-name {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--text);
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #ffffff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     width: 100%;
 }
 
-/* Winner Plate Styles */
+/* Winner Card Styles (Glowing Golden Border) */
 .player-plate.winner {
-    border: 2px solid #28a745;
-    background-color: color-mix(in srgb, #28a745, transparent 75%);
-    box-shadow: 0 0 12px rgba(40, 167, 69, 0.35);
+    border: 2.2px solid #ffbc00;
+    box-shadow: 0 0 15px rgba(255, 188, 0, 0.45);
 }
 
-.player-plate.winner .player-plate-avatar {
-    border-color: #28a745;
-    box-shadow: 0 0 6px rgba(40, 167, 69, 0.5);
+.player-plate.winner:hover {
+    border-color: #ffbc00;
+    box-shadow: 0 0 20px rgba(255, 188, 0, 0.65);
+}
+
+.player-plate.winner .player-plate-bg-art {
+    opacity: 0.95;
+}
+
+.player-plate.winner:hover .player-plate-bg-art {
+    opacity: 1;
+}
+
+/* Premium holographic shimmer sweep across winner character card */
+.player-plate.winner .player-plate-overlay {
+    animation: winner-shimmer 6s infinite ease-in-out;
+    background-image: 
+        linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.4) 60%, rgba(0, 0, 0, 0) 100%),
+        linear-gradient(135deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0) 70%);
+    background-size: 100% 100%, 250% 250%;
+    background-position: center, -150% -150%;
+    background-repeat: no-repeat;
+}
+
+@keyframes winner-shimmer {
+    0% {
+        background-position: center, -150% -150%;
+    }
+    30%, 100% {
+        background-position: center, 150% 150%;
+    }
+}
+
+/* Sparkle particles floating around the gold border */
+.player-plate.winner::before {
+    content: "";
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    z-index: 4;
+    pointer-events: none;
+    border-radius: 12px;
+    background-image: 
+        radial-gradient(circle, #ffffff 1px, transparent 2px),
+        radial-gradient(circle, #ffbc00 1.5px, transparent 3.5px),
+        radial-gradient(circle, #ffffff 1px, transparent 2px),
+        radial-gradient(circle, #ffbc00 1.5px, transparent 3px);
+    background-size: 12px 12px, 16px 16px, 10px 10px, 14px 14px;
+    background-position: 5% 15%, 95% 20%, 25% 85%, 75% 80%;
+    background-repeat: no-repeat;
+    opacity: 0;
+    animation: sparkle-blink 5s infinite linear;
+}
+
+@keyframes sparkle-blink {
+    0%, 100% {
+        opacity: 0;
+        transform: scale(0.97);
+        background-position: 5% 15%, 95% 20%, 25% 85%, 75% 80%;
+    }
+    20% {
+        opacity: 0.85;
+        transform: scale(1.01);
+    }
+    40% {
+        opacity: 0.25;
+        background-position: 12% 22%, 88% 28%, 20% 78%, 80% 88%;
+    }
+    60% {
+        opacity: 0.95;
+        transform: scale(1.03);
+    }
+    80% {
+        opacity: 0.35;
+        background-position: 2% 10%, 98% 12%, 30% 90%, 70% 70%;
+    }
 }
 
 .player-plate-crown {
     position: absolute;
-    top: -10px;
-    right: -10px;
-    font-size: 1.1rem;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    top: -8px;
+    right: -8px;
+    font-size: 1.25rem;
+    z-index: 5;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
     animation: floatCrown 3s infinite ease-in-out;
 }
 
@@ -3401,53 +3498,48 @@ body.loaded .bottom-nav {
     50% { transform: translateY(-2px) rotate(10deg); }
 }
 
-/* Loser Plate Styles */
+/* Loser Card Styles (Desaturated Greyscale) */
 .player-plate.loser {
-    opacity: 0.6;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.player-plate.loser .player-plate-bg-art {
+    opacity: 0.35;
+    filter: grayscale(85%);
+}
+
+.player-plate.loser:hover .player-plate-bg-art {
+    opacity: 0.5;
+    filter: grayscale(50%);
+}
+
+/* Draw Card Styles */
+.player-plate.draw {
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.player-plate.draw .player-plate-bg-art {
+    opacity: 0.55;
     filter: grayscale(35%);
 }
 
-.player-plate.loser .player-plate-avatar {
-    border-color: rgba(255, 255, 255, 0.15);
-}
-
-/* Draw Plate Styles & Visual Cues */
-.player-plate.draw {
-    opacity: 0.85;
-}
-
-.player-plate.draw .player-plate-avatar {
-    border-color: #999999;
-}
-
+/* Draw visual overlay badge */
 .player-plate-draw-badge {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) rotate(-12deg);
-    color: #999999;
-    border: 1.5px solid rgba(153, 153, 153, 0.5);
-    background: rgba(15, 16, 19, 0.95);
+    color: #ffffff;
+    border: 1.5px solid rgba(255, 255, 255, 0.7);
+    background: rgba(15, 16, 19, 0.92);
     font-family: Impact, sans-serif;
-    font-size: 0.85rem;
-    padding: 2px 8px;
-    letter-spacing: 1px;
+    font-size: 0.75rem;
+    padding: 1px 4px;
+    letter-spacing: 0.5px;
     border-radius: 4px;
     pointer-events: none;
-    z-index: 10;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-}
-
-/* VS Separator Divider */
-.vs-divider {
-    font-size: 0.75rem;
-    font-weight: 900;
-    color: #ffffff;
-    opacity: 0.8;
-    font-style: italic;
-    user-select: none;
-    flex-shrink: 0;
-    padding: 0 4px;
+    z-index: 4;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.6);
 }
 
 /* Card Action Controls Overlay */
@@ -3484,5 +3576,80 @@ body.loaded .bottom-nav {
 .btn-game-action.delete:hover {
     background: var(--danger);
     border-color: var(--danger);
+}
+
+.player-plate-winner-stats {
+    font-size: 0.55rem;
+    font-weight: 700;
+    color: #ffbc00;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0.95;
+}
+
+/* Responsive adjustments for fitting all players on a single row in mobile viewports */
+@media (max-width: 480px) {
+    .game-card-body {
+        padding: 8px;
+    }
+
+    .player-responsive-grid {
+        gap: 4px;
+    }
+
+    .player-plate {
+        min-width: 50px; /* Allow cards to shrink down on very narrow screens */
+        border-width: 1px; /* Thinner border to conserve space */
+        border-radius: 6px; /* Slightly smaller radius for smaller cards */
+    }
+
+    .player-plate.winner {
+        border-width: 1.5px;
+    }
+
+    .player-plate.winner::before {
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        border-radius: 8px;
+        background-size: 8px 8px, 12px 12px, 7px 7px, 10px 10px;
+    }
+
+    .player-plate-tag {
+        top: 4px;
+        left: 4px;
+        right: 4px;
+        font-size: 0.48rem;
+        padding: 1px;
+        border-radius: 2px;
+    }
+
+    .player-plate-info {
+        padding: 3px 2px;
+    }
+
+    .player-plate-hero-name {
+        font-size: 0.52rem;
+    }
+
+    .player-plate-winner-stats {
+        font-size: 0.45rem;
+    }
+
+    .player-plate-crown {
+        top: -6px;
+        right: -6px;
+        font-size: 0.95rem;
+    }
+
+    .player-plate-draw-badge {
+        font-size: 0.6rem;
+        padding: 0px 2px;
+        border-width: 1px;
+    }
 }
 
