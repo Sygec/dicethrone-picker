@@ -3623,9 +3623,8 @@ function renderGamesList() {
 
             const statusLabel = isInProgress 
                 ? '<span class="game-card-status-badge">In Progress</span>' 
-                : isDraw 
-                    ? '<span class="game-card-status-badge draw-badge">Draw</span>' 
-                    : '';
+                : '';
+            const drawStampHtml = isDraw ? '<div class="player-plate-draw-badge">DRAW</div>' : '';
             const headerHtml = `
             <div class="game-card-header" onclick="toggleGameExpansion('${game.id}')">
                 <div class="game-card-title-group">
@@ -3635,6 +3634,7 @@ function renderGamesList() {
                 <div class="game-card-collapsed-summary">
                     <div class="mini-portrait-strip">
                         ${portraitStrip}
+                        ${drawStampHtml}
                     </div>
                     <span class="chevron-icon">▼</span>
                 </div>
