@@ -4107,8 +4107,12 @@ function renderList() {
                 };
             });
 
-            // Sort descending by probability
-            playerStatsList.sort((x, y) => y.percentage - x.percentage);
+            // Sort by player name
+            playerStatsList.sort((x, y) => {
+                const nameX = (NAMES[x.p] || "").toLowerCase();
+                const nameY = (NAMES[y.p] || "").toLowerCase();
+                return nameX.localeCompare(nameY);
+            });
 
             // Collapsed View: Highly compressed vertical rows (no date line, has recency dot)
             const collapsedPlayersHtml = playerStatsList
