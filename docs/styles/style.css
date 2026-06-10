@@ -3470,6 +3470,8 @@ body.loaded .bottom-nav {
     transition:
         opacity 0.3s ease,
         transform 0.3s ease;
+    mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
 }
 
 @media (hover: hover) {
@@ -3708,12 +3710,34 @@ body.loaded .bottom-nav {
 
 /* Draw Card Styles */
 .player-plate.draw {
-    border-color: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.08);
 }
 
 .player-plate.draw .player-plate-bg-art {
-    opacity: 0.55;
-    filter: grayscale(35%);
+    opacity: 0.35;
+    filter: grayscale(85%);
+}
+
+@media (hover: hover) {
+    .player-plate.draw:hover .player-plate-bg-art {
+        opacity: 0.5;
+        filter: grayscale(50%);
+    }
+}
+
+/* In Progress Card Styles */
+.player-plate.in-progress {
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.player-plate.in-progress .player-plate-bg-art {
+    opacity: 0.70;
+}
+
+@media (hover: hover) {
+    .player-plate.in-progress:hover .player-plate-bg-art {
+        opacity: 0.85;
+    }
 }
 
 /* Draw visual overlay badge */
@@ -3722,17 +3746,18 @@ body.loaded .bottom-nav {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) rotate(-12deg);
-    color: #ffffff;
-    border: 1.5px solid rgba(255, 255, 255, 0.7);
-    background: rgba(15, 16, 19, 0.92);
+    color: var(--accent);
+    border: 2px solid var(--accent);
+    background: rgba(10, 10, 12, 0.95);
     font-family: Impact, sans-serif;
-    font-size: 0.75rem;
-    padding: 1px 4px;
-    letter-spacing: 0.5px;
+    font-size: 0.8rem;
+    padding: 2px 6px;
+    letter-spacing: 0.7px;
     border-radius: 4px;
     pointer-events: none;
     z-index: 4;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.7), 0 0 5px rgba(233, 69, 96, 0.2);
+    font-weight: 900;
 }
 
 /* Card Action Controls Overlay */

@@ -3685,6 +3685,8 @@ function renderGamesList() {
                         plateClass = gp.is_winner ? "winner" : "loser";
                     } else if (isDraw) {
                         plateClass = "draw";
+                    } else if (isInProgress) {
+                        plateClass = "in-progress";
                     } else {
                         plateClass = gp.is_winner === false ? "loser" : "draw";
                     }
