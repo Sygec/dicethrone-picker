@@ -1839,19 +1839,76 @@ textarea {
 
 .collection-heroes-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 8px;
     padding-left: 5px;
 }
 
-.collection-item {
+.collection-hero-card {
+    position: relative;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 8px 4px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 10px;
-    font-size: 0.95rem;
+    gap: 6px;
+    overflow: hidden;
+    user-select: none;
 }
 
-.collection-item input[type="checkbox"],
+@media (hover: hover) {
+    .collection-hero-card:hover:not(.disabled) {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+    }
+}
+
+.collection-hero-card.disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.collection-hero-card.selected {
+    background: color-mix(in srgb, var(--accent) 8%, rgba(255, 255, 255, 0.03));
+    border-color: var(--accent);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+@media (hover: hover) {
+    .collection-hero-card.selected:hover:not(.disabled) {
+        background: color-mix(in srgb, var(--accent) 12%, rgba(255, 255, 255, 0.03));
+        border-color: var(--accent);
+    }
+}
+
+.collection-hero-card-img {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    transition: border-color 0.2s;
+    background: #2a2a2a;
+}
+
+.collection-hero-card.selected .collection-hero-card-img {
+    border-color: var(--accent);
+}
+
+.collection-hero-card-name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text);
+    word-break: break-word;
+    line-height: 1.2;
+}
+
 .collection-group-header input[type="checkbox"] {
     width: 20px;
     height: 20px;
@@ -1859,7 +1916,6 @@ textarea {
     accent-color: var(--accent);
 }
 
-.collection-item label,
 .collection-group-header label {
     cursor: pointer;
     user-select: none;

@@ -1020,14 +1020,15 @@ function renderCollectionView() {
             const allOwned = groupHeroes.every(isHeroOwned);
 
             const heroesHtml = groupHeroes
-                .map(
-                    (h) => `
-            <div class="collection-item">
-                <input type="checkbox" id="owned-${h.id}" ${isHeroOwned(h) ? "checked" : ""} ${isDisabled} onchange="toggleHeroOwned('${h.id}', this.checked)">
-                <label for="owned-${h.id}">${h.name}</label>
+                .map((h) => {
+                    const isSelected = isHeroOwned(h);
+                    return `
+            <div class="collection-hero-card ${isSelected ? "selected" : ""} ${isDisabled ? "disabled" : ""}" onclick="toggleHeroOwned('${h.id}', ${!isSelected})">
+                <img src="${getImgUrl(h.slug)}" class="collection-hero-card-img" alt="${h.name}">
+                <div class="collection-hero-card-name">${h.name}</div>
             </div>
-        `,
-                )
+        `;
+                })
                 .join("");
 
             const isExpanded = expandedCollectionGroups.has(group.id);

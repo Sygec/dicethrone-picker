@@ -8,6 +8,7 @@
             "Fixed all popup modal screens to display correctly",
             "Transfered filter and sort options in Hero Database and Game History to pull-out drawers",
             "Modified Collection section to be per-user instead of system-wide",
+            "Replaced checkboxes with premium hero select cards in Collection view",
             "Tweaks and updates to Admin functions",
             "And many, many, many more fixes all around"
         ]
