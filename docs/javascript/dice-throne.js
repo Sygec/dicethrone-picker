@@ -41,6 +41,23 @@ let expandedCollectionGroups = new Set();
 let scrambleIntervals = {};
 let activeSelectPlayerIdx = null;
 let modalSortMode = "name";
+
+// Draft & Ban Mode State
+let draftModeEnabled = false;
+let draftCount = 3;
+let bannedHeroIds = new Set();
+
+let stagedDraftModeEnabled = false;
+let stagedDraftCount = 3;
+let stagedBannedHeroIds = new Set();
+let stagedBanSearchQuery = "";
+
+let activeDraftOrder = [];
+let activeDraftStep = 0;
+let selectedDraftHeroes = {}; // pIdx -> hero object
+let activeDraftCandidates = {}; // pIdx -> array of candidate heroes
+let draftWheelAngles = {}; // pIdx -> cumulative rotation angle
+let draftWheelFrontCardIndices = {}; // pIdx -> index of the card physically in front
 const isAdmin = () => currentUser?.app_metadata?.role === "admin";
 const isUser = () => !!currentUser;
 
@@ -341,7 +358,10 @@ function updateAuthUI() {
         if (adminNav) adminNav.style.display = "none";
         if (document.getElementById("adminSection"))
             document.getElementById("adminSection").classList.add("hidden");
+        const actionButtons = document.getElementById("action-buttons");
         if (actionButtons) actionButtons.style.display = "none";
+        const rollBtnContainer = document.getElementById("rollBtnContainer");
+        if (rollBtnContainer) rollBtnContainer.style.display = "flex";
         const rollBtn = document.getElementById("rollBtn");
         if (rollBtn) rollBtn.style.display = "block";
     }
@@ -509,6 +529,16 @@ async function handleLogout() {
 // Fetches initial data from Supabase and sets the initial sort state.
 // ******************************************
 async function init() {
+    // Load Draft & Ban settings
+    draftModeEnabled = localStorage.getItem("draftModeEnabled") === "true";
+    draftCount = parseInt(localStorage.getItem("draftCount") || "3", 10);
+    if (draftCount !== 2 && draftCount !== 3) {
+        draftCount = 3;
+    }
+    const banned = localStorage.getItem("bannedHeroIds");
+    bannedHeroIds = banned ? new Set(JSON.parse(banned)) : new Set();
+    updateRollSettingsBadge();
+
     // 0. Fetch Groups
     const { data: groupsData, error: groupsError } = await db
         .from("groups")
@@ -1954,13 +1984,43 @@ function pickCharacters() {
     const resultsDiv = document.getElementById("results");
     resultsDiv.innerHTML = "";
 
-    // Pool of owned heroes
-    let pool = characters.filter(isHeroOwned).map((c) => structuredClone(c));
+    // Pool of owned, non-banned heroes
+    let pool = characters.filter((c) => isHeroOwned(c) && !bannedHeroIds.has(c.id)).map((c) => structuredClone(c));
 
     if (pool.length < active.length) {
         return alert(
-            `Not enough owned heroes (${pool.length}) in your collection for ${active.length} players!`,
+            `Not enough available (owned & non-banned) heroes (${pool.length}) in your collection for ${active.length} players!`,
         );
+    }
+
+    if (draftModeEnabled) {
+        // Hide roll button container
+        const rollBtnContainer = document.getElementById("rollBtnContainer");
+        if (rollBtnContainer) rollBtnContainer.style.display = "none";
+
+        // Hide action buttons container
+        const actionButtons = document.getElementById("action-buttons");
+        if (actionButtons) actionButtons.style.display = "none";
+
+        activeDraftOrder = selectionOrder;
+        activeDraftStep = 0;
+        selectedDraftHeroes = {};
+        activeDraftCandidates = {};
+        draftWheelAngles = {};
+        draftWheelFrontCardIndices = {};
+
+        // Render all player rows in "Waiting..." skeleton state
+        const sortedActive = [...active].sort((a, b) => a - b);
+        sortedActive.forEach((pIdx) => {
+            renderPlayerRowWaiting(pIdx, NAMES[activeDraftOrder[0]]);
+        });
+
+        // Ensure the roll section is visible and scroll to results
+        showRoll();
+        resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
+
+        startDraftStep();
+        return;
     }
 
     // Map to hold calculated results for each player
@@ -1976,29 +2036,42 @@ function pickCharacters() {
             pool.splice(r, 1);
         } else {
             const activePool = pool.filter((c) => c.weights[pIdx] > 0);
-            const totalEffectiveWeight = activePool.reduce(
-                (sum, c) => sum + getSoftWeight(c, pIdx),
-                0,
-            );
-
-            let random = Math.random() * totalEffectiveWeight;
-            for (const hero of activePool) {
-                const weight = getSoftWeight(hero, pIdx);
-                if (random < weight) {
-                    selectedHero = hero;
-                    pool.splice(
-                        pool.findIndex((p) => p.name === hero.name),
-                        1,
-                    );
-                    break;
+            if (activePool.length === 0) {
+                if (pool.length > 0) {
+                    const r = Math.floor(Math.random() * pool.length);
+                    selectedHero = pool[r];
+                    pool.splice(r, 1);
                 }
-                random -= weight;
+            } else {
+                const totalEffectiveWeight = activePool.reduce(
+                    (sum, c) => sum + getSoftWeight(c, pIdx),
+                    0,
+                );
+
+                let random = Math.random() * totalEffectiveWeight;
+                for (const hero of activePool) {
+                    const weight = getSoftWeight(hero, pIdx);
+                    if (random < weight) {
+                        selectedHero = hero;
+                        pool.splice(
+                            pool.findIndex((p) => p.name === hero.name),
+                            1,
+                        );
+                        break;
+                    }
+                    random -= weight;
+                }
             }
         }
         rollResults[pIdx] = selectedHero;
     });
 
-    // Disable Roll Button
+    // Disable Roll Button Container
+    const rollBtnContainer = document.getElementById("rollBtnContainer");
+    if (rollBtnContainer) {
+        rollBtnContainer.style.display = "none";
+    }
+
     const rollBtn = document.getElementById("rollBtn");
     if (rollBtn) {
         rollBtn.disabled = true;
@@ -2024,7 +2097,7 @@ function pickCharacters() {
     resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
 
     // Pool of all owned heroes for the cycling scrambler
-    const ownedHeroes = characters.filter(isHeroOwned);
+    const ownedHeroes = characters.filter((c) => isHeroOwned(c) && !bannedHeroIds.has(c.id));
 
     // Start scrambling for all panels
     sortedActive.forEach((pIdx) => {
@@ -2040,8 +2113,11 @@ function pickCharacters() {
             validateSelection();
             if (isUser()) {
                 if (actionButtons) actionButtons.style.display = "flex";
-                if (rollBtn) rollBtn.style.display = "none";
+                if (rollBtnContainer) rollBtnContainer.style.display = "none";
             } else {
+                if (rollBtnContainer) {
+                    rollBtnContainer.style.display = "flex";
+                }
                 if (rollBtn) {
                     rollBtn.disabled = false;
                     rollBtn.style.opacity = "1";
@@ -2256,6 +2332,15 @@ function selectHeroForPlayer(heroName) {
 
     const char = characters.find((c) => c.name === heroName);
     if (!char) return;
+
+    // Save to chosen hero map and clean up draft classes
+    if (draftModeEnabled) {
+        selectedDraftHeroes[pIdx] = char;
+    }
+    const rowEl = document.getElementById(`player-row-${pIdx}`);
+    if (rowEl) {
+        rowEl.classList.remove("active-draft", "waiting-draft");
+    }
 
     // Update hidden input value
     const selectEl = document.getElementById(`select-${pIdx}`);
@@ -2576,6 +2661,10 @@ async function applyResults() {
     await init();
 
     document.getElementById("action-buttons").style.display = "none";
+    const rollBtnContainer = document.getElementById("rollBtnContainer");
+    if (rollBtnContainer) {
+        rollBtnContainer.style.display = "flex";
+    }
     const rollBtnEl = document.getElementById("rollBtn");
     if (rollBtnEl) {
         rollBtnEl.style.display = "block";
@@ -2600,6 +2689,21 @@ function cancelRoll() {
     document.getElementById("results").innerHTML =
         '<p style="text-align: center; opacity: 0.6;">Select players and roll.</p>';
     document.getElementById("action-buttons").style.display = "none";
+    
+    // Clear any active draft intervals
+    if (activeDraftOrder) {
+        activeDraftOrder.forEach((pIdx) => {
+            if (scrambleIntervals[pIdx]) {
+                clearInterval(scrambleIntervals[pIdx]);
+                delete scrambleIntervals[pIdx];
+            }
+        });
+    }
+
+    const rollBtnContainer = document.getElementById("rollBtnContainer");
+    if (rollBtnContainer) {
+        rollBtnContainer.style.display = "flex";
+    }
     const rollBtnEl = document.getElementById("rollBtn");
     if (rollBtnEl) {
         rollBtnEl.style.display = "block";
@@ -2803,6 +2907,52 @@ function renderDrawerBody() {
         `;
     } else if (currentDrawerMode === "history-filter") {
         renderHistoryFilterDrawerBody(body);
+    } else if (currentDrawerMode === "roll-settings") {
+        const draftModeChecked = stagedDraftModeEnabled ? "checked" : "";
+        const draftCountOptions = [2, 3];
+        const countPills = draftCountOptions
+            .map((c) => {
+                const isActive = stagedDraftCount === c;
+                const activeClass = isActive ? "active" : "";
+                return `
+                    <button type="button" class="pill-toggle active-red ${activeClass}" onclick="setStagedDraftCount(${c})">
+                        ${c} Candidates
+                    </button>
+                `;
+            })
+            .join("");
+
+        body.innerHTML = `
+            <div class="panel-row-new">
+                <span class="panel-row-title" style="font-weight: 700;">Draft Mode:</span>
+                <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="drawer-draft-mode-checkbox" onchange="toggleStagedDraftMode(this.checked)" ${draftModeChecked}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span style="font-size: 0.9em; opacity: 0.8;">Enable Turn-Based Drafting</span>
+                </div>
+            </div>
+
+            <div id="drawer-draft-count-section" class="panel-row-new" style="display: ${stagedDraftModeEnabled ? "block" : "none"};">
+                <span class="panel-row-title" style="font-weight: 700;">Draft Candidates Count:</span>
+                <div class="pill-group" style="margin-top: 10px;">
+                    ${countPills}
+                </div>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 15px 0;">
+
+            <div class="panel-row-new">
+                <span class="panel-row-title" style="font-weight: 700; margin-bottom: 8px; display: block;">Ban List:</span>
+                <input type="text" id="ban-search-input" class="ban-search-input" placeholder="Search heroes to ban..." oninput="handleBanSearch(this.value)" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.2); color: #fff; margin-bottom: 15px;">
+                <div id="drawer-ban-list-container" class="ban-list-container" style="max-height: 300px; overflow-y: auto; padding-right: 4px;">
+                    <!-- Ban List content populated by renderDrawerBanList() -->
+                </div>
+            </div>
+        `;
+
+        renderDrawerBanList();
     }
 }
 
@@ -3255,6 +3405,12 @@ function resetFilters() {
         stagedGamesWinnerOnly = false;
         stagedGamesUseHistorical = true;
         renderDrawerBody();
+    } else if (currentDrawerMode === "roll-settings") {
+        stagedDraftModeEnabled = false;
+        stagedDraftCount = 3;
+        stagedBannedHeroIds = new Set();
+        stagedBanSearchQuery = "";
+        renderDrawerBody();
     }
 }
 
@@ -3281,6 +3437,17 @@ function applyAndCloseDrawer() {
         updateGamesActiveFilterBadge();
         closeDrawer(null, true);
         renderGamesList();
+    } else if (currentDrawerMode === "roll-settings") {
+        draftModeEnabled = stagedDraftModeEnabled;
+        draftCount = stagedDraftCount;
+        bannedHeroIds = new Set(stagedBannedHeroIds);
+        
+        localStorage.setItem("draftModeEnabled", draftModeEnabled);
+        localStorage.setItem("draftCount", draftCount);
+        localStorage.setItem("bannedHeroIds", JSON.stringify(Array.from(bannedHeroIds)));
+        
+        updateRollSettingsBadge();
+        closeDrawer(null, true);
     }
 }
 
@@ -4284,4 +4451,687 @@ function getRecencyDot(lastPlayed) {
         }
     }
     return recencyDot;
+}
+
+// *==========================================================================
+// RANDOMIZER DRAFT WHEEL & BAN LIST IMPLEMENTATION
+// ==========================================================================
+
+function openRollSettingsDrawer() {
+    currentDrawerMode = "roll-settings";
+    const drawer = document.getElementById("sort-filter-drawer");
+    const title = document.getElementById("drawer-title-text");
+    const footer = document.getElementById("drawer-footer-content");
+    if (!drawer) return;
+
+    title.innerText = "Roll Settings";
+    footer.style.display = "flex";
+
+    // Stage current states
+    stagedDraftModeEnabled = draftModeEnabled;
+    stagedDraftCount = draftCount;
+    stagedBannedHeroIds = new Set(bannedHeroIds);
+    stagedBanSearchQuery = "";
+
+    renderDrawerBody();
+    drawer.classList.add("open");
+}
+
+function toggleStagedDraftMode(enabled) {
+    stagedDraftModeEnabled = enabled;
+    const section = document.getElementById("drawer-draft-count-section");
+    if (section) {
+        section.style.display = enabled ? "block" : "none";
+    }
+}
+
+function setStagedDraftCount(count) {
+    stagedDraftCount = count;
+    renderDrawerBody();
+}
+
+function toggleStagedBan(heroId) {
+    if (stagedBannedHeroIds.has(heroId)) {
+        stagedBannedHeroIds.delete(heroId);
+    } else {
+        stagedBannedHeroIds.add(heroId);
+    }
+    renderDrawerBanList();
+}
+
+function toggleBanGroup(groupId, banAll) {
+    characters.forEach((c) => {
+        if (c.group_id === groupId) {
+            if (banAll) {
+                stagedBannedHeroIds.add(c.id);
+            } else {
+                stagedBannedHeroIds.delete(c.id);
+            }
+        }
+    });
+    renderDrawerBanList();
+}
+
+function handleBanSearch(query) {
+    stagedBanSearchQuery = query;
+    renderDrawerBanList();
+}
+
+function renderDrawerBanList() {
+    const container = document.getElementById("drawer-ban-list-container");
+    if (!container) return;
+
+    const query = (stagedBanSearchQuery || "").toLowerCase();
+    let html = "";
+
+    groups.forEach((g) => {
+        const groupChars = characters.filter((c) => c.group_id === g.id && c.name.toLowerCase().includes(query));
+        if (groupChars.length === 0) return;
+
+        const allGroupBanned = groupChars.every((c) => stagedBannedHeroIds.has(c.id));
+        const groupBtnText = allGroupBanned ? "Unban All" : "Ban All";
+
+        html += `
+            <div class="ban-group-section" data-group-id="${g.id}">
+                <div class="ban-group-header">
+                    <span class="ban-group-title">${g.name}</span>
+                    <button type="button" class="btn-ban-group-select" onclick="toggleBanGroup('${g.id}', ${!allGroupBanned})">
+                        ${groupBtnText}
+                    </button>
+                </div>
+                <div class="ban-hero-grid">
+        `;
+
+        groupChars.forEach((c) => {
+            const isBanned = stagedBannedHeroIds.has(c.id);
+            const bannedClass = isBanned ? "banned" : "";
+            html += `
+                <div class="ban-hero-item ${bannedClass}" onclick="toggleStagedBan('${c.id}')">
+                    <img src="${getImgUrl(c.slug)}" alt="${c.name}" class="ban-hero-img">
+                    <span class="ban-hero-name">${c.name}</span>
+                </div>
+            `;
+        });
+
+        html += `
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html || '<p style="text-align: center; opacity: 0.5; margin: 20px 0;">No heroes found.</p>';
+}
+
+function updateRollSettingsBadge() {
+    const badge = document.getElementById("roll-settings-badge");
+    const btn = document.getElementById("rollSettingsBtn");
+    if (!badge || !btn) return;
+
+    let activeCount = 0;
+    if (draftModeEnabled) activeCount++;
+    if (bannedHeroIds.size > 0) activeCount += bannedHeroIds.size;
+
+    if (activeCount > 0) {
+        badge.innerText = activeCount;
+        badge.style.display = "flex";
+        btn.classList.add("has-settings");
+    } else {
+        badge.style.display = "none";
+        btn.classList.remove("has-settings");
+    }
+}
+
+function startDraftStep() {
+    if (activeDraftStep >= activeDraftOrder.length) {
+        // Drafting complete!
+        validateSelection();
+        const actionButtons = document.getElementById("action-buttons");
+        if (actionButtons) actionButtons.style.display = "flex";
+
+        const rollBtnContainer = document.getElementById("rollBtnContainer");
+        if (rollBtnContainer) rollBtnContainer.style.display = "none";
+
+        isRollActive = true;
+        return;
+    }
+
+    const pIdx = activeDraftOrder[activeDraftStep];
+    const activePlayerName = NAMES[pIdx];
+
+    // Update rows for all players
+    activeDraftOrder.forEach((tempIdx) => {
+        const stepIdx = activeDraftOrder.indexOf(tempIdx);
+        if (stepIdx < activeDraftStep) {
+            // Already drafted and collapsed, do nothing
+        } else if (stepIdx === activeDraftStep) {
+            renderPlayerRowDraftingActive(tempIdx);
+        } else {
+            renderPlayerRowWaiting(tempIdx, activePlayerName);
+        }
+    });
+
+    // Pool of remaining owned, non-banned and not already chosen heroes
+    const chosenHeroNames = Object.values(selectedDraftHeroes).map((h) => h.name);
+    const pool = characters.filter((c) => isHeroOwned(c) && !bannedHeroIds.has(c.id) && !chosenHeroNames.includes(c.name));
+
+    // Scramble on wheel
+    startDraftWheelScramble(pIdx, pool);
+
+    setTimeout(() => {
+        const candidates = generateDraftCandidates(pIdx, pool);
+        activeDraftCandidates[pIdx] = candidates;
+        stopDraftWheelScramble(pIdx, candidates);
+    }, 1000);
+}
+
+function generateDraftCandidates(pIdx, pool) {
+    let candidates = [];
+    let tempPool = [...pool];
+    const count = Math.min(draftCount, tempPool.length);
+
+    for (let i = 0; i < count; i++) {
+        let selectedHero = null;
+        if (pIdx >= 4) {
+            const r = Math.floor(Math.random() * tempPool.length);
+            selectedHero = tempPool[r];
+            tempPool.splice(r, 1);
+        } else {
+            const activePool = tempPool.filter((c) => c.weights[pIdx] > 0);
+            if (activePool.length === 0) {
+                if (tempPool.length > 0) {
+                    const r = Math.floor(Math.random() * tempPool.length);
+                    selectedHero = tempPool[r];
+                    tempPool.splice(r, 1);
+                }
+            } else {
+                const totalEffectiveWeight = activePool.reduce(
+                    (sum, c) => sum + getSoftWeight(c, pIdx),
+                    0,
+                );
+                let random = Math.random() * totalEffectiveWeight;
+                for (const hero of activePool) {
+                    const weight = getSoftWeight(hero, pIdx);
+                    if (random < weight) {
+                        selectedHero = hero;
+                        tempPool.splice(
+                            tempPool.findIndex((p) => p.name === hero.name),
+                            1,
+                        );
+                        break;
+                    }
+                    random -= weight;
+                }
+            }
+        }
+        if (selectedHero) {
+            candidates.push(selectedHero);
+        }
+    }
+    return candidates;
+}
+
+function startDraftWheelScramble(pIdx, pool) {
+    const wheel = document.getElementById(`draft-wheel-${pIdx}`);
+    if (!wheel) return;
+
+    let html = "";
+    const count = draftCount;
+    const angleStep = 360 / count;
+    for (let i = 0; i < count; i++) {
+        const angle = i * angleStep;
+        const radius = 150;
+        html += `
+            <div class="draft-card-wrapper" id="draft-card-wrapper-${pIdx}-${i}" style="transform: rotateY(${angle}deg) translateZ(${radius}px);">
+                <div class="draft-card">
+                    <img src="" class="char-bg-img scramble-img" id="draft-card-img-${pIdx}-${i}" style="opacity: 0.08;">
+                    <div class="draft-card-content">
+                        <div class="draft-card-header">
+                            <span class="player-name-caps" style="color: var(--player-color);">${NAMES[pIdx].toUpperCase()}</span>
+                            <span class="hero-name-divider">:</span>
+                            <span class="draft-hero-name scramble-text" id="draft-card-name-${pIdx}-${i}">ROLLING...</span>
+                        </div>
+                        <div class="draft-card-body">
+                            <span class="draft-card-group" id="draft-card-group-${pIdx}-${i}">Group</span>
+                            <div class="hero-stats-row" id="draft-card-stats-${pIdx}-${i}">
+                                <span>Plays: --</span>
+                                <span class="stats-divider">|</span>
+                                <span>Last: --</span>
+                                <span class="stats-divider">|</span>
+                                <span>Prob: --</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    wheel.innerHTML = html;
+
+    scrambleIntervals[pIdx] = setInterval(() => {
+        for (let i = 0; i < count; i++) {
+            const randomHero = pool[Math.floor(Math.random() * pool.length)];
+            if (!randomHero) continue;
+            const imgEl = document.getElementById(`draft-card-img-${pIdx}-${i}`);
+            const nameEl = document.getElementById(`draft-card-name-${pIdx}-${i}`);
+            const groupEl = document.getElementById(`draft-card-group-${pIdx}-${i}`);
+            if (imgEl) imgEl.src = getImgUrl(randomHero.slug);
+            if (nameEl) {
+                const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                let scrambleStr = "";
+                for (let k = 0; k < 6; k++) {
+                    scrambleStr += chars[Math.floor(Math.random() * chars.length)];
+                }
+                nameEl.innerText = scrambleStr;
+            }
+            if (groupEl) groupEl.innerText = randomHero.group || "";
+        }
+    }, 70);
+}
+
+function stopDraftWheelScramble(pIdx, candidates) {
+    if (scrambleIntervals[pIdx]) {
+        clearInterval(scrambleIntervals[pIdx]);
+        delete scrambleIntervals[pIdx];
+    }
+
+    const wheel = document.getElementById(`draft-wheel-${pIdx}`);
+    if (!wheel) return;
+
+    let html = "";
+    const count = candidates.length;
+    wheel.style.transform = "rotateY(0deg)";
+    draftWheelFrontCardIndices[pIdx] = 0;
+    draftWheelAngles[pIdx] = 0;
+
+    const angleStep = 360 / count;
+    candidates.forEach((hero, i) => {
+        const angle = i * angleStep;
+        const radius = 150;
+        
+        const statsHtml = pIdx < 4 ? `
+            <span>Plays: <b>${hero.playCount[pIdx] || 0}</b></span>
+            <span class="stats-divider">|</span>
+            <span>Last: <b>${hero.lastPlayed[pIdx] || "Never"}</b></span>
+            <span class="stats-divider">|</span>
+            <span>Prob: <b>${getHeroProbabilityText(hero, pIdx)}</b></span>
+        ` : `
+            <span>Prob: <b>${getHeroProbabilityText(hero, pIdx)}</b></span>
+        `;
+
+        html += `
+            <div class="draft-card-wrapper" id="draft-card-wrapper-${pIdx}-${i}" style="transform: rotateY(${angle}deg) translateZ(${radius}px);" onclick="selectDraftHero(${pIdx}, '${hero.name.replace(/'/g, "\\'")}', '${hero.slug}', '${hero.id}', ${angle}, ${i})">
+                <div class="draft-card">
+                    <img src="${getImgUrl(hero.slug)}" alt="${hero.name}" class="char-bg-img" style="opacity: 0.25;">
+                    <div class="draft-card-content">
+                        <div class="draft-card-header">
+                            <span class="player-name-caps" style="color: var(--player-color);">${NAMES[pIdx].toUpperCase()}</span>
+                            <span class="hero-name-divider">:</span>
+                            <span class="draft-hero-name">${hero.name}</span>
+                        </div>
+                        <div class="draft-card-body">
+                            <span class="draft-card-group">${hero.group || "Unknown"}</span>
+                            <div class="hero-stats-row">
+                                ${statsHtml}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    wheel.innerHTML = html;
+
+    const container = document.getElementById(`draft-wheel-container-${pIdx}`);
+    if (container) {
+        setupDraftWheelSwipe(pIdx, container, count);
+    }
+}
+
+function setupDraftWheelSwipe(pIdx, container, count) {
+    let startX = 0;
+    let isSwiping = false;
+    let clickPrevented = false;
+
+    // Capture and prevent clicks if a swipe drag occurred
+    const clickHandler = (e) => {
+        if (clickPrevented) {
+            e.stopPropagation();
+            e.preventDefault();
+            clickPrevented = false;
+        }
+    };
+    container.addEventListener('click', clickHandler, true); // capture phase
+
+    container.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        isSwiping = true;
+    }, { passive: true });
+
+    container.addEventListener('touchend', (e) => {
+        if (!isSwiping) return;
+        isSwiping = false;
+        const endX = e.changedTouches[0].clientX;
+        const diffX = endX - startX;
+
+        if (Math.abs(diffX) > 10) {
+            clickPrevented = true;
+        }
+
+        if (diffX > 50) {
+            rotateDraftWheelDirection(pIdx, -1, count);
+        } else if (diffX < -50) {
+            rotateDraftWheelDirection(pIdx, 1, count);
+        }
+    }, { passive: true });
+
+    container.addEventListener('mousedown', (e) => {
+        startX = e.clientX;
+        isSwiping = true;
+
+        const onMouseMove = (moveEvt) => {};
+
+        const onMouseUp = (upEvt) => {
+            if (isSwiping) {
+                isSwiping = false;
+                const diffX = upEvt.clientX - startX;
+                
+                if (Math.abs(diffX) > 10) {
+                    clickPrevented = true;
+                }
+
+                if (diffX > 50) {
+                    rotateDraftWheelDirection(pIdx, -1, count);
+                } else if (diffX < -50) {
+                    rotateDraftWheelDirection(pIdx, 1, count);
+                }
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+        };
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    });
+}
+
+function rotateDraftWheelDirection(pIdx, dir, count) {
+    const candidates = activeDraftCandidates[pIdx];
+    if (!candidates || candidates.length === 0) return;
+
+    if (draftWheelFrontCardIndices[pIdx] === undefined) {
+        draftWheelFrontCardIndices[pIdx] = 0;
+    }
+    let currentIdx = draftWheelFrontCardIndices[pIdx];
+
+    let newIdx = (currentIdx + dir) % count;
+    if (newIdx < 0) newIdx += count;
+    draftWheelFrontCardIndices[pIdx] = newIdx;
+
+    const angleStep = 360 / count;
+
+    if (draftWheelAngles[pIdx] === undefined) {
+        draftWheelAngles[pIdx] = 0;
+    }
+    const currentAngle = draftWheelAngles[pIdx];
+    const targetAngle = currentAngle + dir * angleStep;
+    draftWheelAngles[pIdx] = targetAngle;
+
+    const wheel = document.getElementById(`draft-wheel-${pIdx}`);
+    if (wheel) {
+        wheel.style.transform = `rotateY(${-targetAngle}deg)`;
+    }
+
+    // Deselect any selection when the wheel is rotated
+    deselectDraftHero(pIdx);
+}
+
+function getShortestRotationAngle(currentAngle, targetBaseAngle) {
+    let diff = (targetBaseAngle - currentAngle) % 360;
+    if (diff < -180) {
+        diff += 360;
+    } else if (diff > 180) {
+        diff -= 360;
+    }
+    return currentAngle + diff;
+}
+
+function deselectDraftHero(pIdx) {
+    const selectEl = document.getElementById(`select-${pIdx}`);
+    const confirmBtn = document.getElementById(`confirm-draft-btn-${pIdx}`);
+    const bgImgEl = document.getElementById(`bg-img-${pIdx}`);
+    const wrappers = document.querySelectorAll(`[id^="draft-card-wrapper-${pIdx}-"]`);
+
+    if (selectEl) selectEl.value = "";
+    
+    wrappers.forEach((w) => {
+        w.classList.remove("selected");
+    });
+
+    if (bgImgEl) {
+        bgImgEl.style.opacity = "0";
+    }
+
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+    }
+
+    selectedDraftHeroes[pIdx] = null;
+}
+
+function selectDraftHero(pIdx, heroName, heroSlug, heroId, cardAngle, cardIdx) {
+    // Check if already selected
+    const isAlreadySelected = selectedDraftHeroes[pIdx] && selectedDraftHeroes[pIdx].id === heroId;
+
+    if (isAlreadySelected) {
+        deselectDraftHero(pIdx);
+        return;
+    }
+
+    const selectEl = document.getElementById(`select-${pIdx}`);
+    const confirmBtn = document.getElementById(`confirm-draft-btn-${pIdx}`);
+    const bgImgEl = document.getElementById(`bg-img-${pIdx}`);
+    const wrappers = document.querySelectorAll(`[id^="draft-card-wrapper-${pIdx}-"]`);
+
+    // Select
+    if (selectEl) selectEl.value = heroName;
+
+    // Center selected card to front
+    draftWheelFrontCardIndices[pIdx] = cardIdx;
+
+    if (draftWheelAngles[pIdx] === undefined) {
+        draftWheelAngles[pIdx] = 0;
+    }
+    const currentAngle = draftWheelAngles[pIdx];
+    const shortestAngle = getShortestRotationAngle(currentAngle, cardAngle);
+    draftWheelAngles[pIdx] = shortestAngle;
+
+    const wheel = document.getElementById(`draft-wheel-${pIdx}`);
+    if (wheel) {
+        wheel.style.transform = `rotateY(${-shortestAngle}deg)`;
+    }
+
+    wrappers.forEach((w, idx) => {
+        if (idx === cardIdx) {
+            w.classList.add("selected");
+        } else {
+            w.classList.remove("selected");
+        }
+    });
+
+    if (bgImgEl) {
+        bgImgEl.src = getImgUrl(heroSlug);
+        bgImgEl.style.opacity = "0.25";
+    }
+
+    if (confirmBtn) {
+        confirmBtn.disabled = false;
+    }
+
+    selectedDraftHeroes[pIdx] = characters.find((c) => c.id === heroId);
+}
+
+function collapsePlayerRowToResolved(pIdx, finalHero) {
+    const rowEl = document.getElementById(`player-row-${pIdx}`);
+    if (!rowEl) return;
+
+    rowEl.className = "player-row revealed";
+    rowEl.style.cssText = `--player-color: var(--p${pIdx + 1}); border-color: var(--p${pIdx + 1});`;
+
+    rowEl.innerHTML = `
+        <img src="${getImgUrl(finalHero.slug)}" class="char-bg-img" id="bg-img-${pIdx}" alt="${finalHero.name}" style="opacity: 0.25;">
+        <div class="player-row-content">
+            <div class="hero-info-container" id="info-container-${pIdx}">
+                <div class="hero-header-row">
+                    <div class="hero-header-left">
+                        <span class="player-name-caps" style="color: var(--player-color);">${NAMES[pIdx].toUpperCase()}</span>
+                        <span class="hero-name-divider">:</span>
+                        <a href="${getHeroLink(finalHero.slug)}" target="_blank" class="hero-name hero-name-link resolved" id="hero-name-title-${pIdx}">${finalHero.name}</a>
+                    </div>
+                </div>
+                <span class="expanded-group" id="hero-group-${pIdx}">${finalHero.group || "Unknown"}</span>
+                <div class="hero-stats-row" id="stats-row-${pIdx}">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+            <div class="hero-select-container" id="select-container-${pIdx}">
+                <input type="hidden" class="char-select" data-player="${pIdx}" id="select-${pIdx}" value="${finalHero.name}">
+                <button class="edit-icon-btn" type="button" onclick="openHeroSelectModal(${pIdx})" aria-label="Select hero">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    `;
+
+    const statsRow = document.getElementById(`stats-row-${pIdx}`);
+    if (statsRow) {
+        const probText = `Prob: <b>${getHeroProbabilityText(finalHero, pIdx)}</b>`;
+        if (pIdx < 4) {
+            const plays = finalHero.playCount[pIdx] || 0;
+            const last = finalHero.lastPlayed[pIdx] || "Never";
+            statsRow.innerHTML = `
+                <span>Plays: <b>${plays}</b></span>
+                <span class="stats-divider">|</span>
+                <span>Last: <b>${last}</b></span>
+                <span class="stats-divider">|</span>
+                <span>${probText}</span>
+            `;
+        } else {
+            statsRow.innerHTML = `<span>${probText}</span>`;
+        }
+    }
+}
+
+function confirmDraftPick(pIdx) {
+    const chosenHero = selectedDraftHeroes[pIdx];
+    if (!chosenHero) return;
+
+    collapsePlayerRowToResolved(pIdx, chosenHero);
+
+    activeDraftStep++;
+    startDraftStep();
+}
+
+function renderPlayerRowWaiting(pIdx, activePlayerName) {
+    const resultsDiv = document.getElementById("results");
+    let rowEl = document.getElementById(`player-row-${pIdx}`);
+    if (!rowEl) {
+        rowEl = document.createElement("div");
+        rowEl.id = `player-row-${pIdx}`;
+        resultsDiv.appendChild(rowEl);
+    }
+
+    rowEl.className = "player-row waiting-draft";
+    rowEl.style.cssText = `--player-color: var(--p${pIdx + 1}); border-color: var(--p${pIdx + 1});`;
+    rowEl.innerHTML = `
+        <div class="player-row-content">
+            <span class="player-name-caps" style="color: var(--player-color);">${NAMES[pIdx].toUpperCase()}</span>
+            <span class="draft-waiting-status">Waiting for ${activePlayerName}...</span>
+        </div>
+    `;
+}
+
+function renderPlayerRowDraftingActive(pIdx) {
+    const resultsDiv = document.getElementById("results");
+    let rowEl = document.getElementById(`player-row-${pIdx}`);
+    if (!rowEl) {
+        rowEl = document.createElement("div");
+        rowEl.id = `player-row-${pIdx}`;
+        resultsDiv.appendChild(rowEl);
+    }
+
+    rowEl.className = "player-row active-draft";
+    rowEl.style.cssText = `--player-color: var(--p${pIdx + 1}); border-color: var(--p${pIdx + 1});`;
+
+    rowEl.innerHTML = `
+        <style>
+            .btn-cancel-roll {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
+                background: rgba(255, 77, 77, 0.12);
+                border: 1px solid rgba(255, 77, 77, 0.25);
+                color: #ff4d4d;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                padding: 0;
+            }
+            @media (hover: hover) {
+                .btn-cancel-roll:hover {
+                    background: rgba(255, 77, 77, 0.25);
+                    border-color: #ff4d4d;
+                    color: #fff;
+                    transform: scale(1.08);
+                    box-shadow: 0 0 10px rgba(255, 77, 77, 0.3);
+                }
+            }
+            .btn-cancel-roll:active {
+                transform: scale(0.95);
+            }
+        </style>
+        <img src="" class="char-bg-img scramble-img" id="bg-img-${pIdx}" style="opacity: 0; transition: opacity 0.5s ease;">
+        <input type="hidden" class="char-select" data-player="${pIdx}" id="select-${pIdx}">
+        <div class="player-row-content draft-flow-content">
+            <div class="hero-header-row" style="width: 100%; display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <span class="player-name-caps" style="color: var(--player-color);">${NAMES[pIdx].toUpperCase()}</span>
+                    <span class="hero-name-divider">:</span>
+                    <span class="draft-title" style="font-weight: 700; color: #ffd700;">CHOOSE YOUR HERO</span>
+                </div>
+                <button class="btn-cancel-roll" type="button" onclick="cancelRoll()" aria-label="Cancel roll">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="draft-wheel-container" id="draft-wheel-container-${pIdx}">
+                <button type="button" class="draft-arrow left-arrow" onclick="rotateDraftWheelDirection(${pIdx}, -1, draftCount)" aria-label="Previous hero">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </button>
+
+                <div class="draft-wheel" id="draft-wheel-${pIdx}">
+                    <!-- Cards will be populated here -->
+                </div>
+
+                <button type="button" class="draft-arrow right-arrow" onclick="rotateDraftWheelDirection(${pIdx}, 1, draftCount)" aria-label="Next hero">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
+            </div>
+            <div class="draft-actions">
+                <button type="button" class="btn-confirm-draft" id="confirm-draft-btn-${pIdx}" onclick="confirmDraftPick(${pIdx})" disabled>
+                    CONFIRM PICK
+                </button>
+            </div>
+        </div>
+    `;
 }
