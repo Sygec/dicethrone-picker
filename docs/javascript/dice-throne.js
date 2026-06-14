@@ -2945,7 +2945,7 @@ function renderDrawerBody() {
 
             <div class="panel-row-new">
                 <span class="panel-row-title" style="font-weight: 700; margin-bottom: 8px; display: block;">Ban List:</span>
-                <input type="text" id="ban-search-input" class="ban-search-input" placeholder="Search heroes to ban..." oninput="handleBanSearch(this.value)" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.2); color: #fff; margin-bottom: 15px;">
+                <input type="text" id="ban-search-input" class="ban-search-input" placeholder="Search heroes to ban..." oninput="handleBanSearch(this.value)" style="width: 100%; padding: 8px 0px 0px 0px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.2); color: #fff; margin-bottom: 15px;">
                 <div id="drawer-ban-list-container" class="ban-list-container" style="max-height: 300px; overflow-y: auto; padding-right: 4px;">
                     <!-- Ban List content populated by renderDrawerBanList() -->
                 </div>
@@ -4686,8 +4686,8 @@ function startDraftWheelScramble(pIdx, pool) {
                     <img src="" class="char-bg-img scramble-img" id="draft-card-img-${pIdx}-${i}" style="opacity: 0.08;">
                     <div class="draft-card-content">
                         <div class="draft-card-header">
-                            <span class="player-name-caps" style="color: var(--player-color);">${NAMES[pIdx].toUpperCase()}</span>
-                            <span class="hero-name-divider">:</span>
+                            <!-- <span class="player-name-caps" style="color: var(--player-color);">${NAMES[pIdx].toUpperCase()}</span>
+                            <span class="hero-name-divider">:</span> -->
                             <span class="draft-hero-name scramble-text" id="draft-card-name-${pIdx}-${i}">ROLLING...</span>
                         </div>
                         <div class="draft-card-body">
@@ -4764,8 +4764,8 @@ function stopDraftWheelScramble(pIdx, candidates) {
                     <img src="${getImgUrl(hero.slug)}" alt="${hero.name}" class="char-bg-img" style="opacity: 0.25;">
                     <div class="draft-card-content">
                         <div class="draft-card-header">
-                            <span class="player-name-caps" style="color: var(--player-color);">${NAMES[pIdx].toUpperCase()}</span>
-                            <span class="hero-name-divider">:</span>
+                            <!-- <span class="player-name-caps" style="color: var(--player-color);">${NAMES[pIdx].toUpperCase()}</span>
+                            <span class="hero-name-divider">:</span>  -->
                             <span class="draft-hero-name">${hero.name}</span>
                         </div>
                         <div class="draft-card-body">
