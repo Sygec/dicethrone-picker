@@ -51,6 +51,7 @@ let stagedDraftModeEnabled = false;
 let stagedDraftCount = 3;
 let stagedBannedHeroIds = new Set();
 let stagedBanSearchQuery = "";
+let stagedRollSettingsTab = "draft";
 
 let activeDraftOrder = [];
 let activeDraftStep = 0;
@@ -1985,7 +1986,9 @@ function pickCharacters() {
     resultsDiv.innerHTML = "";
 
     // Pool of owned, non-banned heroes
-    let pool = characters.filter((c) => isHeroOwned(c) && !bannedHeroIds.has(c.id)).map((c) => structuredClone(c));
+    let pool = characters
+        .filter((c) => isHeroOwned(c) && !bannedHeroIds.has(c.id))
+        .map((c) => structuredClone(c));
 
     if (pool.length < active.length) {
         return alert(
@@ -2097,7 +2100,9 @@ function pickCharacters() {
     resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
 
     // Pool of all owned heroes for the cycling scrambler
-    const ownedHeroes = characters.filter((c) => isHeroOwned(c) && !bannedHeroIds.has(c.id));
+    const ownedHeroes = characters.filter(
+        (c) => isHeroOwned(c) && !bannedHeroIds.has(c.id),
+    );
 
     // Start scrambling for all panels
     sortedActive.forEach((pIdx) => {
@@ -2689,7 +2694,7 @@ function cancelRoll() {
     document.getElementById("results").innerHTML =
         '<p style="text-align: center; opacity: 0.6;">Select players and roll.</p>';
     document.getElementById("action-buttons").style.display = "none";
-    
+
     // Clear any active draft intervals
     if (activeDraftOrder) {
         activeDraftOrder.forEach((pIdx) => {
@@ -2804,6 +2809,9 @@ function renderDrawerBody() {
     const body = document.getElementById("drawer-body-content");
     if (!body) return;
 
+    // Reset default overflow
+    body.style.overflowY = "auto";
+
     if (currentDrawerMode === "sort-filter") {
         body.innerHTML = `
             <!-- Sorting Controls -->
@@ -2883,7 +2891,7 @@ function renderDrawerBody() {
 
         body.innerHTML = `
             <div class="panel-row-new">
-                <span class="panel-row-title" style="font-weight: 700; margin-bottom: 10px; display: block;">Show Player Stats Columns:</span>
+                <span class="panel-row-title" style="font-weight: 700; margin-bottom: 10px; display: block;">Show Player Stat Rows:</span>
                 <div class="pill-group">
                     ${visibilityPillsHtml}
                 </div>
@@ -2908,6 +2916,9 @@ function renderDrawerBody() {
     } else if (currentDrawerMode === "history-filter") {
         renderHistoryFilterDrawerBody(body);
     } else if (currentDrawerMode === "roll-settings") {
+        // Prevent double scrollbars by hiding outer body scrollbar
+        body.style.overflowY = "hidden";
+
         const draftModeChecked = stagedDraftModeEnabled ? "checked" : "";
         const draftCountOptions = [2, 3];
         const countPills = draftCountOptions
@@ -2923,31 +2934,41 @@ function renderDrawerBody() {
             .join("");
 
         body.innerHTML = `
-            <div class="panel-row-new">
-                <span class="panel-row-title" style="font-weight: 700;">Draft Mode:</span>
-                <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="drawer-draft-mode-checkbox" onchange="toggleStagedDraftMode(this.checked)" ${draftModeChecked}>
-                        <span class="toggle-slider"></span>
-                    </label>
-                    <span style="font-size: 0.9em; opacity: 0.8;">Enable Turn-Based Drafting</span>
+            <div class="drawer-tabs-container" style="flex-shrink: 0;">
+                <div class="drawer-tabs">
+                    <button type="button" class="drawer-tab-btn ${stagedRollSettingsTab === "draft" ? "active" : ""}" onclick="switchRollSettingsTab('draft')">Draft Mode</button>
+                    <button type="button" class="drawer-tab-btn ${stagedRollSettingsTab === "ban" ? "active" : ""}" onclick="switchRollSettingsTab('ban')">Ban List</button>
+                    <div class="drawer-tab-underline" style="left: ${stagedRollSettingsTab === "draft" ? "0%" : "50%"};"></div>
                 </div>
             </div>
 
-            <div id="drawer-draft-count-section" class="panel-row-new" style="display: ${stagedDraftModeEnabled ? "block" : "none"};">
-                <span class="panel-row-title" style="font-weight: 700;">Draft Candidates Count:</span>
-                <div class="pill-group" style="margin-top: 10px;">
-                    ${countPills}
+            <div id="roll-settings-draft-tab" style="display: ${stagedRollSettingsTab === "draft" ? "block" : "none"};">
+                <div class="panel-row-new">
+                    <!-- <span class="panel-row-title" style="font-weight: 700;">Draft Mode:</span> -->
+                    <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="drawer-draft-mode-checkbox" onchange="toggleStagedDraftMode(this.checked)" ${draftModeChecked}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span style="font-size: 0.9em; opacity: 0.8;">Enable Turn-Based Drafting</span>
+                    </div>
+                </div>
+
+                <div id="drawer-draft-count-section" class="panel-row-new" style="display: ${stagedDraftModeEnabled ? "block" : "none"};">
+                    <span class="panel-row-title" style="font-weight: 700;">Draft Candidates Count:</span>
+                    <div class="pill-group" style="margin-top: 10px;">
+                        ${countPills}
+                    </div>
                 </div>
             </div>
 
-            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 15px 0;">
-
-            <div class="panel-row-new">
-                <span class="panel-row-title" style="font-weight: 700; margin-bottom: 8px; display: block;">Ban List:</span>
-                <input type="text" id="ban-search-input" class="ban-search-input" placeholder="Search heroes to ban..." oninput="handleBanSearch(this.value)" style="width: 100%; padding: 8px 0px 0px 0px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.2); color: #fff; margin-bottom: 15px;">
-                <div id="drawer-ban-list-container" class="ban-list-container" style="max-height: 300px; overflow-y: auto; padding-right: 4px;">
-                    <!-- Ban List content populated by renderDrawerBanList() -->
+            <div id="roll-settings-ban-tab" style="display: ${stagedRollSettingsTab === "ban" ? "flex" : "none"}; flex-direction: column; flex: 1; min-height: 0; font-size: 1rem;">
+                <div class="panel-row-new" style="display: flex; flex-direction: column; flex: 1; min-height: 0; margin-top: 8px;">
+                    <!-- <span class="panel-row-title" style="font-weight: 700; margin-bottom: 8px; display: block; flex-shrink: 0;">Ban List:</span> -->
+                    <input type="text" id="ban-search-input" class="ban-search-input" placeholder="Search heroes to ban..." oninput="handleBanSearch(this.value)" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.2); color: #fff; margin-bottom: 15px; flex-shrink: 0;" value="${stagedBanSearchQuery || ""}">
+                    <div id="drawer-ban-list-container" class="ban-list-container" style="flex: 1; min-height: 0; overflow-y: auto; padding-right: 4px; max-height: 350px;">
+                        <!-- Ban List content populated by renderDrawerBanList() -->
+                    </div>
                 </div>
             </div>
         `;
@@ -3069,11 +3090,11 @@ function toggleStagedPlayerGameFilter(idx) {
     } else {
         stagedSelectedGamePlayerIndex = idx;
     }
-    
+
     if (stagedSelectedGamePlayerIndex === null) {
         stagedGamesWinnerOnly = false;
     }
-    
+
     renderDrawerBody();
 }
 
@@ -3441,11 +3462,14 @@ function applyAndCloseDrawer() {
         draftModeEnabled = stagedDraftModeEnabled;
         draftCount = stagedDraftCount;
         bannedHeroIds = new Set(stagedBannedHeroIds);
-        
+
         localStorage.setItem("draftModeEnabled", draftModeEnabled);
         localStorage.setItem("draftCount", draftCount);
-        localStorage.setItem("bannedHeroIds", JSON.stringify(Array.from(bannedHeroIds)));
-        
+        localStorage.setItem(
+            "bannedHeroIds",
+            JSON.stringify(Array.from(bannedHeroIds)),
+        );
+
         updateRollSettingsBadge();
         closeDrawer(null, true);
     }
@@ -3655,8 +3679,13 @@ function renderGamesList() {
     // Automatically add all in-progress games to the expanded state
     games.forEach((game) => {
         const winners = game.game_players.filter((p) => p.is_winner === true);
-        const explicitLosers = game.game_players.filter((p) => p.is_winner === false);
-        const isDraw = winners.length === 0 && explicitLosers.length > 0 && explicitLosers.length === game.game_players.length;
+        const explicitLosers = game.game_players.filter(
+            (p) => p.is_winner === false,
+        );
+        const isDraw =
+            winners.length === 0 &&
+            explicitLosers.length > 0 &&
+            explicitLosers.length === game.game_players.length;
         const isInProgress = winners.length === 0 && !isDraw;
         if (isInProgress) {
             expandedGameIds.add(game.id);
@@ -3747,21 +3776,26 @@ function renderGamesList() {
             game.game_players.forEach((gp) => {
                 const pIdx = parseInt(gp.player_id.substring(1)) - 1;
                 let rawName = NAMES[pIdx] || "Unknown";
-                if (rawName.toLowerCase().startsWith("player ") && rawName.length > 7) {
+                if (
+                    rawName.toLowerCase().startsWith("player ") &&
+                    rawName.length > 7
+                ) {
                     rawName = "P" + rawName.substring(7);
                 }
                 playerNamesMap[gp.player_id] = rawName;
             });
 
             const firstLetters = Object.values(playerNamesMap).map((name) =>
-                name.charAt(0).toUpperCase()
+                name.charAt(0).toUpperCase(),
             );
 
             const playerLabelsMap = {};
             game.game_players.forEach((gp) => {
                 const name = playerNamesMap[gp.player_id];
                 const firstChar = name.charAt(0).toUpperCase();
-                const count = firstLetters.filter((l) => l === firstChar).length;
+                const count = firstLetters.filter(
+                    (l) => l === firstChar,
+                ).length;
                 let label = firstChar;
                 if (count > 1 && name.length > 1) {
                     label = firstChar + name.charAt(1).toLowerCase();
@@ -3770,11 +3804,13 @@ function renderGamesList() {
             });
 
             // Compact collapsed list of player hero portraits (winners first)
-            const sortedPlayersForSummary = [...game.game_players].sort((a, b) => {
-                if (a.is_winner && !b.is_winner) return -1;
-                if (!a.is_winner && b.is_winner) return 1;
-                return 0;
-            });
+            const sortedPlayersForSummary = [...game.game_players].sort(
+                (a, b) => {
+                    if (a.is_winner && !b.is_winner) return -1;
+                    if (!a.is_winner && b.is_winner) return 1;
+                    return 0;
+                },
+            );
 
             const portraitStrip = sortedPlayersForSummary
                 .map((gp) => {
@@ -3783,7 +3819,9 @@ function renderGamesList() {
                     const heroName = gp.heroes?.name || "Unknown";
                     const isHeroWinner = gp.is_winner === true;
                     const winnerClass = isHeroWinner ? "winner-highlight" : "";
-                    const trophyHtml = isHeroWinner ? '<span class="mini-winner-trophy">🏆</span>' : "";
+                    const trophyHtml = isHeroWinner
+                        ? '<span class="mini-winner-trophy">🏆</span>'
+                        : "";
                     const playerLabel = playerLabelsMap[gp.player_id];
                     return `
                         <a href="${getHeroLink(heroSlug)}" target="_blank" class="mini-portrait-wrapper ${winnerClass}" title="${heroName}" onclick="event.stopPropagation()">
@@ -3795,10 +3833,12 @@ function renderGamesList() {
                 })
                 .join("");
 
-            const statusLabel = isInProgress 
-                ? '<span class="game-card-status-badge">In Progress</span>' 
-                : '';
-            const drawStampHtml = isDraw ? '<div class="player-plate-draw-badge">DRAW</div>' : '';
+            const statusLabel = isInProgress
+                ? '<span class="game-card-status-badge">In Progress</span>'
+                : "";
+            const drawStampHtml = isDraw
+                ? '<div class="player-plate-draw-badge">DRAW</div>'
+                : "";
             const headerHtml = `
             <div class="game-card-header" onclick="toggleGameExpansion('${game.id}')">
                 <div class="game-card-title-group">
@@ -3825,74 +3865,81 @@ function renderGamesList() {
             `
                 : "";
 
-            const platesArray = game.game_players
-                .map((gp) => {
-                    const pIdx = parseInt(gp.player_id.substring(1)) - 1;
-                    const heroName = gp.heroes?.name || "Unknown";
-                    const heroSlug = gp.heroes?.slug || "";
-                    const isSearchMatch = Boolean(
-                        searchTerm &&
-                        heroName.toLowerCase().includes(searchTerm),
-                    );
+            const platesArray = game.game_players.map((gp) => {
+                const pIdx = parseInt(gp.player_id.substring(1)) - 1;
+                const heroName = gp.heroes?.name || "Unknown";
+                const heroSlug = gp.heroes?.slug || "";
+                const isSearchMatch = Boolean(
+                    searchTerm && heroName.toLowerCase().includes(searchTerm),
+                );
 
-                    let isPlayerFilterMatch = false;
-                    if (selectedGamePlayerIndex !== null) {
-                        if (
-                            selectedGamePlayerIndex >= 0 &&
-                            selectedGamePlayerIndex <= 3
-                        ) {
-                            isPlayerFilterMatch =
-                                pIdx === selectedGamePlayerIndex;
-                        } else if (selectedGamePlayerIndex === 4) {
-                            isPlayerFilterMatch = pIdx === 4 || pIdx === 5;
-                        }
+                let isPlayerFilterMatch = false;
+                if (selectedGamePlayerIndex !== null) {
+                    if (
+                        selectedGamePlayerIndex >= 0 &&
+                        selectedGamePlayerIndex <= 3
+                    ) {
+                        isPlayerFilterMatch = pIdx === selectedGamePlayerIndex;
+                    } else if (selectedGamePlayerIndex === 4) {
+                        isPlayerFilterMatch = pIdx === 4 || pIdx === 5;
                     }
+                }
 
-                    let plateClass = "draw";
-                    if (winners.length > 0) {
-                        plateClass = gp.is_winner ? "winner" : "loser";
-                    } else if (isDraw) {
-                        plateClass = "draw";
-                    } else if (isInProgress) {
-                        plateClass = "in-progress";
-                    } else {
-                        plateClass = gp.is_winner === false ? "loser" : "draw";
-                    }
+                let plateClass = "draw";
+                if (winners.length > 0) {
+                    plateClass = gp.is_winner ? "winner" : "loser";
+                } else if (isDraw) {
+                    plateClass = "draw";
+                } else if (isInProgress) {
+                    plateClass = "in-progress";
+                } else {
+                    plateClass = gp.is_winner === false ? "loser" : "draw";
+                }
 
-                    let borderStyle = "";
-                    if (isSearchMatch || isPlayerFilterMatch) {
-                        borderStyle =
-                            "box-shadow: 0 0 8px var(--accent), 0 0 20px color-mix(in srgb, var(--accent) 50%, transparent);";
-                    }
+                let borderStyle = "";
+                if (isSearchMatch || isPlayerFilterMatch) {
+                    borderStyle =
+                        "box-shadow: 0 0 8px var(--accent), 0 0 20px color-mix(in srgb, var(--accent) 50%, transparent);";
+                }
 
-                    const trophyHtml = gp.is_winner ? '<div class="player-plate-trophy">🏆</div>' : "";
-                    const drawBadgeHtml = isDraw ? '<div class="player-plate-draw-badge">DRAW</div>' : "";
+                const trophyHtml = gp.is_winner
+                    ? '<div class="player-plate-trophy">🏆</div>'
+                    : "";
+                const drawBadgeHtml = isDraw
+                    ? '<div class="player-plate-draw-badge">DRAW</div>'
+                    : "";
 
-                    let statsHtml = "";
-                    if (gp.is_winner) {
-                        let heroPlayCount = 0;
-                        let heroWinCount = 0;
-                        const useHistorical = gamesUseHistorical;
-                        games.forEach((g) => {
-                            if (!useHistorical && g.is_historical) return;
-                            g.game_players.forEach((otherGp) => {
-                                if (otherGp.player_id === gp.player_id && otherGp.hero_id === gp.hero_id) {
-                                    heroPlayCount++;
-                                    if (otherGp.is_winner) {
-                                        heroWinCount++;
-                                    }
+                let statsHtml = "";
+                if (gp.is_winner) {
+                    let heroPlayCount = 0;
+                    let heroWinCount = 0;
+                    const useHistorical = gamesUseHistorical;
+                    games.forEach((g) => {
+                        if (!useHistorical && g.is_historical) return;
+                        g.game_players.forEach((otherGp) => {
+                            if (
+                                otherGp.player_id === gp.player_id &&
+                                otherGp.hero_id === gp.hero_id
+                            ) {
+                                heroPlayCount++;
+                                if (otherGp.is_winner) {
+                                    heroWinCount++;
                                 }
-                            });
+                            }
                         });
-                        const pct = heroPlayCount > 0 ? (heroWinCount / heroPlayCount).toFixed(3) : ".000";
-                        const pctStr = pct.startsWith("0") ? pct.substring(1) : pct;
-                        statsHtml = `
+                    });
+                    const pct =
+                        heroPlayCount > 0
+                            ? (heroWinCount / heroPlayCount).toFixed(3)
+                            : ".000";
+                    const pctStr = pct.startsWith("0") ? pct.substring(1) : pct;
+                    statsHtml = `
                             <div class="player-plate-winner-stats">${heroWinCount}🏆 / ${heroPlayCount}🎲</div>
                             <div class="player-plate-winner-pct">(${pctStr})</div>
                         `;
-                    }
+                }
 
-                    return `
+                return `
                     <a href="${getHeroLink(heroSlug)}" target="_blank" class="player-plate ${plateClass}" style="${borderStyle}">
                         <img src="${getImgUrl(heroSlug)}" class="player-plate-bg-art" alt="${heroName}">
                         <div class="player-plate-overlay"></div>
@@ -3904,7 +3951,7 @@ function renderGamesList() {
                             ${statsHtml}
                         </div>
                     </a>`;
-                });
+            });
 
             const playerPlatesHtml = platesArray.join("");
 
@@ -4112,8 +4159,6 @@ async function deleteGame(gameId) {
 
     await init();
 }
-
-
 
 function updateHeroStatsFromHistory() {
     const useHistorical = dbUseHistorical;
@@ -4433,9 +4478,7 @@ function getRecencyDot(lastPlayed) {
                 lastDate.setHours(0, 0, 0, 0);
                 today.setHours(0, 0, 0, 0);
                 const diffTime = today - lastDate;
-                const diffDays = Math.floor(
-                    diffTime / (1000 * 60 * 60 * 24),
-                );
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
                 if (diffDays <= 15) {
                     recencyDot = "🟢"; // Green (last 15 days)
                 } else if (diffDays <= 60) {
@@ -4472,9 +4515,15 @@ function openRollSettingsDrawer() {
     stagedDraftCount = draftCount;
     stagedBannedHeroIds = new Set(bannedHeroIds);
     stagedBanSearchQuery = "";
+    stagedRollSettingsTab = "draft";
 
     renderDrawerBody();
     drawer.classList.add("open");
+}
+
+function switchRollSettingsTab(tabName) {
+    stagedRollSettingsTab = tabName;
+    renderDrawerBody();
 }
 
 function toggleStagedDraftMode(enabled) {
@@ -4525,10 +4574,14 @@ function renderDrawerBanList() {
     let html = "";
 
     groups.forEach((g) => {
-        const groupChars = characters.filter((c) => c.group_id === g.id && c.name.toLowerCase().includes(query));
+        const groupChars = characters.filter(
+            (c) => c.group_id === g.id && c.name.toLowerCase().includes(query),
+        );
         if (groupChars.length === 0) return;
 
-        const allGroupBanned = groupChars.every((c) => stagedBannedHeroIds.has(c.id));
+        const allGroupBanned = groupChars.every((c) =>
+            stagedBannedHeroIds.has(c.id),
+        );
         const groupBtnText = allGroupBanned ? "Unban All" : "Ban All";
 
         html += `
@@ -4559,7 +4612,9 @@ function renderDrawerBanList() {
         `;
     });
 
-    container.innerHTML = html || '<p style="text-align: center; opacity: 0.5; margin: 20px 0;">No heroes found.</p>';
+    container.innerHTML =
+        html ||
+        '<p style="text-align: center; opacity: 0.5; margin: 20px 0;">No heroes found.</p>';
 }
 
 function updateRollSettingsBadge() {
@@ -4611,8 +4666,15 @@ function startDraftStep() {
     });
 
     // Pool of remaining owned, non-banned and not already chosen heroes
-    const chosenHeroNames = Object.values(selectedDraftHeroes).map((h) => h.name);
-    const pool = characters.filter((c) => isHeroOwned(c) && !bannedHeroIds.has(c.id) && !chosenHeroNames.includes(c.name));
+    const chosenHeroNames = Object.values(selectedDraftHeroes).map(
+        (h) => h.name,
+    );
+    const pool = characters.filter(
+        (c) =>
+            isHeroOwned(c) &&
+            !bannedHeroIds.has(c.id) &&
+            !chosenHeroNames.includes(c.name),
+    );
 
     // Scramble on wheel
     startDraftWheelScramble(pIdx, pool);
@@ -4711,15 +4773,22 @@ function startDraftWheelScramble(pIdx, pool) {
         for (let i = 0; i < count; i++) {
             const randomHero = pool[Math.floor(Math.random() * pool.length)];
             if (!randomHero) continue;
-            const imgEl = document.getElementById(`draft-card-img-${pIdx}-${i}`);
-            const nameEl = document.getElementById(`draft-card-name-${pIdx}-${i}`);
-            const groupEl = document.getElementById(`draft-card-group-${pIdx}-${i}`);
+            const imgEl = document.getElementById(
+                `draft-card-img-${pIdx}-${i}`,
+            );
+            const nameEl = document.getElementById(
+                `draft-card-name-${pIdx}-${i}`,
+            );
+            const groupEl = document.getElementById(
+                `draft-card-group-${pIdx}-${i}`,
+            );
             if (imgEl) imgEl.src = getImgUrl(randomHero.slug);
             if (nameEl) {
                 const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
                 let scrambleStr = "";
                 for (let k = 0; k < 6; k++) {
-                    scrambleStr += chars[Math.floor(Math.random() * chars.length)];
+                    scrambleStr +=
+                        chars[Math.floor(Math.random() * chars.length)];
                 }
                 nameEl.innerText = scrambleStr;
             }
@@ -4747,14 +4816,17 @@ function stopDraftWheelScramble(pIdx, candidates) {
     candidates.forEach((hero, i) => {
         const angle = i * angleStep;
         const radius = 150;
-        
-        const statsHtml = pIdx < 4 ? `
+
+        const statsHtml =
+            pIdx < 4
+                ? `
             <span>Plays: <b>${hero.playCount[pIdx] || 0}</b></span>
             <span class="stats-divider">|</span>
             <span>Last: <b>${hero.lastPlayed[pIdx] || "Never"}</b></span>
             <span class="stats-divider">|</span>
             <span>Prob: <b>${getHeroProbabilityText(hero, pIdx)}</b></span>
-        ` : `
+        `
+                : `
             <span>Prob: <b>${getHeroProbabilityText(hero, pIdx)}</b></span>
         `;
 
@@ -4800,31 +4872,39 @@ function setupDraftWheelSwipe(pIdx, container, count) {
             clickPrevented = false;
         }
     };
-    container.addEventListener('click', clickHandler, true); // capture phase
+    container.addEventListener("click", clickHandler, true); // capture phase
 
-    container.addEventListener('touchstart', (e) => {
-        startX = e.touches[0].clientX;
-        isSwiping = true;
-    }, { passive: true });
+    container.addEventListener(
+        "touchstart",
+        (e) => {
+            startX = e.touches[0].clientX;
+            isSwiping = true;
+        },
+        { passive: true },
+    );
 
-    container.addEventListener('touchend', (e) => {
-        if (!isSwiping) return;
-        isSwiping = false;
-        const endX = e.changedTouches[0].clientX;
-        const diffX = endX - startX;
+    container.addEventListener(
+        "touchend",
+        (e) => {
+            if (!isSwiping) return;
+            isSwiping = false;
+            const endX = e.changedTouches[0].clientX;
+            const diffX = endX - startX;
 
-        if (Math.abs(diffX) > 10) {
-            clickPrevented = true;
-        }
+            if (Math.abs(diffX) > 10) {
+                clickPrevented = true;
+            }
 
-        if (diffX > 50) {
-            rotateDraftWheelDirection(pIdx, -1, count);
-        } else if (diffX < -50) {
-            rotateDraftWheelDirection(pIdx, 1, count);
-        }
-    }, { passive: true });
+            if (diffX > 50) {
+                rotateDraftWheelDirection(pIdx, -1, count);
+            } else if (diffX < -50) {
+                rotateDraftWheelDirection(pIdx, 1, count);
+            }
+        },
+        { passive: true },
+    );
 
-    container.addEventListener('mousedown', (e) => {
+    container.addEventListener("mousedown", (e) => {
         startX = e.clientX;
         isSwiping = true;
 
@@ -4834,7 +4914,7 @@ function setupDraftWheelSwipe(pIdx, container, count) {
             if (isSwiping) {
                 isSwiping = false;
                 const diffX = upEvt.clientX - startX;
-                
+
                 if (Math.abs(diffX) > 10) {
                     clickPrevented = true;
                 }
@@ -4844,13 +4924,13 @@ function setupDraftWheelSwipe(pIdx, container, count) {
                 } else if (diffX < -50) {
                     rotateDraftWheelDirection(pIdx, 1, count);
                 }
-                document.removeEventListener('mousemove', onMouseMove);
-                document.removeEventListener('mouseup', onMouseUp);
+                document.removeEventListener("mousemove", onMouseMove);
+                document.removeEventListener("mouseup", onMouseUp);
             }
         };
 
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mouseup", onMouseUp);
     });
 }
 
@@ -4899,10 +4979,12 @@ function deselectDraftHero(pIdx) {
     const selectEl = document.getElementById(`select-${pIdx}`);
     const confirmBtn = document.getElementById(`confirm-draft-btn-${pIdx}`);
     const bgImgEl = document.getElementById(`bg-img-${pIdx}`);
-    const wrappers = document.querySelectorAll(`[id^="draft-card-wrapper-${pIdx}-"]`);
+    const wrappers = document.querySelectorAll(
+        `[id^="draft-card-wrapper-${pIdx}-"]`,
+    );
 
     if (selectEl) selectEl.value = "";
-    
+
     wrappers.forEach((w) => {
         w.classList.remove("selected");
     });
@@ -4920,7 +5002,8 @@ function deselectDraftHero(pIdx) {
 
 function selectDraftHero(pIdx, heroName, heroSlug, heroId, cardAngle, cardIdx) {
     // Check if already selected
-    const isAlreadySelected = selectedDraftHeroes[pIdx] && selectedDraftHeroes[pIdx].id === heroId;
+    const isAlreadySelected =
+        selectedDraftHeroes[pIdx] && selectedDraftHeroes[pIdx].id === heroId;
 
     if (isAlreadySelected) {
         deselectDraftHero(pIdx);
@@ -4930,7 +5013,9 @@ function selectDraftHero(pIdx, heroName, heroSlug, heroId, cardAngle, cardIdx) {
     const selectEl = document.getElementById(`select-${pIdx}`);
     const confirmBtn = document.getElementById(`confirm-draft-btn-${pIdx}`);
     const bgImgEl = document.getElementById(`bg-img-${pIdx}`);
-    const wrappers = document.querySelectorAll(`[id^="draft-card-wrapper-${pIdx}-"]`);
+    const wrappers = document.querySelectorAll(
+        `[id^="draft-card-wrapper-${pIdx}-"]`,
+    );
 
     // Select
     if (selectEl) selectEl.value = heroName;

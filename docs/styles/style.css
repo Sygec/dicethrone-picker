@@ -1882,7 +1882,11 @@ textarea {
 
 @media (hover: hover) {
     .collection-hero-card.selected:hover:not(.disabled) {
-        background: color-mix(in srgb, var(--accent) 12%, rgba(255, 255, 255, 0.03));
+        background: color-mix(
+            in srgb,
+            var(--accent) 12%,
+            rgba(255, 255, 255, 0.03)
+        );
         border-color: var(--accent);
     }
 }
@@ -2282,7 +2286,8 @@ textarea {
 }
 
 @media (hover: hover) {
-    .group-badge-card.group-complexity:hover:not(.disabled) .complexity-dice-img {
+    .group-badge-card.group-complexity:hover:not(.disabled)
+        .complexity-dice-img {
         opacity: 0.65;
         filter: grayscale(50%) brightness(0.95);
         border-color: rgba(255, 255, 255, 0.4);
@@ -3788,7 +3793,7 @@ body.loaded .bottom-nav {
 }
 
 .player-plate.in-progress .player-plate-bg-art {
-    opacity: 0.70;
+    opacity: 0.7;
 }
 
 @media (hover: hover) {
@@ -3813,7 +3818,9 @@ body.loaded .bottom-nav {
     border-radius: 4px;
     pointer-events: none;
     z-index: 4;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.7), 0 0 5px rgba(233, 69, 96, 0.2);
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.7),
+        0 0 5px rgba(233, 69, 96, 0.2);
     font-weight: 900;
 }
 
@@ -4009,7 +4016,7 @@ body.loaded .bottom-nav {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
     border: 1px solid #000;
 }
 
@@ -4036,7 +4043,7 @@ body.loaded .bottom-nav {
     right: 0;
     bottom: 0;
     background-color: rgba(255, 255, 255, 0.15);
-    transition: .3s;
+    transition: 0.3s;
     border-radius: 24px;
     border: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -4049,7 +4056,7 @@ body.loaded .bottom-nav {
     left: 3px;
     bottom: 3px;
     background-color: white;
-    transition: .3s;
+    transition: 0.3s;
     border-radius: 50%;
 }
 
@@ -4143,7 +4150,9 @@ input:checked + .toggle-slider:before {
     opacity: 1;
     transform: scale(1.05);
     border-color: #ffd700;
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), inset 0 0 8px rgba(255, 215, 0, 0.3);
+    box-shadow:
+        0 0 20px rgba(255, 215, 0, 0.6),
+        inset 0 0 8px rgba(255, 215, 0, 0.3);
 }
 
 .draft-card {
@@ -4161,7 +4170,11 @@ input:checked + .toggle-slider:before {
     display: flex;
     align-items: center;
     padding: 12px 16px;
-    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.4s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    transition:
+        transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+        opacity 0.4s ease,
+        border-color 0.3s ease,
+        box-shadow 0.3s ease;
     backface-visibility: visible;
 }
 
@@ -4184,7 +4197,7 @@ input:checked + .toggle-slider:before {
     font-size: 0.85rem;
     font-weight: bold;
     color: var(--accent);
-    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
     /* margin-left: 4px; */
 }
 
@@ -4373,3 +4386,53 @@ input:checked + .toggle-slider:before {
     right: 10px;
 }
 
+/* Roll Settings Drawer Tabs Styling */
+.drawer-tabs-container {
+    margin: -10px -20px 10px -20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.15);
+}
+
+.drawer-tabs {
+    display: flex;
+    position: relative;
+    width: 100%;
+}
+
+.drawer-tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 14px 16px;
+    color: rgba(255, 255, 255, 0.6);
+    font-family: "Outfit", sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    transition: color 0.3s ease;
+    outline: none;
+    position: relative;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    z-index: 2;
+}
+
+.drawer-tab-btn:hover {
+    color: #ffffff;
+}
+
+.drawer-tab-btn.active {
+    color: var(--accent);
+}
+
+.drawer-tab-underline {
+    position: absolute;
+    bottom: 0;
+    height: 3px;
+    width: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+    transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 3;
+}
