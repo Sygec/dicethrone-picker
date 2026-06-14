@@ -1,144 +1,160 @@
 [
-  {
-    "version": "1.7.0.20260603",
-    "changes": [
-      "New Collection section to track owned heroes and collection stats"
-    ]
-  },
-  {
-    "version": "1.6.3.20260602",
-    "changes": [
-      "New expandable hero panel in Database section"
-    ]
-  },
-  {
-    "version": "1.6.2.20260529",
-    "changes": [
-      "Historical data now available in Game History sort section",
-      "Historical data now available in Hero Database section",
-      "Filter and Sort are now separate in Hero Database section",
-      "Fixed bug with admin navigation button",
-      "Fixed Game History not resetting when closing filter",
-      "Changed Filter button in Game History"
-    ]
-  },
-  {
-    "version": "1.6.1.20260527",
-    "changes": [
-      "New player stats in game history sort section",
-      "New visuals for winners, draws and searches in game history section"
-    ]
-  },
-  {
-    "version": "1.6.0.20260521",
-    "changes": [
-      "New search bar in game history section",
-      "New visual preloader",
-      "New cancel buttons when adding new heroes and groups in admin section"
-    ]
-  },
-  {
-    "version": "1.5.0.20260514",
-    "changes": [
-      "New layout and design with bottom navigation bar",
-      "New Cancel Roll button added to roll section"
-    ]
-  },
-  {
-    "version": "1.4.0.20260513",
-    "changes": [
-      "Added login system with different access levels: viewer, user and admin",
-      "App now uses players defined in the database instead of hard-coded names",
-      "Full database security policies implemented",
-      "Added new admin section for groups, players and heroes",
-      "Added game history filtering by player"
-    ]
-  },
-  {
-    "version": "1.3.0.20260508",
-    "changes": [
-      "Added new Games History section with game details and winner selection",
-      "Added new game count stats in Games History section"
-    ]
-  },
-  {
-    "version": "1.2.1.20260507",
-    "changes": [
-      "New aggressive weight system strongly favoring less played heroes without eliminating the others",
-      "Added new build info panel in admin section"
-    ]
-  },
-  {
-    "version": "1.2.0.20260507",
-    "changes": ["Move to Supabase"]
-  },
-  {
-    "version": "1.1.4.20260501",
-    "changes": [
-      "Added ability to hide players from hero stats and sort section",
-      "Re-added edit button for heroes",
-      "Minor hero panel tweaks"
-    ]
-  },
-  {
-    "version": "1.1.3.20260427",
-    "changes": [
-      "Added option to change sort for dropdown heroes",
-      "Code/comments refactoring"
-    ]
-  },
-  {
-    "version": "1.1.3.20260425",
-    "changes": [
-      "Fix bug in hero database view displaying wins instead of plays",
-      "Fixed complexity dice image not updating on dropdown change",
-      "Changed player header in sort section and hero stats to common look"
-    ]
-  },
-  {
-    "version": "1.1.3.20260424",
-    "changes": [
-      "Modified hero database view",
-      "Code cleanup"
-    ]
-  },
-  {
-    "version": "1.1.2.20260423",
-    "changes": [
-      "Added 2 invitee interface changes",
-      "Added complexity dice to roll section",
-      "Modified change log display",
-      "Code cleanup"
-    ]
-  },
-  {
-    "version": "1.1.1.20260419",
-    "changes": ["Fixed 'ALL' dice toggle"]
-  },
-  {
-    "version": "1.1.0.20260419",
-    "changes": [
-      "Updated to new weight system", 
-      "Picked heroes drop to weight 20, all others gain 10, no ceiling"
-    ]
-  },
-  {
-    "version": "1.0.2.20260416",
-    "changes": [
-      "Added new search bar",
-      "Moved form to add hero to admin section",
-      "Other minor tweaks to sort section and search bar"
-    ]
-  },
-  {
-    "version": "1.0.1.20260415",
-    "changes": [
-      "Added button to sort by dates",
-      "Updated sort section entirely"
-    ]
-  },
-  {
-    "version": "1.0.0.20260414",
-    "changes": ["Original version"]
-  }
+    {
+        "version": "2.0.0.20260614",
+        "changes": [
+            "DICE THRONE COMPANION 2.0 IS HERE!!",
+            "Roll randomizer: Full graphic overhaul",
+            "Roll Randomizer: New Draft Mode, roll 2 or 3 heroes per player and choose your prefered hero",
+            "Roll Randomizer: New Ban List, ban heroes and prevent them from being played",
+            "Roll Randomizer: New drawer available to set draft and ban settings",
+            "Hero database: Full graphic overhaul",
+            "Hero database: New drawer available to set sort, filter and row visibility options",
+            "Game History: Full graphic overhaul",
+            "Game History: New drawer available to set filter options",
+            "Collection: Heroes collection is now specific to the logged on user instead of system-wide",
+            "Collection: Replaced checkboxes with hero select cards in Collection view",
+            "Added possibility to reset password in login form",
+            "Fixed all popup modal screens to display correctly",
+            "Tweaks and updates to Admin functions",
+            "And many, many, many more fixes all around",
+            "COMING SOON... Hero AI Strategies, Translations, Dice Throne Adventures, and much more!!"
+        ]
+    },
+    {
+        "version": "1.7.0.20260603",
+        "changes": [
+            "New Collection section to track owned heroes and collection stats"
+        ]
+    },
+    {
+        "version": "1.6.3.20260602",
+        "changes": ["New expandable hero panel in Database section"]
+    },
+    {
+        "version": "1.6.2.20260529",
+        "changes": [
+            "Historical data now available in Game History sort section",
+            "Historical data now available in Hero Database section",
+            "Filter and Sort are now separate in Hero Database section",
+            "Fixed bug with admin navigation button",
+            "Fixed Game History not resetting when closing filter",
+            "Changed Filter button in Game History"
+        ]
+    },
+    {
+        "version": "1.6.1.20260527",
+        "changes": [
+            "New player stats in game history sort section",
+            "New visuals for winners, draws and searches in game history section"
+        ]
+    },
+    {
+        "version": "1.6.0.20260521",
+        "changes": [
+            "New search bar in game history section",
+            "New visual preloader",
+            "New cancel buttons when adding new heroes and groups in admin section"
+        ]
+    },
+    {
+        "version": "1.5.0.20260514",
+        "changes": [
+            "New layout and design with bottom navigation bar",
+            "New Cancel Roll button added to roll section"
+        ]
+    },
+    {
+        "version": "1.4.0.20260513",
+        "changes": [
+            "Added login system with different access levels: viewer, user and admin",
+            "App now uses players defined in the database instead of hard-coded names",
+            "Full database security policies implemented",
+            "Added new admin section for groups, players and heroes",
+            "Added game history filtering by player"
+        ]
+    },
+    {
+        "version": "1.3.0.20260508",
+        "changes": [
+            "Added new Games History section with game details and winner selection",
+            "Added new game count stats in Games History section"
+        ]
+    },
+    {
+        "version": "1.2.1.20260507",
+        "changes": [
+            "New aggressive weight system strongly favoring less played heroes without eliminating the others",
+            "Added new build info panel in admin section"
+        ]
+    },
+    {
+        "version": "1.2.0.20260507",
+        "changes": ["Move to Supabase"]
+    },
+    {
+        "version": "1.1.4.20260501",
+        "changes": [
+            "Added ability to hide players from hero stats and sort section",
+            "Re-added edit button for heroes",
+            "Minor hero panel tweaks"
+        ]
+    },
+    {
+        "version": "1.1.3.20260427",
+        "changes": [
+            "Added option to change sort for dropdown heroes",
+            "Code/comments refactoring"
+        ]
+    },
+    {
+        "version": "1.1.3.20260425",
+        "changes": [
+            "Fix bug in hero database view displaying wins instead of plays",
+            "Fixed complexity dice image not updating on dropdown change",
+            "Changed player header in sort section and hero stats to common look"
+        ]
+    },
+    {
+        "version": "1.1.3.20260424",
+        "changes": ["Modified hero database view", "Code cleanup"]
+    },
+    {
+        "version": "1.1.2.20260423",
+        "changes": [
+            "Added 2 invitee interface changes",
+            "Added complexity dice to roll section",
+            "Modified change log display",
+            "Code cleanup"
+        ]
+    },
+    {
+        "version": "1.1.1.20260419",
+        "changes": ["Fixed 'ALL' dice toggle"]
+    },
+    {
+        "version": "1.1.0.20260419",
+        "changes": [
+            "Updated to new weight system",
+            "Picked heroes drop to weight 20, all others gain 10, no ceiling"
+        ]
+    },
+    {
+        "version": "1.0.2.20260416",
+        "changes": [
+            "Added new search bar",
+            "Moved form to add hero to admin section",
+            "Other minor tweaks to sort section and search bar"
+        ]
+    },
+    {
+        "version": "1.0.1.20260415",
+        "changes": [
+            "Added button to sort by dates",
+            "Updated sort section entirely"
+        ]
+    },
+    {
+        "version": "1.0.0.20260414",
+        "changes": ["Original version"]
+    }
 ]

@@ -1,331 +1,867 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <link rel="manifest" href="manifest.json">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dice Throne</title>
+    <head>
+        <link rel="manifest" href="manifest.json" />
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+            rel="stylesheet" />
+        <title>Dice Throne</title>
 
-    <!-- Stylesheets: We will dynamically load either the production or development stylesheet based on the hostname -->
-    <script>
-        // Check if this is Production or Local environment based on hostname
-        window.isProd = window.location.hostname === "sygec.github.io" || window.location.hostname === "dicethrone-prod.sygec.workers.dev"; 
-        // Create a new link element
-        const themeLink = document.createElement('link');
-        themeLink.rel = 'stylesheet';
-        // Assign the file path based on if this is prod or dev
-        themeLink.href = window.isProd ? 'styles/style-prod.css' : 'styles/style-dev.css';
-        // Append it to the head
-        document.head.appendChild(themeLink);
-    </script>
-    <!-- Additionnally, link the common stylesheet -->
-    <link rel="stylesheet" type="text/css" href="styles/style.css">
+        <script>
+            // Check if this is Production or Local environment based on hostname
+            window.isProd =
+                window.location.hostname === "sygec.github.io" ||
+                window.location.hostname ===
+                    "dicethrone-prod.sygec.workers.dev";
+            // Create a new link element
+            const themeLink = document.createElement("link");
+            themeLink.rel = "stylesheet";
+            // Assign the file path based on if this is prod or dev
+            themeLink.href = window.isProd
+                ? "styles/style-prod.css"
+                : "styles/style-dev.css";
+            // Append it to the head
+            document.head.appendChild(themeLink);
+        </script>
+        <!-- Additionnally, link the common stylesheet -->
+        <link rel="stylesheet" type="text/css" href="styles/style.css" />
+    </head>
 
-</head>
-
-<body>
-    <div id="preloader">
-        <div class="dice-container">
-            <div class="dice">
-                <div class="dice-face front">1</div>
-                <div class="dice-face back">6</div>
-                <div class="dice-face right">3</div>
-                <div class="dice-face left">4</div>
-                <div class="dice-face top">5</div>
-                <div class="dice-face bottom">2</div>
+    <body>
+        <div id="preloader">
+            <div class="dice-container">
+                <div class="dice">
+                    <div class="dice-face front">1</div>
+                    <div class="dice-face back">6</div>
+                    <div class="dice-face right">3</div>
+                    <div class="dice-face left">4</div>
+                    <div class="dice-face top">5</div>
+                    <div class="dice-face bottom">2</div>
+                </div>
             </div>
         </div>
-    </div>
-    <main class="content">
-        <img src="images/banner.png" alt="Dice Throne" style="width: 100%; height: auto;">
-        <div class="small-text">
-            v<button id="version-number" aria-label="View changelog" style="background:none; border:none; color:inherit; font:inherit; cursor:pointer; text-decoration:underline; padding:0;">...</button>
-            | <button id="auth-btn" style="background:none; border:none; color:inherit; font:inherit; cursor:pointer; text-decoration:underline; padding:0;">Login</button>
-        </div>
+        <main class="content">
+            <img
+                src="images/banner.png"
+                alt="Dice Throne"
+                style="width: 100%; height: auto" />
+            <div class="small-text">
+                v<button
+                    id="version-number"
+                    aria-label="View changelog"
+                    style="
+                        background: none;
+                        border: none;
+                        color: inherit;
+                        font: inherit;
+                        cursor: pointer;
+                        text-decoration: underline;
+                        padding: 0;
+                    ">
+                    ...
+                </button>
+                |
+                <button
+                    id="auth-btn"
+                    style="
+                        background: none;
+                        border: none;
+                        color: inherit;
+                        font: inherit;
+                        cursor: pointer;
+                        text-decoration: underline;
+                        padding: 0;
+                    ">
+                    Login
+                </button>
+            </div>
 
+            <section id="rollSection">
+                <!-- Player Selection Toggles -->
+                <div
+                    class="player-toggle-zone-top"
+                    id="player-toggle-zone-top"></div>
+
+                <!-- Action Controls Wrapper -->
+                <div class="roll-controls-wrapper" style="margin-bottom: 15px">
+                    <div id="rollBtnContainer" class="roll-btn-container">
+                        <button
+                            id="rollBtn"
+                            type="button"
+                            onclick="pickCharacters()">
+                            ROLL RANDOMIZER
+                        </button>
+                        <button
+                            id="rollSettingsBtn"
+                            type="button"
+                            class="roll-settings-btn"
+                            onclick="openRollSettingsDrawer()"
+                            aria-label="Roll settings">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                            </svg>
+                            <span id="roll-settings-badge" class="settings-badge" style="display: none;"></span>
+                        </button>
+                    </div>
+                    <div id="action-buttons" style="display: none; gap: 10px">
+                        <button
+                            id="cancelBtn"
+                            type="button"
+                            class="btn-cancelroll"
+                            onclick="cancelRoll()"
+                            style="flex: 1">
+                            CANCEL ROLL
+                        </button>
+                        <button
+                            id="confirmBtn"
+                            type="button"
+                            class="btn-confirm"
+                            onclick="applyResults()"
+                            style="flex: 2">
+                            LOCK IN SESSION
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Randomizer Results Area -->
+                <section id="results" class="results" aria-live="polite">
+                    <p style="text-align: center; opacity: 0.6">
+                        Select players and roll.
+                    </p>
+                </section>
+
+                <!-- Validation Error Message -->
+                <div id="error-msg" role="alert">
+                    ⚠ Duplicate hero selected! Each player must have a unique
+                    character.
+                </div>
+            </section>
+
+            <!-- Hero Database & Stats Section -->
+            <section id="dbSection" class="hidden">
+                <!-- Search & Filtering -->
+                <div class="search-container">
+                    <div class="search-wrapper">
+                        <input
+                            class="search-bar"
+                            type="text"
+                            id="hero-search"
+                            style="font-size: 16px"
+                            placeholder="Search Heroes or Groups..."
+                            oninput="handleSearchInput()"
+                            aria-label="Search heroes by name or group" />
+                        <div class="search-actions">
+                            <img
+                                src="images/buttons/close.png"
+                                id="clear-search"
+                                class="search-icon hidden"
+                                onclick="clearSearch()"
+                                alt="Clear"
+                                title="Clear Search" />
+                        </div>
+                    </div>
+                    <div class="small-text" id="count-stats">
+                        Showing 0 of 0 heroes
+                    </div>
+
+                    <!-- Segmented Pill Control for Ownership -->
+                    <div class="ownership-segmented-control">
+                        <button
+                            type="button"
+                            class="segmented-pill active"
+                            id="pill-show-owned"
+                            onclick="setOwnershipFilter('owned')">
+                            Owned
+                        </button>
+                        <button
+                            type="button"
+                            class="segmented-pill"
+                            id="pill-show-not-owned"
+                            onclick="setOwnershipFilter('unowned')">
+                            Unowned
+                        </button>
+                        <button
+                            type="button"
+                            class="segmented-pill"
+                            id="pill-show-all"
+                            onclick="setOwnershipFilter('all')">
+                            All
+                        </button>
+                    </div>
+
+                    <!-- Hidden inputs for backward compatibility with JS queries -->
+                    <input
+                        type="checkbox"
+                        id="db-show-owned"
+                        checked
+                        style="display: none"
+                        onchange="renderList()" />
+                    <input
+                        type="checkbox"
+                        id="db-show-not-owned"
+                        style="display: none"
+                        onchange="renderList()" />
+                </div>
+
+                <!-- Filter & Sort Action Bar -->
+                <div class="filter-action-bar" style="margin-top: 8px; margin-bottom: 12px;">
+                    <button
+                        type="button"
+                        class="btn-action-trigger"
+                        id="btn-trigger-sort-filter"
+                        onclick="openSortFilterDrawer()">
+                        <span class="action-icon">⚙️</span> Sort & Filter
+                        <span class="active-badge" id="filter-active-badge">0</span>
+                    </button>
+                    <button
+                        type="button"
+                        class="btn-action-trigger"
+                        id="btn-trigger-columns"
+                        onclick="openColumnsDrawer()">
+                        <span class="action-icon">👥</span> Rows
+                    </button>
+                </div>
+
+                <div id="heroContainer"></div>
+            </section>
+
+            <!-- Games History Section -->
+            <section id="gamesSection" class="hidden">
+                <div class="search-container" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+                    <div class="search-wrapper" style="flex: 1;">
+                        <input
+                            class="search-bar"
+                            type="text"
+                            id="games-search"
+                            style="font-size: 16px; padding-right: 35px;"
+                            placeholder="Search games by hero..."
+                            oninput="handleGamesSearchInput()"
+                            aria-label="Search games" />
+                        <div class="search-actions" style="right: 10px;">
+                            <img
+                                src="images/buttons/close.png"
+                                id="clear-games-search"
+                                class="search-icon hidden"
+                                onclick="clearGamesSearch()"
+                                alt="Clear"
+                                title="Clear Search" />
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        class="btn-action-trigger"
+                        id="btn-trigger-games-filter"
+                        onclick="openHistoryFilterDrawer()"
+                        style="height: 38px; padding: 0 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                        <span class="action-icon">⚙️</span> Filter
+                        <span class="active-badge" id="games-filter-active-badge" style="display: none;">0</span>
+                    </button>
+                </div>
+                <div
+                    class="small-text"
+                    id="game-count-stats"
+                    style="margin-top: 5px">
+                    Showing 0 of 0 games
+                </div>
+
+                <div id="gamesContainer" style="margin-top: 20px"></div>
+            </section>
+
+            <!-- Collection Section -->
+            <section id="collectionSection" class="hidden">
+                <div
+                    class="small-text"
+                    id="collection-count-stats"
+                    style="margin-top: 15px">
+                    Owned 0 of 0 heroes
+                </div>
+                <div id="collectionContainer" style="margin-top: 20px"></div>
+            </section>
+
+            <!-- Admin & Data Management -->
+
+            <section id="adminSection" class="hidden">
+                <div id="admin-build-info"></div>
+
+                <div class="admin-panel">
+                    <div
+                        class="panel-header"
+                        onclick="toggleAdminPanel(event, 'groupsPanel')">
+                        <h3>Manage Groups</h3>
+                        <button
+                            type="button"
+                            class="panel-toggle"
+                            aria-expanded="false">
+                            <svg
+                                class="panel-chevron"
+                                viewBox="0 0 24 24"
+                                width="14"
+                                height="14"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="3"
+                                stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="groupsPanel" class="panel-content hidden">
+                        <div style="margin-bottom: 15px">
+                            <button
+                                type="button"
+                                class="btn-save"
+                                id="addGroupBtn"
+                                onclick="toggleGroupForm()">
+                                Add Group
+                            </button>
+                        </div>
+                        <div
+                            id="groupForm"
+                            class="manage-form hidden"
+                            style="
+                                border-bottom: 1px solid #ffffff22;
+                                padding-bottom: 20px;
+                                margin-bottom: 20px;
+                            ">
+                            <h3
+                                style="
+                                    margin-top: 0;
+                                    font-size: 1rem;
+                                    color: var(--accent);
+                                ">
+                                Groups
+                            </h3>
+                            <div class="form-grid">
+                                <input
+                                    type="text"
+                                    id="groupName"
+                                    style="font-size: 16px"
+                                    placeholder="Group Name" />
+                                <input
+                                    type="number"
+                                    id="groupOrder"
+                                    style="font-size: 16px"
+                                    placeholder="Order Index" />
+                                <input
+                                    type="number"
+                                    id="groupYear"
+                                    style="font-size: 16px"
+                                    placeholder="Year (optional)" />
+                            </div>
+                            <div style="display: flex; gap: 10px">
+                                <button
+                                    type="button"
+                                    class="btn-save"
+                                    id="saveGroupBtn"
+                                    onclick="saveGroup()">
+                                    Save Group
+                                </button>
+                                <button
+                                    type="button"
+                                    class="btn-cancel"
+                                    id="cancelGroupBtn"
+                                    onclick="
+                                        if (
+                                            document.getElementById('groupName')
+                                                .value &&
+                                            !confirm('Discard unsaved changes?')
+                                        )
+                                            return;
+                                        resetGroupForm();
+                                    ">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                        <div
+                            id="groupsListContainer"
+                            style="margin-top: 15px"></div>
+                    </div>
+                </div>
+
+                <div class="admin-panel">
+                    <div
+                        class="panel-header"
+                        onclick="toggleAdminPanel(event, 'heroesPanel')">
+                        <h3>Manage Heroes</h3>
+                        <button
+                            type="button"
+                            class="panel-toggle"
+                            aria-expanded="false">
+                            <svg
+                                class="panel-chevron"
+                                viewBox="0 0 24 24"
+                                width="14"
+                                height="14"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="3"
+                                stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="heroesPanel" class="panel-content hidden">
+                        <div style="margin-bottom: 15px">
+                            <button
+                                type="button"
+                                class="btn-save"
+                                id="addHeroBtn"
+                                onclick="toggleHeroForm()">
+                                Add Hero
+                            </button>
+                        </div>
+                        <div id="heroForm" class="manage-form hidden">
+                            <h3
+                                id="formTitle"
+                                style="
+                                    margin-top: 0;
+                                    font-size: 1rem;
+                                    color: var(--accent);
+                                ">
+                                Add New Hero
+                            </h3>
+                            <div class="form-grid hero-form-grid">
+                                <input
+                                    type="text"
+                                    id="charName"
+                                    style="font-size: 16px"
+                                    placeholder="Hero Name" />
+                                <select
+                                    id="charGroup"
+                                    style="font-size: 16px"
+                                    aria-label="Select group">
+                                    <option value="">-- Select Group --</option>
+                                </select>
+                                <input
+                                    type="text"
+                                    id="charSlug"
+                                    style="font-size: 16px"
+                                    placeholder="Slug (for image)" />
+                                <select
+                                    id="charComplexity"
+                                    style="font-size: 16px"
+                                    aria-label="Select complexity">
+                                    <option value="">-- Complexity --</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; gap: 10px">
+                                <button
+                                    type="button"
+                                    class="btn-save"
+                                    id="saveBtn"
+                                    onclick="saveCharacter()">
+                                    Save Hero
+                                </button>
+                                <button
+                                    type="button"
+                                    class="btn-cancel"
+                                    id="cancelHeroBtn"
+                                    onclick="
+                                        if (
+                                            document.getElementById('charName')
+                                                .value &&
+                                            !confirm('Discard unsaved changes?')
+                                        )
+                                            return;
+                                        resetForm();
+                                    ">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                        <div
+                            id="heroesListContainer"
+                            style="margin-top: 15px"></div>
+                    </div>
+                </div>
+
+                <div class="admin-panel">
+                    <div
+                        class="panel-header"
+                        onclick="toggleAdminPanel(event, 'playersPanel')">
+                        <h3>Manage Players</h3>
+                        <button
+                            type="button"
+                            class="panel-toggle"
+                            aria-expanded="false">
+                            <svg
+                                class="panel-chevron"
+                                viewBox="0 0 24 24"
+                                width="14"
+                                height="14"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="3"
+                                stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="playersPanel" class="panel-content hidden">
+                        <div
+                            id="playersListContainer"
+                            style="margin-top: 15px"></div>
+                    </div>
+                </div>
+
+                <div class="admin-panel">
+                    <div
+                        class="panel-header"
+                        onclick="toggleAdminPanel(event, 'usersPanel')">
+                        <h3>Manage Users</h3>
+                        <button
+                            type="button"
+                            class="panel-toggle"
+                            aria-expanded="false">
+                            <svg
+                                class="panel-chevron"
+                                viewBox="0 0 24 24"
+                                width="14"
+                                height="14"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="3"
+                                stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="usersPanel" class="panel-content hidden">
+                        <div
+                            id="usersListContainer"
+                            style="margin-top: 15px"></div>
+                    </div>
+                </div>
+
+                <div class="admin-panel">
+                    <div
+                        class="panel-header"
+                        onclick="toggleAdminPanel(event, 'collectionsPanel')">
+                        <h3>User Collections</h3>
+                        <button
+                            type="button"
+                            class="panel-toggle"
+                            aria-expanded="false">
+                            <svg
+                                class="panel-chevron"
+                                viewBox="0 0 24 24"
+                                width="14"
+                                height="14"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="3"
+                                stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="collectionsPanel" class="panel-content hidden">
+                        <div
+                            id="collectionsListContainer"
+                            style="margin-top: 15px"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Persistent Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a
+                href="#randomizer"
+                class="nav-item"
+                onclick="
+                    showRoll();
+                    return false;
+                ">
+                <span class="icon">🎲</span>
+                <span class="label">Roll</span>
+            </a>
+            <a
+                href="#database"
+                class="nav-item"
+                onclick="
+                    showDatabase();
+                    return false;
+                ">
+                <span class="icon">🛡️</span>
+                <span class="label">Heroes</span>
+            </a>
+            <a
+                href="#history"
+                class="nav-item"
+                onclick="
+                    showHistory();
+                    return false;
+                ">
+                <span class="icon">📜</span>
+                <span class="label">History</span>
+            </a>
+            <a
+                href="#collection"
+                class="nav-item"
+                onclick="
+                    showCollection();
+                    return false;
+                ">
+                <span class="icon">📦</span>
+                <span class="label">Collection</span>
+            </a>
+            <!-- Conditional Admin Icon -->
+            <a
+                href="#admin"
+                class="nav-item admin-only"
+                onclick="
+                    showAdmin();
+                    return false;
+                ">
+                <span class="icon">⚙️</span>
+                <span class="label">Admin</span>
+            </a>
+        </nav>
+
+        <!-- Modals moved outside transform containing block -->
         <!-- Changelog Modal -->
         <div id="changelog-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Change Log</h2>
-            <hr>
-            <div id="changelog-container"></div>
+            <div class="modal-content">
+                <span class="close-button">&times;</span>
+                <h2>Change Log</h2>
+                <div id="changelog-container"></div>
+            </div>
         </div>
-        </div>   
 
         <!-- What's New Modal -->
         <div id="whats-new-modal" class="modal">
             <div class="modal-content">
-                <span class="close-button" onclick="closeWhatsNew()">&times;</span>
-                <h2 style="color: black; margin-top: 0;">What's New?</h2>
+                <span class="close-button" onclick="closeWhatsNew()">
+                    &times;
+                </span>
+                <h2 style="margin-top: 0">What's New?</h2>
                 <div id="whats-new-container"></div>
-                <button type="button" class="btn-save" onclick="closeWhatsNew()" style="margin-top: 20px;">Got it!</button>
+                <button
+                    type="button"
+                    class="btn-save"
+                    onclick="closeWhatsNew()"
+                    style="margin-top: 20px">
+                    Got it!
+                </button>
             </div>
         </div>
-        
+
         <!-- Winner Selection Modal -->
         <div id="winner-modal" class="modal">
             <div class="modal-content">
-                <span class="close-button" onclick="closeWinnerModal()">&times;</span>
-                <h2 style="color: black; margin-top: 0;">Select Winner</h2>
-                <div id="winner-selection-container" style="margin: 20px 0;"></div>
-                <button type="button" class="btn-save" id="confirm-winner-btn">Confirm Winner</button>
+                <span class="close-button" onclick="closeWinnerModal()"
+                    >&times;</span
+                >
+                <h2 style="margin-top: 0">Select Winner</h2>
+                <div
+                    id="winner-selection-container"
+                    style="margin: 15px 0; overflow-y: auto; flex: 1;"></div>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button type="button" class="btn-cancel" onclick="closeWinnerModal()" style="flex: 1;">Cancel</button>
+                    <button type="button" class="btn-save" id="confirm-winner-btn" style="flex: 1;">Save Result</button>
+                </div>
             </div>
         </div>
 
         <!-- Login Modal -->
         <div id="login-modal" class="modal">
             <div class="modal-content">
-                <span class="close-button" onclick="closeLoginModal()">&times;</span>
-                <h2 style="color: black; margin-top: 0;">Login</h2>
-                <form id="login-form" autocomplete="on" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
-                    <input name="email" type="email" id="login-email" autocomplete="username" placeholder="Email" style="font-size: 16px; padding: 10px; border-radius: 4px; border: 1px solid #ccc; color: var(--text);">
-                    <input name="password" type="password" id="login-password" autocomplete="current-password" placeholder="Password" style="font-size: 16px; padding: 10px; border-radius: 4px; border: 1px solid #ccc; color: var(--text);">
+                <span class="close-button" onclick="closeLoginModal()"
+                    >&times;</span
+                >
+                <h2 style="margin-top: 0">Login</h2>
+                <form
+                    id="login-form"
+                    autocomplete="on"
+                    style="
+                        display: flex;
+                        flex-direction: column;
+                        gap: 10px;
+                        margin-top: 10px;
+                    ">
+                    <input
+                        name="email"
+                        type="email"
+                        id="login-email"
+                        autocomplete="username"
+                        placeholder="Email"
+                        style="
+                            font-size: 16px;
+                            padding: 10px;
+                            border-radius: 4px;
+                            border: 1px solid #ccc;
+                            color: var(--text);
+                        " />
+                    <input
+                        name="password"
+                        type="password"
+                        id="login-password"
+                        autocomplete="current-password"
+                        placeholder="Password"
+                        style="
+                            font-size: 16px;
+                            padding: 10px;
+                            border-radius: 4px;
+                            border: 1px solid #ccc;
+                            color: var(--text);
+                        " />
                     <button type="submit" class="btn-save">Sign In</button>
-                    <div id="login-error" style="color: var(--danger); font-size: 0.8rem; text-align: center; display: none; margin-top: 5px;"></div>
+                    <div
+                        id="login-error"
+                        style="
+                            color: var(--danger);
+                            font-size: 0.8rem;
+                            text-align: center;
+                            display: none;
+                            margin-top: 5px;
+                        "></div>
+                    <button
+                        type="button"
+                        onclick="handlePasswordReset()"
+                        style="
+                            background: none;
+                            border: none;
+                            color: inherit;
+                            font: inherit;
+                            cursor: pointer;
+                            text-decoration: underline;
+                            font-size: 0.8rem;
+                            text-align: right;
+                            width: 100%;
+                            margin-top: -5px;
+                        ">
+                        Forgot Password?
+                    </button>
                 </form>
             </div>
         </div>
 
-        <section id="rollSection">
-            <!-- Player Selection Toggles -->
-            <div class="player-toggle-zone-top" id="player-toggle-zone-top"></div>
-
-            <!-- Action Buttons -->
-            <button id="rollBtn" type="button" onclick="pickCharacters()">ROLL RANDOMIZER</button>
-            <div id="action-buttons" style="display: none; margin-top: 10px; gap: 10px;">
-                <button id="cancelBtn" type="button" class="btn-cancelroll" onclick="cancelRoll()" style="flex: 1;">CANCEL ROLL</button>
-                <button id="confirmBtn" type="button" class="btn-confirm" onclick="applyResults()" style="flex: 2;">LOCK IN SESSION</button>
+        <!-- Update Password Modal -->
+        <div id="update-password-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" onclick="closeUpdatePasswordModal()"
+                    >&times;</span
+                >
+                <h2 style="margin-top: 0">Update Password</h2>
+                <form
+                    id="update-password-form"
+                    autocomplete="off"
+                    style="
+                        display: flex;
+                        flex-direction: column;
+                        gap: 10px;
+                        margin-top: 10px;
+                    ">
+                    <input
+                        name="new-password"
+                        type="password"
+                        id="new-password"
+                        placeholder="New Password"
+                        style="
+                            font-size: 16px;
+                            padding: 10px;
+                            border-radius: 4px;
+                            border: 1px solid #ccc;
+                            color: var(--text);
+                        " />
+                    <button type="submit" class="btn-save">
+                        Update Password
+                    </button>
+                    <div
+                        id="update-password-error"
+                        style="
+                            color: var(--danger);
+                            font-size: 0.8rem;
+                            text-align: center;
+                            display: none;
+                            margin-top: 5px;
+                        "></div>
+                </form>
             </div>
+        </div>
 
-            <!-- Dropdown Sort Options -->
-            <div class="dropdown-sort-options">
-                <label><input type="radio" name="dropdownSort" value="name" checked onchange="updateDropdownSort()"> By Name</label>
-                <label><input type="radio" name="dropdownSort" value="weight" onchange="updateDropdownSort()"> By Percentage</label>
+        <!-- Hero Selection Modal -->
+        <div id="hero-select-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" onclick="closeHeroSelectModal()"
+                    >&times;</span
+                >
+                <h2 id="hero-select-modal-title" style="margin-top: 0">
+                    Select Hero
+                </h2>
+
+                <!-- Search Input inside Modal -->
+                <input
+                    type="text"
+                    id="hero-select-search"
+                    class="search-bar"
+                    style="margin-bottom: 10px; font-size: 16px"
+                    placeholder="Search hero or season..."
+                    oninput="filterHeroSelectOptions()" />
+
+                <!-- Segmented Control for Sorting inside Modal -->
+                <div class="segmented-control">
+                    <button
+                        type="button"
+                        class="segmented-pill active"
+                        id="modal-sort-name"
+                        onclick="setModalSort('name')">
+                        By Name
+                    </button>
+                    <button
+                        type="button"
+                        class="segmented-pill"
+                        id="modal-sort-weight"
+                        onclick="setModalSort('weight')">
+                        By Probability
+                    </button>
+                </div>
+
+                <!-- Option Grid/List -->
+                <div
+                    id="hero-select-options-container"
+                    class="hero-select-grid"></div>
             </div>
+        </div>
 
-            <!-- Randomizer Results Area -->
-            <section id="results" class="results" aria-live="polite"><p style="text-align: center; opacity: 0.6;">Select players and roll.</p></section>
-
-            <!-- Validation Error Message -->
-            <div id="error-msg" role="alert">⚠ Duplicate hero selected! Each player must have a unique character.</div>
-        </section>
-
-        <!-- Hero Database & Stats Section -->
-        <section id="dbSection" class="hidden">
-            <!-- Search & Filtering -->
-            <div class="search-container">
-                <div class="search-wrapper">
-                    <input class="search-bar" type="text" id="hero-search" style="font-size: 16px;" placeholder="Search Heroes or Groups..." oninput="handleSearchInput()" aria-label="Search heroes by name or group">
-                    <div class="search-actions">
-                        <img src="images/buttons/close.png" id="clear-search" class="search-icon hidden" onclick="clearSearch()" alt="Clear" title="Clear Search">
-                        <img src="images/buttons/sort.png" id="sort-toggle" class="search-icon" onclick="toggleSortSection()" alt="Sort" title="Toggle Sort Section">
-                        <img src="images/buttons/filter.png" id="filter-toggle" class="search-icon" onclick="toggleFilterSection()" alt="Filter" title="Toggle Filter Section">
-                    </div>
+        <!-- Premium Bottom Drawer for Sorting and Filtering -->
+        <div id="sort-filter-drawer" class="drawer-overlay" onclick="closeDrawer(event)">
+            <div class="drawer-sheet" onclick="event.stopPropagation()">
+                <div class="drawer-header">
+                    <span class="drawer-title" id="drawer-title-text">Sort & Filter</span>
+                    <button type="button" class="drawer-close-btn" onclick="closeDrawer(null, true)">&times;</button>
                 </div>
-                <div class="small-text" id="count-stats">
-                    Showing 0 of 0 heroes
+                <div class="drawer-body" id="drawer-body-content">
+                    <!-- Loaded dynamically -->
                 </div>
-                <div class="dropdown-sort-options" style="margin-top: 5px; margin-bottom: 0;">
-                    <label>
-                        <input type="checkbox" id="db-show-owned" checked onchange="renderList()">
-                        Owned
-                    </label>
-                    <label>
-                        <input type="checkbox" id="db-show-not-owned" onchange="renderList()">
-                        Not owned
-                    </label>
-                </div>
-            </div>
-
-            <div id="sort-section" class="hidden">
-                <div class="dropdown-sort-options" style="margin-top: 0; margin-bottom: 10px;">
-                    <label>
-                        <input type="checkbox" id="db-use-historical-data" checked onchange="renderList()">
-                        Include Historical Data (before May 8th 2026)
-                    </label>
-                </div>
-                <div class="sort-controls">
-                    <div class="sort-row">
-                        <div id="player-sort-container" class="player-toggle-zone"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Filter Section -->
-            <div id="filter-section" class="hidden">
-                <div class="dice-filter-section" style="margin-bottom: 20px;">
-                    <div class="dice-bar">
-                        <img src="images/dice/d1.png" class="dice-icon" id="dice-1" onclick="toggleLevel(1)" title="Level 1">
-                        <img src="images/dice/d2.png" class="dice-icon" id="dice-2" onclick="toggleLevel(2)" title="Level 2">
-                        <img src="images/dice/d3.png" class="dice-icon" id="dice-3" onclick="toggleLevel(3)" title="Level 3">
-                        <img src="images/dice/d4.png" class="dice-icon" id="dice-4" onclick="toggleLevel(4)" title="Level 4">
-                        <img src="images/dice/d5.png" class="dice-icon" id="dice-5" onclick="toggleLevel(5)" title="Level 5">
-                        <img src="images/dice/d6.png" class="dice-icon" id="dice-6" onclick="toggleLevel(6)" title="Level 6">
-                        <img src="images/dice/d_all.png" class="dice-icon" id="dice-all" onclick="toggleLevel('all')" title="All Levels">
-                    </div>
-                </div>
-            </div>
-            <div id="heroContainer"></div>
-        </section>
-
-        <!-- Games History Section -->
-        <section id="gamesSection" class="hidden">
-            <div class="search-container" style="margin-top: 15px;">
-                    <div class="search-wrapper">
-                        <input class="search-bar" type="text" id="games-search" style="font-size: 16px;" placeholder="Search games by hero..." oninput="handleGamesSearchInput()" aria-label="Search games">
-                        <div class="search-actions">
-                            <img src="images/buttons/close.png" id="clear-games-search" class="search-icon hidden" onclick="clearGamesSearch()" alt="Clear" title="Clear Search">
-                            <img src="images/buttons/filter.png" id="games-filter-toggle" class="search-icon" onclick="toggleGamesFilterUI()" alt="Filter" title="Toggle Player Filters">
-                        </div>
-                    </div>
-                <div class="small-text" id="game-count-stats" style="margin-top: 5px;">
-                    Showing 0 of 0 games
-                </div>
-            </div>
-
-            <div id="games-filter-section" class="hidden" style="margin-bottom: 20px;">
-                <div class="dropdown-sort-options" style="margin-top: 0; margin-bottom: 10px;">
-                    <label>
-                        <input type="checkbox" id="use-historical-data" checked onchange="renderPlayerGameFilters()">
-                        Include Historical Data (before May 8th 2026)
-                    </label>
-                </div>
-                <div style="display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap: wrap;">
-                    <div class="dice-bar" id="player-game-filter-container" style="margin-bottom: 0;"></div>
-                    <div id="winner-filter-wrapper" class="hidden">
-                        <input type="checkbox" id="games-winner-only" onchange="renderGamesList()" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent);">
-                        <label for="games-winner-only" style="cursor: pointer; user-select: none;">Wins Only</label>
-                    </div>
+                <div class="drawer-footer" id="drawer-footer-content">
+                    <button type="button" class="btn-drawer-reset" onclick="resetFilters()">Reset All</button>
+                    <button type="button" class="btn-drawer-apply" onclick="applyAndCloseDrawer()">Apply</button>
                 </div>
             </div>
+        </div>
 
-            <div id="gamesContainer" style="margin-top: 20px;"></div>
-        </section>
-
-        <!-- Collection Section -->
-        <section id="collectionSection" class="hidden">
-            <div class="small-text" id="collection-count-stats" style="margin-top: 15px;">
-                Owned 0 of 0 heroes
-            </div>
-            <div id="collectionContainer" style="margin-top: 20px;"></div>
-        </section>
-
-        <!-- Admin & Data Management -->
-
-        <section id="adminSection" class="hidden">
-            <div id="admin-build-info"></div>
-
-            <div class="admin-panel">
-                <div class="panel-header" onclick="toggleAdminPanel(event, 'groupsPanel')">
-                    <h3>Manage Groups</h3>
-                    <button type="button" class="panel-toggle" aria-expanded="false">V</button>
-                </div>
-                <div id="groupsPanel" class="panel-content hidden">
-                    <div style="margin-bottom: 15px;">
-                        <button type="button" class="btn-save" id="addGroupBtn" onclick="toggleGroupForm()">Add Group</button>
-                    </div>
-                    <div id="groupForm" class="manage-form hidden" style="border-bottom: 1px solid #ffffff22; padding-bottom: 20px; margin-bottom: 20px;">
-                        <h3 style="margin-top:0; font-size: 1rem; color: var(--accent);">Groups</h3>
-                        <div class="form-grid">
-                            <input type="text" id="groupName" style="font-size: 16px;" placeholder="Group Name">
-                            <input type="text" id="groupType" style="font-size: 16px;" placeholder="Type (optional)">
-                            <input type="number" id="groupOrder" style="font-size: 16px;" placeholder="Order Index">
-                        </div>
-                        <div style="display: flex; gap: 10px;">
-                            <button type="button" class="btn-save" id="saveGroupBtn" onclick="saveGroup()">Save Group</button>
-                            <button type="button" class="btn-cancel" id="cancelGroupBtn" onclick="if (document.getElementById('groupName').value && !confirm('Discard unsaved changes?')) return; resetGroupForm()">Cancel</button>
-                        </div>
-                    </div>
-                    <div id="groupsListContainer" style="margin-top: 15px;"></div>
-                </div>
-            </div>
-
-            <div class="admin-panel">
-                <div class="panel-header" onclick="toggleAdminPanel(event, 'heroesPanel')">
-                    <h3>Manage Heroes</h3>
-                    <button type="button" class="panel-toggle" aria-expanded="false">V</button>
-                </div>
-                <div id="heroesPanel" class="panel-content hidden">
-                    <div style="margin-bottom: 15px;">
-                        <button type="button" class="btn-save" id="addHeroBtn" onclick="toggleHeroForm()">Add Hero</button>
-                    </div>
-                    <div id="heroForm" class="manage-form hidden">
-                        <h3 id="formTitle" style="margin-top:0; font-size: 1rem; color: var(--accent);">Add New Hero</h3>
-                        <div class="form-grid hero-form-grid">
-                            <input type="text" id="charName" style="font-size: 16px;" placeholder="Hero Name">
-                            <select id="charGroup" style="font-size: 16px;" aria-label="Select group">
-                                <option value="">-- Select Group --</option>
-                            </select>
-                            <input type="text" id="charSlug" style="font-size: 16px;" placeholder="Slug (for image)">
-                            <select id="charComplexity" style="font-size: 16px;" aria-label="Select complexity">
-                                <option value="">-- Complexity --</option>
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                                <option value="6">6</option>
-                            </select>
-                        </div>
-                        <div style="display: flex; gap: 10px;">
-                            <button type="button" class="btn-save" id="saveBtn" onclick="saveCharacter()">Save Hero</button>
-                            <button type="button" class="btn-cancel" id="cancelHeroBtn" onclick="if (document.getElementById('charName').value && !confirm('Discard unsaved changes?')) return; resetForm()">Cancel</button>
-                        </div>
-                    </div>
-                    <div id="heroesListContainer" style="margin-top: 15px;"></div>
-                </div>
-            </div>
-
-            <div class="admin-panel">
-                <div class="panel-header" onclick="toggleAdminPanel(event, 'playersPanel')">
-                    <h3>Manage Players</h3>
-                    <button type="button" class="panel-toggle" aria-expanded="false">V</button>
-                </div>
-                <div id="playersPanel" class="panel-content hidden">
-                    <div id="playersListContainer" style="margin-top: 15px;"></div>
-                </div>
-            </div>
-
-            <div class="admin-panel">
-                <div class="panel-header" onclick="toggleAdminPanel(event, 'usersPanel')">
-                    <h3>Manage Users</h3>
-                    <button type="button" class="panel-toggle" aria-expanded="false">V</button>
-                </div>
-                <div id="usersPanel" class="panel-content hidden">
-                    <div id="usersListContainer" style="margin-top: 15px;"></div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- Persistent Bottom Navigation -->
-    <nav class="bottom-nav">
-    <a href="#randomizer" class="nav-item" onclick="showRoll(); return false;">
-        <span class="icon">🎲</span>
-        <span class="label">Roll</span>
-    </a>
-    <a href="#database" class="nav-item" onclick="showDatabase(); return false;">
-        <span class="icon">🛡️</span>
-        <span class="label">Heroes</span>
-    </a>
-    <a href="#history" class="nav-item" onclick="showHistory(); return false;">
-        <span class="icon">📜</span>
-        <span class="label">History</span>
-    </a>
-    <a href="#collection" class="nav-item" onclick="showCollection(); return false;">
-        <span class="icon">📦</span>
-        <span class="label">Collection</span>
-    </a>
-    <!-- Conditional Admin Icon -->
-    <a href="#admin" class="nav-item admin-only" onclick="showAdmin(); return false;">
-        <span class="icon">⚙️</span>
-        <span class="label">Admin</span>
-    </a>
-    </nav>    
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./javascript/dice-throne.js"></script>
-
-</body>
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <script src="./javascript/dice-throne.js"></script>
+    </body>
 </html>
