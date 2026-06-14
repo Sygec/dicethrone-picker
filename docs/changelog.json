@@ -1,16 +1,23 @@
 [
     {
-        "version": "2.0.0.20260610",
+        "version": "2.0.0.20260614",
         "changes": [
-            "MAJOR update release of Dice Throne Companion v2.0",
-            "Completely revamped UI for all major sections: Roll Randomizer, Hero Database & Game History",
+            "DICE THRONE COMPANION 2.0 IS HERE!!",
+            "Roll randomizer: Full graphic overhaul",
+            "Roll Randomizer: New Draft Mode, roll 2 or 3 heroes per player and choose your prefered hero",
+            "Roll Randomizer: New Ban List, ban heroes and prevent them from being played",
+            "Roll Randomizer: New drawer available to set draft and ban settings",
+            "Hero database: Full graphic overhaul",
+            "Hero database: New drawer available to set sort, filter and row visibility options",
+            "Game History: Full graphic overhaul",
+            "Game History: New drawer available to set filter options",
+            "Collection: Heroes collection is now specific to the logged on user instead of system-wide",
+            "Collection: Replaced checkboxes with hero select cards in Collection view",
             "Added possibility to reset password in login form",
             "Fixed all popup modal screens to display correctly",
-            "Transfered filter and sort options in Hero Database and Game History to pull-out drawers",
-            "Modified Collection section to be per-user instead of system-wide",
-            "Replaced checkboxes with premium hero select cards in Collection view",
             "Tweaks and updates to Admin functions",
-            "And many, many, many more fixes all around"
+            "And many, many, many more fixes all around",
+            "COMING SOON... Hero AI Strategies, Translations, Dice Throne Adventures, and much more!!"
         ]
     },
     {
