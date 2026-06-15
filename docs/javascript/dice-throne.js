@@ -3566,18 +3566,17 @@ function setSort(key) {
 // handleSearchInput()
 // input: none
 // ******************************************
-// Manages the visibility of the clear button based on search input content
-// and triggers the hero list re-render.
+// Manages the visibility of the clear button based on search input content.
+// Does NOT trigger search filtering (moved to manual triggerSearch).
 // ******************************************
 function handleSearchInput() {
     const searchInput = document.getElementById("hero-search");
     const clearBtn = document.getElementById("clear-search");
 
-    // Toggle the 'hidden' class: add it if input is empty, remove it if text exists
-    clearBtn.classList.toggle("hidden", searchInput.value.trim().length === 0);
-
-    // Refresh the displayed list based on the new search value
-    renderList();
+    if (searchInput && clearBtn) {
+        // Toggle the 'hidden' class: add it if input is empty, remove it if text exists
+        clearBtn.classList.toggle("hidden", searchInput.value.trim().length === 0);
+    }
 }
 
 // ******************************************
@@ -3589,11 +3588,75 @@ function handleSearchInput() {
 // ******************************************
 function clearSearch() {
     const searchInput = document.getElementById("hero-search");
-    searchInput.value = ""; // Reset the input value to empty
-    searchInput.focus(); // Return focus to the bar so the user can type again immediately
+    if (searchInput) {
+        searchInput.value = ""; // Reset the input value to empty
+        searchInput.focus(); // Return focus to the bar so the user can type again immediately
+    }
 
-    // Re-use handleSearchInput to hide the 'X' button and refresh the list
+    // Hide the 'X' button
     handleSearchInput();
+    
+    // Refresh the displayed list based on the cleared search value
+    triggerSearch();
+}
+
+// ******************************************
+// handleSearchKeyDown()
+// input: event
+// ******************************************
+// Triggers search when pressing the Enter key.
+// ******************************************
+function handleSearchKeyDown(event) {
+    if (event.key === "Enter") {
+        triggerSearch();
+    }
+}
+
+// ******************************************
+// triggerSearch()
+// input: none
+// ******************************************
+// Applies search filter, updates the breadcrumb chip, and renders list.
+// ******************************************
+function triggerSearch() {
+    renderList();
+    updateActiveFilterChips();
+}
+
+// ******************************************
+// updateActiveFilterChips()
+// input: none
+// ******************************************
+// Dynamically renders active filter breadcrumbs below the action bar.
+// ******************************************
+function updateActiveFilterChips() {
+    const container = document.getElementById("active-filters-container");
+    if (!container) return;
+
+    const searchInput = document.getElementById("hero-search");
+    const searchTerm = searchInput ? searchInput.value.trim() : "";
+
+    let html = "";
+    if (searchTerm) {
+        html += `
+            <div class="filter-chip" title="Active Search Filter">
+                <span class="filter-chip-remove" onclick="clearSearchFilter()" title="Remove search filter">✖</span>
+                <span class="filter-chip-label">Search: "${searchTerm}"</span>
+            </div>
+        `;
+    }
+
+    container.innerHTML = html;
+}
+
+// ******************************************
+// clearSearchFilter()
+// input: none
+// ******************************************
+// Clears the search input and resets active search filters.
+// ******************************************
+function clearSearchFilter() {
+    clearSearch();
 }
 
 // ******************************************

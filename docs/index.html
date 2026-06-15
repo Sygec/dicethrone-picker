@@ -150,11 +150,11 @@
                 <div class="search-container">
                     <div class="search-wrapper">
                         <input
-                            class="search-bar"
+                            class="search-bar search-input"
                             type="text"
                             id="hero-search"
-                            style="font-size: 16px"
-                            placeholder="Search Heroes or Groups..."
+                            placeholder="Search..."
+                            onkeydown="handleSearchKeyDown(event)"
                             oninput="handleSearchInput()"
                             aria-label="Search heroes by name or group" />
                         <div class="search-actions">
@@ -166,6 +166,17 @@
                                 alt="Clear"
                                 title="Clear Search" />
                         </div>
+                        <button
+                            type="button"
+                            class="search-btn"
+                            id="hero-search-btn"
+                            onclick="triggerSearch()"
+                            aria-label="Search">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                        </button>
                     </div>
                     <div class="small-text" id="count-stats">
                         Showing 0 of 0 heroes
@@ -228,6 +239,9 @@
                         <span class="action-icon">👥</span> Rows
                     </button>
                 </div>
+
+                <!-- Active Filters Breadcrumbs Container -->
+                <div class="active-filters-container" id="active-filters-container"></div>
 
                 <div id="heroContainer"></div>
             </section>
