@@ -1,5 +1,13 @@
 [
     {
+        "version": "2.1.0.20260615",
+        "changes": [
+            "Hero Database: New search, filter and sort mechanisms",
+            "Hero Database: Filter chips for quick filtering",
+            "Hero Database: Filter and sort are now separate drawers"
+        ]
+    },
+    {
         "version": "2.0.0.20260614",
         "changes": [
             "DICE THRONE COMPANION 2.0 IS HERE!!",
