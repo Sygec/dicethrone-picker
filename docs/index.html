@@ -226,17 +226,21 @@
                     <button
                         type="button"
                         class="btn-action-trigger"
-                        id="btn-trigger-sort-filter"
+                        id="btn-trigger-sort"
                         onclick="openSortFilterDrawer()">
-                        <span class="action-icon">⚙️</span> Sort & Filter
-                        <span class="active-badge" id="filter-active-badge">0</span>
+                        <span class="action-icon">⚙️</span> Sort
                     </button>
                     <button
                         type="button"
                         class="btn-action-trigger"
-                        id="btn-trigger-columns"
-                        onclick="openColumnsDrawer()">
-                        <span class="action-icon">👥</span> Rows
+                        id="btn-trigger-filter"
+                        onclick="openFilterDrawer()">
+                        <svg class="action-icon-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="margin-right: 6px; vertical-align: middle;">
+                            <line x1="4" y1="6" x2="20" y2="6"></line>
+                            <line x1="7" y1="12" x2="17" y2="12"></line>
+                            <line x1="10" y1="18" x2="14" y2="18"></line>
+                        </svg>Filter
+                        <span class="active-badge" id="filter-active-badge" style="display: none;">0</span>
                     </button>
                 </div>
 
@@ -871,6 +875,78 @@
                 <div class="drawer-footer" id="drawer-footer-content">
                     <button type="button" class="btn-drawer-reset" onclick="resetFilters()">Reset All</button>
                     <button type="button" class="btn-drawer-apply" onclick="applyAndCloseDrawer()">Apply</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Left Drawer for Dynamic Filtering -->
+        <div id="filter-drawer-left" class="filter-drawer-overlay" onclick="closeFilterDrawer(event)">
+            <div class="filter-drawer-sheet" onclick="event.stopPropagation()">
+                <div class="filter-drawer-header">
+                    <span class="filter-drawer-count" id="filter-drawer-hero-count">Showing 0 of 0 heroes</span>
+                    <button type="button" class="filter-drawer-close-btn" onclick="applyFilterPanelSelections()">
+                        Close &times;
+                    </button>
+                </div>
+                
+                <div class="filter-drawer-reset-container">
+                    <button type="button" class="btn-filter-reset" onclick="resetFilterPanelSelections()">RESET</button>
+                </div>
+                
+                <div class="filter-drawer-body">
+                    <!-- By Data History -->
+                    <div class="filter-section">
+                        <span class="filter-section-title" id="title-data-history">By Data History</span>
+                        <div class="filter-options">
+                            <label class="filter-checkbox-label">
+                                <input type="checkbox" value="Normal only" data-type="data-history" onchange="handleFilterDrawerCheckboxChange(this)" />
+                                Normal only
+                            </label>
+                            <label class="filter-checkbox-label">
+                                <input type="checkbox" value="Historical only" data-type="data-history" onchange="handleFilterDrawerCheckboxChange(this)" />
+                                Historical only
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <hr class="filter-divider" />
+                    
+                    <!-- By Player -->
+                    <div class="filter-section">
+                        <span class="filter-section-title" id="title-players">By Player</span>
+                        <div class="filter-options" id="filter-options-players">
+                            <!-- Loaded dynamically -->
+                        </div>
+                    </div>
+                    
+                    <hr class="filter-divider" />
+                    
+                    <!-- By Complexity -->
+                    <div class="filter-section">
+                        <span class="filter-section-title" id="title-complexity">By Complexity</span>
+                        <div class="filter-options">
+                            <label class="filter-checkbox-label"><input type="checkbox" value="1" data-type="complexity" onchange="handleFilterDrawerCheckboxChange(this)" /> 1</label>
+                            <label class="filter-checkbox-label"><input type="checkbox" value="2" data-type="complexity" onchange="handleFilterDrawerCheckboxChange(this)" /> 2</label>
+                            <label class="filter-checkbox-label"><input type="checkbox" value="3" data-type="complexity" onchange="handleFilterDrawerCheckboxChange(this)" /> 3</label>
+                            <label class="filter-checkbox-label"><input type="checkbox" value="4" data-type="complexity" onchange="handleFilterDrawerCheckboxChange(this)" /> 4</label>
+                            <label class="filter-checkbox-label"><input type="checkbox" value="5" data-type="complexity" onchange="handleFilterDrawerCheckboxChange(this)" /> 5</label>
+                            <label class="filter-checkbox-label"><input type="checkbox" value="6" data-type="complexity" onchange="handleFilterDrawerCheckboxChange(this)" /> 6</label>
+                        </div>
+                    </div>
+                    
+                    <hr class="filter-divider" />
+                    
+                    <!-- By Group -->
+                    <div class="filter-section">
+                        <span class="filter-section-title" id="title-groups">By Group</span>
+                        <div class="filter-options" id="filter-options-groups">
+                            <!-- Loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="filter-drawer-footer">
+                    <button type="button" class="btn-filter-apply" onclick="applyFilterPanelSelections()">APPLY FILTERS</button>
                 </div>
             </div>
         </div>

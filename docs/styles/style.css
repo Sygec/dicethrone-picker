@@ -4530,3 +4530,185 @@ input:checked + .toggle-slider:before {
     transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 3;
 }
+
+/* ================================================== */
+/* Left Side Drawer for Filters                       */
+/* ================================================== */
+
+.filter-drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0);
+    z-index: 1000;
+    visibility: hidden;
+    opacity: 0;
+    transition:
+        background-color 0.35s ease,
+        opacity 0.35s ease,
+        visibility 0.35s ease;
+    display: flex;
+    justify-content: flex-start;
+    align-items: stretch;
+}
+
+.filter-drawer-overlay.open {
+    visibility: visible;
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.65);
+}
+
+.filter-drawer-sheet {
+    width: 85%;
+    max-width: 420px;
+    height: 100%;
+    background: rgba(18, 19, 24, 0.98);
+    border-right: 2px solid rgba(255, 204, 0, 0.25);
+    box-shadow: 12px 0 40px rgba(0, 0, 0, 0.85);
+    display: flex;
+    flex-direction: column;
+    transform: translateX(-100%);
+    transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 15px);
+}
+
+@supports (backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px)) {
+    .filter-drawer-sheet {
+        background-color: rgba(20, 22, 28, 0.82) !important;
+        backdrop-filter: blur(24px) !important;
+        -webkit-backdrop-filter: blur(24px) !important;
+    }
+}
+
+.filter-drawer-overlay.open .filter-drawer-sheet {
+    transform: translateX(0);
+}
+
+/* Header */
+.filter-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.filter-drawer-count {
+    font-family: "Outfit", sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.filter-drawer-close-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.filter-drawer-close-btn:hover {
+    color: #ffffff;
+}
+
+/* Reset Button Container */
+.filter-drawer-reset-container {
+    padding: 12px 20px;
+    display: flex;
+}
+
+.btn-filter-reset,
+.btn-filter-apply {
+    width: 100%;
+    background: var(--accent);
+    border: none;
+    color: #121212;
+    padding: 14px;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 1rem;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+}
+
+/* Scrollable Body */
+.filter-drawer-body {
+    padding: 10px 20px;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Filter Sections */
+.filter-section {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.filter-section-title {
+    font-family: "Outfit", sans-serif;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+}
+
+.filter-options {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+/* Checkbox Design */
+.filter-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.85rem;
+    cursor: pointer;
+    user-select: none;
+    padding: 2px 0;
+    transition: color 0.2s;
+}
+
+.filter-checkbox-label:hover {
+    color: #ffffff;
+}
+
+.filter-checkbox-label input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+.filter-divider {
+    border: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin: 6px 0;
+}
+
+/* Footer / Apply Button */
+.filter-drawer-footer {
+    padding: 16px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* btn-filter-apply styles consolidated above */
