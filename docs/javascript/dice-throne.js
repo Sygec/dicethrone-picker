@@ -812,107 +812,44 @@ function closeWhatsNew() {
 }
 
 // ******************************************
-// showRoll()
-// input: none
 // ******************************************
-// Shows the Roll section and hides all other sections.
+// showSection(sectionName)
+// input: sectionName (string)
 // ******************************************
-function showRoll() {
-    const rs = document.getElementById("rollSection");
-    const ds = document.getElementById("dbSection");
-    const gs = document.getElementById("gamesSection");
-    const cs = document.getElementById("collectionSection");
-    const as = document.getElementById("adminSection");
+// Shows the specified section and hides all other sections.
+// ******************************************
+function showSection(sectionName) {
+    if (sectionName === "admin" && !isAdmin()) return;
 
-    rs.classList.remove("hidden");
-    ds.classList.add("hidden");
-    gs.classList.add("hidden");
-    cs.classList.add("hidden");
-    as.classList.add("hidden");
-}
+    const sections = {
+        roll: "rollSection",
+        database: "dbSection",
+        history: "gamesSection",
+        collection: "collectionSection",
+        admin: "adminSection"
+    };
 
-// ******************************************
-// showDatabase()
-// input: none
-// ******************************************
-// Toggles the visibility of the Hero Database section.
-// ******************************************
-function showDatabase() {
-    const rs = document.getElementById("rollSection");
-    const ds = document.getElementById("dbSection");
-    const gs = document.getElementById("gamesSection");
-    const cs = document.getElementById("collectionSection");
-    const as = document.getElementById("adminSection");
+    const targetId = sections[sectionName];
+    if (!targetId) return;
 
-    rs.classList.add("hidden");
-    ds.classList.remove("hidden");
-    gs.classList.add("hidden");
-    cs.classList.add("hidden");
-    as.classList.add("hidden");
+    Object.values(sections).forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (id === targetId) {
+                el.classList.remove("hidden");
+            } else {
+                el.classList.add("hidden");
+            }
+        }
+    });
 
-    setTimeout(updateSegmentedHighlights, 50);
-}
-
-// ******************************************
-// showHistory()
-// input: none
-// ******************************************
-// Toggles the visibility of the Games History section.
-// ******************************************
-function showHistory() {
-    const rs = document.getElementById("rollSection");
-    const ds = document.getElementById("dbSection");
-    const gs = document.getElementById("gamesSection");
-    const cs = document.getElementById("collectionSection");
-    const as = document.getElementById("adminSection");
-
-    rs.classList.add("hidden");
-    ds.classList.add("hidden");
-    gs.classList.remove("hidden");
-    cs.classList.add("hidden");
-    as.classList.add("hidden");
-    renderGamesList();
-}
-
-// ******************************************
-// showCollection()
-// input: none
-// ******************************************
-function showCollection() {
-    const rs = document.getElementById("rollSection");
-    const ds = document.getElementById("dbSection");
-    const gs = document.getElementById("gamesSection");
-    const cs = document.getElementById("collectionSection");
-    const as = document.getElementById("adminSection");
-
-    rs.classList.add("hidden");
-    ds.classList.add("hidden");
-    gs.classList.add("hidden");
-    cs.classList.remove("hidden");
-    as.classList.add("hidden");
-    renderCollectionView();
-}
-
-// ******************************************
-// showAdmin()
-// input: none
-// ******************************************
-// Toggles the visibility of the Admin section.
-// ******************************************
-function showAdmin() {
-    if (!isAdmin()) return;
-
-    const rs = document.getElementById("rollSection");
-    const ds = document.getElementById("dbSection");
-    const gs = document.getElementById("gamesSection");
-    const cs = document.getElementById("collectionSection");
-    const as = document.getElementById("adminSection");
-
-    rs.classList.add("hidden");
-    ds.classList.add("hidden");
-    gs.classList.add("hidden");
-    cs.classList.add("hidden");
-    as.classList.remove("hidden");
+    if (sectionName === "database") {
+        setTimeout(updateSegmentedHighlights, 50);
+    } else if (sectionName === "history") {
+        renderGamesList();
+    } else if (sectionName === "collection") {
+        renderCollectionView();
+    }
 }
 
 // ******************************************
@@ -1244,7 +1181,7 @@ function editChar(idx) {
     renderHeroesList();
 
     const adminSection = document.getElementById("adminSection");
-    if (adminSection.classList.contains("hidden")) toggleAdmin();
+    if (adminSection.classList.contains("hidden")) showSection("admin");
 
     const editPanel = document.getElementById(
         `heroEditPanel-${characters[idx]?.id}`,
@@ -2042,7 +1979,7 @@ function pickCharacters() {
         });
 
         // Ensure the roll section is visible and scroll to results
-        showRoll();
+        showSection("roll");
         resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
 
         startDraftStep();
@@ -2119,7 +2056,7 @@ function pickCharacters() {
     });
 
     // Ensure the roll section is visible and scroll to results
-    showRoll();
+    showSection("roll");
     resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
 
     // Pool of all owned heroes for the cycling scrambler
