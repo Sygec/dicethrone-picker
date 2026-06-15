@@ -1137,6 +1137,7 @@ main > section:not(.hidden) {
     background: lightgray;
     color: var(--text);
     box-sizing: border-box;
+    font-size: 16px;
 }
 
 #dbSection {
