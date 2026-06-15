@@ -3809,20 +3809,20 @@ function updateSortButtonText() {
     const btn = document.getElementById("btn-trigger-sort");
     if (!btn) return;
 
-    let text = "Hero Name (A-Z)"; // Default
+    let text = "Hero (A-Z)"; // Default
 
     if (currentSort === "name") {
-        text = sortAsc ? "Hero Name (A-Z)" : "Hero Name (Z-A)";
+        text = sortAsc ? "Hero (A-Z)" : "Hero (Z-A)";
     } else if (currentSort === "complexity") {
         text = sortAsc ? "Complexity (1-6)" : "Complexity (6-1)";
     } else if (currentSort.startsWith("w")) {
         const idx = parseInt(currentSort.substring(1));
         const playerName = NAMES[idx] || `Player ${idx + 1}`;
-        text = sortAsc ? `${playerName} Prob (Low to High)` : `${playerName} Prob (High to Low)`;
+        text = sortAsc ? `${playerName} % (Low to High)` : `${playerName} % (High to Low)`;
     } else if (currentSort.startsWith("d")) {
         const idx = parseInt(currentSort.substring(1));
         const playerName = NAMES[idx] || `Player ${idx + 1}`;
-        text = sortAsc ? `${playerName} Last Played (Oldest)` : `${playerName} Last Played (Newest)`;
+        text = sortAsc ? `${playerName} Played (Oldest)` : `${playerName} Played (Newest)`;
     } else if (currentSort === "group") {
         text = sortAsc ? "Group (A-Z)" : "Group (Z-A)";
     }
