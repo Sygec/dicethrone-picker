@@ -342,6 +342,18 @@ window.onclick = (event) => {
     if (event.target == updatePasswordModal) closeUpdatePasswordModal();
     if (event.target == document.getElementById("hero-select-modal"))
         closeHeroSelectModal();
+
+    // Close sort dropdown if clicking outside of its container
+    const sortDropdown = document.getElementById("sort-dropdown-menu");
+    const sortContainer = document.getElementById("sort-dropdown-container");
+    if (
+        sortDropdown &&
+        sortDropdown.classList.contains("show") &&
+        sortContainer &&
+        !sortContainer.contains(event.target)
+    ) {
+        closeSortDropdown();
+    }
 };
 
 document.addEventListener("keydown", (event) => {
@@ -3776,7 +3788,128 @@ function setSort(key) {
     }
 
     updateActiveFilterBadge();
+    updateSortButtonText();
     renderList();
+}
+
+// ******************************************
+// SORT DROPDOWN MENUS LOGIC
+// ******************************************
+
+function getVisiblePlayerIndices() {
+    if (activeFilterPlayers && activeFilterPlayers.size > 0) {
+        return Array.from(activeFilterPlayers)
+            .map(pId => parseInt(pId.substring(1)) - 1)
+            .filter(idx => idx >= 0 && idx < NAMES.length);
+    }
+    return activePlayerIndices || [0, 1, 2, 3];
+}
+
+function updateSortButtonText() {
+    const btn = document.getElementById("btn-trigger-sort");
+    if (!btn) return;
+
+    let text = "Hero Name (A-Z)"; // Default
+
+    if (currentSort === "name") {
+        text = sortAsc ? "Hero Name (A-Z)" : "Hero Name (Z-A)";
+    } else if (currentSort === "complexity") {
+        text = sortAsc ? "Complexity (1-6)" : "Complexity (6-1)";
+    } else if (currentSort.startsWith("w")) {
+        const idx = parseInt(currentSort.substring(1));
+        const playerName = NAMES[idx] || `Player ${idx + 1}`;
+        text = sortAsc ? `${playerName} Prob (Low to High)` : `${playerName} Prob (High to Low)`;
+    } else if (currentSort.startsWith("d")) {
+        const idx = parseInt(currentSort.substring(1));
+        const playerName = NAMES[idx] || `Player ${idx + 1}`;
+        text = sortAsc ? `${playerName} Last Played (Oldest)` : `${playerName} Last Played (Newest)`;
+    } else if (currentSort === "group") {
+        text = sortAsc ? "Group (A-Z)" : "Group (Z-A)";
+    }
+
+    btn.innerHTML = `<span class="action-icon">⇅</span> <strong style="font-weight: 700;">SORT:</strong> <span style="font-weight: 400; text-transform: none; margin-left: 2px;">${text}</span>`;
+}
+
+function renderSortDropdownOptions() {
+    const menu = document.getElementById("sort-dropdown-menu");
+    if (!menu) return;
+
+    const visibleIdxs = getVisiblePlayerIndices();
+
+    let html = `
+        <div class="sort-dropdown-section-title">General</div>
+        <button type="button" class="sort-dropdown-item ${currentSort === 'name' && sortAsc ? 'active' : ''}" onclick="selectSortOption('name', true)">
+            Hero Name (A-Z)
+        </button>
+        <button type="button" class="sort-dropdown-item ${currentSort === 'name' && !sortAsc ? 'active' : ''}" onclick="selectSortOption('name', false)">
+            Hero Name (Z-A)
+        </button>
+        <button type="button" class="sort-dropdown-item ${currentSort === 'complexity' && sortAsc ? 'active' : ''}" onclick="selectSortOption('complexity', true)">
+            Complexity (1-6)
+        </button>
+        <button type="button" class="sort-dropdown-item ${currentSort === 'complexity' && !sortAsc ? 'active' : ''}" onclick="selectSortOption('complexity', false)">
+            Complexity (6-1)
+        </button>
+    `;
+
+    if (visibleIdxs.length > 0) {
+        html += `<div class="sort-dropdown-divider"></div>`;
+        visibleIdxs.forEach(idx => {
+            const playerName = NAMES[idx] || `Player ${idx + 1}`;
+            html += `
+                <div class="sort-dropdown-section-title" style="color: var(--p${idx + 1}, #fff);">${playerName}</div>
+                <button type="button" class="sort-dropdown-item ${currentSort === 'w' + idx && !sortAsc ? 'active' : ''}" onclick="selectSortOption('w${idx}', false)">
+                    Probability (High to Low)
+                </button>
+                <button type="button" class="sort-dropdown-item ${currentSort === 'w' + idx && sortAsc ? 'active' : ''}" onclick="selectSortOption('w${idx}', true)">
+                    Probability (Low to High)
+                </button>
+                <button type="button" class="sort-dropdown-item ${currentSort === 'd' + idx && !sortAsc ? 'active' : ''}" onclick="selectSortOption('d${idx}', false)">
+                    Last Played (Newest)
+                </button>
+                <button type="button" class="sort-dropdown-item ${currentSort === 'd' + idx && sortAsc ? 'active' : ''}" onclick="selectSortOption('d${idx}', true)">
+                    Last Played (Oldest)
+                </button>
+            `;
+        });
+    }
+
+    menu.innerHTML = html;
+}
+
+function toggleSortDropdown(event) {
+    if (event) event.stopPropagation();
+    const dropdown = document.getElementById("sort-dropdown-menu");
+    if (!dropdown) return;
+
+    const isShown = dropdown.classList.contains("show");
+    if (isShown) {
+        closeSortDropdown();
+    } else {
+        renderSortDropdownOptions();
+        dropdown.classList.add("show");
+        document.getElementById("btn-trigger-sort")?.classList.add("active");
+    }
+}
+
+function closeSortDropdown() {
+    const dropdown = document.getElementById("sort-dropdown-menu");
+    if (dropdown) {
+        dropdown.classList.remove("show");
+    }
+    document.getElementById("btn-trigger-sort")?.classList.remove("active");
+}
+
+function selectSortOption(key, asc) {
+    currentSort = key;
+    sortAsc = asc;
+    if (key.startsWith("w") || key.startsWith("d")) {
+        currentSortPlayerIndex = parseInt(key.substring(1));
+    }
+    updateActiveFilterBadge();
+    updateSortButtonText();
+    renderList();
+    closeSortDropdown();
 }
 
 // ******************************************
@@ -4720,6 +4853,14 @@ function renderList() {
                 return sortAsc
                     ? nameA.localeCompare(nameB)
                     : nameB.localeCompare(nameA);
+            }
+        } else if (currentSort === "complexity") {
+            valA = Number(a.complexity) || 0;
+            valB = Number(b.complexity) || 0;
+            if (valA === valB) {
+                const nameA = (a.name || "").toLowerCase();
+                const nameB = (b.name || "").toLowerCase();
+                return nameA.localeCompare(nameB);
             }
         } else {
             valA = (a[currentSort] || "").toLowerCase();

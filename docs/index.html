@@ -223,13 +223,17 @@
 
                 <!-- Filter & Sort Action Bar -->
                 <div class="filter-action-bar" style="margin-top: 8px; margin-bottom: 12px;">
-                    <button
-                        type="button"
-                        class="btn-action-trigger"
-                        id="btn-trigger-sort"
-                        onclick="openSortFilterDrawer()">
-                        <span class="action-icon">⚙️</span> Sort
-                    </button>
+                    <div class="sort-dropdown-container" id="sort-dropdown-container">
+                        <button
+                            type="button"
+                            class="btn-action-trigger"
+                            id="btn-trigger-sort"
+                            style="width: 100%;"
+                            onclick="toggleSortDropdown(event)">
+                            <span class="action-icon">⇅</span> <strong style="font-weight: 700;">SORT:</strong> <span style="font-weight: 400; text-transform: none; margin-left: 2px;">Hero Name (A-Z)</span>
+                        </button>
+                        <div id="sort-dropdown-menu" class="sort-dropdown-menu"></div>
+                    </div>
                     <button
                         type="button"
                         class="btn-action-trigger"
