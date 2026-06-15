@@ -2932,7 +2932,7 @@ body.loaded .bottom-nav {
 .ownership-segmented-control {
     display: flex;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--secondary);
+    border: 1px solid var(--accent);
     border-radius: 8px;
     padding: 3px;
     margin-top: 10px;
