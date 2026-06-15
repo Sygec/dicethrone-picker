@@ -3196,16 +3196,12 @@ function renderDrawerComplexityFilters() {
     for (let i = 1; i <= 6; i++) {
         const potentialMatchesCount = characters.filter((c) => {
             if (Number(c.complexity) !== i) return false;
-            const nameMatch = c.name.toLowerCase().includes(searchTerm);
-            const groupNameMatch = (c.group || "")
-                .toLowerCase()
-                .includes(searchTerm);
             const groupFilterMatch = stagedGroups.has(c.group_id);
             const ownershipMatch =
                 (isHeroOwned(c) && showOwned) ||
                 (!isHeroOwned(c) && showNotOwned);
             return (
-                (nameMatch || groupNameMatch) &&
+                matchesSearchTerm(c, searchTerm) &&
                 groupFilterMatch &&
                 ownershipMatch
             );
@@ -3225,15 +3221,11 @@ function renderDrawerComplexityFilters() {
     }
 
     const totalMatchingHeroes = characters.filter((c) => {
-        const nameMatch = c.name.toLowerCase().includes(searchTerm);
-        const groupNameMatch = (c.group || "")
-            .toLowerCase()
-            .includes(searchTerm);
         const groupFilterMatch = stagedGroups.has(c.group_id);
         const ownershipMatch =
             (isHeroOwned(c) && showOwned) || (!isHeroOwned(c) && showNotOwned);
         return (
-            (nameMatch || groupNameMatch) && groupFilterMatch && ownershipMatch
+            matchesSearchTerm(c, searchTerm) && groupFilterMatch && ownershipMatch
         );
     }).length;
 
@@ -3328,16 +3320,12 @@ function renderDrawerGroupFilters() {
 
             const potentialMatchesCount = characters.filter((c) => {
                 if (c.group_id !== g.id) return false;
-                const nameMatch = c.name.toLowerCase().includes(searchTerm);
-                const groupNameMatch = (c.group || "")
-                    .toLowerCase()
-                    .includes(searchTerm);
                 const complexityMatch = stagedLevels.has(Number(c.complexity));
                 const ownershipMatch =
                     (isHeroOwned(c) && showOwned) ||
                     (!isHeroOwned(c) && showNotOwned);
                 return (
-                    (nameMatch || groupNameMatch) &&
+                    matchesSearchTerm(c, searchTerm) &&
                     complexityMatch &&
                     ownershipMatch
                 );
@@ -3357,15 +3345,11 @@ function renderDrawerGroupFilters() {
         .join("");
 
     const totalMatchingHeroes = characters.filter((c) => {
-        const nameMatch = c.name.toLowerCase().includes(searchTerm);
-        const groupNameMatch = (c.group || "")
-            .toLowerCase()
-            .includes(searchTerm);
         const complexityMatch = stagedLevels.has(Number(c.complexity));
         const ownershipMatch =
             (isHeroOwned(c) && showOwned) || (!isHeroOwned(c) && showNotOwned);
         return (
-            (nameMatch || groupNameMatch) && complexityMatch && ownershipMatch
+            matchesSearchTerm(c, searchTerm) && complexityMatch && ownershipMatch
         );
     }).length;
 
@@ -3657,6 +3641,33 @@ function updateActiveFilterChips() {
 // ******************************************
 function clearSearchFilter() {
     clearSearch();
+}
+
+// ******************************************
+// matchesSearchTerm()
+// input: character object, searchTerm string
+// output: boolean indicating match
+// ******************************************
+// Checks if a hero matches the search term by name, group (or abbreviation),
+// or if the search term matches a player's name (which shows all heroes).
+// ******************************************
+function matchesSearchTerm(c, searchTerm) {
+    if (!searchTerm) return true;
+    const term = searchTerm.trim().toLowerCase();
+
+    // 1. Match Hero Name
+    const nameMatch = c.name && c.name.toLowerCase().includes(term);
+
+    // 2. Match Group Name or Abbreviation
+    const groupAbbreviation = getGroupAbbreviation(c.group || "");
+    const groupMatch = (c.group || "").toLowerCase().includes(term) ||
+                       groupAbbreviation.toLowerCase().includes(term);
+
+    // 3. Match Player Name
+    // If the search term is a player's name, consider it a match for all heroes.
+    const isPlayerName = NAMES.some(playerName => playerName && playerName.toLowerCase().includes(term));
+
+    return nameMatch || groupMatch || isPlayerName;
 }
 
 // ******************************************
@@ -4283,6 +4294,16 @@ function renderList() {
     const showNotOwned =
         document.getElementById("db-show-not-owned")?.checked ?? false;
 
+    // Find which active players match the search term (if any)
+    const matchingPlayerIdxs = [];
+    if (searchTerm) {
+        NAMES.forEach((playerName, playerIdx) => {
+            if (playerName && playerName.toLowerCase().includes(searchTerm)) {
+                matchingPlayerIdxs.push(playerIdx);
+            }
+        });
+    }
+
     // 1. Efficiently calculate totals for the entire pool in a single pass O(N)
     // Now uses soft weights (with play-count penalty) for the pool total
     const totals = [0, 0, 0, 0];
@@ -4297,17 +4318,13 @@ function renderList() {
     const processedList = characters
         .map((char, index) => ({ ...char, originalIndex: index }))
         .filter((c) => {
-            const nameMatch = c.name.toLowerCase().includes(searchTerm);
-            const groupMatch = (c.group || "")
-                .toLowerCase()
-                .includes(searchTerm);
             const complexityMatch = activeLevels.has(Number(c.complexity));
             const groupFilterMatch = activeGroups.has(c.group_id);
             const ownershipMatch =
                 (isHeroOwned(c) && showOwned) ||
                 (!isHeroOwned(c) && showNotOwned);
             return (
-                (nameMatch || groupMatch) &&
+                matchesSearchTerm(c, searchTerm) &&
                 complexityMatch &&
                 groupFilterMatch &&
                 ownershipMatch
@@ -4355,8 +4372,13 @@ function renderList() {
     // Generate the HTML efficiently
     container.innerHTML = processedList
         .map((c) => {
-            // Compute player list statistics sorted by probability
-            const playerStatsList = activePlayerIndices.map((p) => {
+            // Compute player list statistics
+            // If the search matches a player name, only show that player's stats row
+            const playersToRender = (matchingPlayerIdxs.length > 0)
+                ? activePlayerIndices.filter(p => matchingPlayerIdxs.includes(p))
+                : activePlayerIndices;
+
+            const playerStatsList = playersToRender.map((p) => {
                 const weight = (c.weights && c.weights[p]) || 0;
                 const softWeight = getSoftWeight(c, p);
                 const owned = isHeroOwned(c);
