@@ -996,13 +996,36 @@ main > section:not(.hidden) {
     width: 100%;
 }
 
-#hero-search {
-    width: 100%;
-    padding: 12px 80px 12px 15px; /* Large right padding for 2 icons */
+#dbSection .search-wrapper {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 8px;
-    border: 1px solid var(--secondary);
-    background: var(--card-bg);
-    color: var(--text);
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+
+#dbSection .search-wrapper:hover,
+#dbSection .search-wrapper:focus-within {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--accent);
+}
+
+#hero-search {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 10px 90px 10px 14px; /* Space for both the close icon and search button on the right */
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 16px;
+    font-weight: 400; /* Regular weight, not bold */
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#hero-search::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 400;
 }
 
 .search-actions {
@@ -1012,6 +1035,11 @@ main > section:not(.hidden) {
     gap: 12px;
     align-items: center;
     z-index: 5;
+}
+
+#dbSection .search-actions {
+    right: 60px; /* Positioned to the left of the vertical separator line */
+    gap: 0;
 }
 
 .search-icon {
@@ -1029,6 +1057,72 @@ main > section:not(.hidden) {
     }
 }
 
+#dbSection .search-btn {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: transparent;
+    border: none;
+    border-left: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 0 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.8);
+    transition: color 0.2s, background-color 0.2s;
+    border-top-right-radius: 7px;
+    border-bottom-right-radius: 7px;
+}
+
+#dbSection .search-btn:hover {
+    color: var(--accent);
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Active Filters Breadcrumbs Styling */
+.active-filters-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 5px;
+    margin-bottom: 12px;
+    width: 100%;
+}
+
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.72rem; /* Clearly smaller than 0.82rem of button */
+    font-weight: 500; /* Regular/medium weight, not bold */
+    padding: 4px 8px; /* Clearly smaller padding */
+    border-radius: 6px;
+    cursor: default;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+}
+
+.filter-chip-remove {
+    cursor: pointer;
+    font-weight: bold;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, color 0.2s;
+    font-size: 0.75rem;
+}
+
+.filter-chip-remove:hover {
+    transform: scale(1.25);
+    color: #ff4d6d;
+}
+
 .hidden {
     display: none !important;
 }
@@ -1043,6 +1137,7 @@ main > section:not(.hidden) {
     background: lightgray;
     color: var(--text);
     box-sizing: border-box;
+    font-size: 16px;
 }
 
 #dbSection {
@@ -2838,7 +2933,7 @@ body.loaded .bottom-nav {
 .ownership-segmented-control {
     display: flex;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--secondary);
+    border: 1px solid var(--accent);
     border-radius: 8px;
     padding: 3px;
     margin-top: 10px;
@@ -4436,3 +4531,284 @@ input:checked + .toggle-slider:before {
     transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 3;
 }
+
+/* ================================================== */
+/* Left Side Drawer for Filters                       */
+/* ================================================== */
+
+.filter-drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0);
+    z-index: 1000;
+    visibility: hidden;
+    opacity: 0;
+    transition:
+        background-color 0.35s ease,
+        opacity 0.35s ease,
+        visibility 0.35s ease;
+    display: flex;
+    justify-content: flex-start;
+    align-items: stretch;
+}
+
+.filter-drawer-overlay.open {
+    visibility: visible;
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.65);
+}
+
+.filter-drawer-sheet {
+    width: 85%;
+    max-width: 420px;
+    height: 100%;
+    background: rgba(18, 19, 24, 0.98);
+    border-right: 2px solid rgba(255, 204, 0, 0.25);
+    box-shadow: 12px 0 40px rgba(0, 0, 0, 0.85);
+    display: flex;
+    flex-direction: column;
+    transform: translateX(-100%);
+    transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 15px);
+}
+
+@supports (backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px)) {
+    .filter-drawer-sheet {
+        background-color: rgba(20, 22, 28, 0.82) !important;
+        backdrop-filter: blur(24px) !important;
+        -webkit-backdrop-filter: blur(24px) !important;
+    }
+}
+
+.filter-drawer-overlay.open .filter-drawer-sheet {
+    transform: translateX(0);
+}
+
+/* Header */
+.filter-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.filter-drawer-count {
+    font-family: "Outfit", sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.filter-drawer-close-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.filter-drawer-close-btn:hover {
+    color: #ffffff;
+}
+
+/* Reset Button Container */
+.filter-drawer-reset-container {
+    padding: 12px 20px;
+    display: flex;
+}
+
+.btn-filter-reset,
+.btn-filter-apply {
+    width: 100%;
+    background: var(--accent);
+    border: none;
+    color: #121212;
+    padding: 14px;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 1rem;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+}
+
+/* Scrollable Body */
+.filter-drawer-body {
+    padding: 10px 20px;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Filter Sections */
+.filter-section {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.filter-section-title {
+    font-family: "Outfit", sans-serif;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+}
+
+.filter-options {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+/* Checkbox Design */
+.filter-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.85rem;
+    cursor: pointer;
+    user-select: none;
+    padding: 2px 0;
+    transition: color 0.2s;
+}
+
+.filter-checkbox-label:hover {
+    color: #ffffff;
+}
+
+.filter-checkbox-label input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+.filter-divider {
+    border: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin: 6px 0;
+}
+
+/* Footer / Apply Button */
+.filter-drawer-footer {
+    padding: 16px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* btn-filter-apply styles consolidated above */
+
+/* -------------------------------------------------- */
+/* SORT DROPDOWN SYSTEM                               */
+/* -------------------------------------------------- */
+
+.sort-dropdown-container {
+    position: relative;
+    width: 100%;
+}
+
+.sort-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    width: 100%;
+    min-width: 250px;
+    background: rgba(22, 33, 62, 0.96); /* Matches --card-bg glass */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    padding: 8px 0;
+    max-height: 350px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.sort-dropdown-menu::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sort-dropdown-menu::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.sort-dropdown-menu.show {
+    display: block;
+    animation: fadeInDropdown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInDropdown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.sort-dropdown-section-title {
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.4);
+    padding: 6px 16px 4px 16px;
+    user-select: none;
+}
+
+.sort-dropdown-item {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.85);
+    text-align: left;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.sort-dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    padding-left: 20px;
+}
+
+.sort-dropdown-item.active {
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.sort-dropdown-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    margin: 6px 0;
+}
+

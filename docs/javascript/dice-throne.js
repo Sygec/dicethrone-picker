@@ -28,6 +28,17 @@ let stagedPlayerIndices = [];
 let stagedUseHistorical = true;
 let dbUseHistorical = true;
 
+// New Left Filter Drawer States
+let activeFilterDataHistories = new Set();
+let activeFilterPlayers = new Set();
+let activeFilterComplexities = new Set();
+let activeFilterGroups = new Set();
+
+let stagedFilterDataHistories = new Set();
+let stagedFilterPlayers = new Set();
+let stagedFilterComplexities = new Set();
+let stagedFilterGroups = new Set();
+
 // Games History Filters State
 let gamesWinnerOnly = false;
 let gamesUseHistorical = true;
@@ -331,6 +342,18 @@ window.onclick = (event) => {
     if (event.target == updatePasswordModal) closeUpdatePasswordModal();
     if (event.target == document.getElementById("hero-select-modal"))
         closeHeroSelectModal();
+
+    // Close sort dropdown if clicking outside of its container
+    const sortDropdown = document.getElementById("sort-dropdown-menu");
+    const sortContainer = document.getElementById("sort-dropdown-container");
+    if (
+        sortDropdown &&
+        sortDropdown.classList.contains("show") &&
+        sortContainer &&
+        !sortContainer.contains(event.target)
+    ) {
+        closeSortDropdown();
+    }
 };
 
 document.addEventListener("keydown", (event) => {
@@ -789,107 +812,44 @@ function closeWhatsNew() {
 }
 
 // ******************************************
-// showRoll()
-// input: none
 // ******************************************
-// Shows the Roll section and hides all other sections.
+// showSection(sectionName)
+// input: sectionName (string)
 // ******************************************
-function showRoll() {
-    const rs = document.getElementById("rollSection");
-    const ds = document.getElementById("dbSection");
-    const gs = document.getElementById("gamesSection");
-    const cs = document.getElementById("collectionSection");
-    const as = document.getElementById("adminSection");
+// Shows the specified section and hides all other sections.
+// ******************************************
+function showSection(sectionName) {
+    if (sectionName === "admin" && !isAdmin()) return;
 
-    rs.classList.remove("hidden");
-    ds.classList.add("hidden");
-    gs.classList.add("hidden");
-    cs.classList.add("hidden");
-    as.classList.add("hidden");
-}
+    const sections = {
+        roll: "rollSection",
+        database: "dbSection",
+        history: "gamesSection",
+        collection: "collectionSection",
+        admin: "adminSection"
+    };
 
-// ******************************************
-// showDatabase()
-// input: none
-// ******************************************
-// Toggles the visibility of the Hero Database section.
-// ******************************************
-function showDatabase() {
-    const rs = document.getElementById("rollSection");
-    const ds = document.getElementById("dbSection");
-    const gs = document.getElementById("gamesSection");
-    const cs = document.getElementById("collectionSection");
-    const as = document.getElementById("adminSection");
+    const targetId = sections[sectionName];
+    if (!targetId) return;
 
-    rs.classList.add("hidden");
-    ds.classList.remove("hidden");
-    gs.classList.add("hidden");
-    cs.classList.add("hidden");
-    as.classList.add("hidden");
+    Object.values(sections).forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (id === targetId) {
+                el.classList.remove("hidden");
+            } else {
+                el.classList.add("hidden");
+            }
+        }
+    });
 
-    setTimeout(updateSegmentedHighlights, 50);
-}
-
-// ******************************************
-// showHistory()
-// input: none
-// ******************************************
-// Toggles the visibility of the Games History section.
-// ******************************************
-function showHistory() {
-    const rs = document.getElementById("rollSection");
-    const ds = document.getElementById("dbSection");
-    const gs = document.getElementById("gamesSection");
-    const cs = document.getElementById("collectionSection");
-    const as = document.getElementById("adminSection");
-
-    rs.classList.add("hidden");
-    ds.classList.add("hidden");
-    gs.classList.remove("hidden");
-    cs.classList.add("hidden");
-    as.classList.add("hidden");
-    renderGamesList();
-}
-
-// ******************************************
-// showCollection()
-// input: none
-// ******************************************
-function showCollection() {
-    const rs = document.getElementById("rollSection");
-    const ds = document.getElementById("dbSection");
-    const gs = document.getElementById("gamesSection");
-    const cs = document.getElementById("collectionSection");
-    const as = document.getElementById("adminSection");
-
-    rs.classList.add("hidden");
-    ds.classList.add("hidden");
-    gs.classList.add("hidden");
-    cs.classList.remove("hidden");
-    as.classList.add("hidden");
-    renderCollectionView();
-}
-
-// ******************************************
-// showAdmin()
-// input: none
-// ******************************************
-// Toggles the visibility of the Admin section.
-// ******************************************
-function showAdmin() {
-    if (!isAdmin()) return;
-
-    const rs = document.getElementById("rollSection");
-    const ds = document.getElementById("dbSection");
-    const gs = document.getElementById("gamesSection");
-    const cs = document.getElementById("collectionSection");
-    const as = document.getElementById("adminSection");
-
-    rs.classList.add("hidden");
-    ds.classList.add("hidden");
-    gs.classList.add("hidden");
-    cs.classList.add("hidden");
-    as.classList.remove("hidden");
+    if (sectionName === "database") {
+        setTimeout(updateSegmentedHighlights, 50);
+    } else if (sectionName === "history") {
+        renderGamesList();
+    } else if (sectionName === "collection") {
+        renderCollectionView();
+    }
 }
 
 // ******************************************
@@ -1221,7 +1181,7 @@ function editChar(idx) {
     renderHeroesList();
 
     const adminSection = document.getElementById("adminSection");
-    if (adminSection.classList.contains("hidden")) toggleAdmin();
+    if (adminSection.classList.contains("hidden")) showSection("admin");
 
     const editPanel = document.getElementById(
         `heroEditPanel-${characters[idx]?.id}`,
@@ -2019,7 +1979,7 @@ function pickCharacters() {
         });
 
         // Ensure the roll section is visible and scroll to results
-        showRoll();
+        showSection("roll");
         resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
 
         startDraftStep();
@@ -2096,7 +2056,7 @@ function pickCharacters() {
     });
 
     // Ensure the roll section is visible and scroll to results
-    showRoll();
+    showSection("roll");
     resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
 
     // Pool of all owned heroes for the cycling scrambler
@@ -2797,6 +2757,227 @@ function openHistoryFilterDrawer() {
     drawer.classList.add("open");
 }
 
+// ==========================================
+// New Left Filter Drawer UI Handlers
+// ==========================================
+
+function openFilterDrawer() {
+    stagedFilterDataHistories = new Set(activeFilterDataHistories);
+    stagedFilterPlayers = new Set(activeFilterPlayers);
+    stagedFilterComplexities = new Set(activeFilterComplexities);
+    stagedFilterGroups = new Set(activeFilterGroups);
+
+    renderFilterDrawerDynamicSections();
+    updateFilterDrawerHeroCountUI();
+    updateFilterDrawerSectionTitlesUI();
+
+    const drawer = document.getElementById("filter-drawer-left");
+    if (drawer) {
+        drawer.classList.add("open");
+        document.body.style.overflow = "hidden"; // Prevent background scroll
+    }
+}
+
+function closeFilterDrawer(event = null, force = false) {
+    if (event && event.target !== event.currentTarget && !force) return;
+    const drawer = document.getElementById("filter-drawer-left");
+    if (drawer) {
+        drawer.classList.remove("open");
+        document.body.style.overflow = "auto"; // Restore background scroll
+    }
+}
+
+function renderFilterDrawerDynamicSections() {
+    // 1. Render Players alphabetically (excluding Invitees)
+    const playersContainer = document.getElementById("filter-options-players");
+    if (playersContainer) {
+        const sortedPlayers = players
+            .filter(p => p.name && !p.name.toLowerCase().includes("invitee"))
+            .slice()
+            .sort((a, b) => a.name.localeCompare(b.name));
+        playersContainer.innerHTML = sortedPlayers.map(p => {
+            const isChecked = stagedFilterPlayers.has(p.id) ? "checked" : "";
+            return `
+                <label class="filter-checkbox-label">
+                    <input type="checkbox" value="${p.id}" data-type="player" ${isChecked} onchange="handleFilterDrawerCheckboxChange(this)" />
+                    ${p.name}
+                </label>
+            `;
+        }).join("");
+    }
+
+    // 2. Render Groups by order_index
+    const groupsContainer = document.getElementById("filter-options-groups");
+    if (groupsContainer) {
+        const sortedGroups = groups.slice().sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
+        groupsContainer.innerHTML = sortedGroups.map(g => {
+            const isChecked = stagedFilterGroups.has(g.id) ? "checked" : "";
+            return `
+                <label class="filter-checkbox-label">
+                    <input type="checkbox" value="${g.id}" data-type="group" ${isChecked} onchange="handleFilterDrawerCheckboxChange(this)" />
+                    ${g.name}
+                </label>
+            `;
+        }).join("");
+    }
+
+    // Update static checkboxes (Complexity and Data History)
+    document.querySelectorAll('#filter-drawer-left input[data-type="data-history"]').forEach(cb => {
+        cb.checked = stagedFilterDataHistories.has(cb.value);
+    });
+
+    document.querySelectorAll('#filter-drawer-left input[data-type="complexity"]').forEach(cb => {
+        cb.checked = stagedFilterComplexities.has(Number(cb.value));
+    });
+}
+
+function handleFilterDrawerCheckboxChange(checkbox) {
+    const type = checkbox.getAttribute("data-type");
+    const val = checkbox.value;
+    const checked = checkbox.checked;
+
+    if (type === "data-history") {
+        if (checked) stagedFilterDataHistories.add(val);
+        else stagedFilterDataHistories.delete(val);
+    } else if (type === "player") {
+        if (checked) stagedFilterPlayers.add(val);
+        else stagedFilterPlayers.delete(val);
+    } else if (type === "complexity") {
+        const numVal = Number(val);
+        if (checked) stagedFilterComplexities.add(numVal);
+        else stagedFilterComplexities.delete(numVal);
+    } else if (type === "group") {
+        if (checked) stagedFilterGroups.add(val);
+        else stagedFilterGroups.delete(val);
+    }
+
+    updateFilterDrawerHeroCountUI();
+    updateFilterDrawerSectionTitlesUI();
+}
+
+function resetFilterPanelSelections() {
+    stagedFilterDataHistories.clear();
+    stagedFilterPlayers.clear();
+    stagedFilterComplexities.clear();
+    stagedFilterGroups.clear();
+
+    const checkboxes = document.querySelectorAll('#filter-drawer-left input[type="checkbox"]');
+    checkboxes.forEach(cb => {
+        cb.checked = false;
+    });
+
+    updateFilterDrawerHeroCountUI();
+    updateFilterDrawerSectionTitlesUI();
+}
+
+function applyFilterPanelSelections() {
+    activeFilterDataHistories = new Set(stagedFilterDataHistories);
+    activeFilterPlayers = new Set(stagedFilterPlayers);
+    activeFilterComplexities = new Set(stagedFilterComplexities);
+    activeFilterGroups = new Set(stagedFilterGroups);
+
+    // Sync with the global dbUseHistorical variable
+    // If 'Normal only' is selected and 'Historical only' is not, exclude historical data. Otherwise, include it.
+    dbUseHistorical = !activeFilterDataHistories.has("Normal only") || activeFilterDataHistories.has("Historical only");
+
+    closeFilterDrawer(null, true);
+    
+    renderList();
+
+    updateActiveFilterBadge();
+    updateActiveFilterChips();
+}
+
+function getFilterDrawerMatchingCount() {
+    const searchTerm = document.getElementById("hero-search")?.value.toLowerCase() || "";
+    const showOwned = document.getElementById("db-show-owned")?.checked ?? true;
+    const showNotOwned = document.getElementById("db-show-not-owned")?.checked ?? false;
+
+    const matched = characters.filter((c) => {
+        // Complexity Match
+        let complexityMatch = true;
+        if (stagedFilterComplexities.size > 0) {
+            complexityMatch = stagedFilterComplexities.has(Number(c.complexity));
+        }
+
+        // Group Match
+        let groupFilterMatch = true;
+        if (stagedFilterGroups.size > 0) {
+            groupFilterMatch = stagedFilterGroups.has(c.group_id);
+        }
+
+        // Data History Filter
+        let dataHistoryMatch = true;
+        const hasNormalOnlyStaged = stagedFilterDataHistories.has("Normal only");
+        const hasHistoricalOnlyStaged = stagedFilterDataHistories.has("Historical only");
+        if (hasNormalOnlyStaged && !hasHistoricalOnlyStaged) {
+            const heroGames = games.filter(g => g.game_players.some(gp => gp.hero_id === c.id));
+            dataHistoryMatch = heroGames.some(g => !g.is_historical);
+        } else if (hasHistoricalOnlyStaged && !hasNormalOnlyStaged) {
+            const heroGames = games.filter(g => g.game_players.some(gp => gp.hero_id === c.id));
+            dataHistoryMatch = heroGames.some(g => g.is_historical);
+        }
+
+        // Players Match
+        let playersMatch = true;
+        if (stagedFilterPlayers.size > 0) {
+            const heroGames = games.filter(g => g.game_players.some(gp => gp.hero_id === c.id));
+            const playedBySelected = heroGames.some(g => 
+                g.game_players.some(gp => gp.hero_id === c.id && stagedFilterPlayers.has(gp.player_id))
+            );
+            playersMatch = playedBySelected;
+        }
+
+        // Ownership Match
+        const ownershipMatch =
+            (isHeroOwned(c) && showOwned) ||
+            (!isHeroOwned(c) && showNotOwned);
+
+        return (
+            matchesSearchTerm(c, searchTerm) &&
+            complexityMatch &&
+            groupFilterMatch &&
+            dataHistoryMatch &&
+            playersMatch &&
+            ownershipMatch
+        );
+    });
+
+    return matched.length;
+}
+
+function updateFilterDrawerHeroCountUI() {
+    const total = getFilterDrawerMatchingCount();
+    const countLabel = document.getElementById("filter-drawer-hero-count");
+    if (countLabel) {
+        countLabel.innerText = `Showing ${total} of ${characters.length} heroes`;
+    }
+}
+
+function updateFilterDrawerSectionTitlesUI() {
+    const titleDataHistory = document.getElementById("title-data-history");
+    const titlePlayers = document.getElementById("title-players");
+    const titleComplexity = document.getElementById("title-complexity");
+    const titleGroups = document.getElementById("title-groups");
+
+    if (titleDataHistory) {
+        const count = stagedFilterDataHistories.size;
+        titleDataHistory.innerText = count > 0 ? `By Data History (${count})` : "By Data History";
+    }
+    if (titlePlayers) {
+        const count = stagedFilterPlayers.size;
+        titlePlayers.innerText = count > 0 ? `By Player (${count})` : "By Player";
+    }
+    if (titleComplexity) {
+        const count = stagedFilterComplexities.size;
+        titleComplexity.innerText = count > 0 ? `By Complexity (${count})` : "By Complexity";
+    }
+    if (titleGroups) {
+        const count = stagedFilterGroups.size;
+        titleGroups.innerText = count > 0 ? `By Group (${count})` : "By Group";
+    }
+}
+
 function closeDrawer(event = null, force = false) {
     if (event && event.target !== event.currentTarget && !force) return;
     const drawer = document.getElementById("sort-filter-drawer");
@@ -3196,16 +3377,12 @@ function renderDrawerComplexityFilters() {
     for (let i = 1; i <= 6; i++) {
         const potentialMatchesCount = characters.filter((c) => {
             if (Number(c.complexity) !== i) return false;
-            const nameMatch = c.name.toLowerCase().includes(searchTerm);
-            const groupNameMatch = (c.group || "")
-                .toLowerCase()
-                .includes(searchTerm);
             const groupFilterMatch = stagedGroups.has(c.group_id);
             const ownershipMatch =
                 (isHeroOwned(c) && showOwned) ||
                 (!isHeroOwned(c) && showNotOwned);
             return (
-                (nameMatch || groupNameMatch) &&
+                matchesSearchTerm(c, searchTerm) &&
                 groupFilterMatch &&
                 ownershipMatch
             );
@@ -3225,15 +3402,11 @@ function renderDrawerComplexityFilters() {
     }
 
     const totalMatchingHeroes = characters.filter((c) => {
-        const nameMatch = c.name.toLowerCase().includes(searchTerm);
-        const groupNameMatch = (c.group || "")
-            .toLowerCase()
-            .includes(searchTerm);
         const groupFilterMatch = stagedGroups.has(c.group_id);
         const ownershipMatch =
             (isHeroOwned(c) && showOwned) || (!isHeroOwned(c) && showNotOwned);
         return (
-            (nameMatch || groupNameMatch) && groupFilterMatch && ownershipMatch
+            matchesSearchTerm(c, searchTerm) && groupFilterMatch && ownershipMatch
         );
     }).length;
 
@@ -3328,16 +3501,12 @@ function renderDrawerGroupFilters() {
 
             const potentialMatchesCount = characters.filter((c) => {
                 if (c.group_id !== g.id) return false;
-                const nameMatch = c.name.toLowerCase().includes(searchTerm);
-                const groupNameMatch = (c.group || "")
-                    .toLowerCase()
-                    .includes(searchTerm);
                 const complexityMatch = stagedLevels.has(Number(c.complexity));
                 const ownershipMatch =
                     (isHeroOwned(c) && showOwned) ||
                     (!isHeroOwned(c) && showNotOwned);
                 return (
-                    (nameMatch || groupNameMatch) &&
+                    matchesSearchTerm(c, searchTerm) &&
                     complexityMatch &&
                     ownershipMatch
                 );
@@ -3357,15 +3526,11 @@ function renderDrawerGroupFilters() {
         .join("");
 
     const totalMatchingHeroes = characters.filter((c) => {
-        const nameMatch = c.name.toLowerCase().includes(searchTerm);
-        const groupNameMatch = (c.group || "")
-            .toLowerCase()
-            .includes(searchTerm);
         const complexityMatch = stagedLevels.has(Number(c.complexity));
         const ownershipMatch =
             (isHeroOwned(c) && showOwned) || (!isHeroOwned(c) && showNotOwned);
         return (
-            (nameMatch || groupNameMatch) && complexityMatch && ownershipMatch
+            matchesSearchTerm(c, searchTerm) && complexityMatch && ownershipMatch
         );
     }).length;
 
@@ -3480,9 +3645,10 @@ function updateActiveFilterBadge() {
     if (!badge) return;
 
     let activeCount = 0;
-    if (currentSort !== "name" || !sortAsc) activeCount++;
-    if (activeLevels.size !== 6) activeCount++;
-    if (activeGroups.size !== groups.length) activeCount++;
+    activeCount += activeFilterDataHistories.size;
+    activeCount += activeFilterPlayers.size;
+    activeCount += activeFilterComplexities.size;
+    activeCount += activeFilterGroups.size;
 
     if (activeCount > 0) {
         badge.innerText = activeCount;
@@ -3559,25 +3725,145 @@ function setSort(key) {
     }
 
     updateActiveFilterBadge();
+    updateSortButtonText();
     renderList();
+}
+
+// ******************************************
+// SORT DROPDOWN MENUS LOGIC
+// ******************************************
+
+function getVisiblePlayerIndices() {
+    if (activeFilterPlayers && activeFilterPlayers.size > 0) {
+        return Array.from(activeFilterPlayers)
+            .map(pId => parseInt(pId.substring(1)) - 1)
+            .filter(idx => idx >= 0 && idx < NAMES.length);
+    }
+    return activePlayerIndices || [0, 1, 2, 3];
+}
+
+function updateSortButtonText() {
+    const btn = document.getElementById("btn-trigger-sort");
+    if (!btn) return;
+
+    let text = "Hero (A-Z)"; // Default
+
+    if (currentSort === "name") {
+        text = sortAsc ? "Hero (A-Z)" : "Hero (Z-A)";
+    } else if (currentSort === "complexity") {
+        text = sortAsc ? "Complexity (1-6)" : "Complexity (6-1)";
+    } else if (currentSort.startsWith("w")) {
+        const idx = parseInt(currentSort.substring(1));
+        const playerName = NAMES[idx] || `Player ${idx + 1}`;
+        text = sortAsc ? `${playerName} % (Low to High)` : `${playerName} % (High to Low)`;
+    } else if (currentSort.startsWith("d")) {
+        const idx = parseInt(currentSort.substring(1));
+        const playerName = NAMES[idx] || `Player ${idx + 1}`;
+        text = sortAsc ? `${playerName} Played (Oldest)` : `${playerName} Played (Newest)`;
+    } else if (currentSort === "group") {
+        text = sortAsc ? "Group (A-Z)" : "Group (Z-A)";
+    }
+
+    btn.innerHTML = `<span class="action-icon">⇅</span> <strong style="font-weight: 700;">SORT:</strong> <span style="font-weight: 400; text-transform: none; margin-left: 2px;">${text}</span>`;
+}
+
+function renderSortDropdownOptions() {
+    const menu = document.getElementById("sort-dropdown-menu");
+    if (!menu) return;
+
+    const visibleIdxs = getVisiblePlayerIndices();
+
+    let html = `
+        <div class="sort-dropdown-section-title">General</div>
+        <button type="button" class="sort-dropdown-item ${currentSort === 'name' && sortAsc ? 'active' : ''}" onclick="selectSortOption('name', true)">
+            Hero Name (A-Z)
+        </button>
+        <button type="button" class="sort-dropdown-item ${currentSort === 'name' && !sortAsc ? 'active' : ''}" onclick="selectSortOption('name', false)">
+            Hero Name (Z-A)
+        </button>
+        <button type="button" class="sort-dropdown-item ${currentSort === 'complexity' && sortAsc ? 'active' : ''}" onclick="selectSortOption('complexity', true)">
+            Complexity (1-6)
+        </button>
+        <button type="button" class="sort-dropdown-item ${currentSort === 'complexity' && !sortAsc ? 'active' : ''}" onclick="selectSortOption('complexity', false)">
+            Complexity (6-1)
+        </button>
+    `;
+
+    if (visibleIdxs.length > 0) {
+        html += `<div class="sort-dropdown-divider"></div>`;
+        visibleIdxs.forEach(idx => {
+            const playerName = NAMES[idx] || `Player ${idx + 1}`;
+            html += `
+                <div class="sort-dropdown-section-title" style="color: var(--p${idx + 1}, #fff);">${playerName}</div>
+                <button type="button" class="sort-dropdown-item ${currentSort === 'w' + idx && !sortAsc ? 'active' : ''}" onclick="selectSortOption('w${idx}', false)">
+                    Probability (High to Low)
+                </button>
+                <button type="button" class="sort-dropdown-item ${currentSort === 'w' + idx && sortAsc ? 'active' : ''}" onclick="selectSortOption('w${idx}', true)">
+                    Probability (Low to High)
+                </button>
+                <button type="button" class="sort-dropdown-item ${currentSort === 'd' + idx && !sortAsc ? 'active' : ''}" onclick="selectSortOption('d${idx}', false)">
+                    Last Played (Newest)
+                </button>
+                <button type="button" class="sort-dropdown-item ${currentSort === 'd' + idx && sortAsc ? 'active' : ''}" onclick="selectSortOption('d${idx}', true)">
+                    Last Played (Oldest)
+                </button>
+            `;
+        });
+    }
+
+    menu.innerHTML = html;
+}
+
+function toggleSortDropdown(event) {
+    if (event) event.stopPropagation();
+    const dropdown = document.getElementById("sort-dropdown-menu");
+    if (!dropdown) return;
+
+    const isShown = dropdown.classList.contains("show");
+    if (isShown) {
+        closeSortDropdown();
+    } else {
+        renderSortDropdownOptions();
+        dropdown.classList.add("show");
+        document.getElementById("btn-trigger-sort")?.classList.add("active");
+    }
+}
+
+function closeSortDropdown() {
+    const dropdown = document.getElementById("sort-dropdown-menu");
+    if (dropdown) {
+        dropdown.classList.remove("show");
+    }
+    document.getElementById("btn-trigger-sort")?.classList.remove("active");
+}
+
+function selectSortOption(key, asc) {
+    currentSort = key;
+    sortAsc = asc;
+    if (key.startsWith("w") || key.startsWith("d")) {
+        currentSortPlayerIndex = parseInt(key.substring(1));
+    }
+    updateActiveFilterBadge();
+    updateSortButtonText();
+    renderList();
+    closeSortDropdown();
 }
 
 // ******************************************
 // handleSearchInput()
 // input: none
 // ******************************************
-// Manages the visibility of the clear button based on search input content
-// and triggers the hero list re-render.
+// Manages the visibility of the clear button based on search input content.
+// Does NOT trigger search filtering (moved to manual triggerSearch).
 // ******************************************
 function handleSearchInput() {
     const searchInput = document.getElementById("hero-search");
     const clearBtn = document.getElementById("clear-search");
 
-    // Toggle the 'hidden' class: add it if input is empty, remove it if text exists
-    clearBtn.classList.toggle("hidden", searchInput.value.trim().length === 0);
-
-    // Refresh the displayed list based on the new search value
-    renderList();
+    if (searchInput && clearBtn) {
+        // Toggle the 'hidden' class: add it if input is empty, remove it if text exists
+        clearBtn.classList.toggle("hidden", searchInput.value.trim().length === 0);
+    }
 }
 
 // ******************************************
@@ -3589,11 +3875,182 @@ function handleSearchInput() {
 // ******************************************
 function clearSearch() {
     const searchInput = document.getElementById("hero-search");
-    searchInput.value = ""; // Reset the input value to empty
-    searchInput.focus(); // Return focus to the bar so the user can type again immediately
+    if (searchInput) {
+        searchInput.value = ""; // Reset the input value to empty
+        searchInput.focus(); // Return focus to the bar so the user can type again immediately
+    }
 
-    // Re-use handleSearchInput to hide the 'X' button and refresh the list
+    // Hide the 'X' button
     handleSearchInput();
+    
+    // Refresh the displayed list based on the cleared search value
+    triggerSearch();
+}
+
+// ******************************************
+// handleSearchKeyDown()
+// input: event
+// ******************************************
+// Triggers search when pressing the Enter key.
+// ******************************************
+function handleSearchKeyDown(event) {
+    if (event.key === "Enter") {
+        triggerSearch();
+    }
+}
+
+// ******************************************
+// triggerSearch()
+// input: none
+// ******************************************
+// Applies search filter, updates the breadcrumb chip, and renders list.
+// ******************************************
+function triggerSearch() {
+    renderList();
+    updateActiveFilterChips();
+}
+
+// ******************************************
+// updateActiveFilterChips()
+// input: none
+// ******************************************
+// Dynamically renders active filter breadcrumbs below the action bar.
+// ******************************************
+function updateActiveFilterChips() {
+    const container = document.getElementById("active-filters-container");
+    if (!container) return;
+
+    const searchInput = document.getElementById("hero-search");
+    const searchTerm = searchInput ? searchInput.value.trim() : "";
+
+    let html = "";
+    if (searchTerm) {
+        html += `
+            <div class="filter-chip" title="Active Search Filter">
+                <span class="filter-chip-remove" onclick="clearSearchFilter()" title="Remove search filter">✖</span>
+                <span class="filter-chip-label">Search: "${searchTerm}"</span>
+            </div>
+        `;
+    }
+
+    // Data History Chips (Sorted: Normal only, then Historical only)
+    const sortedDataHistories = Array.from(activeFilterDataHistories).sort((a, b) => {
+        const order = ["Normal only", "Historical only"];
+        return order.indexOf(a) - order.indexOf(b);
+    });
+    sortedDataHistories.forEach(dh => {
+        html += `
+            <div class="filter-chip" title="Active Data History Filter">
+                <span class="filter-chip-remove" onclick="removeFilterChip('data-history', '${dh}')" title="Remove filter">✖</span>
+                <span class="filter-chip-label">Data: ${dh}</span>
+            </div>
+        `;
+    });
+
+    // Player Chips (Sorted Alphabetically by Player Name)
+    const sortedPlayerIds = Array.from(activeFilterPlayers).sort((a, b) => {
+        const pA = players.find(p => p.id === a);
+        const pB = players.find(p => p.id === b);
+        const nameA = pA ? pA.name : "";
+        const nameB = pB ? pB.name : "";
+        return nameA.localeCompare(nameB);
+    });
+    sortedPlayerIds.forEach(pId => {
+        const pObj = players.find(p => p.id === pId);
+        const name = pObj ? pObj.name : pId;
+        html += `
+            <div class="filter-chip" title="Active Player Filter">
+                <span class="filter-chip-remove" onclick="removeFilterChip('player', '${pId}')" title="Remove filter">✖</span>
+                <span class="filter-chip-label">${name}</span>
+            </div>
+        `;
+    });
+
+    // Complexity Chips (Sorted Numerically 1-6)
+    const sortedComplexities = Array.from(activeFilterComplexities).sort((a, b) => a - b);
+    sortedComplexities.forEach(cVal => {
+        html += `
+            <div class="filter-chip" title="Active Complexity Filter">
+                <span class="filter-chip-remove" onclick="removeFilterChip('complexity', ${cVal})" title="Remove filter">✖</span>
+                <span class="filter-chip-label">Complexity: ${cVal}</span>
+            </div>
+        `;
+    });
+
+    // Group Chips (Sorted by order_index)
+    const sortedGroupIds = Array.from(activeFilterGroups).sort((a, b) => {
+        const gA = groups.find(g => g.id === a);
+        const gB = groups.find(g => g.id === b);
+        const orderA = gA ? (gA.order_index ?? 0) : 0;
+        const orderB = gB ? (gB.order_index ?? 0) : 0;
+        return orderA - orderB;
+    });
+    sortedGroupIds.forEach(gId => {
+        const gObj = groups.find(g => g.id === gId);
+        const name = gObj ? gObj.name : gId;
+        html += `
+            <div class="filter-chip" title="Active Group Filter">
+                <span class="filter-chip-remove" onclick="removeFilterChip('group', '${gId}')" title="Remove filter">✖</span>
+                <span class="filter-chip-label">${name}</span>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+function removeFilterChip(type, val) {
+    if (type === 'data-history') {
+        activeFilterDataHistories.delete(val);
+        dbUseHistorical = !activeFilterDataHistories.has("Normal only") || activeFilterDataHistories.has("Historical only");
+    } else if (type === 'player') {
+        activeFilterPlayers.delete(val);
+    } else if (type === 'complexity') {
+        activeFilterComplexities.delete(Number(val));
+    } else if (type === 'group') {
+        activeFilterGroups.delete(val);
+    }
+
+    renderList();
+    updateActiveFilterBadge();
+    updateActiveFilterChips();
+}
+
+// ******************************************
+// clearSearchFilter()
+// input: none
+// ******************************************
+// Clears the search input and resets active search filters.
+// ******************************************
+function clearSearchFilter() {
+    clearSearch();
+}
+
+// ******************************************
+// matchesSearchTerm()
+// input: character object, searchTerm string
+// output: boolean indicating match
+// ******************************************
+// Checks if a hero matches the search term by name, group (or abbreviation),
+// or if the search term matches a player's name (which shows all heroes).
+// ******************************************
+function matchesSearchTerm(c, searchTerm) {
+    if (!searchTerm) return true;
+    const term = searchTerm.trim().toLowerCase();
+
+    // 1. Match Hero Name
+    const nameMatch = c.name && c.name.toLowerCase().includes(term);
+
+    // 2. Match Group Name or Abbreviation
+    const groupAbbreviation = getGroupAbbreviation(c.group || "");
+    const groupMatch = (c.group || "").toLowerCase().includes(term) ||
+                       groupAbbreviation.toLowerCase().includes(term);
+
+    // 3. Match Player Name
+    // If the search term is a player's name, consider it a match for all heroes.
+    const isPlayerName = NAMES.some(playerName => playerName && playerName.toLowerCase().includes(term));
+
+    return nameMatch || groupMatch || isPlayerName;
 }
 
 // ******************************************
@@ -4161,7 +4618,19 @@ async function deleteGame(gameId) {
 }
 
 function updateHeroStatsFromHistory() {
-    const useHistorical = dbUseHistorical;
+    let showNormal = true;
+    let showHistorical = true;
+    
+    const hasNormalOnly = activeFilterDataHistories.has("Normal only");
+    const hasHistoricalOnly = activeFilterDataHistories.has("Historical only");
+    
+    if (hasNormalOnly && !hasHistoricalOnly) {
+        showNormal = true;
+        showHistorical = false;
+    } else if (hasHistoricalOnly && !hasNormalOnly) {
+        showNormal = false;
+        showHistorical = true;
+    }
 
     characters.forEach((char) => {
         char.playCount = [0, 0, 0, 0];
@@ -4172,7 +4641,9 @@ function updateHeroStatsFromHistory() {
     if (!games) return;
 
     games.forEach((game) => {
-        if (!useHistorical && game.is_historical) return;
+        const isGameHistorical = !!game.is_historical;
+        if (isGameHistorical && !showHistorical) return;
+        if (!isGameHistorical && !showNormal) return;
 
         game.game_players.forEach((gp) => {
             const pIdx = parseInt(gp.player_id?.substring(1) || "0", 10) - 1;
@@ -4220,6 +4691,16 @@ function renderList() {
     const showNotOwned =
         document.getElementById("db-show-not-owned")?.checked ?? false;
 
+    // Find which active players match the search term (if any)
+    const matchingPlayerIdxs = [];
+    if (searchTerm) {
+        NAMES.forEach((playerName, playerIdx) => {
+            if (playerName && playerName.toLowerCase().includes(searchTerm)) {
+                matchingPlayerIdxs.push(playerIdx);
+            }
+        });
+    }
+
     // 1. Efficiently calculate totals for the entire pool in a single pass O(N)
     // Now uses soft weights (with play-count penalty) for the pool total
     const totals = [0, 0, 0, 0];
@@ -4234,19 +4715,50 @@ function renderList() {
     const processedList = characters
         .map((char, index) => ({ ...char, originalIndex: index }))
         .filter((c) => {
-            const nameMatch = c.name.toLowerCase().includes(searchTerm);
-            const groupMatch = (c.group || "")
-                .toLowerCase()
-                .includes(searchTerm);
-            const complexityMatch = activeLevels.has(Number(c.complexity));
-            const groupFilterMatch = activeGroups.has(c.group_id);
+            // Complexity Level Filter
+            let complexityMatch = true;
+            if (activeFilterComplexities.size > 0) {
+                complexityMatch = activeFilterComplexities.has(Number(c.complexity));
+            }
+
+            // Group Filter
+            let groupFilterMatch = true;
+            if (activeFilterGroups.size > 0) {
+                groupFilterMatch = activeFilterGroups.has(c.group_id);
+            }
+
+            // Data History Filter
+            let dataHistoryMatch = true;
+            const hasNormalOnlyActive = activeFilterDataHistories.has("Normal only");
+            const hasHistoricalOnlyActive = activeFilterDataHistories.has("Historical only");
+            if (hasNormalOnlyActive && !hasHistoricalOnlyActive) {
+                const heroGames = games.filter(g => g.game_players.some(gp => gp.hero_id === c.id));
+                dataHistoryMatch = heroGames.some(g => !g.is_historical);
+            } else if (hasHistoricalOnlyActive && !hasNormalOnlyActive) {
+                const heroGames = games.filter(g => g.game_players.some(gp => gp.hero_id === c.id));
+                dataHistoryMatch = heroGames.some(g => g.is_historical);
+            }
+
+            // Players Filter
+            let playersMatch = true;
+            if (activeFilterPlayers.size > 0) {
+                const heroGames = games.filter(g => g.game_players.some(gp => gp.hero_id === c.id));
+                const playedBySelected = heroGames.some(g => 
+                    g.game_players.some(gp => gp.hero_id === c.id && activeFilterPlayers.has(gp.player_id))
+                );
+                playersMatch = playedBySelected;
+            }
+
             const ownershipMatch =
                 (isHeroOwned(c) && showOwned) ||
                 (!isHeroOwned(c) && showNotOwned);
+
             return (
-                (nameMatch || groupMatch) &&
+                matchesSearchTerm(c, searchTerm) &&
                 complexityMatch &&
                 groupFilterMatch &&
+                dataHistoryMatch &&
+                playersMatch &&
                 ownershipMatch
             );
         });
@@ -4279,6 +4791,14 @@ function renderList() {
                     ? nameA.localeCompare(nameB)
                     : nameB.localeCompare(nameA);
             }
+        } else if (currentSort === "complexity") {
+            valA = Number(a.complexity) || 0;
+            valB = Number(b.complexity) || 0;
+            if (valA === valB) {
+                const nameA = (a.name || "").toLowerCase();
+                const nameB = (b.name || "").toLowerCase();
+                return nameA.localeCompare(nameB);
+            }
         } else {
             valA = (a[currentSort] || "").toLowerCase();
             valB = (b[currentSort] || "").toLowerCase();
@@ -4292,8 +4812,19 @@ function renderList() {
     // Generate the HTML efficiently
     container.innerHTML = processedList
         .map((c) => {
-            // Compute player list statistics sorted by probability
-            const playerStatsList = activePlayerIndices.map((p) => {
+            // Compute player list statistics
+            // If player filter is active in the filter drawer, only show those selected players.
+            // Otherwise, fall back to activePlayerIndices (controlled by the Column settings)
+            let playersToRender = activePlayerIndices;
+            if (activeFilterPlayers.size > 0) {
+                playersToRender = Array.from(activeFilterPlayers)
+                    .map(pId => parseInt(pId.substring(1)) - 1)
+                    .filter(idx => idx >= 0 && idx < 4);
+            } else if (matchingPlayerIdxs.length > 0) {
+                playersToRender = activePlayerIndices.filter(p => matchingPlayerIdxs.includes(p));
+            }
+
+            const playerStatsList = playersToRender.map((p) => {
                 const weight = (c.weights && c.weights[p]) || 0;
                 const softWeight = getSoftWeight(c, p);
                 const owned = isHeroOwned(c);
