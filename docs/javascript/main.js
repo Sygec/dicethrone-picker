@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Main entry point of the application. Bootstraps state, setups global elements, registers database subscriptions, and hooks lifecycle listeners.
+ * @module main
+ */
+
 import './config.js';
 import { db } from './db.js';
 import './state.js';
@@ -36,7 +41,13 @@ if (window.updatePasswordForm) {
     });
 }
 
-// Bootstrapping App Data
+/**
+ * Initializes and bootstraps player, hero, and game logs by calling Supabase endpoints.
+ * Populates global lists and binds configuration variables.
+ * @function init
+ * @async
+ * @returns {Promise<void>}
+ */
 export async function init() {
     window.draftModeEnabled = localStorage.getItem("draftModeEnabled") === "true";
     window.draftCount = parseInt(localStorage.getItem("draftCount") || "3", 10);
@@ -197,7 +208,13 @@ export async function init() {
 }
 window.init = init;
 
-// Bootstrapping App lifecycle
+/**
+ * Validates active session metadata, loads dynamic data structures, reads the changelog, 
+ * subscribes to postgres database mutations, and removes the web preloader.
+ * @function initializeApp
+ * @async
+ * @returns {Promise<void>}
+ */
 export async function initializeApp() {
     try {
         const {
@@ -261,6 +278,10 @@ export async function initializeApp() {
 }
 window.initializeApp = initializeApp;
 
+/**
+ * Triggers the fade-out CSS animation on the spinner preloader, then removes it from the DOM.
+ * @function hidePreloader
+ */
 function hidePreloader() {
     const preloader = document.getElementById("preloader");
     if (!preloader) return;
@@ -317,3 +338,4 @@ document.addEventListener("keydown", (event) => {
         if (typeof window.closeHeroSelectModal === "function") window.closeHeroSelectModal();
     }
 });
+

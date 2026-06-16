@@ -1,5 +1,15 @@
+/**
+ * @fileoverview Authentication UI and business logic module wrapping Supabase Auth APIs.
+ * @module auth
+ */
+
 import { db } from './db.js';
 
+/**
+ * Synchronizes the UI elements, buttons, and navigation options based on the user's login status.
+ * Shows or hides administrator components and triggers list redraws.
+ * @function updateAuthUI
+ */
 export function updateAuthUI() {
     const adminNav = document.querySelector(".bottom-nav .admin-only");
 
@@ -32,6 +42,10 @@ export function updateAuthUI() {
 }
 window.updateAuthUI = updateAuthUI;
 
+/**
+ * Renders the toggle buttons/checkboxes for player slots at the top of the interface.
+ * @function renderPlayerToggles
+ */
 export function renderPlayerToggles() {
     const container = document.getElementById("player-toggle-zone-top");
     if (!container || window.players.length === 0) return;
@@ -49,6 +63,10 @@ export function renderPlayerToggles() {
 }
 window.renderPlayerToggles = renderPlayerToggles;
 
+/**
+ * Displays the login modal popup, sets page scroll behavior, and registers keybind handlers.
+ * @function openLoginModal
+ */
 export function openLoginModal() {
     loginModal.style.display = "flex";
     document.getElementById("login-error").style.display = "none";
@@ -63,6 +81,10 @@ export function openLoginModal() {
 }
 window.openLoginModal = openLoginModal;
 
+/**
+ * Closes the login modal popup, restores page scrolling, and removes keybind event listeners.
+ * @function closeLoginModal
+ */
 export function closeLoginModal() {
     loginModal.style.display = "none";
     document.body.style.overflow = "auto";
@@ -74,6 +96,13 @@ export function closeLoginModal() {
 }
 window.closeLoginModal = closeLoginModal;
 
+/**
+ * Authenticates the user with Supabase using email and password credentials from login inputs.
+ * Displays error messages if login fails.
+ * @function handleLogin
+ * @async
+ * @returns {Promise<void>}
+ */
 export async function handleLogin() {
     const email = document.getElementById("login-email").value;
     const password = document.getElementById("login-password").value;
@@ -88,6 +117,13 @@ export async function handleLogin() {
 }
 window.handleLogin = handleLogin;
 
+/**
+ * Requests a password reset email via Supabase Auth for the email filled in the login input.
+ * Displays success feedback or error message.
+ * @function handlePasswordReset
+ * @async
+ * @returns {Promise<void>}
+ */
 export async function handlePasswordReset() {
     const email = document.getElementById("login-email").value;
     const errorDiv = document.getElementById("login-error");
@@ -116,6 +152,10 @@ export async function handlePasswordReset() {
 }
 window.handlePasswordReset = handlePasswordReset;
 
+/**
+ * Displays the password update modal dialog overlay.
+ * @function openUpdatePasswordModal
+ */
 export function openUpdatePasswordModal() {
     updatePasswordModal.style.display = "block";
     document.getElementById("update-password-error").style.display = "none";
@@ -123,12 +163,22 @@ export function openUpdatePasswordModal() {
 }
 window.openUpdatePasswordModal = openUpdatePasswordModal;
 
+/**
+ * Closes the password update modal dialog overlay.
+ * @function closeUpdatePasswordModal
+ */
 export function closeUpdatePasswordModal() {
     updatePasswordModal.style.display = "none";
     document.body.style.overflow = "auto";
 }
 window.closeUpdatePasswordModal = closeUpdatePasswordModal;
 
+/**
+ * Updates the logged-in user's password using the value inside the password reset form.
+ * @function handleUpdatePassword
+ * @async
+ * @returns {Promise<void>}
+ */
 export async function handleUpdatePassword() {
     const newPassword = document.getElementById("new-password").value;
     const errorDiv = document.getElementById("update-password-error");
@@ -154,9 +204,16 @@ export async function handleUpdatePassword() {
 }
 window.handleUpdatePassword = handleUpdatePassword;
 
+/**
+ * Prompts the user and logs out of the active Supabase session.
+ * @function handleLogout
+ * @async
+ * @returns {Promise<void>}
+ */
 export async function handleLogout() {
     if (confirm("Log out now?")) {
         await db.auth.signOut();
     }
 }
 window.handleLogout = handleLogout;
+

@@ -1,5 +1,9 @@
 import { db } from './db.js';
 
+/**
+ * Renders environmental build metadata in the admin interface (e.g. host name, production/development status, target DB).
+ * @function renderAdminBuildInfo
+ */
 export function renderAdminBuildInfo() {
     const infoDiv = document.getElementById("admin-build-info");
     if (!infoDiv) return;
@@ -22,6 +26,10 @@ export function renderAdminBuildInfo() {
 }
 window.renderAdminBuildInfo = renderAdminBuildInfo;
 
+/**
+ * Opens the application changelog modal, populating it with cached version history.
+ * @function openChangelog
+ */
 export function openChangelog() {
     if (!window.cachedChangelog) return;
 
@@ -45,6 +53,10 @@ export function openChangelog() {
 }
 window.openChangelog = openChangelog;
 
+/**
+ * Closes the application changelog modal.
+ * @function closeChangelog
+ */
 export function closeChangelog() {
     const modal = document.getElementById("changelog-modal");
     if (modal) modal.style.display = "none";
@@ -52,6 +64,11 @@ export function closeChangelog() {
 }
 window.closeChangelog = closeChangelog;
 
+/**
+ * Displays the "What's New" modal with release updates for a specific version entry.
+ * @function showWhatsNew
+ * @param {Object} entry - Version changelog entry containing version and changes list.
+ */
 export function showWhatsNew(entry) {
     const whatsNewContainer = document.getElementById("whats-new-container");
     whatsNewContainer.innerHTML = `
@@ -69,6 +86,10 @@ export function showWhatsNew(entry) {
 }
 window.showWhatsNew = showWhatsNew;
 
+/**
+ * Closes the "What's New" version updates modal.
+ * @function closeWhatsNew
+ */
 export function closeWhatsNew() {
     const whatsNewModal = document.getElementById("whats-new-modal");
     if (whatsNewModal) whatsNewModal.style.display = "none";
@@ -76,6 +97,11 @@ export function closeWhatsNew() {
 }
 window.closeWhatsNew = closeWhatsNew;
 
+/**
+ * Handles navigation switching by showing the target section and hiding others.
+ * @function showSection
+ * @param {string} sectionName - The section identifier (e.g. 'roll', 'database', 'history', 'collection', 'admin').
+ */
 export function showSection(sectionName) {
     if (sectionName === "admin" && !window.isAdmin()) return;
 
@@ -113,6 +139,12 @@ export function showSection(sectionName) {
 }
 window.showSection = showSection;
 
+/**
+ * Toggles the visibility state of an admin accordion panel.
+ * @function toggleAdminPanel
+ * @param {Event} event - The triggering click event.
+ * @param {string} panelId - ID of the target panel element.
+ */
 export function toggleAdminPanel(event, panelId) {
     const panel = document.getElementById(panelId);
     const header =
@@ -126,6 +158,11 @@ export function toggleAdminPanel(event, panelId) {
 }
 window.toggleAdminPanel = toggleAdminPanel;
 
+/**
+ * Collapses or expands a specific hero detail panel in the admin list.
+ * @function toggleHeroPanel
+ * @param {HTMLElement} header - The header element of the panel.
+ */
 export function toggleHeroPanel(header) {
     const item = header.closest(".hero-item");
     const button = header.querySelector(".panel-toggle");
@@ -135,6 +172,12 @@ export function toggleHeroPanel(header) {
 }
 window.toggleHeroPanel = toggleHeroPanel;
 
+/**
+ * Expands or collapses a season/group category list in the collection view.
+ * @function toggleCollectionGroup
+ * @param {string} groupId - The ID of the group/season.
+ * @param {Event} event - The triggering mouse/pointer event.
+ */
 export function toggleCollectionGroup(groupId, event) {
     if (
         event.target.tagName === "INPUT" ||
@@ -152,6 +195,11 @@ export function toggleCollectionGroup(groupId, event) {
 }
 window.toggleCollectionGroup = toggleCollectionGroup;
 
+/**
+ * Applies a filter to the collection database view based on ownership.
+ * @function setOwnershipFilter
+ * @param {string} filterState - The filter state identifier ('owned', 'unowned', 'all').
+ */
 export function setOwnershipFilter(filterState) {
     const showOwnedCheckbox = document.getElementById("db-show-owned");
     const showNotOwnedCheckbox = document.getElementById("db-show-not-owned");
@@ -169,7 +217,6 @@ export function setOwnershipFilter(filterState) {
         }
     }
 
-    // Update segmented pill active class
     const pills = {
         owned: document.getElementById("pill-show-owned"),
         unowned: document.getElementById("pill-show-not-owned"),
@@ -192,6 +239,10 @@ export function setOwnershipFilter(filterState) {
 }
 window.setOwnershipFilter = setOwnershipFilter;
 
+/**
+ * Renders the user collection view, grouping characters by season/group and displaying ownership checkbox states.
+ * @function renderCollectionView
+ */
 export function renderCollectionView() {
     const container = document.getElementById("collectionContainer");
     const countLabel = document.getElementById("collection-count-stats");
@@ -263,6 +314,13 @@ export function renderCollectionView() {
 }
 window.renderCollectionView = renderCollectionView;
 
+/**
+ * Toggles ownership status of a single hero for the logged-in user, updating local memory and database.
+ * @async
+ * @function toggleHeroOwned
+ * @param {string} heroId - Hero UUID.
+ * @param {boolean} isOwned - Ownership boolean.
+ */
 export async function toggleHeroOwned(heroId, isOwned) {
     if (!window.currentUser) {
         alert("Please log in to manage your collection.");
@@ -302,6 +360,13 @@ export async function toggleHeroOwned(heroId, isOwned) {
 }
 window.toggleHeroOwned = toggleHeroOwned;
 
+/**
+ * Toggles ownership of all heroes in a group/season.
+ * @async
+ * @function toggleGroupOwned
+ * @param {string} groupId - Group/Season UUID.
+ * @param {boolean} isOwned - Target ownership state.
+ */
 export async function toggleGroupOwned(groupId, isOwned) {
     if (!window.currentUser) {
         alert("Please log in to manage your collection.");
@@ -345,6 +410,11 @@ export async function toggleGroupOwned(groupId, isOwned) {
 }
 window.toggleGroupOwned = toggleGroupOwned;
 
+/**
+ * Saves a new character entry from the form input values.
+ * @async
+ * @function saveCharacter
+ */
 export async function saveCharacter() {
     const name = document.getElementById("charName").value.trim();
     const groupId = document.getElementById("charGroup").value;
@@ -375,6 +445,11 @@ export async function saveCharacter() {
 }
 window.saveCharacter = saveCharacter;
 
+/**
+ * Opens edit panel for a specific character from the character index.
+ * @function editChar
+ * @param {number} idx - Index in window.characters.
+ */
 export function editChar(idx) {
     window.editIndex = idx;
     renderHeroesList();
@@ -391,6 +466,12 @@ export function editChar(idx) {
 }
 window.editChar = editChar;
 
+/**
+ * Utility to determine if a DOM element is fully visible in the browser viewport.
+ * @function isElementFullyVisible
+ * @param {HTMLElement} el - Element to inspect.
+ * @returns {boolean} True if the element is fully inside viewport.
+ */
 export function isElementFullyVisible(el) {
     const rect = el.getBoundingClientRect();
     return (
@@ -402,6 +483,10 @@ export function isElementFullyVisible(el) {
 }
 window.isElementFullyVisible = isElementFullyVisible;
 
+/**
+ * Resets the active editing hero form state back to Add mode.
+ * @function resetForm
+ */
 export function resetForm() {
     window.editIndex = -1;
 
@@ -421,6 +506,10 @@ export function resetForm() {
 }
 window.resetForm = resetForm;
 
+/**
+ * Collapses or expands the hero creator form.
+ * @function toggleHeroForm
+ */
 export function toggleHeroForm() {
     const form = document.getElementById("heroForm");
     const button = document.getElementById("addHeroBtn");
@@ -435,6 +524,10 @@ export function toggleHeroForm() {
 }
 window.toggleHeroForm = toggleHeroForm;
 
+/**
+ * Populates the hero form group dropdown with loaded seasons/groups.
+ * @function populateGroupDropdown
+ */
 export function populateGroupDropdown() {
     const select = document.getElementById("charGroup");
     if (!select) return;
@@ -445,6 +538,10 @@ export function populateGroupDropdown() {
 }
 window.populateGroupDropdown = populateGroupDropdown;
 
+/**
+ * Renders the list of seasons/groups in the admin management dashboard.
+ * @function renderGroupsList
+ */
 export function renderGroupsList() {
     const container = document.getElementById("groupsListContainer");
     if (!container) return;
@@ -489,6 +586,11 @@ export function renderGroupsList() {
 }
 window.renderGroupsList = renderGroupsList;
 
+
+/**
+ * Renders the admin heroes list, allowing inline configuration updates and deletes.
+ * @function renderHeroesList
+ */
 export function renderHeroesList() {
     const container = document.getElementById("heroesListContainer");
     if (!container) return;
@@ -559,12 +661,23 @@ export function renderHeroesList() {
 }
 window.renderHeroesList = renderHeroesList;
 
+/**
+ * Cancels the active hero inline editing, resetting the edit index.
+ * @function cancelHeroEdit
+ */
 export function cancelHeroEdit() {
     window.editIndex = -1;
     renderHeroesList();
 }
 window.cancelHeroEdit = cancelHeroEdit;
 
+/**
+ * Saves the modified inline hero details back to the database.
+ * @async
+ * @function saveHeroInline
+ * @param {string} heroId - Hero UUID.
+ * @param {number} idx - Index of hero in the characters list.
+ */
 export async function saveHeroInline(heroId, idx) {
     const name = document.getElementById(`heroName-${idx}`).value.trim();
     const groupId = document.getElementById(`heroGroup-${idx}`).value;
@@ -598,6 +711,12 @@ export async function saveHeroInline(heroId, idx) {
 }
 window.saveHeroInline = saveHeroInline;
 
+/**
+ * Deletes a hero record from the database.
+ * @async
+ * @function deleteHero
+ * @param {string} heroId - Hero UUID.
+ */
 export async function deleteHero(heroId) {
     if (!confirm("Delete this hero? This action cannot be undone.")) return;
 
@@ -608,6 +727,11 @@ export async function deleteHero(heroId) {
 }
 window.deleteHero = deleteHero;
 
+/**
+ * Saves a new season/group from the group creation form input fields.
+ * @async
+ * @function saveGroup
+ */
 export async function saveGroup() {
     const name = document.getElementById("groupName").value.trim();
     const order_index = document.getElementById("groupOrder").value.trim();
@@ -635,6 +759,11 @@ export async function saveGroup() {
 }
 window.saveGroup = saveGroup;
 
+/**
+ * Opens the inline edit panel for a specific season/group.
+ * @function editGroup
+ * @param {string} groupId - Season/Group ID.
+ */
 export function editGroup(groupId) {
     const group = window.groups.find((g) => g.id === groupId);
     if (!group) return;
@@ -660,6 +789,11 @@ export function editGroup(groupId) {
 }
 window.editGroup = editGroup;
 
+/**
+ * Cancels the inline editing view for a season/group.
+ * @function cancelGroupEdit
+ * @param {string} groupId - Season/Group ID.
+ */
 export function cancelGroupEdit(groupId) {
     const panel = document.getElementById(`groupEditPanel-${groupId}`);
     const activeRow = document.getElementById(`groupRow-${groupId}`);
@@ -671,6 +805,12 @@ export function cancelGroupEdit(groupId) {
 }
 window.cancelGroupEdit = cancelGroupEdit;
 
+/**
+ * Saves inline edits of a season/group to the database.
+ * @async
+ * @function saveGroupInline
+ * @param {string} groupId - Season/Group ID.
+ */
 export async function saveGroupInline(groupId) {
     const name = document.getElementById(`groupName-${groupId}`).value.trim();
     const order_index = document
@@ -698,6 +838,10 @@ export async function saveGroupInline(groupId) {
 }
 window.saveGroupInline = saveGroupInline;
 
+/**
+ * Resets the season/group creation form values and visibility state.
+ * @function resetGroupForm
+ */
 export function resetGroupForm() {
     document.getElementById("groupName").value = "";
     document.getElementById("groupOrder").value = "";
@@ -712,6 +856,10 @@ export function resetGroupForm() {
 }
 window.resetGroupForm = resetGroupForm;
 
+/**
+ * Renders the players administration list, supporting inline name edits and color picks.
+ * @function renderPlayersList
+ */
 export function renderPlayersList() {
     const container = document.getElementById("playersListContainer");
     if (!container) return;
@@ -757,6 +905,11 @@ export function renderPlayersList() {
 }
 window.renderPlayersList = renderPlayersList;
 
+/**
+ * Opens the inline edit panel for editing a player's name.
+ * @function editPlayer
+ * @param {string} playerId - The ID of the player to edit.
+ */
 export function editPlayer(playerId) {
     const player = window.players.find((p) => p.id === playerId);
     if (!player) return;
@@ -779,6 +932,11 @@ export function editPlayer(playerId) {
 }
 window.editPlayer = editPlayer;
 
+/**
+ * Cancels a player's inline name editing panel.
+ * @function cancelPlayerEdit
+ * @param {string} playerId - The ID of the player.
+ */
 export function cancelPlayerEdit(playerId) {
     const panel = document.getElementById(`playerEditPanel-${playerId}`);
     const activeRow = document.getElementById(`playerRow-${playerId}`);
@@ -790,6 +948,12 @@ export function cancelPlayerEdit(playerId) {
 }
 window.cancelPlayerEdit = cancelPlayerEdit;
 
+/**
+ * Saves the modified player name inline to the database.
+ * @async
+ * @function savePlayerInline
+ * @param {string} playerId - Player UUID/ID.
+ */
 export async function savePlayerInline(playerId) {
     const name = document.getElementById(`playerName-${playerId}`).value.trim();
 
@@ -815,6 +979,10 @@ export async function savePlayerInline(playerId) {
 }
 window.savePlayerInline = savePlayerInline;
 
+/**
+ * Renders the authorized database users list.
+ * @function renderUsersList
+ */
 export function renderUsersList() {
     const container = document.getElementById("usersListContainer");
     if (!container) return;
@@ -847,6 +1015,11 @@ export function renderUsersList() {
 }
 window.renderUsersList = renderUsersList;
 
+/**
+ * Renders the collection spreadsheet overview of all users and their owned heroes.
+ * @async
+ * @function renderCollectionsList
+ */
 export async function renderCollectionsList() {
     const container = document.getElementById("collectionsListContainer");
     if (!container) return;
@@ -979,6 +1152,14 @@ export async function renderCollectionsList() {
 }
 window.renderCollectionsList = renderCollectionsList;
 
+/**
+ * Toggles user collection ownership for a hero, updating local state if it is the current user.
+ * @async
+ * @function toggleUserHeroOwned
+ * @param {string} userId - User UUID.
+ * @param {string} heroId - Hero UUID.
+ * @param {boolean} isOwned - Ownership boolean.
+ */
 export async function toggleUserHeroOwned(userId, heroId, isOwned) {
     if (userId === window.currentUser?.id) {
         const hero = window.characters.find((h) => h.id === heroId);
@@ -1008,6 +1189,10 @@ export async function toggleUserHeroOwned(userId, heroId, isOwned) {
 }
 window.toggleUserHeroOwned = toggleUserHeroOwned;
 
+/**
+ * Toggles the visibility state of the group creator form.
+ * @function toggleGroupForm
+ */
 export function toggleGroupForm() {
     const form = document.getElementById("groupForm");
     const button = document.getElementById("addGroupBtn");
@@ -1022,6 +1207,12 @@ export function toggleGroupForm() {
 }
 window.toggleGroupForm = toggleGroupForm;
 
+/**
+ * Deletes a season/group from the database.
+ * @async
+ * @function deleteGroup
+ * @param {string} groupId - Season/Group ID.
+ */
 export async function deleteGroup(groupId) {
     if (!confirm("Delete this group?")) return;
 
@@ -1034,6 +1225,11 @@ export async function deleteGroup(groupId) {
 }
 window.deleteGroup = deleteGroup;
 
+
+/**
+ * Renders the match session/games history cards with filters, winners/losers, status badges, and management options.
+ * @function renderGamesList
+ */
 export function renderGamesList() {
     const container = document.getElementById("gamesContainer");
     const countLabel = document.getElementById("game-count-stats");
@@ -1337,6 +1533,11 @@ export function renderGamesList() {
 }
 window.renderGamesList = renderGamesList;
 
+/**
+ * Expands or collapses a match detail card in the games list.
+ * @function toggleGameExpansion
+ * @param {string} gameId - Match UUID/ID.
+ */
 export function toggleGameExpansion(gameId) {
     if (window.expandedGameIds.has(gameId)) {
         window.expandedGameIds.delete(gameId);
@@ -1347,6 +1548,12 @@ export function toggleGameExpansion(gameId) {
 }
 window.toggleGameExpansion = toggleGameExpansion;
 
+/**
+ * Opens the modal for selecting/updating the winner of a game session.
+ * @async
+ * @function selectWinner
+ * @param {string} gameId - Match UUID/ID.
+ */
 export async function selectWinner(gameId) {
     const game = window.games.find((g) => g.id == gameId);
     if (!game) return;
@@ -1411,6 +1618,11 @@ export async function selectWinner(gameId) {
 }
 window.selectWinner = selectWinner;
 
+/**
+ * Updates selected styling when a winner choice radio card is selected in the modal.
+ * @function handleWinnerSelect
+ * @param {string} value - Selected radio value ('draw' or player_id).
+ */
 export function handleWinnerSelect(value) {
     const cards = document.querySelectorAll(".winner-card, .winner-draw-card");
     cards.forEach((card) => {
@@ -1427,12 +1639,22 @@ export function handleWinnerSelect(value) {
 }
 window.handleWinnerSelect = handleWinnerSelect;
 
+/**
+ * Closes the winner selection modal.
+ * @function closeWinnerModal
+ */
 export function closeWinnerModal() {
     document.getElementById("winner-modal").style.display = "none";
     document.body.style.overflow = "auto";
 }
 window.closeWinnerModal = closeWinnerModal;
 
+/**
+ * Submits the selected winner (or draw) to the database and refreshes application data.
+ * @async
+ * @function submitWinner
+ * @param {string} gameId - Match UUID/ID.
+ */
 export async function submitWinner(gameId) {
     const selectedRadio = document.querySelector(
         'input[name="winner-choice"]:checked',
@@ -1478,6 +1700,12 @@ export async function submitWinner(gameId) {
 }
 window.submitWinner = submitWinner;
 
+/**
+ * Deletes a game record completely from the database.
+ * @async
+ * @function deleteGame
+ * @param {string} gameId - Match UUID/ID.
+ */
 export async function deleteGame(gameId) {
     if (
         !confirm(
@@ -1497,6 +1725,10 @@ export async function deleteGame(gameId) {
 }
 window.deleteGame = deleteGame;
 
+/**
+ * Recalculates play count, win count, and last played date for all heroes based on filtered history logs.
+ * @function updateHeroStatsFromHistory
+ */
 export function updateHeroStatsFromHistory() {
     let showNormal = true;
     let showHistorical = true;
@@ -1550,3 +1782,4 @@ export function updateHeroStatsFromHistory() {
     });
 }
 window.updateHeroStatsFromHistory = updateHeroStatsFromHistory;
+

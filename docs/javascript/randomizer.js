@@ -1,5 +1,15 @@
+/**
+ * @fileoverview Logic for hero picker rolls, randomizer animations, manual hero overrides, drafts, bans, and result logging.
+ * @module randomizer
+ */
+
 import { db } from './db.js';
 
+/**
+ * Executes a hero roll for all active players, selecting unique characters.
+ * Triggers draft wheels if draft mode is enabled.
+ * @function pickCharacters
+ */
 export function pickCharacters() {
     const active = window.NAMES.map((_, i) => i).filter(
         (i) => document.getElementById(`use${i}`).checked,
@@ -161,11 +171,20 @@ export function pickCharacters() {
 }
 window.pickCharacters = pickCharacters;
 
+/**
+ * Refreshes valid selections after a dropdown sorting update.
+ * @function updateDropdownSort
+ */
 export function updateDropdownSort() {
     validateSelection();
 }
 window.updateDropdownSort = updateDropdownSort;
 
+/**
+ * Appends a player row placeholder with animatable text inside the results container.
+ * @function renderPlayerRowSkeleton
+ * @param {number} pIdx - The index of the player slot.
+ */
 export function renderPlayerRowSkeleton(pIdx) {
     const resultsDiv = document.getElementById("results");
 
@@ -209,6 +228,11 @@ export function renderPlayerRowSkeleton(pIdx) {
 }
 window.renderPlayerRowSkeleton = renderPlayerRowSkeleton;
 
+/**
+ * Opens the manual hero selection modal for a specific player slot.
+ * @function openHeroSelectModal
+ * @param {number} pIdx - The target player index.
+ */
 export function openHeroSelectModal(pIdx) {
     window.activeSelectPlayerIdx = pIdx;
 
@@ -235,6 +259,10 @@ export function openHeroSelectModal(pIdx) {
 }
 window.openHeroSelectModal = openHeroSelectModal;
 
+/**
+ * Closes the manual hero selection modal.
+ * @function closeHeroSelectModal
+ */
 export function closeHeroSelectModal() {
     const modal = document.getElementById("hero-select-modal");
     if (modal) {
@@ -245,6 +273,11 @@ export function closeHeroSelectModal() {
 }
 window.closeHeroSelectModal = closeHeroSelectModal;
 
+/**
+ * Sets the active sort criteria inside the manual selection modal.
+ * @function setModalSort
+ * @param {string} mode - Sorting key ("name" or "weight").
+ */
 export function setModalSort(mode) {
     window.modalSortMode = mode;
 
@@ -261,6 +294,10 @@ export function setModalSort(mode) {
 }
 window.setModalSort = setModalSort;
 
+/**
+ * Re-evaluates search queries typed into the hero override search bar.
+ * @function filterHeroSelectOptions
+ */
 export function filterHeroSelectOptions() {
     const searchInput = document.getElementById("hero-select-search");
     const searchTerm = searchInput ? searchInput.value : "";
@@ -268,6 +305,11 @@ export function filterHeroSelectOptions() {
 }
 window.filterHeroSelectOptions = filterHeroSelectOptions;
 
+/**
+ * Generates options inside the manual hero selection modal container.
+ * @function renderHeroSelectOptions
+ * @param {string} [searchTerm=""] - Search term filters.
+ */
 export function renderHeroSelectOptions(searchTerm = "") {
     const container = document.getElementById("hero-select-options-container");
     if (!container) return;
@@ -329,6 +371,11 @@ export function renderHeroSelectOptions(searchTerm = "") {
 }
 window.renderHeroSelectOptions = renderHeroSelectOptions;
 
+/**
+ * Manually overrides a rolled selection for a player slot, updates UI attributes, and closes the modal.
+ * @function selectHeroForPlayer
+ * @param {string} heroName - Name of the selected hero.
+ */
 export function selectHeroForPlayer(heroName) {
     const pIdx = window.activeSelectPlayerIdx;
     if (pIdx === null) return;
@@ -389,6 +436,12 @@ export function selectHeroForPlayer(heroName) {
 }
 window.selectHeroForPlayer = selectHeroForPlayer;
 
+/**
+ * Starts scramble animations inside a player's results card.
+ * @function startPanelScramble
+ * @param {number} pIdx - Player index.
+ * @param {Object[]} ownedHeroes - Array of owned hero objects.
+ */
 export function startPanelScramble(pIdx, ownedHeroes) {
     if (ownedHeroes.length === 0) return;
 
@@ -411,6 +464,12 @@ export function startPanelScramble(pIdx, ownedHeroes) {
 }
 window.startPanelScramble = startPanelScramble;
 
+/**
+ * Stops scramble animations, locking visual states to the selected hero attributes.
+ * @function stopPanelScramble
+ * @param {number} pIdx - Player index.
+ * @param {Object} finalHero - Rolled hero object.
+ */
 export function stopPanelScramble(pIdx, finalHero) {
     if (window.scrambleIntervals[pIdx]) {
         clearInterval(window.scrambleIntervals[pIdx]);
@@ -451,9 +510,9 @@ export function stopPanelScramble(pIdx, finalHero) {
                 const plays = finalHero.playCount[pIdx] || 0;
                 const last = finalHero.lastPlayed[pIdx] || "Never";
                 statsRow.innerHTML = `
-                    <span>Plays: <b>${plays}</b></span>
+                    <span>Plays: <b>${plays}</b></b></span>
                     <span class="stats-divider">|</span>
-                    <span>Last: <b>${last}</b></span>
+                    <span>Last: <b>${last}</b></b></span>
                     <span class="stats-divider">|</span>
                     <span>${probText}</span>
                 `;
@@ -476,6 +535,11 @@ export function stopPanelScramble(pIdx, finalHero) {
 }
 window.stopPanelScramble = stopPanelScramble;
 
+/**
+ * Validates selected items across player slots, checking for duplicates or unowned entries.
+ * Adjusts lock buttons.
+ * @function validateSelection
+ */
 export function validateSelection() {
     const dropdowns = document.querySelectorAll(".char-select");
     const names = Array.from(dropdowns).map((d) => d.value);
@@ -524,6 +588,13 @@ export function validateSelection() {
 }
 window.validateSelection = validateSelection;
 
+/**
+ * Submits rolled selection results, logging a new entry inside the database, 
+ * updating play count weights, and clearing results.
+ * @function applyResults
+ * @async
+ * @returns {Promise<void>}
+ */
 export async function applyResults() {
     const confirmBtn = document.getElementById("confirmBtn");
     const originalText = confirmBtn ? confirmBtn.innerText : "Lock In";
@@ -652,6 +723,10 @@ export async function applyResults() {
 }
 window.applyResults = applyResults;
 
+/**
+ * Resets visual states, halts scramble animations, and cancels the current active roll.
+ * @function cancelRoll
+ */
 export function cancelRoll() {
     document.getElementById("results").innerHTML =
         '<p style="text-align: center; opacity: 0.6;">Select players and roll.</p>';
@@ -681,6 +756,12 @@ export function cancelRoll() {
 }
 window.cancelRoll = cancelRoll;
 
+/**
+ * Handles confirmation prompt when players checkbox configuration is modified during an active roll.
+ * @function handlePlayerToggleClick
+ * @param {Event} event - Toggle event.
+ * @param {number} index - Player index context.
+ */
 export function handlePlayerToggleClick(event, index) {
     if (window.isRollActive) {
         const confirmed = confirm(
@@ -695,6 +776,10 @@ export function handlePlayerToggleClick(event, index) {
 }
 window.handlePlayerToggleClick = handlePlayerToggleClick;
 
+/**
+ * Opens the roll settings drawer and initializes the staged draft and ban configuration.
+ * @function openRollSettingsDrawer
+ */
 export function openRollSettingsDrawer() {
     window.currentDrawerMode = "roll-settings";
     const drawer = document.getElementById("sort-filter-drawer");
@@ -718,6 +803,11 @@ export function openRollSettingsDrawer() {
 }
 window.openRollSettingsDrawer = openRollSettingsDrawer;
 
+/**
+ * Switches the active tab in the roll settings drawer and re-renders the body.
+ * @function switchRollSettingsTab
+ * @param {string} tabName - The name of the tab to switch to (e.g. 'draft', 'ban').
+ */
 export function switchRollSettingsTab(tabName) {
     window.stagedRollSettingsTab = tabName;
     if (typeof window.renderDrawerBody === "function") {
@@ -726,6 +816,11 @@ export function switchRollSettingsTab(tabName) {
 }
 window.switchRollSettingsTab = switchRollSettingsTab;
 
+/**
+ * Toggles draft mode in the staged settings.
+ * @function toggleStagedDraftMode
+ * @param {boolean} enabled - True if draft mode is enabled.
+ */
 export function toggleStagedDraftMode(enabled) {
     window.stagedDraftModeEnabled = enabled;
     const section = document.getElementById("drawer-draft-count-section");
@@ -735,6 +830,11 @@ export function toggleStagedDraftMode(enabled) {
 }
 window.toggleStagedDraftMode = toggleStagedDraftMode;
 
+/**
+ * Sets the draft card count in the staged settings and re-renders the drawer.
+ * @function setStagedDraftCount
+ * @param {number} count - The number of cards to draft.
+ */
 export function setStagedDraftCount(count) {
     window.stagedDraftCount = count;
     if (typeof window.renderDrawerBody === "function") {
@@ -743,6 +843,11 @@ export function setStagedDraftCount(count) {
 }
 window.setStagedDraftCount = setStagedDraftCount;
 
+/**
+ * Toggles a hero's ban status in the staged settings and updates the ban list UI.
+ * @function toggleStagedBan
+ * @param {string} heroId - The ID of the hero to toggle ban status for.
+ */
 export function toggleStagedBan(heroId) {
     if (window.stagedBannedHeroIds.has(heroId)) {
         window.stagedBannedHeroIds.delete(heroId);
@@ -753,6 +858,12 @@ export function toggleStagedBan(heroId) {
 }
 window.toggleStagedBan = toggleStagedBan;
 
+/**
+ * Toggles bans for all heroes within a specific group/season.
+ * @function toggleBanGroup
+ * @param {string} groupId - The ID of the group/season.
+ * @param {boolean} banAll - True to ban all, false to unban all.
+ */
 export function toggleBanGroup(groupId, banAll) {
     window.characters.forEach((c) => {
         if (c.group_id === groupId) {
@@ -767,12 +878,21 @@ export function toggleBanGroup(groupId, banAll) {
 }
 window.toggleBanGroup = toggleBanGroup;
 
+/**
+ * Handles typing in the ban search box.
+ * @function handleBanSearch
+ * @param {string} query - The search query string.
+ */
 export function handleBanSearch(query) {
     window.stagedBanSearchQuery = query;
     renderDrawerBanList();
 }
 window.handleBanSearch = handleBanSearch;
 
+/**
+ * Renders the categorized list of heroes for banning in the drawer.
+ * @function renderDrawerBanList
+ */
 export function renderDrawerBanList() {
     const container = document.getElementById("drawer-ban-list-container");
     if (!container) return;
@@ -825,6 +945,10 @@ export function renderDrawerBanList() {
 }
 window.renderDrawerBanList = renderDrawerBanList;
 
+/**
+ * Updates the roll settings badge and button styling depending on whether draft mode or bans are active.
+ * @function updateRollSettingsBadge
+ */
 export function updateRollSettingsBadge() {
     const badge = document.getElementById("roll-settings-badge");
     const btn = document.getElementById("rollSettingsBtn");
@@ -845,6 +969,11 @@ export function updateRollSettingsBadge() {
 }
 window.updateRollSettingsBadge = updateRollSettingsBadge;
 
+/**
+ * Starts the draft step for the current active drafting player.
+ * Resolves roll once all drafting players are completed.
+ * @function startDraftStep
+ */
 export function startDraftStep() {
     if (window.activeDraftStep >= window.activeDraftOrder.length) {
         validateSelection();
@@ -892,6 +1021,13 @@ export function startDraftStep() {
 }
 window.startDraftStep = startDraftStep;
 
+/**
+ * Generates random or weighted draft candidate heroes for a player from the available pool.
+ * @function generateDraftCandidates
+ * @param {number} pIdx - The index of the player drafting.
+ * @param {Array<Object>} pool - The pool of unbanned, owned, and unpicked heroes.
+ * @returns {Array<Object>} The array of candidate heroes.
+ */
 export function generateDraftCandidates(pIdx, pool) {
     let candidates = [];
     let tempPool = [...pool];
@@ -939,6 +1075,12 @@ export function generateDraftCandidates(pIdx, pool) {
 }
 window.generateDraftCandidates = generateDraftCandidates;
 
+/**
+ * Initializes and starts the scrambling visual animation on the draft wheel.
+ * @function startDraftWheelScramble
+ * @param {number} pIdx - The index of the player.
+ * @param {Array<Object>} pool - The available hero pool to scramble images from.
+ */
 export function startDraftWheelScramble(pIdx, pool) {
     const wheel = document.getElementById(`draft-wheel-${pIdx}`);
     if (!wheel) return;
@@ -1003,6 +1145,12 @@ export function startDraftWheelScramble(pIdx, pool) {
 }
 window.startDraftWheelScramble = startDraftWheelScramble;
 
+/**
+ * Stops scrambling and displays the actual draft options on the 3D draft wheel.
+ * @function stopDraftWheelScramble
+ * @param {number} pIdx - The index of the player.
+ * @param {Array<Object>} candidates - The resolved candidate heroes.
+ */
 export function stopDraftWheelScramble(pIdx, candidates) {
     if (window.scrambleIntervals[pIdx]) {
         clearInterval(window.scrambleIntervals[pIdx]);
@@ -1064,6 +1212,13 @@ export function stopDraftWheelScramble(pIdx, candidates) {
 }
 window.stopDraftWheelScramble = stopDraftWheelScramble;
 
+/**
+ * Attaches swipe/drag event listeners to rotate the draft wheel on touch or mouse drag.
+ * @function setupDraftWheelSwipe
+ * @param {number} pIdx - The index of the player.
+ * @param {HTMLElement} container - The container element for the draft wheel.
+ * @param {number} count - The number of cards in the wheel.
+ */
 export function setupDraftWheelSwipe(pIdx, container, count) {
     let startX = 0;
     let isSwiping = false;
@@ -1139,6 +1294,13 @@ export function setupDraftWheelSwipe(pIdx, container, count) {
 }
 window.setupDraftWheelSwipe = setupDraftWheelSwipe;
 
+/**
+ * Rotates the draft wheel by a single position left (-1) or right (1).
+ * @function rotateDraftWheelDirection
+ * @param {number} pIdx - The index of the player.
+ * @param {number} dir - Direction of rotation (-1 or 1).
+ * @param {number} count - Total card count in the wheel.
+ */
 export function rotateDraftWheelDirection(pIdx, dir, count) {
     const candidates = window.activeDraftCandidates[pIdx];
     if (!candidates || candidates.length === 0) return;
@@ -1170,6 +1332,13 @@ export function rotateDraftWheelDirection(pIdx, dir, count) {
 }
 window.rotateDraftWheelDirection = rotateDraftWheelDirection;
 
+/**
+ * Computes the shortest rotation angle in degrees from current orientation to target angle.
+ * @function getShortestRotationAngle
+ * @param {number} currentAngle - The current rotation angle of the wheel.
+ * @param {number} targetBaseAngle - The target rotation angle base.
+ * @returns {number} The absolute target angle containing shortest path.
+ */
 export function getShortestRotationAngle(currentAngle, targetBaseAngle) {
     let diff = (targetBaseAngle - currentAngle) % 360;
     if (diff < -180) {
@@ -1181,6 +1350,11 @@ export function getShortestRotationAngle(currentAngle, targetBaseAngle) {
 }
 window.getShortestRotationAngle = getShortestRotationAngle;
 
+/**
+ * Resets the selection state for draft pick. Deselects cards and disables confirmation.
+ * @function deselectDraftHero
+ * @param {number} pIdx - Player index.
+ */
 export function deselectDraftHero(pIdx) {
     const selectEl = document.getElementById(`select-${pIdx}`);
     const confirmBtn = document.getElementById(`confirm-draft-btn-${pIdx}`);
@@ -1207,6 +1381,16 @@ export function deselectDraftHero(pIdx) {
 }
 window.deselectDraftHero = deselectDraftHero;
 
+/**
+ * Selects a specific hero card in the draft wheel, snapping/rotating the wheel to it.
+ * @function selectDraftHero
+ * @param {number} pIdx - Player index.
+ * @param {string} heroName - Name of the hero.
+ * @param {string} heroSlug - URL-friendly name/slug of the hero.
+ * @param {string} heroId - Database UUID of the hero.
+ * @param {number} cardAngle - Base rotation angle of the card.
+ * @param {number} cardIdx - Index of the card on the wheel.
+ */
 export function selectDraftHero(pIdx, heroName, heroSlug, heroId, cardAngle, cardIdx) {
     const isAlreadySelected =
         window.selectedDraftHeroes[pIdx] && window.selectedDraftHeroes[pIdx].id === heroId;
@@ -1260,6 +1444,12 @@ export function selectDraftHero(pIdx, heroName, heroSlug, heroId, cardAngle, car
 }
 window.selectDraftHero = selectDraftHero;
 
+/**
+ * Collapses the draft row view to show the final selected character's stats and edit triggers.
+ * @function collapsePlayerRowToResolved
+ * @param {number} pIdx - Player index.
+ * @param {Object} finalHero - The hero object that was drafted.
+ */
 export function collapsePlayerRowToResolved(pIdx, finalHero) {
     const rowEl = document.getElementById(`player-row-${pIdx}`);
     if (!rowEl) return;
@@ -1314,6 +1504,11 @@ export function collapsePlayerRowToResolved(pIdx, finalHero) {
 }
 window.collapsePlayerRowToResolved = collapsePlayerRowToResolved;
 
+/**
+ * Confirms the currently selected draft hero for a player and moves on to the next player's draft step.
+ * @function confirmDraftPick
+ * @param {number} pIdx - Player index.
+ */
 export function confirmDraftPick(pIdx) {
     const chosenHero = window.selectedDraftHeroes[pIdx];
     if (!chosenHero) return;
@@ -1325,6 +1520,12 @@ export function confirmDraftPick(pIdx) {
 }
 window.confirmDraftPick = confirmDraftPick;
 
+/**
+ * Renders the placeholder view for a player waiting for their turn to draft.
+ * @function renderPlayerRowWaiting
+ * @param {number} pIdx - Player index.
+ * @param {string} activePlayerName - The name of the player currently drafting.
+ */
 export function renderPlayerRowWaiting(pIdx, activePlayerName) {
     const resultsDiv = document.getElementById("results");
     let rowEl = document.getElementById(`player-row-${pIdx}`);
@@ -1345,6 +1546,11 @@ export function renderPlayerRowWaiting(pIdx, activePlayerName) {
 }
 window.renderPlayerRowWaiting = renderPlayerRowWaiting;
 
+/**
+ * Renders the active drafting interface (complete with 3D carousel and controls) for a player.
+ * @function renderPlayerRowDraftingActive
+ * @param {number} pIdx - Player index.
+ */
 export function renderPlayerRowDraftingActive(pIdx) {
     const resultsDiv = document.getElementById("results");
     let rowEl = document.getElementById(`player-row-${pIdx}`);

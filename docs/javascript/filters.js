@@ -1,3 +1,12 @@
+/**
+ * @fileoverview Logic for hero listing layout rendering, table sort columns, sidebar drawers, active filter chips, search queries, and recency calculations.
+ * @module filters
+ */
+
+/**
+ * Toggles the visibility state of the sorting options section in the UI.
+ * @function toggleSortSection
+ */
 export function toggleSortSection() {
     const sortSection = document.getElementById("sort-section");
     const button = document.getElementById("sort-panel-toggle");
@@ -10,6 +19,10 @@ export function toggleSortSection() {
 }
 window.toggleSortSection = toggleSortSection;
 
+/**
+ * Toggles the visibility state of the filtering options section in the UI.
+ * @function toggleFilterSection
+ */
 export function toggleFilterSection() {
     const filterSection = document.getElementById("filter-section");
     const button = document.getElementById("filter-panel-toggle");
@@ -22,6 +35,10 @@ export function toggleFilterSection() {
 }
 window.toggleFilterSection = toggleFilterSection;
 
+/**
+ * Opens the Sort & Filter drawer overlay, staging current settings values.
+ * @function openSortFilterDrawer
+ */
 export function openSortFilterDrawer() {
     window.currentDrawerMode = "sort-filter";
     const drawer = document.getElementById("sort-filter-drawer");
@@ -44,6 +61,10 @@ export function openSortFilterDrawer() {
 }
 window.openSortFilterDrawer = openSortFilterDrawer;
 
+/**
+ * Opens the Columns & Historical Data configuration drawer, staging active stats.
+ * @function openColumnsDrawer
+ */
 export function openColumnsDrawer() {
     window.currentDrawerMode = "columns";
     const drawer = document.getElementById("sort-filter-drawer");
@@ -63,6 +84,10 @@ export function openColumnsDrawer() {
 }
 window.openColumnsDrawer = openColumnsDrawer;
 
+/**
+ * Opens the Game History filter settings drawer, staging selected parameters.
+ * @function openHistoryFilterDrawer
+ */
 export function openHistoryFilterDrawer() {
     window.currentDrawerMode = "history-filter";
     const drawer = document.getElementById("sort-filter-drawer");
@@ -83,6 +108,10 @@ export function openHistoryFilterDrawer() {
 }
 window.openHistoryFilterDrawer = openHistoryFilterDrawer;
 
+/**
+ * Opens the Left Filters drawer, staging active player, group, and complexity parameters.
+ * @function openFilterDrawer
+ */
 export function openFilterDrawer() {
     window.stagedFilterDataHistories = new Set(window.activeFilterDataHistories);
     window.stagedFilterPlayers = new Set(window.activeFilterPlayers);
@@ -101,6 +130,12 @@ export function openFilterDrawer() {
 }
 window.openFilterDrawer = openFilterDrawer;
 
+/**
+ * Closes the Left Filters drawer, restoring page scroll behavior.
+ * @function closeFilterDrawer
+ * @param {Event|null} [event=null] - The triggered event context.
+ * @param {boolean} [force=false] - If true, bypasses target mismatch checks.
+ */
 export function closeFilterDrawer(event = null, force = false) {
     if (event && event.target !== event.currentTarget && !force) return;
     const drawer = document.getElementById("filter-drawer-left");
@@ -111,6 +146,10 @@ export function closeFilterDrawer(event = null, force = false) {
 }
 window.closeFilterDrawer = closeFilterDrawer;
 
+/**
+ * Re-renders the dynamic content regions inside the Left Filters drawer panel.
+ * @function renderFilterDrawerDynamicSections
+ */
 export function renderFilterDrawerDynamicSections() {
     // 1. Render Players alphabetically (excluding Invitees)
     const playersContainer = document.getElementById("filter-options-players");
@@ -156,6 +195,11 @@ export function renderFilterDrawerDynamicSections() {
 }
 window.renderFilterDrawerDynamicSections = renderFilterDrawerDynamicSections;
 
+/**
+ * Handles checking and unchecking events inside the left filter drawer, updating staged states.
+ * @function handleFilterDrawerCheckboxChange
+ * @param {HTMLInputElement} checkbox - The checkbox element toggled by the user.
+ */
 export function handleFilterDrawerCheckboxChange(checkbox) {
     const type = checkbox.getAttribute("data-type");
     const val = checkbox.value;
@@ -181,6 +225,10 @@ export function handleFilterDrawerCheckboxChange(checkbox) {
 }
 window.handleFilterDrawerCheckboxChange = handleFilterDrawerCheckboxChange;
 
+/**
+ * Clears all filters currently staged inside the Left Filters drawer.
+ * @function resetFilterPanelSelections
+ */
 export function resetFilterPanelSelections() {
     window.stagedFilterDataHistories.clear();
     window.stagedFilterPlayers.clear();
@@ -197,6 +245,10 @@ export function resetFilterPanelSelections() {
 }
 window.resetFilterPanelSelections = resetFilterPanelSelections;
 
+/**
+ * Promotes staged left filter parameters to active filters, closing the drawer and updating the layout.
+ * @function applyFilterPanelSelections
+ */
 export function applyFilterPanelSelections() {
     window.activeFilterDataHistories = new Set(window.stagedFilterDataHistories);
     window.activeFilterPlayers = new Set(window.stagedFilterPlayers);
@@ -215,6 +267,11 @@ export function applyFilterPanelSelections() {
 }
 window.applyFilterPanelSelections = applyFilterPanelSelections;
 
+/**
+ * Computes the quantity of heroes matching the filter values currently staged inside the drawer.
+ * @function getFilterDrawerMatchingCount
+ * @returns {number} The quantity of matching hero records.
+ */
 export function getFilterDrawerMatchingCount() {
     const searchTerm = document.getElementById("hero-search")?.value.toLowerCase() || "";
     const showOwned = document.getElementById("db-show-owned")?.checked ?? true;
@@ -274,6 +331,10 @@ export function getFilterDrawerMatchingCount() {
 }
 window.getFilterDrawerMatchingCount = getFilterDrawerMatchingCount;
 
+/**
+ * Updates the hero search results quantity text in the Left Filter drawer UI.
+ * @function updateFilterDrawerHeroCountUI
+ */
 export function updateFilterDrawerHeroCountUI() {
     const total = getFilterDrawerMatchingCount();
     const countLabel = document.getElementById("filter-drawer-hero-count");
@@ -283,6 +344,10 @@ export function updateFilterDrawerHeroCountUI() {
 }
 window.updateFilterDrawerHeroCountUI = updateFilterDrawerHeroCountUI;
 
+/**
+ * Updates section titles inside the Left Filter drawer, displaying staged badge counts.
+ * @function updateFilterDrawerSectionTitlesUI
+ */
 export function updateFilterDrawerSectionTitlesUI() {
     const titleDataHistory = document.getElementById("title-data-history");
     const titlePlayers = document.getElementById("title-players");
@@ -308,6 +373,12 @@ export function updateFilterDrawerSectionTitlesUI() {
 }
 window.updateFilterDrawerSectionTitlesUI = updateFilterDrawerSectionTitlesUI;
 
+/**
+ * Closes the Sort/Filter/Settings overlay drawer.
+ * @function closeDrawer
+ * @param {Event|null} [event=null] - The triggered event context.
+ * @param {boolean} [force=false] - If true, bypasses target mismatch checks.
+ */
 export function closeDrawer(event = null, force = false) {
     if (event && event.target !== event.currentTarget && !force) return;
     const drawer = document.getElementById("sort-filter-drawer");
@@ -317,6 +388,10 @@ export function closeDrawer(event = null, force = false) {
 }
 window.closeDrawer = closeDrawer;
 
+/**
+ * Renders the body content of the active sidebar drawer based on the current drawer mode (e.g., sort, filter, column layout, settings).
+ * @function renderDrawerBody
+ */
 export function renderDrawerBody() {
     const body = document.getElementById("drawer-body-content");
     if (!body) return;
@@ -483,6 +558,11 @@ export function renderDrawerBody() {
 }
 window.renderDrawerBody = renderDrawerBody;
 
+/**
+ * Generates the game history filters inside the history drawer, calculating played/won stats.
+ * @function renderHistoryFilterDrawerBody
+ * @param {HTMLElement} body - The container element to append the filter controls to.
+ */
 export function renderHistoryFilterDrawerBody(body) {
     const useHistorical = window.stagedGamesUseHistorical;
     const playerStats = window.players.map(() => ({ played: 0, won: 0 }));
@@ -591,6 +671,11 @@ export function renderHistoryFilterDrawerBody(body) {
 }
 window.renderHistoryFilterDrawerBody = renderHistoryFilterDrawerBody;
 
+/**
+ * Stages the player index context for game history filters in the drawer.
+ * @function toggleStagedPlayerGameFilter
+ * @param {number} idx - Player index context (0-3, or 4 for invitee).
+ */
 export function toggleStagedPlayerGameFilter(idx) {
     if (window.stagedSelectedGamePlayerIndex === idx) {
         window.stagedSelectedGamePlayerIndex = null;
@@ -606,12 +691,22 @@ export function toggleStagedPlayerGameFilter(idx) {
 }
 window.toggleStagedPlayerGameFilter = toggleStagedPlayerGameFilter;
 
+/**
+ * Stages toggle specifying whether historical game entries are included in history results.
+ * @function toggleStagedGamesHistorical
+ * @param {boolean} checked - True if historical logs are to be listed.
+ */
 export function toggleStagedGamesHistorical(checked) {
     window.stagedGamesUseHistorical = checked;
     renderDrawerBody();
 }
 window.toggleStagedGamesHistorical = toggleStagedGamesHistorical;
 
+/**
+ * Handles drawer sort criteria selection mutations, adjusting defaults.
+ * @function handleDrawerSortTypeChange
+ * @param {string} value - Select value representation ("name", "group", "probability", "lastPlayed").
+ */
 export function handleDrawerSortTypeChange(value) {
     if (value === "name") {
         window.stagedSort = "name";
@@ -629,12 +724,20 @@ export function handleDrawerSortTypeChange(value) {
 }
 window.handleDrawerSortTypeChange = handleDrawerSortTypeChange;
 
+/**
+ * Alternates staged sorting direction between ascending and descending.
+ * @function toggleDrawerSortDirection
+ */
 export function toggleDrawerSortDirection() {
     window.stagedSortAsc = !window.stagedSortAsc;
     updateDrawerSortDirectionUI();
 }
 window.toggleDrawerSortDirection = toggleDrawerSortDirection;
 
+/**
+ * Refreshes direction buttons inside the drawer, highlighting correct arrows and descriptions.
+ * @function updateDrawerSortDirectionUI
+ */
 export function updateDrawerSortDirectionUI() {
     const dirText = document.getElementById("drawer-sort-direction-text");
     const dirArrow = document.getElementById("drawer-sort-direction-arrow");
@@ -645,6 +748,10 @@ export function updateDrawerSortDirectionUI() {
 }
 window.updateDrawerSortDirectionUI = updateDrawerSortDirectionUI;
 
+/**
+ * Redraws active sorting player context selector pills.
+ * @function updateDrawerPlayerSortPillsUI
+ */
 export function updateDrawerPlayerSortPillsUI() {
     const subSection = document.getElementById("drawer-player-sort-sub-section");
     const pillsContainer = document.getElementById("drawer-player-sort-pills");
@@ -673,6 +780,11 @@ export function updateDrawerPlayerSortPillsUI() {
 }
 window.updateDrawerPlayerSortPillsUI = updateDrawerPlayerSortPillsUI;
 
+/**
+ * Updates staged player sort context index values.
+ * @function handleDrawerSortPlayerChange
+ * @param {number} playerIndex - Selected target player index.
+ */
 export function handleDrawerSortPlayerChange(playerIndex) {
     window.stagedSortPlayerIndex = playerIndex;
     if (window.stagedSort.startsWith("w")) {
@@ -684,6 +796,11 @@ export function handleDrawerSortPlayerChange(playerIndex) {
 }
 window.handleDrawerSortPlayerChange = handleDrawerSortPlayerChange;
 
+/**
+ * Toggles column visibility filters on player index values.
+ * @function toggleDrawerPlayerFilter
+ * @param {number} playerIndex - Selected player index.
+ */
 export function toggleDrawerPlayerFilter(playerIndex) {
     const idx = window.stagedPlayerIndices.indexOf(playerIndex);
     if (idx > -1) {
@@ -695,6 +812,10 @@ export function toggleDrawerPlayerFilter(playerIndex) {
 }
 window.toggleDrawerPlayerFilter = toggleDrawerPlayerFilter;
 
+/**
+ * Draws complexity badge items inside the drawer, highlighting candidate counts.
+ * @function renderDrawerComplexityFilters
+ */
 export function renderDrawerComplexityFilters() {
     const container = document.getElementById("drawer-complexity-filter-bar");
     if (!container) return;
@@ -758,6 +879,11 @@ export function renderDrawerComplexityFilters() {
 }
 window.renderDrawerComplexityFilters = renderDrawerComplexityFilters;
 
+/**
+ * Toggles complexity levels within the staged state filters.
+ * @function toggleDrawerLevel
+ * @param {number|string} level - Level identifier (1-6) or "all".
+ */
 export function toggleDrawerLevel(level) {
     if (level === "all") {
         window.stagedLevels =
@@ -771,6 +897,12 @@ export function toggleDrawerLevel(level) {
 }
 window.toggleDrawerLevel = toggleDrawerLevel;
 
+/**
+ * Resolves a unique theme string token based on expansion pack or season group metadata.
+ * @function getGroupThemeClass
+ * @param {string} groupName - Group/season name text.
+ * @returns {string} The resolved CSS group identifier class.
+ */
 export function getGroupThemeClass(groupName) {
     const name = (groupName || "").toLowerCase();
     if (name.includes("season 1") || name.includes("s1")) return "group-s1";
@@ -791,6 +923,12 @@ export function getGroupThemeClass(groupName) {
 }
 window.getGroupThemeClass = getGroupThemeClass;
 
+/**
+ * Resolves abbreviation short codes representing seasons/expansions.
+ * @function getGroupAbbreviation
+ * @param {string} name - Group name.
+ * @returns {string} Short code text.
+ */
 export function getGroupAbbreviation(name) {
     if (!name) return "?";
     const cleanName = name.trim().toLowerCase();
@@ -818,6 +956,11 @@ export function getGroupAbbreviation(name) {
 }
 window.getGroupAbbreviation = getGroupAbbreviation;
 
+
+/**
+ * Renders the group/season filters inside the drawer.
+ * @function renderDrawerGroupFilters
+ */
 export function renderDrawerGroupFilters() {
     const container = document.getElementById("drawer-group-filter-bar");
     if (!container) return;
@@ -892,6 +1035,11 @@ export function renderDrawerGroupFilters() {
 }
 window.renderDrawerGroupFilters = renderDrawerGroupFilters;
 
+/**
+ * Toggles a group filtering criterion inside the staged state.
+ * @function toggleDrawerGroupFilter
+ * @param {string} groupId - Unique ID of the group/season, or "all".
+ */
 export function toggleDrawerGroupFilter(groupId) {
     if (groupId === "all") {
         if (window.stagedGroups.size === window.groups.length) {
@@ -911,6 +1059,10 @@ export function toggleDrawerGroupFilter(groupId) {
 }
 window.toggleDrawerGroupFilter = toggleDrawerGroupFilter;
 
+/**
+ * Resets the active settings/filters inside the active drawer panel.
+ * @function resetFilters
+ */
 export function resetFilters() {
     if (window.currentDrawerMode === "sort-filter") {
         window.stagedSort = "name";
@@ -938,6 +1090,10 @@ export function resetFilters() {
 }
 window.resetFilters = resetFilters;
 
+/**
+ * Applies all filters staged in the drawer and closes the drawer.
+ * @function applyAndCloseDrawer
+ */
 export function applyAndCloseDrawer() {
     if (window.currentDrawerMode === "sort-filter") {
         window.currentSort = window.stagedSort;
@@ -981,6 +1137,10 @@ export function applyAndCloseDrawer() {
 }
 window.applyAndCloseDrawer = applyAndCloseDrawer;
 
+/**
+ * Updates the quantity badge displaying active filters counts.
+ * @function updateActiveFilterBadge
+ */
 export function updateActiveFilterBadge() {
     const badge = document.getElementById("filter-active-badge");
     if (!badge) return;
@@ -1000,6 +1160,10 @@ export function updateActiveFilterBadge() {
 }
 window.updateActiveFilterBadge = updateActiveFilterBadge;
 
+/**
+ * Updates the active filter badge on the games history tab.
+ * @function updateGamesActiveFilterBadge
+ */
 export function updateGamesActiveFilterBadge() {
     const badge = document.getElementById("games-filter-active-badge");
     if (!badge) return;
@@ -1018,6 +1182,10 @@ export function updateGamesActiveFilterBadge() {
 }
 window.updateGamesActiveFilterBadge = updateGamesActiveFilterBadge;
 
+/**
+ * Repositions sliding highlighting backdrops behind segmented control items.
+ * @function updateSegmentedHighlights
+ */
 export function updateSegmentedHighlights() {
     document
         .querySelectorAll(".ownership-segmented-control, .segmented-control")
@@ -1038,6 +1206,11 @@ export function updateSegmentedHighlights() {
 }
 window.updateSegmentedHighlights = updateSegmentedHighlights;
 
+/**
+ * Sets sorting parameters and triggers a reload of the character lists.
+ * @function setSort
+ * @param {string} key - Sort attribute selector.
+ */
 export function setSort(key) {
     if (window.currentSort === key) {
         window.sortAsc = !window.sortAsc;
@@ -1056,6 +1229,11 @@ export function setSort(key) {
 }
 window.setSort = setSort;
 
+/**
+ * Retrieves list of player indices representing player columns currently enabled in UI view.
+ * @function getVisiblePlayerIndices
+ * @returns {number[]} Array of player indices.
+ */
 export function getVisiblePlayerIndices() {
     if (window.activeFilterPlayers && window.activeFilterPlayers.size > 0) {
         return Array.from(window.activeFilterPlayers)
@@ -1066,6 +1244,10 @@ export function getVisiblePlayerIndices() {
 }
 window.getVisiblePlayerIndices = getVisiblePlayerIndices;
 
+/**
+ * Refreshes button label representing active sorting state.
+ * @function updateSortButtonText
+ */
 export function updateSortButtonText() {
     const btn = document.getElementById("btn-trigger-sort");
     if (!btn) return;
@@ -1092,6 +1274,10 @@ export function updateSortButtonText() {
 }
 window.updateSortButtonText = updateSortButtonText;
 
+/**
+ * Builds HTML buttons populate the sort dropdown selection overlay.
+ * @function renderSortDropdownOptions
+ */
 export function renderSortDropdownOptions() {
     const menu = document.getElementById("sort-dropdown-menu");
     if (!menu) return;
@@ -1140,6 +1326,11 @@ export function renderSortDropdownOptions() {
 }
 window.renderSortDropdownOptions = renderSortDropdownOptions;
 
+/**
+ * Toggles visibility of the sort option selection dropdown list.
+ * @function toggleSortDropdown
+ * @param {Event} event - The triggered event.
+ */
 export function toggleSortDropdown(event) {
     if (event) event.stopPropagation();
     const dropdown = document.getElementById("sort-dropdown-menu");
@@ -1156,6 +1347,10 @@ export function toggleSortDropdown(event) {
 }
 window.toggleSortDropdown = toggleSortDropdown;
 
+/**
+ * Closes sort option selection dropdown list overlay.
+ * @function closeSortDropdown
+ */
 export function closeSortDropdown() {
     const dropdown = document.getElementById("sort-dropdown-menu");
     if (dropdown) {
@@ -1165,6 +1360,12 @@ export function closeSortDropdown() {
 }
 window.closeSortDropdown = closeSortDropdown;
 
+/**
+ * Applies a selected sort option, closing the dropdown and redrawing lists.
+ * @function selectSortOption
+ * @param {string} key - Sort attribute identifier.
+ * @param {boolean} asc - Sort direction.
+ */
 export function selectSortOption(key, asc) {
     window.currentSort = key;
     window.sortAsc = asc;
@@ -1178,6 +1379,10 @@ export function selectSortOption(key, asc) {
 }
 window.selectSortOption = selectSortOption;
 
+/**
+ * Handles text mutations inside the search input box, displaying or hiding the clear button.
+ * @function handleSearchInput
+ */
 export function handleSearchInput() {
     const searchInput = document.getElementById("hero-search");
     const clearBtn = document.getElementById("clear-search");
@@ -1188,6 +1393,10 @@ export function handleSearchInput() {
 }
 window.handleSearchInput = handleSearchInput;
 
+/**
+ * Clears search fields, focusing input back and retriggering queries.
+ * @function clearSearch
+ */
 export function clearSearch() {
     const searchInput = document.getElementById("hero-search");
     if (searchInput) {
@@ -1200,6 +1409,11 @@ export function clearSearch() {
 }
 window.clearSearch = clearSearch;
 
+/**
+ * Intercepts keyboard input to fire search queries upon pressing Enter.
+ * @function handleSearchKeyDown
+ * @param {KeyboardEvent} event - The keyboard event.
+ */
 export function handleSearchKeyDown(event) {
     if (event.key === "Enter") {
         triggerSearch();
@@ -1207,12 +1421,20 @@ export function handleSearchKeyDown(event) {
 }
 window.handleSearchKeyDown = handleSearchKeyDown;
 
+/**
+ * Refreshes layouts and filter display badges when a query is executed.
+ * @function triggerSearch
+ */
 export function triggerSearch() {
     renderList();
     updateActiveFilterChips();
 }
 window.triggerSearch = triggerSearch;
 
+/**
+ * Re-renders dynamic filter chip buttons based on active search terms, player selections, complexities, and group limits.
+ * @function updateActiveFilterChips
+ */
 export function updateActiveFilterChips() {
     const container = document.getElementById("active-filters-container");
     if (!container) return;
@@ -1293,6 +1515,12 @@ export function updateActiveFilterChips() {
 }
 window.updateActiveFilterChips = updateActiveFilterChips;
 
+/**
+ * Removes a filter criteria chip, updating search parameters and refreshing layouts.
+ * @function removeFilterChip
+ * @param {string} type - Category key ("data-history", "player", "complexity", "group").
+ * @param {string|number} val - Selected value of target filter criteria to drop.
+ */
 export function removeFilterChip(type, val) {
     if (type === 'data-history') {
         window.activeFilterDataHistories.delete(val);
@@ -1311,11 +1539,22 @@ export function removeFilterChip(type, val) {
 }
 window.removeFilterChip = removeFilterChip;
 
+/**
+ * Resets search string inputs.
+ * @function clearSearchFilter
+ */
 export function clearSearchFilter() {
     clearSearch();
 }
 window.clearSearchFilter = clearSearchFilter;
 
+/**
+ * Evaluates whether a hero's details (name, group abbreviation, or player associations) match a given search query term.
+ * @function matchesSearchTerm
+ * @param {Object} c - The character/hero object.
+ * @param {string} searchTerm - Query string term.
+ * @returns {boolean} True if matched, false otherwise.
+ */
 export function matchesSearchTerm(c, searchTerm) {
     if (!searchTerm) return true;
     const term = searchTerm.trim().toLowerCase();
@@ -1332,6 +1571,10 @@ export function matchesSearchTerm(c, searchTerm) {
 }
 window.matchesSearchTerm = matchesSearchTerm;
 
+/**
+ * Monitors inputs in game log searches, updating logs table lists.
+ * @function handleGamesSearchInput
+ */
 export function handleGamesSearchInput() {
     const searchInput = document.getElementById("games-search");
     const clearBtn = document.getElementById("clear-games-search");
@@ -1345,6 +1588,10 @@ export function handleGamesSearchInput() {
 }
 window.handleGamesSearchInput = handleGamesSearchInput;
 
+/**
+ * Clears search strings on game log views.
+ * @function clearGamesSearch
+ */
 export function clearGamesSearch() {
     const searchInput = document.getElementById("games-search");
     if (!searchInput) return;
@@ -1354,6 +1601,11 @@ export function clearGamesSearch() {
 }
 window.clearGamesSearch = clearGamesSearch;
 
+/**
+ * Toggles column visibility filters on player index values, sorting tables.
+ * @function togglePlayerFilter
+ * @param {number} index - Selected player index.
+ */
 export function togglePlayerFilter(index) {
     const position = window.activePlayerIndices.indexOf(index);
 
@@ -1375,6 +1627,10 @@ export function togglePlayerFilter(index) {
 }
 window.togglePlayerFilter = togglePlayerFilter;
 
+/**
+ * Computes sorting and renders the main grid hero list.
+ * @function renderList
+ */
 export function renderList() {
     const container = document.getElementById("heroContainer");
     if (!container) return;
@@ -1568,7 +1824,7 @@ export function renderList() {
                         <span class="expanded-player-name" style="color: var(--p${item.p + 1});">${window.NAMES[item.p]}</span>
                         <span class="expanded-player-prob">${item.percentageStr}%</span>
                         <span class="expanded-player-plays">🎲 ${item.playCount}</span>
-                        <span class="expanded-player-wins">🏆 ${item.winCount} <span class="expanded-player-rate">(${item.winRate}%)</span></span>
+                        <span class="expanded-player-wins">🏆 ${item.winCount} <span class="collapsed-player-rate">(${item.winRate}%)</span></span>
                     </div>
                     <div class="expanded-player-date">
                         <span>📅 Last played: ${item.lastPlayed}</span>
@@ -1630,6 +1886,12 @@ export function renderList() {
 }
 window.renderList = renderList;
 
+/**
+ * Parses dynamic date string inputs, normalizing timezone tokens.
+ * @function parseDateString
+ * @param {string} dateString - Input date string.
+ * @returns {Date|null} Evaluated JavaScript Date object or null.
+ */
 export function parseDateString(dateString) {
     if (!dateString) return null;
     try {
@@ -1651,6 +1913,12 @@ export function parseDateString(dateString) {
 }
 window.parseDateString = parseDateString;
 
+/**
+ * Calculates human readable relative elapsed duration string from active dates.
+ * @function getDaysAgoClean
+ * @param {string} dateString - Input date string.
+ * @returns {string} Relative timestamp phrase (e.g., "today", "yesterday", "5 days ago").
+ */
 export function getDaysAgoClean(dateString) {
     if (!dateString || dateString === "Never") return "";
     if (dateString === "Unknown") return "Date unknown (historical)";
@@ -1672,6 +1940,12 @@ export function getDaysAgoClean(dateString) {
 }
 window.getDaysAgoClean = getDaysAgoClean;
 
+/**
+ * Computes color indicators based on elapsed days since last played.
+ * @function getRecencyDot
+ * @param {string} lastPlayed - Date string token.
+ * @returns {string} Colored circle emoji indicator.
+ */
 export function getRecencyDot(lastPlayed) {
     let recencyDot = "⚫";
     if (lastPlayed && lastPlayed === "Unknown") {
