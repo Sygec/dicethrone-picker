@@ -14,22 +14,13 @@
             rel="stylesheet" />
         <title>Dice Throne</title>
 
-        <!-- Dynamic Theme loader: Injects dev/prod stylesheet depending on deployment host -->
+        <!-- Environment check: Sets production flag depending on deployment host -->
         <script>
             // Check if this is Production or Local environment based on hostname
             window.isProd =
                 window.location.hostname === "sygec.github.io" ||
                 window.location.hostname ===
                     "dicethrone-prod.sygec.workers.dev";
-            // Create a new link element
-            const themeLink = document.createElement("link");
-            themeLink.rel = "stylesheet";
-            // Assign the file path based on if this is prod or dev
-            themeLink.href = window.isProd
-                ? "styles/style-prod.css"
-                : "styles/style-dev.css";
-            // Append it to the head
-            document.head.appendChild(themeLink);
         </script>
         <!-- Link the shared main styles -->
         <link rel="stylesheet" type="text/css" href="styles/style.css" />
