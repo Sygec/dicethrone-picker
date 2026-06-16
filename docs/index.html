@@ -14,6 +14,7 @@
             rel="stylesheet" />
         <title>Dice Throne</title>
 
+        <!-- Dynamic Theme loader: Injects dev/prod stylesheet depending on deployment host -->
         <script>
             // Check if this is Production or Local environment based on hostname
             window.isProd =
@@ -30,11 +31,12 @@
             // Append it to the head
             document.head.appendChild(themeLink);
         </script>
-        <!-- Additionnally, link the common stylesheet -->
+        <!-- Link the shared main styles -->
         <link rel="stylesheet" type="text/css" href="styles/style.css" />
     </head>
 
     <body>
+        <!-- Component: Dice Roll preloader animation screen -->
         <div id="preloader">
             <div class="dice-container">
                 <div class="dice">
@@ -46,11 +48,13 @@
                     <div class="dice-face bottom">2</div>
                 </div>
             </div>
-        </div>
+        </div> <!-- /#preloader -->
+
+        <!-- Layout Wrapper: Main viewport content -->
         <main class="content">
             <img
                 src="images/banner.png"
-                alt="Dice Throne"
+                alt="Dice Throne Logo"
                 style="width: 100%; height: auto" />
             <div class="small-text">
                 v<button
@@ -83,6 +87,9 @@
                 </button>
             </div>
 
+            <!-- ========================================== -->
+            <!-- SECTION: Roll Randomizer                   -->
+            <!-- ========================================== -->
             <section id="rollSection">
                 <!-- Player Selection Toggles -->
                 <div
@@ -145,7 +152,9 @@
                 </div>
             </section>
 
-            <!-- Hero Database & Stats Section -->
+            <!-- ========================================== -->
+            <!-- SECTION: Hero Database & Stats             -->
+            <!-- ========================================== -->
             <section id="dbSection" class="hidden">
                 <!-- Search & Filtering -->
                 <div class="search-container">
@@ -255,7 +264,9 @@
                 <div id="heroContainer"></div>
             </section>
 
-            <!-- Games History Section -->
+            <!-- ========================================== -->
+            <!-- SECTION: Games History Log                 -->
+            <!-- ========================================== -->
             <section id="gamesSection" class="hidden">
                 <div class="search-container" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
                     <div class="search-wrapper" style="flex: 1;">
@@ -297,7 +308,9 @@
                 <div id="gamesContainer" style="margin-top: 20px"></div>
             </section>
 
-            <!-- Collection Section -->
+            <!-- ========================================== -->
+            <!-- SECTION: Collection Ownership Manager      -->
+            <!-- ========================================== -->
             <section id="collectionSection" class="hidden">
                 <div
                     class="small-text"
@@ -308,8 +321,9 @@
                 <div id="collectionContainer" style="margin-top: 20px"></div>
             </section>
 
-            <!-- Admin & Data Management -->
-
+            <!-- ========================================== -->
+            <!-- SECTION: Admin Panel & DB Control          -->
+            <!-- ========================================== -->
             <section id="adminSection" class="hidden">
                 <div id="admin-build-info"></div>
 
@@ -604,9 +618,9 @@
                     </div>
                 </div>
             </section>
-        </main>
+        </main> <!-- /main.content -->
 
-        <!-- Persistent Bottom Navigation -->
+        <!-- Component: Persistent Bottom Tab Navigation -->
         <nav class="bottom-nav">
             <a
                 href="#randomizer"
@@ -867,7 +881,7 @@
             </div>
         </div>
 
-        <!-- Premium Bottom Drawer for Sorting and Filtering -->
+        <!-- Component: Premium Bottom Settings Drawer for Sorting and Filtering -->
         <div id="sort-filter-drawer" class="drawer-overlay" onclick="closeDrawer(event)">
             <div class="drawer-sheet" onclick="event.stopPropagation()">
                 <div class="drawer-header">
@@ -884,7 +898,7 @@
             </div>
         </div>
 
-        <!-- Left Drawer for Dynamic Filtering -->
+        <!-- Component: Left Side Drawer for Dynamic Filtering -->
         <div id="filter-drawer-left" class="filter-drawer-overlay" onclick="closeFilterDrawer(event)">
             <div class="filter-drawer-sheet" onclick="event.stopPropagation()">
                 <div class="filter-drawer-header">
@@ -956,7 +970,12 @@
             </div>
         </div>
 
+        <!-- ========================================== -->
+        <!-- SCRIPTS & MODULES                          -->
+        <!-- ========================================== -->
+        <!-- Third-party Supabase DB SDK -->
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <!-- Application entry point -->
         <script type="module" src="./javascript/main.js"></script>
     </body>
 </html>
