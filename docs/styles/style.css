@@ -253,6 +253,8 @@ button {
         opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1),
         transform 1.2s cubic-bezier(0.16, 1, 0.3, 1),
         filter 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+    /* Prevent content from being hidden behind the bottom nav bar */
+    padding-bottom: calc(66px + env(safe-area-inset-bottom));
 }
 
 body.loaded .content {
@@ -877,6 +879,7 @@ h1 {
     box-shadow:
         0 4px 15px rgba(0, 0, 0, 0.35),
         0 0 0 1px rgba(255, 255, 255, 0.05);
+    animation: breathingGlow 3s infinite ease-in-out;
 }
 
 .btn-confirm {
@@ -975,9 +978,7 @@ main > section:not(.hidden) {
             0 0 0 0 var(--accent-glow);
     }
 }
-#rollBtn {
-    animation: breathingGlow 3s infinite ease-in-out;
-}
+
 
 /* 5. Desktop-only Hover Rules (Protected by media query to prevent stuck states on iOS/Android) */
 @media (hover: hover) {
@@ -1240,9 +1241,7 @@ main > section:not(.hidden) {
     user-select: none;
 }
 
-.panel-toggle {
-    cursor: pointer;
-}
+
 
 .panel-header h3 {
     margin: 0;
@@ -1974,10 +1973,14 @@ textarea {
 .collection-group-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 12px;
     margin-bottom: 15px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     padding-bottom: 10px;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s ease;
 }
 
 .collection-heroes-list {
@@ -2706,12 +2709,7 @@ textarea {
 
 /* Navigation bar styles */
 
-/* 1. Prevent content from being hidden behind the nav bar */
-.content {
-    padding-bottom: calc(
-        66px + env(safe-area-inset-bottom)
-    ); /* Dynamic offset based on nav height */
-}
+
 
 /* 2. The Navigation Bar Container */
 .bottom-nav {
@@ -3030,13 +3028,7 @@ body.loaded .bottom-nav {
     pointer-events: none;
 }
 
-/* Accordion Header for Collection view */
-.collection-group-header {
-    cursor: pointer;
-    justify-content: space-between !important;
-    user-select: none;
-    transition: background-color 0.2s ease;
-}
+
 
 @media (hover: hover) {
     .collection-group-header:hover {
