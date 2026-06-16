@@ -1,0 +1,621 @@
+/**
+ * @fileoverview Stylesheet module for the sliding filter drawer, bottom sheets, filter options checkboxes, and action bars.
+ * @module filters
+ * @requires style
+ */
+
+/* Premium Sort & Filter Action Bar & Drawer Styles  */
+/* -------------------------------------------------- */
+
+.filter-action-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 8px;
+    margin-bottom: 12px;
+}
+
+.btn-action-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+@media (hover: hover) {
+    .btn-action-trigger:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--accent);
+        transform: translateY(-1px);
+    }
+}
+
+.btn-action-trigger:active {
+    transform: scale(0.97);
+}
+
+.btn-action-trigger .action-icon {
+    font-size: 1.1rem;
+}
+
+.btn-action-trigger .active-badge {
+    background: var(--accent);
+    color: var(--gray-800);
+    font-size: 0.75rem;
+    font-weight: 800;
+    border-radius: 10px;
+    padding: 1px 6px;
+    margin-left: 4px;
+}
+
+/* Bottom Sheet Drawer Overlay */
+.drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0);
+    z-index: 1000;
+    visibility: hidden;
+    opacity: 0;
+    transition:
+        background-color 0.35s ease,
+        opacity 0.35s ease,
+        visibility 0.35s ease;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+.drawer-overlay.open {
+    visibility: visible;
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.65);
+}
+
+/* Bottom Sheet Container */
+.drawer-sheet {
+    width: 100%;
+    max-width: 550px;
+    background: rgba(18, 19, 24, 0.98);
+    border-top: 2px solid rgba(255, 204, 0, 0.25);
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.85);
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+    transform: translateY(100%);
+    transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+    padding-bottom: env(safe-area-inset-bottom, 15px);
+}
+
+@supports (backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px)) {
+    .drawer-sheet {
+        background-color: rgba(20, 22, 28, 0.82) !important;
+        backdrop-filter: blur(24px) !important;
+        -webkit-backdrop-filter: blur(24px) !important;
+    }
+}
+
+.drawer-overlay.open .drawer-sheet {
+    transform: translateY(0);
+}
+
+/* Header */
+.drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.drawer-title {
+    font-family: "Outfit", sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.5px;
+}
+
+.drawer-close-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1.8rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+@media (hover: hover) {
+    .drawer-close-btn:hover {
+        color: var(--text);
+    }
+}
+
+/* Body */
+.drawer-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Footer Control Row */
+.drawer-footer {
+    display: flex;
+    gap: 12px;
+    padding: 16px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.btn-drawer-reset {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1.5px solid rgba(255, 255, 255, 0.1);
+    color: var(--text);
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+@media (hover: hover) {
+    .btn-drawer-reset:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+}
+
+.btn-drawer-apply {
+    flex: 2;
+    background: var(--accent);
+    border: none;
+    color: var(--gray-800);
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+@media (hover: hover) {
+    .btn-drawer-apply:hover {
+        background: var(--warning);
+        box-shadow: 0 0 14px rgba(255, 204, 0, 0.35);
+    }
+}
+
+/* 2x4 Season Grid Layout with Standalone ALL bar */
+.group-filter-grid-container {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+    justify-content: center; /* Center the layout in the drawer */
+    width: fit-content;
+    margin: 0 auto;
+}
+
+.seasons-grid-left {
+    display: grid;
+    grid-template-columns: repeat(4, 48px); /* Force exact 48px square cells */
+    gap: 0;
+    row-gap: 0;
+    column-gap: 0;
+}
+
+.all-column-right {
+    display: flex;
+    flex-direction: column;
+    width: 48px; /* Force exact 48px square width */
+}
+
+.seasons-grid-left .group-badge-card {
+    width: 100%; /* Fill grid cell width */
+}
+
+/* Winner Selection Modal Grid & Cards */
+.winner-select-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 105px);
+    gap: 12px;
+    margin-bottom: 20px;
+    margin-top: 15px;
+    justify-content: center;
+}
+
+.winner-select-grid.two-rows {
+    grid-template-columns: repeat(2, 105px);
+}
+
+.winner-card {
+    position: relative;
+    background: rgba(255, 255, 255, 0.03);
+    border: 2px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    overflow: hidden;
+}
+
+@media (hover: hover) {
+    .winner-card:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.25);
+        transform: translateY(-2px);
+    }
+}
+
+.winner-card.selected {
+    background: rgba(76, 175, 80, 0.12); /* light green overlay */
+    border-color: #4caf50; /* green border */
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.35);
+}
+
+.winner-card-img {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    background: #2a2a2a;
+    transition: border-color 0.2s;
+}
+
+.winner-card.selected .winner-card-img {
+    border-color: #4caf50;
+}
+
+.winner-card-player-name {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.2;
+}
+
+.winner-card-hero-name {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1.2;
+}
+
+/* Draw Option Card */
+.winner-draw-card {
+    grid-column: 1 / -1; /* spans across all columns */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    color: var(--text);
+    transition: all 0.2s ease;
+}
+
+@media (hover: hover) {
+    .winner-draw-card:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.25);
+    }
+}
+
+.winner-draw-card.selected {
+    background: rgba(76, 175, 80, 0.12);
+    border-color: #4caf50;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.35);
+}
+
+
+/* ================================================== */
+/* Left Side Drawer for Filters                       */
+/* ================================================== */
+
+.filter-drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0);
+    z-index: 1000;
+    visibility: hidden;
+    opacity: 0;
+    transition:
+        background-color 0.35s ease,
+        opacity 0.35s ease,
+        visibility 0.35s ease;
+    display: flex;
+    justify-content: flex-start;
+    align-items: stretch;
+}
+
+.filter-drawer-overlay.open {
+    visibility: visible;
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.65);
+}
+
+.filter-drawer-sheet {
+    width: 85%;
+    max-width: 420px;
+    height: 100%;
+    background: rgba(18, 19, 24, 0.98);
+    border-right: 2px solid rgba(255, 204, 0, 0.25);
+    box-shadow: 12px 0 40px rgba(0, 0, 0, 0.85);
+    display: flex;
+    flex-direction: column;
+    transform: translateX(-100%);
+    transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 15px);
+}
+
+@supports (backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px)) {
+    .filter-drawer-sheet {
+        background-color: rgba(20, 22, 28, 0.82) !important;
+        backdrop-filter: blur(24px) !important;
+        -webkit-backdrop-filter: blur(24px) !important;
+    }
+}
+
+.filter-drawer-overlay.open .filter-drawer-sheet {
+    transform: translateX(0);
+}
+
+/* Header */
+.filter-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.filter-drawer-count {
+    font-family: "Outfit", sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.filter-drawer-close-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.filter-drawer-close-btn:hover {
+    color: var(--text);
+}
+
+/* Reset Button Container */
+.filter-drawer-reset-container {
+    padding: 12px 20px;
+    display: flex;
+}
+
+.btn-filter-reset,
+.btn-filter-apply {
+    width: 100%;
+    background: var(--accent);
+    border: none;
+    color: var(--gray-800);
+    padding: 14px;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 1rem;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+}
+
+/* Scrollable Body */
+.filter-drawer-body {
+    padding: 10px 20px;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Filter Sections */
+.filter-section {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.filter-section-title {
+    font-family: "Outfit", sans-serif;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+}
+
+.filter-options {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+/* Checkbox Design */
+.filter-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.85rem;
+    cursor: pointer;
+    user-select: none;
+    padding: 2px 0;
+    transition: color 0.2s;
+}
+
+.filter-checkbox-label:hover {
+    color: var(--text);
+}
+
+.filter-checkbox-label input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+.filter-divider {
+    border: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin: 6px 0;
+}
+
+/* Footer / Apply Button */
+.filter-drawer-footer {
+    padding: 16px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* btn-filter-apply styles consolidated above */
+
+/* -------------------------------------------------- */
+/* SORT DROPDOWN SYSTEM                               */
+/* -------------------------------------------------- */
+
+.sort-dropdown-container {
+    position: relative;
+    width: 100%;
+}
+
+.sort-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    width: 100%;
+    min-width: 250px;
+    background: rgba(22, 33, 62, 0.96); /* Matches --card-bg glass */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    padding: 8px 0;
+    max-height: 350px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.sort-dropdown-menu::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sort-dropdown-menu::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.sort-dropdown-menu.show {
+    display: block;
+    animation: fadeInDropdown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInDropdown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.sort-dropdown-section-title {
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.4);
+    padding: 6px 16px 4px 16px;
+    user-select: none;
+}
+
+.sort-dropdown-item {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.85);
+    text-align: left;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.sort-dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+    padding-left: 20px;
+}
+
+.sort-dropdown-item.active {
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.sort-dropdown-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    margin: 6px 0;
+}

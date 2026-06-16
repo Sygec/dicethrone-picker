@@ -2,6 +2,7 @@
 <html lang="en">
     <head>
         <link rel="manifest" href="manifest.json" />
+        <link rel="icon" type="image/png" href="images/ico/icon-192.png" />
         <meta charset="UTF-8" />
         <meta
             name="viewport"
@@ -13,27 +14,20 @@
             rel="stylesheet" />
         <title>Dice Throne</title>
 
+        <!-- Environment check: Sets production flag depending on deployment host -->
         <script>
             // Check if this is Production or Local environment based on hostname
             window.isProd =
                 window.location.hostname === "sygec.github.io" ||
                 window.location.hostname ===
                     "dicethrone-prod.sygec.workers.dev";
-            // Create a new link element
-            const themeLink = document.createElement("link");
-            themeLink.rel = "stylesheet";
-            // Assign the file path based on if this is prod or dev
-            themeLink.href = window.isProd
-                ? "styles/style-prod.css"
-                : "styles/style-dev.css";
-            // Append it to the head
-            document.head.appendChild(themeLink);
         </script>
-        <!-- Additionnally, link the common stylesheet -->
+        <!-- Link the shared main styles -->
         <link rel="stylesheet" type="text/css" href="styles/style.css" />
     </head>
 
     <body>
+        <!-- Component: Dice Roll preloader animation screen -->
         <div id="preloader">
             <div class="dice-container">
                 <div class="dice">
@@ -45,43 +39,32 @@
                     <div class="dice-face bottom">2</div>
                 </div>
             </div>
-        </div>
+        </div> <!-- /#preloader -->
+
+        <!-- Layout Wrapper: Main viewport content -->
         <main class="content">
             <img
                 src="images/banner.png"
-                alt="Dice Throne"
-                style="width: 100%; height: auto" />
+                alt="Dice Throne Logo"
+                class="banner-image" />
             <div class="small-text">
                 v<button
                     id="version-number"
                     aria-label="View changelog"
-                    style="
-                        background: none;
-                        border: none;
-                        color: inherit;
-                        font: inherit;
-                        cursor: pointer;
-                        text-decoration: underline;
-                        padding: 0;
-                    ">
+                    class="btn-link">
                     ...
                 </button>
                 |
                 <button
                     id="auth-btn"
-                    style="
-                        background: none;
-                        border: none;
-                        color: inherit;
-                        font: inherit;
-                        cursor: pointer;
-                        text-decoration: underline;
-                        padding: 0;
-                    ">
+                    class="btn-link">
                     Login
                 </button>
             </div>
 
+            <!-- ========================================== -->
+            <!-- SECTION: Roll Randomizer                   -->
+            <!-- ========================================== -->
             <section id="rollSection">
                 <!-- Player Selection Toggles -->
                 <div
@@ -89,7 +72,7 @@
                     id="player-toggle-zone-top"></div>
 
                 <!-- Action Controls Wrapper -->
-                <div class="roll-controls-wrapper" style="margin-bottom: 15px">
+                <div class="roll-controls-wrapper">
                     <div id="rollBtnContainer" class="roll-btn-container">
                         <button
                             id="rollBtn"
@@ -132,7 +115,7 @@
 
                 <!-- Randomizer Results Area -->
                 <section id="results" class="results" aria-live="polite">
-                    <p style="text-align: center; opacity: 0.6">
+                    <p class="picker-hint">
                         Select players and roll.
                     </p>
                 </section>
@@ -144,7 +127,9 @@
                 </div>
             </section>
 
-            <!-- Hero Database & Stats Section -->
+            <!-- ========================================== -->
+            <!-- SECTION: Hero Database & Stats             -->
+            <!-- ========================================== -->
             <section id="dbSection" class="hidden">
                 <!-- Search & Filtering -->
                 <div class="search-container">
@@ -222,7 +207,7 @@
                 </div>
 
                 <!-- Filter & Sort Action Bar -->
-                <div class="filter-action-bar" style="margin-top: 8px; margin-bottom: 12px;">
+                <div class="filter-action-bar">
                     <div class="sort-dropdown-container" id="sort-dropdown-container">
                         <button
                             type="button"
@@ -254,19 +239,21 @@
                 <div id="heroContainer"></div>
             </section>
 
-            <!-- Games History Section -->
+            <!-- ========================================== -->
+            <!-- SECTION: Games History Log                 -->
+            <!-- ========================================== -->
             <section id="gamesSection" class="hidden">
-                <div class="search-container" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-                    <div class="search-wrapper" style="flex: 1;">
+                <div class="search-container">
+                    <div class="search-wrapper">
                         <input
                             class="search-bar"
                             type="text"
                             id="games-search"
-                            style="font-size: 16px; padding-right: 35px;"
+                            style="padding-right: 35px;"
                             placeholder="Search games by hero..."
                             oninput="handleGamesSearchInput()"
                             aria-label="Search games" />
-                        <div class="search-actions" style="right: 10px;">
+                        <div class="search-actions">
                             <img
                                 src="images/buttons/close.png"
                                 id="clear-games-search"
@@ -280,8 +267,7 @@
                         type="button"
                         class="btn-action-trigger"
                         id="btn-trigger-games-filter"
-                        onclick="openHistoryFilterDrawer()"
-                        style="height: 38px; padding: 0 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                        onclick="openHistoryFilterDrawer()">
                         <span class="action-icon">⚙️</span> Filter
                         <span class="active-badge" id="games-filter-active-badge" style="display: none;">0</span>
                     </button>
@@ -293,10 +279,12 @@
                     Showing 0 of 0 games
                 </div>
 
-                <div id="gamesContainer" style="margin-top: 20px"></div>
+                <div id="gamesContainer"></div>
             </section>
 
-            <!-- Collection Section -->
+            <!-- ========================================== -->
+            <!-- SECTION: Collection Ownership Manager      -->
+            <!-- ========================================== -->
             <section id="collectionSection" class="hidden">
                 <div
                     class="small-text"
@@ -304,11 +292,12 @@
                     style="margin-top: 15px">
                     Owned 0 of 0 heroes
                 </div>
-                <div id="collectionContainer" style="margin-top: 20px"></div>
+                <div id="collectionContainer"></div>
             </section>
 
-            <!-- Admin & Data Management -->
-
+            <!-- ========================================== -->
+            <!-- SECTION: Admin Panel & DB Control          -->
+            <!-- ========================================== -->
             <section id="adminSection" class="hidden">
                 <div id="admin-build-info"></div>
 
@@ -603,9 +592,9 @@
                     </div>
                 </div>
             </section>
-        </main>
+        </main> <!-- /main.content -->
 
-        <!-- Persistent Bottom Navigation -->
+        <!-- Component: Persistent Bottom Tab Navigation -->
         <nav class="bottom-nav">
             <a
                 href="#randomizer"
@@ -676,7 +665,7 @@
                 <span class="close-button" onclick="closeWhatsNew()">
                     &times;
                 </span>
-                <h2 style="margin-top: 0">What's New?</h2>
+                <h2>What's New?</h2>
                 <div id="whats-new-container"></div>
                 <button
                     type="button"
@@ -694,7 +683,7 @@
                 <span class="close-button" onclick="closeWinnerModal()"
                     >&times;</span
                 >
-                <h2 style="margin-top: 0">Select Winner</h2>
+                <h2>Select Winner</h2>
                 <div
                     id="winner-selection-container"
                     style="margin: 15px 0; overflow-y: auto; flex: 1;"></div>
@@ -711,7 +700,7 @@
                 <span class="close-button" onclick="closeLoginModal()"
                     >&times;</span
                 >
-                <h2 style="margin-top: 0">Login</h2>
+                <h2>Login</h2>
                 <form
                     id="login-form"
                     autocomplete="on"
@@ -784,7 +773,7 @@
                 <span class="close-button" onclick="closeUpdatePasswordModal()"
                     >&times;</span
                 >
-                <h2 style="margin-top: 0">Update Password</h2>
+                <h2>Update Password</h2>
                 <form
                     id="update-password-form"
                     autocomplete="off"
@@ -794,10 +783,18 @@
                         gap: 10px;
                         margin-top: 10px;
                     ">
+                    <!-- Hidden username field for accessibility and password managers -->
+                    <input
+                        type="text"
+                        id="update-password-username"
+                        name="username"
+                        autocomplete="username"
+                        style="display: none;" />
                     <input
                         name="new-password"
                         type="password"
                         id="new-password"
+                        autocomplete="new-password"
                         placeholder="New Password"
                         style="
                             font-size: 16px;
@@ -866,7 +863,7 @@
             </div>
         </div>
 
-        <!-- Premium Bottom Drawer for Sorting and Filtering -->
+        <!-- Component: Premium Bottom Settings Drawer for Sorting and Filtering -->
         <div id="sort-filter-drawer" class="drawer-overlay" onclick="closeDrawer(event)">
             <div class="drawer-sheet" onclick="event.stopPropagation()">
                 <div class="drawer-header">
@@ -883,7 +880,7 @@
             </div>
         </div>
 
-        <!-- Left Drawer for Dynamic Filtering -->
+        <!-- Component: Left Side Drawer for Dynamic Filtering -->
         <div id="filter-drawer-left" class="filter-drawer-overlay" onclick="closeFilterDrawer(event)">
             <div class="filter-drawer-sheet" onclick="event.stopPropagation()">
                 <div class="filter-drawer-header">
@@ -955,7 +952,12 @@
             </div>
         </div>
 
+        <!-- ========================================== -->
+        <!-- SCRIPTS & MODULES                          -->
+        <!-- ========================================== -->
+        <!-- Third-party Supabase DB SDK -->
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-        <script src="./javascript/dice-throne.js"></script>
+        <!-- Application entry point -->
+        <script type="module" src="./javascript/main.js"></script>
     </body>
 </html>
