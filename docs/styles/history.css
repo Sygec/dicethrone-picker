@@ -1,0 +1,236 @@
+/**
+ * @fileoverview Stylesheet module for the game match history records, scores, winner highlights, and archive cards.
+ * @module history
+ * @requires style
+ */
+
+/* ==========================================
+   Modernized Accordion Games History Styles
+   ========================================== */
+
+.game-history-card {
+    position: relative;
+    background: rgba(22, 33, 62, 0.45);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    margin-bottom: 15px;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: var(--glass-shadow);
+    overflow: hidden;
+    z-index: 1;
+}
+
+@media (hover: hover) {
+    .game-history-card:hover {
+        border-color: rgba(255, 255, 255, 0.25);
+        background: rgba(22, 33, 62, 0.55);
+    }
+}
+
+/* 22% opacity background artwork of the winning character (more visible) */
+.game-card-bg-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 30%;
+    z-index: 0;
+    opacity: 0.22;
+    filter: saturate(1.2) contrast(1.1);
+    pointer-events: none;
+    transition:
+        opacity 0.5s ease,
+        transform 0.5s ease;
+}
+
+@media (hover: hover) {
+    .game-history-card:hover .game-card-bg-img {
+        transform: scale(1.03);
+        opacity: 0.28;
+    }
+}
+
+/* Accordion Header */
+.game-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    z-index: 2;
+    background: rgba(0, 0, 0, 0.15);
+    transition: background-color 0.2s ease;
+}
+
+@media (hover: hover) {
+    .game-card-header:hover {
+        background: rgba(0, 0, 0, 0.25);
+    }
+}
+
+.game-card-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.game-card-date {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.5px;
+}
+
+.game-card-status-badge {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #e94560;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.game-card-status-badge.draw-badge {
+    color: #999999;
+}
+
+/* Mini portrait strip in collapsed header */
+.game-card-collapsed-summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+    margin-right: 15px;
+}
+
+.mini-portrait-strip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+}
+
+.mini-portrait-wrapper {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+    transition:
+        transform 0.2s,
+        z-index 0.2s;
+    z-index: 1;
+}
+
+@media (hover: hover) {
+    .mini-portrait-wrapper:hover {
+        transform: translateY(-2px);
+        z-index: 12;
+    }
+}
+
+.mini-portrait-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 1.5px solid var(--glass-border);
+    background: #1a1a2e;
+}
+
+/* Highlight and enlarge winner portrait in collapsed view */
+.mini-portrait-wrapper.winner-highlight {
+    width: 40px;
+    height: 40px;
+    margin-left: 0; /* display first without left overlap */
+    margin-right: 8px; /* push subsequent portraits with a wider gap */
+    z-index: 10;
+}
+
+.mini-portrait-wrapper.winner-highlight .mini-portrait-img {
+    border: 2px solid #ffbc00; /* Gold border */
+    box-shadow: 0 0 10px rgba(255, 188, 0, 0.7);
+}
+
+.mini-winner-trophy {
+    position: absolute;
+    top: -9px;
+    right: -3px;
+    font-size: 0.95rem; /* Larger, more visible trophy */
+    z-index: 12;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8));
+}
+.mini-portrait-pill {
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #101216;
+    font-size: 0.5rem;
+    font-weight: 900;
+    padding: 1px 3.5px;
+    border-radius: 3px;
+    border: 1px solid var(--text);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+    z-index: 11;
+    white-space: nowrap;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: -0.2px;
+}
+
+.mini-portrait-wrapper.winner-highlight .mini-portrait-pill {
+    bottom: -4px;
+    font-size: 0.55rem;
+    padding: 1.5px 4.5px;
+    border-radius: 4px;
+}
+.chevron-icon {
+    font-size: 0.8rem;
+    color: var(--accent);
+    transition: transform 0.3s ease;
+    opacity: 0.7;
+}
+
+.game-history-card.expanded .chevron-icon {
+    transform: rotate(180deg);
+}
+
+/* Accordion Body */
+.game-card-body {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.25);
+    padding: 16px;
+    position: relative;
+    z-index: 2;
+    display: none; /* Controlled by JS via expanded class */
+}
+
+.game-history-card.expanded .game-card-body {
+    display: block;
+    animation: slideDownIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideDownIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Player Grid (holds Hearthstone cards in a row) */
+.player-responsive-grid {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    flex-wrap: nowrap;
+}

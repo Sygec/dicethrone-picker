@@ -1,0 +1,84 @@
+/**
+ * @fileoverview Stylesheet module for the sticky bottom navigation bar, mobile layouts, and responsive desktop sidebar overrides.
+ * @module navigation
+ * @requires style
+ */
+
+/* Navigation bar styles */
+
+/* 2. The Navigation Bar Container */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(56px + env(safe-area-inset-bottom));
+    background-color: var(--gray-700); /* Dark theme for Dice Throne vibes */
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border-top: 1px solid var(--gray-500);
+    z-index: 1000;
+    box-sizing: border-box;
+
+    /* Critical for modern mobile browsers (iOS/Android bars) */
+    padding-bottom: env(safe-area-inset-bottom);
+
+    /* Workspace Entry Transition */
+    opacity: 0;
+    transform: translateY(20px);
+    filter: blur(4px);
+    transition:
+        opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+        filter 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+        background-color 0.3s ease;
+}
+
+body.loaded .bottom-nav {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+}
+
+/* 3. Individual Nav Items */
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    text-decoration: none;
+    color: var(--gray-300);
+    font-size: 0.75rem;
+    transition: color 0.2s ease;
+}
+
+.nav-item:active,
+.nav-item:focus {
+    color: var(--accent);
+}
+
+.icon {
+    font-size: 1.5rem;
+    margin-bottom: 2px;
+}
+
+/* 4. Desktop Adaptation */
+@media (min-width: 768px) {
+    .bottom-nav {
+        top: 0;
+        bottom: auto;
+        flex-direction: column;
+        width: 60px;
+        height: 100vh;
+        justify-content: flex-start;
+        padding-top: 30px;
+        padding-left: 30px;
+        box-sizing: content-box;
+    }
+
+    .content {
+        padding-bottom: 0;
+        margin-left: 80px; /* Push content right to make room for sidebar */
+    }
+}
