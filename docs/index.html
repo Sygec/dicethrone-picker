@@ -809,6 +809,13 @@
                         gap: 10px;
                         margin-top: 10px;
                     ">
+                    <!-- Hidden username field for accessibility and password managers -->
+                    <input
+                        type="text"
+                        id="update-password-username"
+                        name="username"
+                        autocomplete="username"
+                        style="display: none;" />
                     <input
                         name="new-password"
                         type="password"

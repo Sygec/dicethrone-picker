@@ -160,6 +160,12 @@ export function openUpdatePasswordModal() {
     updatePasswordModal.style.display = "block";
     document.getElementById("update-password-error").style.display = "none";
     document.body.style.overflow = "hidden";
+
+    // Populate hidden username field for password manager context
+    const usernameInput = document.getElementById("update-password-username");
+    if (usernameInput && window.currentUser) {
+        usernameInput.value = window.currentUser.email || "";
+    }
 }
 window.openUpdatePasswordModal = openUpdatePasswordModal;
 
