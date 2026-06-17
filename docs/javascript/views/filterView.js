@@ -11,9 +11,12 @@ import {
     getSoftWeight, 
     escapeHtml,
     isAdmin,
-    isUser
+    isUser,
+    parseDateString,
+    getDaysAgoClean,
+    getRecencyDot
 } from '../utils.js';
-import { getFilterDrawerMatchingCount, parseDateString } from '../filters.js';
+import { getFilterDrawerMatchingCount } from '../filters.js';
 import { updateHeroStatsFromHistory } from '../admin.js';
 import { renderDrawerBanList } from './rollView.js';
 
@@ -1108,59 +1111,7 @@ export function renderList() {
         return (c.name || "").toLowerCase().includes(clean) || (c.group || "").toLowerCase().includes(clean);
     };
 
-    const getRecencyDot = (lastPlayed) => {
-        let recencyDot = "⚫";
-        if (lastPlayed && lastPlayed === "Unknown") {
-            recencyDot = "🔴";
-        } else if (
-            lastPlayed &&
-            lastPlayed !== "Never" &&
-            lastPlayed !== "Unknown"
-        ) {
-            const lastDate = parseDateString(lastPlayed);
-            if (lastDate) {
-                try {
-                    const today = new Date();
-                    lastDate.setHours(0, 0, 0, 0);
-                    today.setHours(0, 0, 0, 0);
-                    const diffTime = today - lastDate;
-                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                    if (diffDays <= 15) {
-                        recencyDot = "🟢";
-                    } else if (diffDays <= 60) {
-                        recencyDot = "🟡";
-                    } else {
-                        recencyDot = "🔴";
-                    }
-                } catch (e) {
-                    recencyDot = "⚪";
-                }
-            } else {
-                recencyDot = "⚪";
-            }
-        }
-        return recencyDot;
-    };
 
-    const getDaysAgoClean = (dateString) => {
-        if (!dateString || dateString === "Never") return "";
-        if (dateString === "Unknown") return "Date unknown (historical)";
-        const lastDate = parseDateString(dateString);
-        if (!lastDate) return "";
-        try {
-            const today = new Date();
-            lastDate.setHours(0, 0, 0, 0);
-            today.setHours(0, 0, 0, 0);
-            const diffTime = today - lastDate;
-            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-            if (diffDays < 0) return "";
-            if (diffDays === 0) return "today";
-            if (diffDays === 1) return "yesterday";
-            return `${diffDays} days ago`;
-        } catch (e) {
-            return "";
-        }
-    };
 
     const matchingPlayerIdxs = [];
     if (searchTerm) {

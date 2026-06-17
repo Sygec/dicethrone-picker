@@ -175,3 +175,97 @@ export async function handlePlayerColorChange(playerId, input) {
         ((async () => { const m = await import("./admin.js"); m.renderPlayersList(); })());
     }
 }
+
+/**
+ * Parses a date string into a Date object.
+ * Supports various formats and adjusts timezone flags if needed.
+ * @function parseDateString
+ * @param {string} dateString - The raw date string.
+ * @returns {Date|null} The parsed Date object, or null if invalid.
+ */
+export function parseDateString(dateString) {
+    if (!dateString) return null;
+    try {
+        let cleanDate = dateString.trim();
+        if (cleanDate && !cleanDate.includes("T"))
+            cleanDate = cleanDate.replace(" ", "T");
+        if (
+            cleanDate &&
+            cleanDate.includes(":") &&
+            !cleanDate.includes("Z") &&
+            !cleanDate.includes("+")
+        )
+            cleanDate += "Z";
+        const dateObj = new Date(cleanDate);
+        return isNaN(dateObj.getTime()) ? null : dateObj;
+    } catch (e) {
+        return null;
+    }
+}
+
+/**
+ * Formats a date string into a user-friendly relative elapsed time text.
+ * @function getDaysAgoClean
+ * @param {string} dateString - The raw date string.
+ * @returns {string} The formatted elapsed time (e.g. "today", "yesterday", "3 days ago").
+ */
+export function getDaysAgoClean(dateString) {
+    if (!dateString || dateString === "Never") return "";
+    if (dateString === "Unknown") return "Date unknown (historical)";
+    const lastDate = parseDateString(dateString);
+    if (!lastDate) return "";
+    try {
+        const today = new Date();
+        lastDate.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+        const diffTime = today - lastDate;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays < 0) return "";
+        if (diffDays === 0) return "today";
+        if (diffDays === 1) return "yesterday";
+        return `${diffDays} days ago`;
+    } catch (e) {
+        return "";
+    }
+}
+
+/**
+ * Evaluates recency of a play and returns a corresponding status indicator emoji.
+ * @function getRecencyDot
+ * @param {string} lastPlayed - The last played date string.
+ * @returns {string} Colored circle emoji indicating recency status.
+ */
+export function getRecencyDot(lastPlayed) {
+    let recencyDot = "⚫";
+    if (lastPlayed && lastPlayed === "Unknown") {
+        recencyDot = "🔴";
+    } else if (
+        lastPlayed &&
+        lastPlayed !== "Never" &&
+        lastPlayed !== "Unknown"
+    ) {
+        const lastDate = parseDateString(lastPlayed);
+        if (lastDate) {
+            try {
+                const today = new Date();
+                lastDate.setHours(0, 0, 0, 0);
+                today.setHours(0, 0, 0, 0);
+                const diffTime = today - lastDate;
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                if (diffDays <= 15) {
+                    recencyDot = "🟢";
+                } else if (diffDays <= 60) {
+                    recencyDot = "🟡";
+                } else {
+                    recencyDot = "🔴";
+                }
+            } catch (e) {
+                recencyDot = "⚪";
+            }
+        } else {
+            recencyDot = "⚪";
+        }
+    }
+    return recencyDot;
+}
+

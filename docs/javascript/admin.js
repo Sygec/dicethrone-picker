@@ -1,4 +1,4 @@
-import { isHeroOwned } from './utils.js';
+import { isHeroOwned, escapeHtml } from './utils.js';
 import { renderList, updateSegmentedHighlights } from './filters.js';
 import { updateDropdownSort } from './randomizer.js';
 import { init } from './main.js';
@@ -632,12 +632,4 @@ export function updateHeroStatsFromHistory() {
         });
     });
 }
-// Helper to escape HTML characters
-function escapeHtml(text) {
-    return String(text || "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
+
