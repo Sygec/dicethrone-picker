@@ -4,6 +4,7 @@
  */
 
 import * as apiService from './services/apiService.js';
+import * as stateStore from './stateStore.js';
 
 /**
  * Executes a hero roll for all active players, selecting unique characters.
@@ -448,7 +449,7 @@ export function startPanelScramble(pIdx, ownedHeroes) {
     const bgImgEl = document.getElementById(`bg-img-${pIdx}`);
     const nameEl = document.getElementById(`hero-name-title-${pIdx}`);
 
-    window.scrambleIntervals[pIdx] = setInterval(() => {
+    const intervalId = setInterval(() => {
         const randomHero =
             ownedHeroes[Math.floor(Math.random() * ownedHeroes.length)];
         if (bgImgEl) bgImgEl.src = window.getImgUrl(randomHero.slug);
@@ -461,6 +462,7 @@ export function startPanelScramble(pIdx, ownedHeroes) {
             nameEl.innerText = scrambleStr;
         }
     }, 70);
+    stateStore.updateObject("scrambleIntervals", pIdx, intervalId);
 }
 window.startPanelScramble = startPanelScramble;
 
@@ -471,9 +473,10 @@ window.startPanelScramble = startPanelScramble;
  * @param {Object} finalHero - Rolled hero object.
  */
 export function stopPanelScramble(pIdx, finalHero) {
-    if (window.scrambleIntervals[pIdx]) {
-        clearInterval(window.scrambleIntervals[pIdx]);
-        delete window.scrambleIntervals[pIdx];
+    const intervals = stateStore.get("scrambleIntervals");
+    if (intervals[pIdx]) {
+        clearInterval(intervals[pIdx]);
+        stateStore.updateObject("scrambleIntervals", pIdx, undefined);
     }
 
     const rowEl = document.getElementById(`player-row-${pIdx}`);
@@ -728,9 +731,10 @@ export function cancelRoll() {
 
     if (window.activeDraftOrder) {
         window.activeDraftOrder.forEach((pIdx) => {
-            if (window.scrambleIntervals[pIdx]) {
-                clearInterval(window.scrambleIntervals[pIdx]);
-                delete window.scrambleIntervals[pIdx];
+            const intervals = stateStore.get("scrambleIntervals");
+            if (intervals[pIdx]) {
+                clearInterval(intervals[pIdx]);
+                stateStore.updateObject("scrambleIntervals", pIdx, undefined);
             }
         });
     }
@@ -843,11 +847,7 @@ window.setStagedDraftCount = setStagedDraftCount;
  * @param {string} heroId - The ID of the hero to toggle ban status for.
  */
 export function toggleStagedBan(heroId) {
-    if (window.stagedBannedHeroIds.has(heroId)) {
-        window.stagedBannedHeroIds.delete(heroId);
-    } else {
-        window.stagedBannedHeroIds.add(heroId);
-    }
+    stateStore.updateSet("stagedBannedHeroIds", "toggle", heroId);
     renderDrawerBanList();
 }
 window.toggleStagedBan = toggleStagedBan;
@@ -862,9 +862,9 @@ export function toggleBanGroup(groupId, banAll) {
     window.characters.forEach((c) => {
         if (c.group_id === groupId) {
             if (banAll) {
-                window.stagedBannedHeroIds.add(c.id);
+                stateStore.updateSet("stagedBannedHeroIds", "add", c.id);
             } else {
-                window.stagedBannedHeroIds.delete(c.id);
+                stateStore.updateSet("stagedBannedHeroIds", "delete", c.id);
             }
         }
     });
@@ -1110,7 +1110,7 @@ export function startDraftWheelScramble(pIdx, pool) {
     }
     wheel.innerHTML = html;
 
-    window.scrambleIntervals[pIdx] = setInterval(() => {
+    const intervalId = setInterval(() => {
         for (let i = 0; i < count; i++) {
             const randomHero = pool[Math.floor(Math.random() * pool.length)];
             if (!randomHero) continue;
@@ -1136,6 +1136,7 @@ export function startDraftWheelScramble(pIdx, pool) {
             if (groupEl) groupEl.innerText = randomHero.group || "";
         }
     }, 70);
+    stateStore.updateObject("scrambleIntervals", pIdx, intervalId);
 }
 window.startDraftWheelScramble = startDraftWheelScramble;
 
@@ -1146,9 +1147,10 @@ window.startDraftWheelScramble = startDraftWheelScramble;
  * @param {Array<Object>} candidates - The resolved candidate heroes.
  */
 export function stopDraftWheelScramble(pIdx, candidates) {
-    if (window.scrambleIntervals[pIdx]) {
-        clearInterval(window.scrambleIntervals[pIdx]);
-        delete window.scrambleIntervals[pIdx];
+    const intervals = stateStore.get("scrambleIntervals");
+    if (intervals[pIdx]) {
+        clearInterval(intervals[pIdx]);
+        stateStore.updateObject("scrambleIntervals", pIdx, undefined);
     }
 
     const wheel = document.getElementById(`draft-wheel-${pIdx}`);

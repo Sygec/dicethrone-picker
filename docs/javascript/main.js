@@ -6,6 +6,7 @@
 import './config.js';
 import * as apiService from './services/apiService.js';
 import './state.js';
+import * as stateStore from './stateStore.js';
 import './utils.js';
 import './auth.js';
 import './admin.js';
@@ -49,13 +50,14 @@ if (window.updatePasswordForm) {
  * @returns {Promise<void>}
  */
 export async function init() {
-    window.draftModeEnabled = localStorage.getItem("draftModeEnabled") === "true";
-    window.draftCount = parseInt(localStorage.getItem("draftCount") || "3", 10);
-    if (window.draftCount !== 2 && window.draftCount !== 3) {
-        window.draftCount = 3;
+    stateStore.set("draftModeEnabled", localStorage.getItem("draftModeEnabled") === "true");
+    let dCount = parseInt(localStorage.getItem("draftCount") || "3", 10);
+    if (dCount !== 2 && dCount !== 3) {
+        dCount = 3;
     }
+    stateStore.set("draftCount", dCount);
     const banned = localStorage.getItem("bannedHeroIds");
-    window.bannedHeroIds = banned ? new Set(JSON.parse(banned)) : new Set();
+    stateStore.set("bannedHeroIds", banned ? new Set(JSON.parse(banned)) : new Set());
     if (typeof window.updateRollSettingsBadge === "function") {
         window.updateRollSettingsBadge();
     }
@@ -63,17 +65,17 @@ export async function init() {
     const { data: groupsData, error: groupsError } = await apiService.getGroups();
 
     if (!groupsError && groupsData) {
-        window.groups = groupsData;
+        stateStore.set("groups", groupsData);
         if (typeof window.populateGroupDropdown === "function") window.populateGroupDropdown();
         if (typeof window.renderGroupsList === "function") window.renderGroupsList();
 
-        const currentGroupIds = new Set(window.groups.map((g) => g.id));
-        if (window.activeGroups.size === 0) {
-            window.groups.forEach((g) => window.activeGroups.add(g.id));
+        const currentGroupIds = new Set(groupsData.map((g) => g.id));
+        if (stateStore.get("activeGroups").size === 0) {
+            groupsData.forEach((g) => stateStore.updateSet("activeGroups", "add", g.id));
         } else {
-            for (let id of window.activeGroups) {
+            for (let id of stateStore.get("activeGroups")) {
                 if (!currentGroupIds.has(id)) {
-                    window.activeGroups.delete(id);
+                    stateStore.updateSet("activeGroups", "delete", id);
                 }
             }
         }
@@ -85,7 +87,7 @@ export async function init() {
     const { data: playersData, error: playersError } = await apiService.getPlayers();
 
     if (!playersError && playersData) {
-        window.players = playersData;
+        stateStore.set("players", playersData);
         playersData.forEach((p) => {
             if (p.player_color) {
                 if (typeof window.setPlayerColorVariable === "function") {
@@ -94,16 +96,19 @@ export async function init() {
             }
         });
 
-        window.NAMES = playersData.map((p) => p.name);
-        window.loggedInPlayerIndex = -1;
+        const names = playersData.map((p) => p.name);
+        let loggedInIdx = -1;
+        const currentUser = stateStore.get("currentUser");
         playersData.forEach((p, i) => {
             if (i < 6) {
-                window.NAMES[i] = p.name;
-                if (window.currentUser && p.user_id === window.currentUser.id) {
-                    window.loggedInPlayerIndex = i;
+                names[i] = p.name;
+                if (currentUser && p.user_id === currentUser.id) {
+                    loggedInIdx = i;
                 }
             }
         });
+        stateStore.set("NAMES", names);
+        stateStore.set("loggedInPlayerIndex", loggedInIdx);
         if (typeof window.updateAuthUI === "function") window.updateAuthUI();
         if (typeof window.renderPlayerToggles === "function") window.renderPlayerToggles();
     }
@@ -112,9 +117,9 @@ export async function init() {
 
     if (error) return console.error("Error fetching heroes:", error);
 
-    window.characters = data.map((hero) => {
+    const characters = data.map((hero) => {
         const userHeroRecord = hero.user_heroes?.find(
-            (uh) => uh.user_id === window.currentUser?.id,
+            (uh) => uh.user_id === stateStore.get("currentUser")?.id,
         );
         const isOwned = userHeroRecord ? userHeroRecord.is_owned : true;
 
@@ -141,13 +146,14 @@ export async function init() {
 
         return char;
     });
+    stateStore.set("characters", characters);
 
     const { data: gamesData, error: gamesError } = await apiService.getGames();
 
     if (gamesError) {
         console.error("Error fetching games:", gamesError);
     } else {
-        window.games = gamesData.map((game) => ({
+        const games = gamesData.map((game) => ({
             ...game,
             game_players: (game.game_players || []).slice().sort((a, b) => {
                 const aIdx = parseInt(a.player_id?.substring(1) || "0", 10);
@@ -155,6 +161,7 @@ export async function init() {
                 return aIdx - bIdx;
             }),
         }));
+        stateStore.set("games", games);
     }
 
     if (typeof window.renderAdminBuildInfo === "function") window.renderAdminBuildInfo();
@@ -168,8 +175,8 @@ export async function init() {
     }
     if (typeof window.renderCollectionView === "function") window.renderCollectionView();
     
-    const initialSort = window.currentSort;
-    window.currentSort = null;
+    const initialSort = stateStore.get("currentSort");
+    stateStore.set("currentSort", null);
     if (typeof window.setSort === "function") window.setSort(initialSort);
 }
 window.init = init;
@@ -186,13 +193,13 @@ export async function initializeApp() {
         const {
             data: { session },
         } = await apiService.getSession();
-        window.currentUser = session?.user || null;
+        stateStore.set("currentUser", session?.user || null);
         if (typeof window.updateAuthUI === "function") window.updateAuthUI();
 
         await init();
 
         const response = await fetch("changelog.json");
-        window.cachedChangelog = await response.json();
+        stateStore.set("cachedChangelog", await response.json());
 
         if (window.cachedChangelog.length > 0) {
             const latestEntry = window.cachedChangelog[0];
@@ -207,6 +214,11 @@ export async function initializeApp() {
 
         // Setup Realtime subscriptions
         apiService.subscribeToDatabaseChanges(init);
+
+        // Setup State change logging for development verification
+        stateStore.subscribe((key, val) => {
+            console.log(`[stateStore] Update: ${key} =`, val);
+        });
     } catch (error) {
         console.error("Could not load version number:", error);
         if (window.versionLabel) {
@@ -240,7 +252,7 @@ if (window.versionLabel) window.versionLabel.onclick = window.openChangelog;
 if (window.closeBtn) window.closeBtn.onclick = window.closeChangelog;
 
 apiService.onAuthStateChange((event, session) => {
-    window.currentUser = session?.user || null;
+    stateStore.set("currentUser", session?.user || null);
     if (event === "SIGNED_IN" || event === "SIGNED_OUT") init();
 
     if (event === "PASSWORD_RECOVERY") {

@@ -3,6 +3,8 @@
  * @module filters
  */
 
+import * as stateStore from './stateStore.js';
+
 /**
  * Toggles the visibility state of the sorting options section in the UI.
  * @function toggleSortSection
@@ -206,18 +208,14 @@ export function handleFilterDrawerCheckboxChange(checkbox) {
     const checked = checkbox.checked;
 
     if (type === "data-history") {
-        if (checked) window.stagedFilterDataHistories.add(val);
-        else window.stagedFilterDataHistories.delete(val);
+        stateStore.updateSet("stagedFilterDataHistories", checked ? "add" : "delete", val);
     } else if (type === "player") {
-        if (checked) window.stagedFilterPlayers.add(val);
-        else window.stagedFilterPlayers.delete(val);
+        stateStore.updateSet("stagedFilterPlayers", checked ? "add" : "delete", val);
     } else if (type === "complexity") {
         const numVal = Number(val);
-        if (checked) window.stagedFilterComplexities.add(numVal);
-        else window.stagedFilterComplexities.delete(numVal);
+        stateStore.updateSet("stagedFilterComplexities", checked ? "add" : "delete", numVal);
     } else if (type === "group") {
-        if (checked) window.stagedFilterGroups.add(val);
-        else window.stagedFilterGroups.delete(val);
+        stateStore.updateSet("stagedFilterGroups", checked ? "add" : "delete", val);
     }
 
     updateFilterDrawerHeroCountUI();
@@ -886,11 +884,9 @@ window.renderDrawerComplexityFilters = renderDrawerComplexityFilters;
  */
 export function toggleDrawerLevel(level) {
     if (level === "all") {
-        window.stagedLevels =
-            window.stagedLevels.size === 6 ? new Set() : new Set([1, 2, 3, 4, 5, 6]);
+        stateStore.set("stagedLevels", stateStore.get("stagedLevels").size === 6 ? new Set() : new Set([1, 2, 3, 4, 5, 6]));
     } else {
-        if (window.stagedLevels.has(level)) window.stagedLevels.delete(level);
-        else window.stagedLevels.add(level);
+        stateStore.updateSet("stagedLevels", "toggle", level);
     }
     renderDrawerComplexityFilters();
     renderDrawerGroupFilters();
@@ -1042,17 +1038,13 @@ window.renderDrawerGroupFilters = renderDrawerGroupFilters;
  */
 export function toggleDrawerGroupFilter(groupId) {
     if (groupId === "all") {
-        if (window.stagedGroups.size === window.groups.length) {
-            window.stagedGroups.clear();
+        if (stateStore.get("stagedGroups").size === window.groups.length) {
+            stateStore.updateSet("stagedGroups", "clear");
         } else {
-            window.groups.forEach((g) => window.stagedGroups.add(g.id));
+            window.groups.forEach((g) => stateStore.updateSet("stagedGroups", "add", g.id));
         }
     } else {
-        if (window.stagedGroups.has(groupId)) {
-            window.stagedGroups.delete(groupId);
-        } else {
-            window.stagedGroups.add(groupId);
-        }
+        stateStore.updateSet("stagedGroups", "toggle", groupId);
     }
     renderDrawerComplexityFilters();
     renderDrawerGroupFilters();
@@ -1523,14 +1515,14 @@ window.updateActiveFilterChips = updateActiveFilterChips;
  */
 export function removeFilterChip(type, val) {
     if (type === 'data-history') {
-        window.activeFilterDataHistories.delete(val);
-        window.dbUseHistorical = !window.activeFilterDataHistories.has("Normal only") || window.activeFilterDataHistories.has("Historical only");
+        stateStore.updateSet("activeFilterDataHistories", "delete", val);
+        stateStore.set("dbUseHistorical", !stateStore.get("activeFilterDataHistories").has("Normal only") || stateStore.get("activeFilterDataHistories").has("Historical only"));
     } else if (type === 'player') {
-        window.activeFilterPlayers.delete(val);
+        stateStore.updateSet("activeFilterPlayers", "delete", val);
     } else if (type === 'complexity') {
-        window.activeFilterComplexities.delete(Number(val));
+        stateStore.updateSet("activeFilterComplexities", "delete", Number(val));
     } else if (type === 'group') {
-        window.activeFilterGroups.delete(val);
+        stateStore.updateSet("activeFilterGroups", "delete", val);
     }
 
     renderList();

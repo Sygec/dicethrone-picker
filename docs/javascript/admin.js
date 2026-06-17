@@ -1,4 +1,5 @@
 import * as apiService from './services/apiService.js';
+import * as stateStore from './stateStore.js';
 
 /**
  * Renders environmental build metadata in the admin interface (e.g. host name, production/development status, target DB).
@@ -186,11 +187,7 @@ export function toggleCollectionGroup(groupId, event) {
     ) {
         return;
     }
-    if (window.expandedCollectionGroups.has(groupId)) {
-        window.expandedCollectionGroups.delete(groupId);
-    } else {
-        window.expandedCollectionGroups.add(groupId);
-    }
+    stateStore.updateSet("expandedCollectionGroups", "toggle", groupId);
     renderCollectionView();
 }
 window.toggleCollectionGroup = toggleCollectionGroup;
@@ -1232,7 +1229,7 @@ export function renderGamesList() {
             explicitLosers.length === game.game_players.length;
         const isInProgress = winners.length === 0 && !isDraw;
         if (isInProgress) {
-            window.expandedGameIds.add(game.id);
+            stateStore.updateSet("expandedGameIds", "add", game.id);
         }
     });
 
@@ -1518,11 +1515,7 @@ window.renderGamesList = renderGamesList;
  * @param {string} gameId - Match UUID/ID.
  */
 export function toggleGameExpansion(gameId) {
-    if (window.expandedGameIds.has(gameId)) {
-        window.expandedGameIds.delete(gameId);
-    } else {
-        window.expandedGameIds.add(gameId);
-    }
+    stateStore.updateSet("expandedGameIds", "toggle", gameId);
     renderGamesList();
 }
 window.toggleGameExpansion = toggleGameExpansion;
