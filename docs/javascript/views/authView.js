@@ -4,6 +4,7 @@
  */
 
 import * as stateStore from '../stateStore.js';
+import { isAdmin } from '../utils.js';
 
 // DOM Element references cache
 const getElements = () => ({
@@ -37,11 +38,9 @@ export function updateAuthUI() {
             const username = currentUser.email ? currentUser.email.split("@")[0] : "User";
             if (el.authBtn) el.authBtn.innerText = `Logout (${username})`;
         }
-        if (el.authBtn) el.authBtn.onclick = window.handleLogout;
-        if (el.adminNav) el.adminNav.style.display = window.isAdmin() ? "flex" : "none";
+        if (el.adminNav) el.adminNav.style.display = isAdmin() ? "flex" : "none";
     } else {
         if (el.authBtn) el.authBtn.innerText = "Login";
-        if (el.authBtn) el.authBtn.onclick = window.openLoginModal;
         if (el.adminNav) el.adminNav.style.display = "none";
         
         const adminSection = document.getElementById("adminSection");
@@ -66,7 +65,7 @@ export function renderPlayerToggles() {
             const isChecked = i < 4 ? "checked" : "";
             return `
             <label class="player-card" style="--player-color: var(--${p.id})">
-                <input type="checkbox" id="use${i}" ${isChecked} onclick="handlePlayerToggleClick(event, ${i})">
+                <input type="checkbox" id="use${i}" ${isChecked} data-action="toggle-player-slot" data-player-idx="${i}">
                 <span class="player-card-name">${p.name}</span>
             </label>`;
         })

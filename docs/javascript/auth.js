@@ -2,6 +2,10 @@
  * @fileoverview Authentication UI and business logic module wrapping Supabase Auth APIs.
  * @module auth
  */
+let loginModalKeyHandler = null;
+import { renderList } from './filters.js';
+import { renderGamesList, renderHeroesList } from './admin.js';
+
 
 import * as apiService from './services/apiService.js';
 import * as authView from './views/authView.js';
@@ -15,12 +19,10 @@ export function updateAuthUI() {
     authView.updateAuthUI();
 
     // Refresh lists to show/hide edit buttons
-    if (typeof window.renderList === "function") window.renderList();
-    if (typeof window.renderGamesList === "function") window.renderGamesList();
-    if (typeof window.renderHeroesList === "function") window.renderHeroesList();
+    if (true) renderList();
+    if (true) renderGamesList();
+    if (true) renderHeroesList();
 }
-window.updateAuthUI = updateAuthUI;
-
 /**
  * Renders the toggle buttons/checkboxes for player slots at the top of the interface.
  * @function renderPlayerToggles
@@ -28,8 +30,6 @@ window.updateAuthUI = updateAuthUI;
 export function renderPlayerToggles() {
     authView.renderPlayerToggles();
 }
-window.renderPlayerToggles = renderPlayerToggles;
-
 /**
  * Displays the login modal popup, sets page scroll behavior, and registers keybind handlers.
  * @function openLoginModal
@@ -37,15 +37,13 @@ window.renderPlayerToggles = renderPlayerToggles;
 export function openLoginModal() {
     authView.openLoginModal();
     // Add key handler so Escape cancels (form submit handles Enter)
-    window.loginModalKeyHandler = (e) => {
+    loginModalKeyHandler = (e) => {
         if (e.key === "Escape") {
             closeLoginModal();
         }
     };
-    document.addEventListener("keydown", window.loginModalKeyHandler);
+    document.addEventListener("keydown", loginModalKeyHandler);
 }
-window.openLoginModal = openLoginModal;
-
 /**
  * Closes the login modal popup, restores page scrolling, and removes keybind event listeners.
  * @function closeLoginModal
@@ -53,13 +51,10 @@ window.openLoginModal = openLoginModal;
 export function closeLoginModal() {
     authView.closeLoginModal();
     // Remove key handler when modal is closed
-    if (window.loginModalKeyHandler) {
-        document.removeEventListener("keydown", window.loginModalKeyHandler);
-        window.loginModalKeyHandler = null;
+    if (loginModalKeyHandler) {
+        document.removeEventListener("keydown", loginModalKeyHandler);
     }
 }
-window.closeLoginModal = closeLoginModal;
-
 /**
  * Authenticates the user with Supabase using email and password credentials from login inputs.
  * Displays error messages if login fails.
@@ -77,8 +72,6 @@ export async function handleLogin() {
         authView.showLoginError(error.message);
     }
 }
-window.handleLogin = handleLogin;
-
 /**
  * Requests a password reset email via Supabase Auth for the email filled in the login input.
  * Displays success feedback or error message.
@@ -102,8 +95,6 @@ export async function handlePasswordReset() {
         authView.showUpdatePasswordSuccessFeedback();
     }
 }
-window.handlePasswordReset = handlePasswordReset;
-
 /**
  * Displays the password update modal dialog overlay.
  * @function openUpdatePasswordModal
@@ -111,8 +102,6 @@ window.handlePasswordReset = handlePasswordReset;
 export function openUpdatePasswordModal() {
     authView.openUpdatePasswordModal();
 }
-window.openUpdatePasswordModal = openUpdatePasswordModal;
-
 /**
  * Closes the password update modal dialog overlay.
  * @function closeUpdatePasswordModal
@@ -120,8 +109,6 @@ window.openUpdatePasswordModal = openUpdatePasswordModal;
 export function closeUpdatePasswordModal() {
     authView.closeUpdatePasswordModal();
 }
-window.closeUpdatePasswordModal = closeUpdatePasswordModal;
-
 /**
  * Updates the logged-in user's password using the value inside the password reset form.
  * @function handleUpdatePassword
@@ -148,8 +135,6 @@ export async function handleUpdatePassword() {
         authView.resetPasswordUpdateForm();
     }
 }
-window.handleUpdatePassword = handleUpdatePassword;
-
 /**
  * Prompts the user and logs out of the active Supabase session.
  * @function handleLogout
@@ -161,4 +146,3 @@ export async function handleLogout() {
         await apiService.signOut();
     }
 }
-window.handleLogout = handleLogout;

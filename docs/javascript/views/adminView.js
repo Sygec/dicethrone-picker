@@ -10,8 +10,12 @@ import {
     getPlayerColor, 
     escapeHtml, 
     normalizeColorValue,
-    getHeroProbabilityText 
+    getHeroProbabilityText,
+    isAdmin,
+    isUser
 } from '../utils.js';
+import { isProd } from '../config.js';
+import { updateSegmentedHighlights } from './filterView.js';
 
 // DOM Element references cache helper
 const getElements = () => ({
@@ -54,15 +58,15 @@ export function renderAdminBuildInfo() {
     if (host.includes("github.io")) platform = "GitHub Pages";
     else if (host.includes("workers.dev")) platform = "Cloudflare Workers";
 
-    const env = window.isProd ? "Production" : "Development";
-    const dbName = window.isProd ? "Supabase PROD" : "Supabase DEV";
-    const branchHint = window.isProd ? "main" : "dev/local";
+    const env = isProd ? "Production" : "Development";
+    const dbName = isProd ? "Supabase PROD" : "Supabase DEV";
+    const branchHint = isProd ? "main" : "dev/local";
 
     el.buildInfoDiv.innerHTML = `
         <div><b>Platform:</b> ${platform} (${host})</div>
         <div><b>Environment:</b> ${env} (Targeting: ${branchHint})</div>
         <div><b>Database:</b> ${dbName}</div>
-        ${!window.isProd ? '<div style="margin-top:5px; color:var(--danger); font-style:italic;">Note: Dev heroes are prefixed with "DEV-" in this database.</div>' : ""}
+        ${!isProd ? '<div style="margin-top:5px; color:var(--danger); font-style:italic;">Note: Dev heroes are prefixed with "DEV-" in this database.</div>' : ""}
     `;
 }
 
@@ -134,7 +138,7 @@ export function closeWhatsNew() {
  * @param {string} sectionName - Section identifier ('roll', 'database', 'history', 'collection', 'admin').
  */
 export function showSection(sectionName) {
-    if (sectionName === "admin" && !window.isAdmin()) return;
+    if (sectionName === "admin" && !isAdmin()) return;
 
     const sections = {
         roll: "rollSection",
@@ -159,9 +163,7 @@ export function showSection(sectionName) {
     });
 
     if (sectionName === "database") {
-        if (typeof window.updateSegmentedHighlights === "function") {
-            setTimeout(window.updateSegmentedHighlights, 50);
-        }
+        setTimeout(updateSegmentedHighlights, 50);
     } else if (sectionName === "history") {
         renderGamesList();
     } else if (sectionName === "collection") {
@@ -241,7 +243,7 @@ export function renderCollectionView() {
                 .map((h) => {
                     const isSelected = h.is_owned;
                     return `
-            <div class="collection-hero-card ${isSelected ? "selected" : ""} ${isDisabled ? "disabled" : ""}" onclick="toggleHeroOwned('${h.id}', ${!isSelected})">
+            <div class="collection-hero-card ${isSelected ? "selected" : ""} ${isDisabled ? "disabled" : ""}" data-action="toggle-hero-owned" data-hero-id="${h.id}" data-selected="${isSelected}">
                 <img src="${getImgUrl(h.slug)}" class="collection-hero-card-img" alt="${h.name}">
                 <div class="collection-hero-card-name">${h.name}</div>
             </div>
@@ -255,9 +257,9 @@ export function renderCollectionView() {
 
             return `
             <div class="collection-group${isExpanded ? "" : " collapsed"}">
-                <div class="collection-group-header" onclick="toggleCollectionGroup('${group.id}', event)" style="cursor: pointer;">
-                    <input type="checkbox" id="owned-group-${group.id}" ${allOwned ? "checked" : ""} ${isDisabled} onchange="toggleGroupOwned('${group.id}', this.checked)" onclick="event.stopPropagation();">
-                    <label for="owned-group-${group.id}" onclick="event.stopPropagation();">
+                <div class="collection-group-header" data-action="toggle-collection-group" data-group-id="${group.id}" style="cursor: pointer;">
+                    <input type="checkbox" id="owned-group-${group.id}" ${allOwned ? "checked" : ""} ${isDisabled} data-action="toggle-group-owned" data-group-id="${group.id}">
+                    <label for="owned-group-${group.id}">
                         <strong>${group.name}</strong>
                         ${group.year ? ` <span style="opacity: 0.6; font-size: 0.85em;">(${group.year})</span>` : ""}
                         <span class="stats-divider" style="margin: 0 8px;">|</span>
@@ -344,8 +346,8 @@ export function renderGroupsList() {
                     ${g.year ? ` <span style="opacity: 0.6;">(${g.year})</span>` : ""}
                 </div>
                 <div style="display: flex; gap: 5px;">
-                    <button type="button" class="btn-save btn-inline" onclick="editGroup('${g.id}')">Edit</button>
-                    <button type="button" class="btn-cancel btn-inline" onclick="deleteGroup('${g.id}')">Delete</button>
+                    <button type="button" class="btn-save btn-inline" data-action="edit-group" data-group-id="${g.id}">Edit</button>
+                    <button type="button" class="btn-cancel btn-inline" data-action="delete-group" data-group-id="${g.id}">Delete</button>
                 </div>
             </div>
             <div id="groupEditPanel-${g.id}" class="group-edit-panel hidden">
@@ -355,8 +357,8 @@ export function renderGroupsList() {
                     <input type="number" id="groupYear-${g.id}" placeholder="Release Year" value="${g.year ?? ""}">
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <button type="button" class="btn-save" onclick="saveGroupInline('${g.id}')">Save</button>
-                    <button type="button" class="btn-cancel" onclick="cancelGroupEdit('${g.id}')">Cancel</button>
+                    <button type="button" class="btn-save" data-action="save-group-inline" data-group-id="${g.id}">Save</button>
+                    <button type="button" class="btn-cancel" data-action="cancel-group-edit" data-group-id="${g.id}">Cancel</button>
                 </div>
             </div>
         </div>
@@ -387,11 +389,11 @@ export function renderHeroesList() {
     const html = characters
         .map((c, idx) => {
             const isEditing = editIndex === idx;
-            const editBtn = window.isAdmin()
-                ? `<button class="btn-save btn-inline" onclick="editChar(${idx})">Edit</button>`
+            const editBtn = isAdmin()
+                ? `<button class="btn-save btn-inline" data-action="edit-hero" data-hero-idx="${idx}">Edit</button>`
                 : "";
-            const deleteBtn = window.isAdmin()
-                ? `<button class="btn-cancel btn-inline" onclick="deleteHero('${c.id}')">Delete</button>`
+            const deleteBtn = isAdmin()
+                ? `<button class="btn-cancel btn-inline" data-action="delete-hero" data-hero-id="${c.id}">Delete</button>`
                 : "";
             const groupOptions = groups
                 .map(
@@ -427,8 +429,8 @@ export function renderHeroesList() {
                         </select>
                     </div>
                     <div style="display: flex; gap: 10px;">
-                        <button class="btn-save" onclick="saveHeroInline('${c.id}', ${idx})">Save</button>
-                        <button class="btn-cancel" onclick="cancelHeroEdit()">Cancel</button>
+                        <button class="btn-save" data-action="save-hero-inline" data-hero-id="${c.id}" data-hero-idx="${idx}">Save</button>
+                        <button class="btn-cancel" data-action="cancel-hero-edit">Cancel</button>
                     </div>
                 </div>
             </div>`;
@@ -526,9 +528,9 @@ export function renderPlayersList() {
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <label class="color-picker-button" title="Choose player color">
                             <span>🎨</span>
-                            <input type="color" id="playerColor-${p.id}" value="${currentColor}" onchange="handlePlayerColorChange('${p.id}', this)">
+                            <input type="color" id="playerColor-${p.id}" value="${currentColor}" data-action="player-color-change" data-player-id="${p.id}">
                         </label>
-                        <button class="btn-save btn-inline" onclick="editPlayer('${p.id}')">Edit</button>
+                        <button class="btn-save btn-inline" data-action="edit-player" data-player-id="${p.id}">Edit</button>
                     </div>
                 </div>
                 <div id="playerEditPanel-${p.id}" class="group-edit-panel hidden">
@@ -536,8 +538,8 @@ export function renderPlayersList() {
                         <input type="text" id="playerName-${p.id}" placeholder="Player Name" value="${escapeHtml(p.name)}">
                     </div>
                     <div style="display: flex; gap: 10px;">
-                        <button class="btn-save" onclick="savePlayerInline('${p.id}')">Save</button>
-                        <button class="btn-cancel" onclick="cancelPlayerEdit('${p.id}')">Cancel</button>
+                        <button class="btn-save" data-action="save-player-inline" data-player-id="${p.id}">Save</button>
+                        <button class="btn-cancel" data-action="cancel-player-edit" data-player-id="${p.id}">Cancel</button>
                     </div>
                 </div>
             </div>`;
@@ -593,7 +595,7 @@ export function renderUsersList() {
                 </div>
                 <div>
                     <label class="toggle-switch">
-                        <input type="checkbox" ${isUserAdmin ? "checked" : ""} onchange="handleUserRoleChange('${user.id}', this.checked)">
+                        <input type="checkbox" ${isUserAdmin ? "checked" : ""} data-action="user-role-change" data-user-id="${user.id}">
                         <span class="toggle-slider"></span>
                     </label>
                     <span style="font-size: 0.75rem; opacity: 0.7; margin-left: 5px;">Admin</span>
@@ -649,7 +651,7 @@ export function renderCollectionsListUI(userProfiles, userHeroes) {
                             <input 
                                 type="checkbox" 
                                 ${isOwned ? "checked" : ""} 
-                                onchange="toggleUserHeroOwned('${up.user_id}', '${hero.id}', this.checked)"
+                                data-action="toggle-user-hero-owned" data-user-id="${up.user_id}" data-hero-id="${hero.id}"
                                 style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent);"
                             >
                         </td>
@@ -718,7 +720,7 @@ export function openWinnerModal(gameId) {
 
         playersHtml += `
             <label class="winner-player-card" style="--player-color: var(${playerColorVar}); font-size: 0.95rem;">
-                <input type="radio" name="winner-selection" value="${gp.player_id}" onchange="document.getElementById('confirm-winner-btn').disabled = false;">
+                <input type="radio" name="winner-selection" value="${gp.player_id}" data-action="winner-selection-change">
                 <div class="winner-card-content">
                     <span class="winner-player-name">${playerLabelName}</span>
                     <span class="winner-hero-name" style="opacity: 0.7; font-size: 0.85em;">${displayName}</span>
@@ -729,7 +731,7 @@ export function openWinnerModal(gameId) {
 
     playersHtml += `
         <label class="winner-player-card draw-card" style="--player-color: var(--accent); grid-column: 1 / -1;">
-            <input type="radio" name="winner-selection" value="draw" onchange="document.getElementById('confirm-winner-btn').disabled = false;">
+            <input type="radio" name="winner-selection" value="draw" data-action="winner-selection-change">
             <div class="winner-card-content" style="text-align: center;">
                 <span class="winner-player-name">Draw / Tie Game</span>
             </div>
@@ -782,11 +784,11 @@ export function renderGamesList() {
     };
 
     let toggleHtml = "";
-    if (window.isAdmin && window.isAdmin()) {
+    if (isAdmin()) {
         const btnText = isGorgeous ? "Switch to Admin List View" : "Switch to Gorgeous View";
         toggleHtml = `
             <div class="admin-view-toggle-row" style="display: flex; justify-content: flex-end; margin-bottom: 15px; padding: 0 5px;">
-                <button type="button" class="btn-save btn-inline" onclick="toggleHistoryViewStyle()" style="font-size: 0.85em; padding: 6px 12px; height: auto;">
+                <button type="button" class="btn-save btn-inline" data-action="toggle-history-view-style" style="font-size: 0.85em; padding: 6px 12px; height: auto;">
                     ${btnText}
                 </button>
             </div>
@@ -904,7 +906,7 @@ export function renderGamesList() {
                         const trophyHtml = isHeroWinner ? '<span class="mini-winner-trophy">🏆</span>' : "";
                         const playerLabel = playerLabelsMap[gp.player_id];
                         return `
-                            <a href="${getHeroLink(heroSlug)}" target="_blank" class="mini-portrait-wrapper ${winnerClass}" title="${heroName}" onclick="event.stopPropagation()">
+                            <a href="${getHeroLink(heroSlug)}" target="_blank" class="mini-portrait-wrapper ${winnerClass}" title="${heroName}">
                                 ${trophyHtml}
                                 <img src="${getImgUrl(heroSlug)}" class="mini-portrait-img" alt="${heroName}">
                                 <div class="mini-portrait-pill" style="background-color: var(--p${pIdx + 1});">${playerLabel}</div>
@@ -917,7 +919,7 @@ export function renderGamesList() {
                 const drawStampHtml = isDraw ? '<div class="player-plate-draw-badge">DRAW</div>' : "";
                 
                 const headerHtml = `
-                <div class="game-card-header" onclick="toggleGameExpansion('${game.id}')">
+                <div class="game-card-header" data-action="toggle-game-expansion" data-game-id="${game.id}">
                     <div class="game-card-title-group">
                         <span class="game-card-date">${dateStr}</span>
                         ${statusLabel}
@@ -931,12 +933,12 @@ export function renderGamesList() {
                     </div>
                 </div>`;
 
-                const canManage = window.isAdmin() || game.last_updated_by === (stateStore.get("currentUser")?.id);
+                const canManage = isAdmin() || game.last_updated_by === (stateStore.get("currentUser")?.id);
                 const gameActions = canManage
                     ? `
                     <div class="game-card-actions">
-                        <button class="btn-game-action" onclick="selectWinner('${game.id}')" title="Select Winner">🏆</button>
-                        <button class="btn-game-action delete" onclick="deleteGame('${game.id}')" title="Delete Game">🗑️</button>
+                        <button class="btn-game-action" data-action="select-winner" data-game-id="${game.id}" title="Select Winner">🏆</button>
+                        <button class="btn-game-action delete" data-action="delete-game" data-game-id="${game.id}" title="Delete Game">🗑️</button>
                     </div>
                 `
                     : "";
@@ -1098,12 +1100,12 @@ export function renderGamesList() {
                     `;
                 });
 
-                const winnerBtn = window.isUser() && isPending
-                    ? `<button type="button" class="btn-save btn-inline" onclick="openWinnerModal('${game.id}')">Select Winner</button>`
+                const winnerBtn = isUser() && isPending
+                    ? `<button type="button" class="btn-save btn-inline" data-action="open-winner-modal" data-game-id="${game.id}">Select Winner</button>`
                     : "";
                 
-                const deleteBtn = window.isAdmin()
-                    ? `<button type="button" class="btn-cancel btn-inline" onclick="deleteGame('${game.id}')">Delete</button>`
+                const deleteBtn = isAdmin()
+                    ? `<button type="button" class="btn-cancel btn-inline" data-action="delete-game" data-game-id="${game.id}">Delete</button>`
                     : "";
 
                 const historicBadge = game.is_historical
@@ -1112,7 +1114,7 @@ export function renderGamesList() {
 
                 return `
                 <div id="gameCard-${game.id}" class="game-history-card${isExpanded ? " expanded" : ""}" style="border: 1px solid rgba(255,255,255,0.08); margin: 10px 0; border-radius: 8px; background: rgba(0,0,0,0.15);">
-                    <div class="game-card-summary-header" onclick="toggleGameExpansion('${game.id}')" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 12px 15px;">
+                    <div class="game-card-summary-header" data-action="toggle-game-expansion" data-game-id="${game.id}" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 12px 15px;">
                         <div style="display: flex; flex-direction: column; gap: 4px;">
                             <span style="font-size: 0.8em; opacity: 0.6;">${dateStr} ${historicBadge}</span>
                             <div style="display: flex; align-items: center; gap: 6px; font-size: 0.95em;">

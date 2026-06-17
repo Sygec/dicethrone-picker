@@ -76,15 +76,13 @@
                     <div id="rollBtnContainer" class="roll-btn-container">
                         <button
                             id="rollBtn"
-                            type="button"
-                            onclick="pickCharacters()">
+                            type="button">
                             ROLL RANDOMIZER
                         </button>
                         <button
                             id="rollSettingsBtn"
                             type="button"
                             class="roll-settings-btn"
-                            onclick="openRollSettingsDrawer()"
                             aria-label="Roll settings">
                             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="12" cy="12" r="3"></circle>
@@ -98,7 +96,6 @@
                             id="cancelBtn"
                             type="button"
                             class="btn-cancelroll"
-                            onclick="cancelRoll()"
                             style="flex: 1">
                             CANCEL ROLL
                         </button>
@@ -106,7 +103,6 @@
                             id="confirmBtn"
                             type="button"
                             class="btn-confirm"
-                            onclick="applyResults()"
                             style="flex: 2">
                             LOCK IN SESSION
                         </button>
@@ -139,15 +135,12 @@
                             type="text"
                             id="hero-search"
                             placeholder="Search..."
-                            onkeydown="handleSearchKeyDown(event)"
-                            oninput="handleSearchInput()"
                             aria-label="Search heroes by name or group" />
                         <div class="search-actions">
                             <img
                                 src="images/buttons/close.png"
                                 id="clear-search"
                                 class="search-icon hidden"
-                                onclick="clearSearch()"
                                 alt="Clear"
                                 title="Clear Search" />
                         </div>
@@ -155,7 +148,6 @@
                             type="button"
                             class="search-btn"
                             id="hero-search-btn"
-                            onclick="triggerSearch()"
                             aria-label="Search">
                             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="11" cy="11" r="8"></circle>
@@ -173,21 +165,21 @@
                             type="button"
                             class="segmented-pill active"
                             id="pill-show-owned"
-                            onclick="setOwnershipFilter('owned')">
+                            data-filter="owned">
                             Owned
                         </button>
                         <button
                             type="button"
                             class="segmented-pill"
                             id="pill-show-not-owned"
-                            onclick="setOwnershipFilter('unowned')">
+                            data-filter="unowned">
                             Unowned
                         </button>
                         <button
                             type="button"
                             class="segmented-pill"
                             id="pill-show-all"
-                            onclick="setOwnershipFilter('all')">
+                            data-filter="all">
                             All
                         </button>
                     </div>
@@ -197,13 +189,11 @@
                         type="checkbox"
                         id="db-show-owned"
                         checked
-                        style="display: none"
-                        onchange="renderList()" />
+                        style="display: none" />
                     <input
                         type="checkbox"
                         id="db-show-not-owned"
-                        style="display: none"
-                        onchange="renderList()" />
+                        style="display: none" />
                 </div>
 
                 <!-- Filter & Sort Action Bar -->
@@ -213,8 +203,7 @@
                             type="button"
                             class="btn-action-trigger"
                             id="btn-trigger-sort"
-                            style="width: 100%;"
-                            onclick="toggleSortDropdown(event)">
+                            style="width: 100%;">
                             <span class="action-icon">⇅</span> <strong style="font-weight: 700;">SORT:</strong> <span style="font-weight: 400; text-transform: none; margin-left: 2px;">Hero (A-Z)</span>
                         </button>
                         <div id="sort-dropdown-menu" class="sort-dropdown-menu"></div>
@@ -222,8 +211,7 @@
                     <button
                         type="button"
                         class="btn-action-trigger"
-                        id="btn-trigger-filter"
-                        onclick="openFilterDrawer()">
+                        id="btn-trigger-filter">
                         <svg class="action-icon-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="margin-right: 6px; vertical-align: middle;">
                             <line x1="4" y1="6" x2="20" y2="6"></line>
                             <line x1="7" y1="12" x2="17" y2="12"></line>
@@ -251,14 +239,12 @@
                             id="games-search"
                             style="padding-right: 35px;"
                             placeholder="Search games by hero..."
-                            oninput="handleGamesSearchInput()"
                             aria-label="Search games" />
                         <div class="search-actions">
                             <img
                                 src="images/buttons/close.png"
                                 id="clear-games-search"
                                 class="search-icon hidden"
-                                onclick="clearGamesSearch()"
                                 alt="Clear"
                                 title="Clear Search" />
                         </div>
@@ -266,8 +252,7 @@
                     <button
                         type="button"
                         class="btn-action-trigger"
-                        id="btn-trigger-games-filter"
-                        onclick="openHistoryFilterDrawer()">
+                        id="btn-trigger-games-filter">
                         <span class="action-icon">⚙️</span> Filter
                         <span class="active-badge" id="games-filter-active-badge" style="display: none;">0</span>
                     </button>
@@ -304,7 +289,8 @@
                 <div class="admin-panel">
                     <div
                         class="panel-header"
-                        onclick="toggleAdminPanel(event, 'groupsPanel')">
+                        id="admin-groups-header"
+                        data-panel="groupsPanel">
                         <h3>Manage Groups</h3>
                         <button
                             type="button"
@@ -329,8 +315,7 @@
                             <button
                                 type="button"
                                 class="btn-save"
-                                id="addGroupBtn"
-                                onclick="toggleGroupForm()">
+                                id="addGroupBtn">
                                 Add Group
                             </button>
                         </div>
@@ -371,23 +356,13 @@
                                 <button
                                     type="button"
                                     class="btn-save"
-                                    id="saveGroupBtn"
-                                    onclick="saveGroup()">
+                                    id="saveGroupBtn">
                                     Save Group
                                 </button>
                                 <button
                                     type="button"
                                     class="btn-cancel"
-                                    id="cancelGroupBtn"
-                                    onclick="
-                                        if (
-                                            document.getElementById('groupName')
-                                                .value &&
-                                            !confirm('Discard unsaved changes?')
-                                        )
-                                            return;
-                                        resetGroupForm();
-                                    ">
+                                    id="cancelGroupBtn">
                                     Cancel
                                 </button>
                             </div>
@@ -401,7 +376,8 @@
                 <div class="admin-panel">
                     <div
                         class="panel-header"
-                        onclick="toggleAdminPanel(event, 'heroesPanel')">
+                        id="admin-heroes-header"
+                        data-panel="heroesPanel">
                         <h3>Manage Heroes</h3>
                         <button
                             type="button"
@@ -426,8 +402,7 @@
                             <button
                                 type="button"
                                 class="btn-save"
-                                id="addHeroBtn"
-                                onclick="toggleHeroForm()">
+                                id="addHeroBtn">
                                 Add Hero
                             </button>
                         </div>
@@ -475,23 +450,13 @@
                                 <button
                                     type="button"
                                     class="btn-save"
-                                    id="saveBtn"
-                                    onclick="saveCharacter()">
+                                    id="saveBtn">
                                     Save Hero
                                 </button>
                                 <button
                                     type="button"
                                     class="btn-cancel"
-                                    id="cancelHeroBtn"
-                                    onclick="
-                                        if (
-                                            document.getElementById('charName')
-                                                .value &&
-                                            !confirm('Discard unsaved changes?')
-                                        )
-                                            return;
-                                        resetForm();
-                                    ">
+                                    id="cancelHeroBtn">
                                     Cancel
                                 </button>
                             </div>
@@ -505,7 +470,8 @@
                 <div class="admin-panel">
                     <div
                         class="panel-header"
-                        onclick="toggleAdminPanel(event, 'playersPanel')">
+                        id="admin-players-header"
+                        data-panel="playersPanel">
                         <h3>Manage Players</h3>
                         <button
                             type="button"
@@ -535,7 +501,8 @@
                 <div class="admin-panel">
                     <div
                         class="panel-header"
-                        onclick="toggleAdminPanel(event, 'usersPanel')">
+                        id="admin-users-header"
+                        data-panel="usersPanel">
                         <h3>Manage Users</h3>
                         <button
                             type="button"
@@ -565,7 +532,8 @@
                 <div class="admin-panel">
                     <div
                         class="panel-header"
-                        onclick="toggleAdminPanel(event, 'collectionsPanel')">
+                        id="admin-collections-header"
+                        data-panel="collectionsPanel">
                         <h3>User Collections</h3>
                         <button
                             type="button"
@@ -599,40 +567,28 @@
             <a
                 href="#randomizer"
                 class="nav-item"
-                onclick="
-                    showSection('roll');
-                    return false;
-                ">
+                data-section="roll">
                 <span class="icon">🎲</span>
                 <span class="label">Roll</span>
             </a>
             <a
                 href="#database"
                 class="nav-item"
-                onclick="
-                    showSection('database');
-                    return false;
-                ">
+                data-section="database">
                 <span class="icon">🛡️</span>
                 <span class="label">Heroes</span>
             </a>
             <a
                 href="#history"
                 class="nav-item"
-                onclick="
-                    showSection('history');
-                    return false;
-                ">
+                data-section="history">
                 <span class="icon">📜</span>
                 <span class="label">History</span>
             </a>
             <a
                 href="#collection"
                 class="nav-item"
-                onclick="
-                    showSection('collection');
-                    return false;
-                ">
+                data-section="collection">
                 <span class="icon">📦</span>
                 <span class="label">Collection</span>
             </a>
@@ -640,10 +596,7 @@
             <a
                 href="#admin"
                 class="nav-item admin-only"
-                onclick="
-                    showSection('admin');
-                    return false;
-                ">
+                data-section="admin">
                 <span class="icon">⚙️</span>
                 <span class="label">Admin</span>
             </a>
@@ -662,7 +615,7 @@
         <!-- What's New Modal -->
         <div id="whats-new-modal" class="modal">
             <div class="modal-content">
-                <span class="close-button" onclick="closeWhatsNew()">
+                <span class="close-button" id="whats-new-close">
                     &times;
                 </span>
                 <h2>What's New?</h2>
@@ -670,7 +623,7 @@
                 <button
                     type="button"
                     class="btn-save"
-                    onclick="closeWhatsNew()"
+                    id="whats-new-got-it"
                     style="margin-top: 20px">
                     Got it!
                 </button>
@@ -680,7 +633,7 @@
         <!-- Winner Selection Modal -->
         <div id="winner-modal" class="modal">
             <div class="modal-content">
-                <span class="close-button" onclick="closeWinnerModal()"
+                <span class="close-button" id="winner-close"
                     >&times;</span
                 >
                 <h2>Select Winner</h2>
@@ -688,7 +641,7 @@
                     id="winner-selection-container"
                     style="margin: 15px 0; overflow-y: auto; flex: 1;"></div>
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <button type="button" class="btn-cancel" onclick="closeWinnerModal()" style="flex: 1;">Cancel</button>
+                    <button type="button" class="btn-cancel" id="winner-cancel" style="flex: 1;">Cancel</button>
                     <button type="button" class="btn-save" id="confirm-winner-btn" style="flex: 1;">Save Result</button>
                 </div>
             </div>
@@ -697,7 +650,7 @@
         <!-- Login Modal -->
         <div id="login-modal" class="modal">
             <div class="modal-content">
-                <span class="close-button" onclick="closeLoginModal()"
+                <span class="close-button" id="login-close"
                     >&times;</span
                 >
                 <h2>Login</h2>
@@ -748,7 +701,7 @@
                         "></div>
                     <button
                         type="button"
-                        onclick="handlePasswordReset()"
+                        id="forgot-password-btn"
                         style="
                             background: none;
                             border: none;
@@ -770,7 +723,7 @@
         <!-- Update Password Modal -->
         <div id="update-password-modal" class="modal">
             <div class="modal-content">
-                <span class="close-button" onclick="closeUpdatePasswordModal()"
+                <span class="close-button" id="update-password-close"
                     >&times;</span
                 >
                 <h2>Update Password</h2>
@@ -822,7 +775,7 @@
         <!-- Hero Selection Modal -->
         <div id="hero-select-modal" class="modal">
             <div class="modal-content">
-                <span class="close-button" onclick="closeHeroSelectModal()"
+                <span class="close-button" id="hero-select-close"
                     >&times;</span
                 >
                 <h2 id="hero-select-modal-title" style="margin-top: 0">
@@ -835,8 +788,7 @@
                     id="hero-select-search"
                     class="search-bar"
                     style="margin-bottom: 10px; font-size: 16px"
-                    placeholder="Search hero or season..."
-                    oninput="filterHeroSelectOptions()" />
+                    placeholder="Search hero or season..." />
 
                 <!-- Segmented Control for Sorting inside Modal -->
                 <div class="segmented-control">
@@ -844,14 +796,14 @@
                         type="button"
                         class="segmented-pill active"
                         id="modal-sort-name"
-                        onclick="setModalSort('name')">
+                        data-sort="name">
                         By Name
                     </button>
                     <button
                         type="button"
                         class="segmented-pill"
                         id="modal-sort-weight"
-                        onclick="setModalSort('weight')">
+                        data-sort="weight">
                         By Probability
                     </button>
                 </div>
@@ -864,34 +816,34 @@
         </div>
 
         <!-- Component: Premium Bottom Settings Drawer for Sorting and Filtering -->
-        <div id="sort-filter-drawer" class="drawer-overlay" onclick="closeDrawer(event)">
-            <div class="drawer-sheet" onclick="event.stopPropagation()">
+        <div id="sort-filter-drawer" class="drawer-overlay">
+            <div class="drawer-sheet">
                 <div class="drawer-header">
                     <span class="drawer-title" id="drawer-title-text">Sort & Filter</span>
-                    <button type="button" class="drawer-close-btn" onclick="closeDrawer(null, true)">&times;</button>
+                    <button type="button" class="drawer-close-btn" id="drawer-close">&times;</button>
                 </div>
                 <div class="drawer-body" id="drawer-body-content">
                     <!-- Loaded dynamically -->
                 </div>
                 <div class="drawer-footer" id="drawer-footer-content">
-                    <button type="button" class="btn-drawer-reset" onclick="resetFilters()">Reset All</button>
-                    <button type="button" class="btn-drawer-apply" onclick="applyAndCloseDrawer()">Apply</button>
+                    <button type="button" class="btn-drawer-reset" id="drawer-reset">Reset All</button>
+                    <button type="button" class="btn-drawer-apply" id="drawer-apply">Apply</button>
                 </div>
             </div>
         </div>
 
         <!-- Component: Left Side Drawer for Dynamic Filtering -->
-        <div id="filter-drawer-left" class="filter-drawer-overlay" onclick="closeFilterDrawer(event)">
-            <div class="filter-drawer-sheet" onclick="event.stopPropagation()">
+        <div id="filter-drawer-left" class="filter-drawer-overlay">
+            <div class="filter-drawer-sheet">
                 <div class="filter-drawer-header">
                     <span class="filter-drawer-count" id="filter-drawer-hero-count">Showing 0 of 0 heroes</span>
-                    <button type="button" class="filter-drawer-close-btn" onclick="applyFilterPanelSelections()">
+                    <button type="button" class="filter-drawer-close-btn" id="filter-drawer-close-btn">
                         Close &times;
                     </button>
                 </div>
                 
                 <div class="filter-drawer-reset-container">
-                    <button type="button" class="btn-filter-reset" onclick="resetFilterPanelSelections()">RESET</button>
+                    <button type="button" class="btn-filter-reset" id="filter-drawer-reset">RESET</button>
                 </div>
                 
                 <div class="filter-drawer-body">
@@ -900,11 +852,11 @@
                         <span class="filter-section-title" id="title-data-history">By Data History</span>
                         <div class="filter-options">
                             <label class="filter-checkbox-label">
-                                <input type="checkbox" value="Normal only" data-type="data-history" onchange="handleFilterDrawerCheckboxChange(this)" />
+                                <input type="checkbox" value="Normal only" data-type="data-history" />
                                 Normal only
                             </label>
                             <label class="filter-checkbox-label">
-                                <input type="checkbox" value="Historical only" data-type="data-history" onchange="handleFilterDrawerCheckboxChange(this)" />
+                                <input type="checkbox" value="Historical only" data-type="data-history" />
                                 Historical only
                             </label>
                         </div>
@@ -926,12 +878,12 @@
                     <div class="filter-section">
                         <span class="filter-section-title" id="title-complexity">By Complexity</span>
                         <div class="filter-options">
-                            <label class="filter-checkbox-label"><input type="checkbox" value="1" data-type="complexity" onchange="handleFilterDrawerCheckboxChange(this)" /> 1</label>
-                            <label class="filter-checkbox-label"><input type="checkbox" value="2" data-type="complexity" onchange="handleFilterDrawerCheckboxChange(this)" /> 2</label>
-                            <label class="filter-checkbox-label"><input type="checkbox" value="3" data-type="complexity" onchange="handleFilterDrawerCheckboxChange(this)" /> 3</label>
-                            <label class="filter-checkbox-label"><input type="checkbox" value="4" data-type="complexity" onchange="handleFilterDrawerCheckboxChange(this)" /> 4</label>
-                            <label class="filter-checkbox-label"><input type="checkbox" value="5" data-type="complexity" onchange="handleFilterDrawerCheckboxChange(this)" /> 5</label>
-                            <label class="filter-checkbox-label"><input type="checkbox" value="6" data-type="complexity" onchange="handleFilterDrawerCheckboxChange(this)" /> 6</label>
+                            <label class="filter-checkbox-label"><input type="checkbox" value="1" data-type="complexity" /> 1</label>
+                            <label class="filter-checkbox-label"><input type="checkbox" value="2" data-type="complexity" /> 2</label>
+                            <label class="filter-checkbox-label"><input type="checkbox" value="3" data-type="complexity" /> 3</label>
+                            <label class="filter-checkbox-label"><input type="checkbox" value="4" data-type="complexity" /> 4</label>
+                            <label class="filter-checkbox-label"><input type="checkbox" value="5" data-type="complexity" /> 5</label>
+                            <label class="filter-checkbox-label"><input type="checkbox" value="6" data-type="complexity" /> 6</label>
                         </div>
                     </div>
                     
@@ -947,7 +899,7 @@
                 </div>
                 
                 <div class="filter-drawer-footer">
-                    <button type="button" class="btn-filter-apply" onclick="applyFilterPanelSelections()">APPLY FILTERS</button>
+                    <button type="button" class="btn-filter-apply" id="filter-drawer-apply">APPLY FILTERS</button>
                 </div>
             </div>
         </div>

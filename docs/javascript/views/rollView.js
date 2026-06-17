@@ -9,8 +9,10 @@ import {
     getHeroLink, 
     getHeroProbabilityText, 
     isHeroOwned, 
+    getSoftWeight,
     escapeHtml 
 } from '../utils.js';
+import { updateSegmentedHighlights } from './filterView.js';
 
 // DOM Element references cache helper
 const getElements = () => ({
@@ -68,7 +70,7 @@ export function renderPlayerRowSkeleton(pIdx) {
                 
                 <div class="hero-select-container scramble-hidden opacity-0" id="select-container-${pIdx}">
                     <input type="hidden" class="char-select" data-player="${pIdx}" id="select-${pIdx}">
-                    <button class="edit-icon-btn" type="button" onclick="openHeroSelectModal(${pIdx})" aria-label="Select hero">
+                    <button class="edit-icon-btn" type="button" data-action="open-hero-select" data-player-idx="${pIdx}" aria-label="Select hero">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                             <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
@@ -99,10 +101,10 @@ export function openHeroSelectModal(pIdx) {
         el.heroSelectSearch.value = "";
     }
 
+    stateStore.set("modalSortMode", "name");
     setModalSort("name");
-    if (typeof window.updateSegmentedHighlights === "function") {
-        setTimeout(window.updateSegmentedHighlights, 50);
-    }
+    renderHeroSelectOptions();
+    setTimeout(updateSegmentedHighlights, 50);
 }
 
 /**
@@ -124,9 +126,7 @@ export function setModalSort(mode) {
     if (el.modalSortName) el.modalSortName.classList.toggle("active", mode === "name");
     if (el.modalSortWeight) el.modalSortWeight.classList.toggle("active", mode === "weight");
 
-    if (typeof window.updateSegmentedHighlights === "function") {
-        window.updateSegmentedHighlights();
-    }
+    updateSegmentedHighlights();
 }
 
 /**
@@ -178,7 +178,7 @@ export function renderHeroSelectOptions() {
             const probText = getHeroProbabilityText(hero, pIdx);
 
             return `
-            <div class="hero-select-card ${isSelected ? "selected" : ""}" onclick="selectHeroFromModal('${hero.name.replace(/'/g, "\\'")}', '${hero.slug}', '${hero.id}')">
+            <div class="hero-select-card ${isSelected ? "selected" : ""}" data-action="select-hero-option" data-hero-name="${hero.name.replace(/"/g, "&quot;")}" data-hero-slug="${hero.slug}" data-hero-id="${hero.id}">
                 <img src="${getImgUrl(hero.slug)}" class="hero-select-card-img" alt="${hero.name}">
                 <div class="hero-select-card-info">
                     <div class="hero-select-card-name">${hero.name}</div>
@@ -365,7 +365,7 @@ export function collapsePlayerRowToResolved(pIdx, finalHero) {
             </div>
             <div class="hero-select-container" id="select-container-${pIdx}">
                 <input type="hidden" class="char-select" data-player="${pIdx}" id="select-${pIdx}" value="${finalHero.name}">
-                <button class="edit-icon-btn" type="button" onclick="openHeroSelectModal(${pIdx})" aria-label="Select hero">
+                <button class="edit-icon-btn" type="button" data-action="open-hero-select" data-player-idx="${pIdx}" aria-label="Select hero">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                         <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
@@ -480,7 +480,7 @@ export function renderPlayerRowDraftingActive(pIdx) {
                     <span class="hero-name-divider">:</span>
                     <span class="draft-title" style="font-weight: 700; color: #ffd700;">CHOOSE YOUR HERO</span>
                 </div>
-                <button class="btn-cancel-roll" type="button" onclick="cancelRoll()" aria-label="Cancel roll">
+                <button class="btn-cancel-roll" type="button" data-action="cancel-roll" aria-label="Cancel roll">
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -488,7 +488,7 @@ export function renderPlayerRowDraftingActive(pIdx) {
                 </button>
             </div>
             <div class="draft-wheel-container" id="draft-wheel-container-${pIdx}">
-                <button type="button" class="draft-arrow left-arrow" onclick="rotateDraftWheelDirection(${pIdx}, -1, ${draftCount})" aria-label="Previous hero">
+                <button type="button" class="draft-arrow left-arrow" data-action="rotate-draft" data-player-idx="${pIdx}" data-direction="-1" data-draft-count="${draftCount}" aria-label="Previous hero">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="15 18 9 12 15 6"></polyline>
                     </svg>
@@ -497,14 +497,14 @@ export function renderPlayerRowDraftingActive(pIdx) {
                 <div class="draft-wheel" id="draft-wheel-${pIdx}">
                 </div>
 
-                <button type="button" class="draft-arrow right-arrow" onclick="rotateDraftWheelDirection(${pIdx}, 1, ${draftCount})" aria-label="Next hero">
+                <button type="button" class="draft-arrow right-arrow" data-action="rotate-draft" data-player-idx="${pIdx}" data-direction="1" data-draft-count="${draftCount}" aria-label="Next hero">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="9 18 15 12 9 6"></polyline>
                     </svg>
                 </button>
             </div>
             <div class="draft-actions">
-                <button type="button" class="btn-confirm-draft" id="confirm-draft-btn-${pIdx}" onclick="confirmDraftPick(${pIdx})" disabled>
+                <button type="button" class="btn-confirm-draft" id="confirm-draft-btn-${pIdx}" data-action="confirm-draft" data-player-idx="${pIdx}" disabled>
                     CONFIRM PICK
                 </button>
             </div>
@@ -569,7 +569,7 @@ export function renderDrawerBanList() {
             return `
             <label class="ban-list-item ${isBanned ? "banned" : ""}">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <input type="checkbox" ${isBanned ? "checked" : ""} onchange="toggleStagedBan('${hero.id}')" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--danger);">
+                    <input type="checkbox" ${isBanned ? "checked" : ""} data-action="toggle-staged-ban" data-hero-id="${hero.id}" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--danger);">
                     <span>${hero.name}</span>
                 </div>
                 <span class="ban-item-group">${hero.group || "Unknown"}</span>

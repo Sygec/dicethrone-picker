@@ -2,6 +2,13 @@
  * @fileoverview Utility helper methods for formatting, string escaping, calculations, color resolution, and weighting formulas.
  * @module utils
  */
+import * as stateStore from './stateStore.js';
+export const DEFAULT_HERO_WEIGHT = 250;
+export const PICKED_HERO_WEIGHT = 20;
+export const WEIGHT_INCREMENT = 10;
+export function isAdmin() { return stateStore.get("currentUser")?.app_metadata?.role === "admin"; }
+export function isUser() { return !!stateStore.get("currentUser"); }
+
 
 import * as apiService from './services/apiService.js';
 
@@ -13,8 +20,6 @@ import * as apiService from './services/apiService.js';
  */
 export const getImgUrl = (slug) =>
     slug ? `https://dice-throne.rulepop.com/heroes/${slug}.webp` : "";
-window.getImgUrl = getImgUrl;
-
 /**
  * Generates the external URL link to the official hero details page.
  * @function getHeroLink
@@ -22,8 +27,6 @@ window.getImgUrl = getImgUrl;
  * @returns {string} The rulepop external URL.
  */
 export const getHeroLink = (slug) => `https://dice-throne.rulepop.com/#hero/${slug}`;
-window.getHeroLink = getHeroLink;
-
 /**
  * Checks if a character is marked as owned.
  * @function isHeroOwned
@@ -31,8 +34,6 @@ window.getHeroLink = getHeroLink;
  * @returns {boolean} True if the hero is owned, false otherwise.
  */
 export const isHeroOwned = (hero) => !!hero?.is_owned;
-window.isHeroOwned = isHeroOwned;
-
 /**
  * Safely escapes HTML special characters to prevent cross-site scripting (XSS).
  * @function escapeHtml
@@ -47,8 +48,6 @@ export const escapeHtml = (text) => {
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
 };
-window.escapeHtml = escapeHtml;
-
 /**
  * Normalizes any RGB or RGBa CSS color string into a HEX color format.
  * @function normalizeColorValue
@@ -68,8 +67,6 @@ export const normalizeColorValue = (color) => {
     }
     return color;
 };
-window.normalizeColorValue = normalizeColorValue;
-
 /**
  * Resolves a player's color preference, falling back to CSS variables if undefined.
  * @function getPlayerColor
@@ -83,8 +80,6 @@ export const getPlayerColor = (player) => {
         .trim();
     return normalizeColorValue(rootColor);
 };
-window.getPlayerColor = getPlayerColor;
-
 /**
  * Sets a dynamic CSS variable on the document root to update player theme colors.
  * @function setPlayerColorVariable
@@ -94,8 +89,6 @@ window.getPlayerColor = getPlayerColor;
 export const setPlayerColorVariable = (playerId, color) => {
     document.documentElement.style.setProperty(`--${playerId}`, color);
 };
-window.setPlayerColorVariable = setPlayerColorVariable;
-
 /**
  * Calculates the soft probability weight of a hero based on the current play count of a player.
  * Applies the (p * 3 + 1)^2 penalty formula to reduce probability for frequently played heroes.
@@ -112,8 +105,6 @@ export function getSoftWeight(hero, userIndex) {
     const penalty = Math.pow(plays * 3 + 1, 2);
     return baseWeight / penalty;
 }
-window.getSoftWeight = getSoftWeight;
-
 /**
  * Formats the roll probability of a character as a user-friendly percentage string.
  * @function getHeroProbabilityText
@@ -123,7 +114,7 @@ window.getSoftWeight = getSoftWeight;
  */
 export function getHeroProbabilityText(charData, pIdx) {
     if (!charData) return "0.00%";
-    const ownedCount = window.characters.filter(isHeroOwned).length;
+    const ownedCount = stateStore.get("characters").filter(isHeroOwned).length;
     if (ownedCount === 0) return "0.00%";
 
     if (pIdx >= 4) {
@@ -131,7 +122,7 @@ export function getHeroProbabilityText(charData, pIdx) {
     }
 
     let totalWeight = 0;
-    window.characters
+    stateStore.get("characters")
         .filter(isHeroOwned)
         .forEach((c) => (totalWeight += getSoftWeight(c, pIdx)));
 
@@ -142,8 +133,6 @@ export function getHeroProbabilityText(charData, pIdx) {
     const pct = owned ? ((weight / totalWeight) * 100).toFixed(2) : "0.00";
     return `${pct}%`;
 }
-window.getHeroProbabilityText = getHeroProbabilityText;
-
 /**
  * Handles color picker changes for a player, prompting for confirmation and syncing with Supabase.
  * @function handlePlayerColorChange
@@ -153,7 +142,7 @@ window.getHeroProbabilityText = getHeroProbabilityText;
  * @returns {Promise<void>}
  */
 export async function handlePlayerColorChange(playerId, input) {
-    const player = window.players.find((p) => p.id === playerId);
+    const player = stateStore.get("players").find((p) => p.id === playerId);
     if (!player) return;
 
     const currentColor = getPlayerColor(player);
@@ -176,15 +165,13 @@ export async function handlePlayerColorChange(playerId, input) {
         return;
     }
 
-    const playerIndex = window.players.findIndex((p) => p.id === playerId);
+    const playerIndex = stateStore.get("players").findIndex((p) => p.id === playerId);
     if (playerIndex !== -1) {
-        window.players[playerIndex].player_color = newColor;
+        stateStore.get("players")[playerIndex].player_color = newColor;
     }
 
     setPlayerColorVariable(playerId, newColor);
-    if (typeof window.renderPlayersList === "function") {
-        window.renderPlayersList();
+    if (true) {
+        ((async () => { const m = await import("./admin.js"); m.renderPlayersList(); })());
     }
 }
-window.handlePlayerColorChange = handlePlayerColorChange;
-

@@ -2,6 +2,11 @@
  * @fileoverview Logic for hero listing layout rendering, table sort columns, sidebar drawers, active filter chips, search queries, and recency calculations.
  * @module filters
  */
+import { isHeroOwned } from './utils.js';
+import { renderGamesList } from './admin.js';
+import { updateRollSettingsBadge } from './randomizer.js';
+export function toggleStagedGamesWinnerOnly(checked) { stateStore.set("stagedGamesWinnerOnly", checked); renderDrawerBody(); }
+
 
 import * as stateStore from './stateStore.js';
 import * as filterView from './views/filterView.js';
@@ -9,13 +14,9 @@ import * as filterView from './views/filterView.js';
 export function toggleSortSection() {
     filterView.toggleSortSection();
 }
-window.toggleSortSection = toggleSortSection;
-
 export function toggleFilterSection() {
     filterView.toggleFilterSection();
 }
-window.toggleFilterSection = toggleFilterSection;
-
 export function openSortFilterDrawer() {
     stateStore.set("currentDrawerMode", "sort-filter");
 
@@ -28,8 +29,6 @@ export function openSortFilterDrawer() {
 
     filterView.openSortFilterDrawer();
 }
-window.openSortFilterDrawer = openSortFilterDrawer;
-
 export function openColumnsDrawer() {
     stateStore.set("currentDrawerMode", "columns");
 
@@ -39,8 +38,6 @@ export function openColumnsDrawer() {
 
     filterView.openColumnsDrawer();
 }
-window.openColumnsDrawer = openColumnsDrawer;
-
 export function openHistoryFilterDrawer() {
     stateStore.set("currentDrawerMode", "history-filter");
 
@@ -51,8 +48,6 @@ export function openHistoryFilterDrawer() {
 
     filterView.openHistoryFilterDrawer();
 }
-window.openHistoryFilterDrawer = openHistoryFilterDrawer;
-
 export function openFilterDrawer() {
     stateStore.set("stagedFilterDataHistories", new Set(stateStore.get("activeFilterDataHistories")));
     stateStore.set("stagedFilterPlayers", new Set(stateStore.get("activeFilterPlayers")));
@@ -61,18 +56,12 @@ export function openFilterDrawer() {
 
     filterView.openFilterDrawer();
 }
-window.openFilterDrawer = openFilterDrawer;
-
 export function closeFilterDrawer(event = null, force = false) {
     filterView.closeFilterDrawer(event, force);
 }
-window.closeFilterDrawer = closeFilterDrawer;
-
 export function renderFilterDrawerDynamicSections() {
     filterView.renderFilterDrawerDynamicSections();
 }
-window.renderFilterDrawerDynamicSections = renderFilterDrawerDynamicSections;
-
 export function handleFilterDrawerCheckboxChange(checkbox) {
     const type = checkbox.getAttribute("data-type");
     const val = checkbox.value;
@@ -92,8 +81,6 @@ export function handleFilterDrawerCheckboxChange(checkbox) {
     filterView.updateFilterDrawerHeroCountUI();
     filterView.updateFilterDrawerSectionTitlesUI();
 }
-window.handleFilterDrawerCheckboxChange = handleFilterDrawerCheckboxChange;
-
 export function resetFilterPanelSelections() {
     stateStore.get("stagedFilterDataHistories").clear();
     stateStore.get("stagedFilterPlayers").clear();
@@ -108,8 +95,6 @@ export function resetFilterPanelSelections() {
     filterView.updateFilterDrawerHeroCountUI();
     filterView.updateFilterDrawerSectionTitlesUI();
 }
-window.resetFilterPanelSelections = resetFilterPanelSelections;
-
 export function applyFilterPanelSelections() {
     stateStore.set("activeFilterDataHistories", new Set(stateStore.get("stagedFilterDataHistories")));
     stateStore.set("activeFilterPlayers", new Set(stateStore.get("stagedFilterPlayers")));
@@ -125,8 +110,6 @@ export function applyFilterPanelSelections() {
     updateActiveFilterBadge();
     updateActiveFilterChips();
 }
-window.applyFilterPanelSelections = applyFilterPanelSelections;
-
 export function getFilterDrawerMatchingCount() {
     const searchTerm = document.getElementById("hero-search")?.value.toLowerCase() || "";
     const showOwned = document.getElementById("db-show-owned")?.checked ?? true;
@@ -170,8 +153,8 @@ export function getFilterDrawerMatchingCount() {
         }
 
         const ownershipMatch =
-            (window.isHeroOwned(c) && showOwned) ||
-            (!window.isHeroOwned(c) && showNotOwned);
+            (isHeroOwned(c) && showOwned) ||
+            (!isHeroOwned(c) && showNotOwned);
 
         return (
             matchesSearchTerm(c, searchTerm) &&
@@ -185,33 +168,21 @@ export function getFilterDrawerMatchingCount() {
 
     return matched.length;
 }
-window.getFilterDrawerMatchingCount = getFilterDrawerMatchingCount;
-
 export function updateFilterDrawerHeroCountUI() {
     filterView.updateFilterDrawerHeroCountUI();
 }
-window.updateFilterDrawerHeroCountUI = updateFilterDrawerHeroCountUI;
-
 export function updateFilterDrawerSectionTitlesUI() {
     filterView.updateFilterDrawerSectionTitlesUI();
 }
-window.updateFilterDrawerSectionTitlesUI = updateFilterDrawerSectionTitlesUI;
-
 export function closeDrawer(event = null, force = false) {
     filterView.closeDrawer(event, force);
 }
-window.closeDrawer = closeDrawer;
-
 export function renderDrawerBody() {
     filterView.renderDrawerBody();
 }
-window.renderDrawerBody = renderDrawerBody;
-
 export function renderHistoryFilterDrawerBody(body) {
     filterView.renderHistoryFilterDrawerBody(body);
 }
-window.renderHistoryFilterDrawerBody = renderHistoryFilterDrawerBody;
-
 export function toggleStagedPlayerGameFilter(idx) {
     const stagedSelectedGamePlayerIndex = stateStore.get("stagedSelectedGamePlayerIndex");
     if (stagedSelectedGamePlayerIndex === idx) {
@@ -226,14 +197,10 @@ export function toggleStagedPlayerGameFilter(idx) {
 
     renderDrawerBody();
 }
-window.toggleStagedPlayerGameFilter = toggleStagedPlayerGameFilter;
-
 export function toggleStagedGamesHistorical(checked) {
     stateStore.set("stagedGamesUseHistorical", checked);
     renderDrawerBody();
 }
-window.toggleStagedGamesHistorical = toggleStagedGamesHistorical;
-
 export function handleDrawerSortTypeChange(value) {
     if (value === "name") {
         stateStore.set("stagedSort", "name");
@@ -249,24 +216,16 @@ export function handleDrawerSortTypeChange(value) {
     filterView.updateDrawerSortDirectionUI();
     filterView.updateDrawerPlayerSortPillsUI();
 }
-window.handleDrawerSortTypeChange = handleDrawerSortTypeChange;
-
 export function toggleDrawerSortDirection() {
     stateStore.set("stagedSortAsc", !stateStore.get("stagedSortAsc"));
     filterView.updateDrawerSortDirectionUI();
 }
-window.toggleDrawerSortDirection = toggleDrawerSortDirection;
-
 export function updateDrawerSortDirectionUI() {
     filterView.updateDrawerSortDirectionUI();
 }
-window.updateDrawerSortDirectionUI = updateDrawerSortDirectionUI;
-
 export function updateDrawerPlayerSortPillsUI() {
     filterView.updateDrawerPlayerSortPillsUI();
 }
-window.updateDrawerPlayerSortPillsUI = updateDrawerPlayerSortPillsUI;
-
 export function handleDrawerSortPlayerChange(playerIndex) {
     stateStore.set("stagedSortPlayerIndex", playerIndex);
     const stagedSort = stateStore.get("stagedSort");
@@ -277,8 +236,6 @@ export function handleDrawerSortPlayerChange(playerIndex) {
     }
     filterView.updateDrawerPlayerSortPillsUI();
 }
-window.handleDrawerSortPlayerChange = handleDrawerSortPlayerChange;
-
 export function toggleDrawerPlayerFilter(playerIndex) {
     const stagedPlayerIndices = stateStore.get("stagedPlayerIndices");
     const idx = stagedPlayerIndices.indexOf(playerIndex);
@@ -290,13 +247,9 @@ export function toggleDrawerPlayerFilter(playerIndex) {
     stateStore.set("stagedPlayerIndices", stagedPlayerIndices);
     renderDrawerBody();
 }
-window.toggleDrawerPlayerFilter = toggleDrawerPlayerFilter;
-
 export function renderDrawerComplexityFilters() {
     filterView.renderDrawerComplexityFilters();
 }
-window.renderDrawerComplexityFilters = renderDrawerComplexityFilters;
-
 export function toggleDrawerLevel(level) {
     if (level === "all") {
         stateStore.set("stagedLevels", stateStore.get("stagedLevels").size === 6 ? new Set() : new Set([1, 2, 3, 4, 5, 6]));
@@ -306,13 +259,9 @@ export function toggleDrawerLevel(level) {
     filterView.renderDrawerComplexityFilters();
     filterView.renderDrawerGroupFilters();
 }
-window.toggleDrawerLevel = toggleDrawerLevel;
-
 export function renderDrawerGroupFilters() {
     filterView.renderDrawerGroupFilters();
 }
-window.renderDrawerGroupFilters = renderDrawerGroupFilters;
-
 export function toggleDrawerGroupFilter(groupId) {
     const groups = stateStore.get("groups");
     if (groupId === "all") {
@@ -327,8 +276,6 @@ export function toggleDrawerGroupFilter(groupId) {
     filterView.renderDrawerComplexityFilters();
     filterView.renderDrawerGroupFilters();
 }
-window.toggleDrawerGroupFilter = toggleDrawerGroupFilter;
-
 export function resetFilters() {
     const groups = stateStore.get("groups");
     const currentDrawerMode = stateStore.get("currentDrawerMode");
@@ -356,8 +303,6 @@ export function resetFilters() {
         renderDrawerBody();
     }
 }
-window.resetFilters = resetFilters;
-
 export function applyAndCloseDrawer() {
     const currentDrawerMode = stateStore.get("currentDrawerMode");
     if (currentDrawerMode === "sort-filter") {
@@ -381,7 +326,7 @@ export function applyAndCloseDrawer() {
         stateStore.set("gamesUseHistorical", stateStore.get("stagedGamesUseHistorical"));
         updateGamesActiveFilterBadge();
         closeDrawer(null, true);
-        if (typeof window.renderGamesList === "function") window.renderGamesList();
+        if (true) renderGamesList();
     } else if (currentDrawerMode === "roll-settings") {
         stateStore.set("draftModeEnabled", stateStore.get("stagedDraftModeEnabled"));
         stateStore.set("draftCount", stateStore.get("stagedDraftCount"));
@@ -394,29 +339,21 @@ export function applyAndCloseDrawer() {
             JSON.stringify(Array.from(stateStore.get("bannedHeroIds"))),
         );
 
-        if (typeof window.updateRollSettingsBadge === "function") {
-            window.updateRollSettingsBadge();
+        if (true) {
+            updateRollSettingsBadge();
         }
         closeDrawer(null, true);
     }
 }
-window.applyAndCloseDrawer = applyAndCloseDrawer;
-
 export function updateActiveFilterBadge() {
     filterView.updateActiveFilterBadge();
 }
-window.updateActiveFilterBadge = updateActiveFilterBadge;
-
 export function updateGamesActiveFilterBadge() {
     filterView.updateGamesActiveFilterBadge();
 }
-window.updateGamesActiveFilterBadge = updateGamesActiveFilterBadge;
-
 export function updateSegmentedHighlights() {
     filterView.updateSegmentedHighlights();
 }
-window.updateSegmentedHighlights = updateSegmentedHighlights;
-
 export function setSort(key) {
     const currentSort = stateStore.get("currentSort");
     const sortAsc = stateStore.get("sortAsc");
@@ -429,33 +366,21 @@ export function setSort(key) {
     updateSortButtonText();
     renderList();
 }
-window.setSort = setSort;
-
 export function getVisiblePlayerIndices() {
     return stateStore.get("activePlayerIndices");
 }
-window.getVisiblePlayerIndices = getVisiblePlayerIndices;
-
 export function updateSortButtonText() {
     filterView.updateSortButtonText();
 }
-window.updateSortButtonText = updateSortButtonText;
-
 export function renderSortDropdownOptions() {
     filterView.renderSortDropdownOptions();
 }
-window.renderSortDropdownOptions = renderSortDropdownOptions;
-
 export function toggleSortDropdown(event) {
     filterView.toggleSortDropdown(event);
 }
-window.toggleSortDropdown = toggleSortDropdown;
-
 export function closeSortDropdown() {
     filterView.closeSortDropdown();
 }
-window.closeSortDropdown = closeSortDropdown;
-
 export function selectSortOption(key, asc) {
     stateStore.set("currentSort", key);
     stateStore.set("sortAsc", asc);
@@ -470,8 +395,6 @@ export function selectSortOption(key, asc) {
     updateSortButtonText();
     renderList();
 }
-window.selectSortOption = selectSortOption;
-
 export function handleSearchInput() {
     const searchInput = document.getElementById("hero-search");
     const clearBtn = document.getElementById("clear-search");
@@ -479,8 +402,6 @@ export function handleSearchInput() {
         clearBtn.classList.toggle("hidden", searchInput.value.trim().length === 0);
     }
 }
-window.handleSearchInput = handleSearchInput;
-
 export function clearSearch() {
     const searchInput = document.getElementById("hero-search");
     if (searchInput) {
@@ -490,8 +411,6 @@ export function clearSearch() {
     handleSearchInput();
     triggerSearch();
 }
-window.clearSearch = clearSearch;
-
 export function handleSearchKeyDown(event) {
     if (event.key === "Enter") {
         triggerSearch();
@@ -499,19 +418,13 @@ export function handleSearchKeyDown(event) {
         clearSearch();
     }
 }
-window.handleSearchKeyDown = handleSearchKeyDown;
-
 export function triggerSearch() {
     renderList();
     updateActiveFilterChips();
 }
-window.triggerSearch = triggerSearch;
-
 export function updateActiveFilterChips() {
     filterView.updateActiveFilterChips();
 }
-window.updateActiveFilterChips = updateActiveFilterChips;
-
 export function removeFilterChip(type, val) {
     if (type === 'data-history') {
         stateStore.updateSet("activeFilterDataHistories", "delete", val);
@@ -532,18 +445,12 @@ export function removeFilterChip(type, val) {
     updateActiveFilterChips();
     updateActiveFilterBadge();
 }
-window.removeFilterChip = removeFilterChip;
-
 export function clearSearchFilter() {
     clearSearch();
 }
-window.clearSearchFilter = clearSearchFilter;
-
 export function renderList() {
     filterView.renderList();
 }
-window.renderList = renderList;
-
 export function matchesSearchTerm(c, term) {
     if (!term) return true;
     const clean = term.trim().toLowerCase();
@@ -552,8 +459,6 @@ export function matchesSearchTerm(c, term) {
         (c.group || "").toLowerCase().includes(clean)
     );
 }
-window.matchesSearchTerm = matchesSearchTerm;
-
 export function parseDateString(dateString) {
     if (!dateString) return null;
     try {
@@ -573,8 +478,6 @@ export function parseDateString(dateString) {
         return null;
     }
 }
-window.parseDateString = parseDateString;
-
 export function getDaysAgoClean(dateString) {
     if (!dateString || dateString === "Never") return "";
     if (dateString === "Unknown") return "Date unknown (historical)";
@@ -594,8 +497,6 @@ export function getDaysAgoClean(dateString) {
         return "";
     }
 }
-window.getDaysAgoClean = getDaysAgoClean;
-
 export function getRecencyDot(lastPlayed) {
     let recencyDot = "⚫";
     if (lastPlayed && lastPlayed === "Unknown") {
@@ -629,4 +530,3 @@ export function getRecencyDot(lastPlayed) {
     }
     return recencyDot;
 }
-window.getRecencyDot = getRecencyDot;

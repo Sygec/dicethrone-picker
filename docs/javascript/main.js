@@ -5,42 +5,28 @@
 
 import './config.js';
 import * as apiService from './services/apiService.js';
-import './state.js';
 import * as stateStore from './stateStore.js';
-import './utils.js';
-import './auth.js';
-import './admin.js';
-import './filters.js';
-import './randomizer.js';
+import { DEFAULT_HERO_WEIGHT, normalizeColorValue, setPlayerColorVariable, isAdmin } from './utils.js';
+import { updateAuthUI, renderPlayerToggles, openUpdatePasswordModal, closeLoginModal } from './auth.js';
+import { 
+    populateGroupDropdown, 
+    renderGroupsList, 
+    renderAdminBuildInfo, 
+    renderGamesList, 
+    renderHeroesList, 
+    renderPlayersList, 
+    renderUsersList, 
+    renderCollectionsList, 
+    renderCollectionView, 
+    showWhatsNew,
+    openChangelog,
+    closeChangelog
+} from './admin.js';
+import { updateActiveFilterBadge, setSort } from './filters.js';
+import { updateRollSettingsBadge } from './randomizer.js';
+import { setupAllEventBindings } from './eventBindings.js';
 
-// Setup DOM Element References on window for cross-module global access
-window.versionLabel = document.getElementById("version-number");
-window.container = document.getElementById("changelog-container");
-window.modal = document.getElementById("changelog-modal");
-window.whatsNewModal = document.getElementById("whats-new-modal");
-window.whatsNewContainer = document.getElementById("whats-new-container");
-window.closeBtn = document.querySelector(".close-button");
-window.loginModal = document.getElementById("login-modal");
-window.authBtn = document.getElementById("auth-btn");
-window.actionButtons = document.getElementById("action-buttons");
-window.loginForm = document.getElementById("login-form");
-window.updatePasswordModal = document.getElementById("update-password-modal");
-window.updatePasswordForm = document.getElementById("update-password-form");
 
-// Setup Submit Event Handlers
-if (window.loginForm) {
-    window.loginForm.addEventListener("submit", (e) => {
-        e.preventDefault();
-        if (typeof window.handleLogin === "function") window.handleLogin();
-    });
-}
-
-if (window.updatePasswordForm) {
-    window.updatePasswordForm.addEventListener("submit", (e) => {
-        e.preventDefault();
-        if (typeof window.handleUpdatePassword === "function") window.handleUpdatePassword();
-    });
-}
 
 /**
  * Initializes and bootstraps player, hero, and game logs by calling Supabase endpoints.
@@ -58,16 +44,14 @@ export async function init() {
     stateStore.set("draftCount", dCount);
     const banned = localStorage.getItem("bannedHeroIds");
     stateStore.set("bannedHeroIds", banned ? new Set(JSON.parse(banned)) : new Set());
-    if (typeof window.updateRollSettingsBadge === "function") {
-        window.updateRollSettingsBadge();
-    }
+    updateRollSettingsBadge();
 
     const { data: groupsData, error: groupsError } = await apiService.getGroups();
 
     if (!groupsError && groupsData) {
         stateStore.set("groups", groupsData);
-        if (typeof window.populateGroupDropdown === "function") window.populateGroupDropdown();
-        if (typeof window.renderGroupsList === "function") window.renderGroupsList();
+        populateGroupDropdown();
+        renderGroupsList();
 
         const currentGroupIds = new Set(groupsData.map((g) => g.id));
         if (stateStore.get("activeGroups").size === 0) {
@@ -79,9 +63,7 @@ export async function init() {
                 }
             }
         }
-        if (typeof window.updateActiveFilterBadge === "function") {
-            window.updateActiveFilterBadge();
-        }
+        updateActiveFilterBadge();
     }
 
     const { data: playersData, error: playersError } = await apiService.getPlayers();
@@ -90,9 +72,7 @@ export async function init() {
         stateStore.set("players", playersData);
         playersData.forEach((p) => {
             if (p.player_color) {
-                if (typeof window.setPlayerColorVariable === "function") {
-                    window.setPlayerColorVariable(p.id, window.normalizeColorValue(p.player_color));
-                }
+                setPlayerColorVariable(p.id, normalizeColorValue(p.player_color));
             }
         });
 
@@ -109,8 +89,8 @@ export async function init() {
         });
         stateStore.set("NAMES", names);
         stateStore.set("loggedInPlayerIndex", loggedInIdx);
-        if (typeof window.updateAuthUI === "function") window.updateAuthUI();
-        if (typeof window.renderPlayerToggles === "function") window.renderPlayerToggles();
+        updateAuthUI();
+        renderPlayerToggles();
     }
 
     const { data, error } = await apiService.getHeroes();
@@ -131,7 +111,7 @@ export async function init() {
             group_id: hero.group_id,
             is_owned: isOwned,
             group: hero.groups?.name || "Unknown",
-            weights: Array(4).fill(window.DEFAULT_HERO_WEIGHT),
+            weights: Array(4).fill(DEFAULT_HERO_WEIGHT),
             playCount: [0, 0, 0, 0],
             lastPlayed: ["Never", "Never", "Never", "Never"],
             winCount: [0, 0, 0, 0],
@@ -164,22 +144,21 @@ export async function init() {
         stateStore.set("games", games);
     }
 
-    if (typeof window.renderAdminBuildInfo === "function") window.renderAdminBuildInfo();
-    if (typeof window.renderGroupsList === "function") window.renderGroupsList();
-    if (typeof window.renderGamesList === "function") window.renderGamesList();
-    if (typeof window.renderHeroesList === "function") window.renderHeroesList();
-    if (typeof window.renderPlayersList === "function") window.renderPlayersList();
-    if (typeof window.renderUsersList === "function") window.renderUsersList();
-    if (window.isAdmin() && typeof window.renderCollectionsList === "function") {
-        window.renderCollectionsList();
+    renderAdminBuildInfo();
+    renderGroupsList();
+    renderGamesList();
+    renderHeroesList();
+    renderPlayersList();
+    renderUsersList();
+    if (isAdmin()) {
+        renderCollectionsList();
     }
-    if (typeof window.renderCollectionView === "function") window.renderCollectionView();
+    renderCollectionView();
     
     const initialSort = stateStore.get("currentSort");
     stateStore.set("currentSort", null);
-    if (typeof window.setSort === "function") window.setSort(initialSort);
+    setSort(initialSort);
 }
-window.init = init;
 
 /**
  * Validates active session metadata, loads dynamic data structures, reads the changelog, 
@@ -194,21 +173,23 @@ export async function initializeApp() {
             data: { session },
         } = await apiService.getSession();
         stateStore.set("currentUser", session?.user || null);
-        if (typeof window.updateAuthUI === "function") window.updateAuthUI();
+        updateAuthUI();
 
         await init();
 
         const response = await fetch("changelog.json");
         stateStore.set("cachedChangelog", await response.json());
 
-        if (window.cachedChangelog.length > 0) {
-            const latestEntry = window.cachedChangelog[0];
-            if (window.versionLabel) {
-                window.versionLabel.innerText = latestEntry.version;
+        const changelog = stateStore.get("cachedChangelog");
+        if (changelog && changelog.length > 0) {
+            const latestEntry = changelog[0];
+            const versionLabel = document.getElementById("version-number");
+            if (versionLabel) {
+                versionLabel.innerText = latestEntry.version;
             }
 
             if (localStorage.getItem("lastSeenVersion") !== latestEntry.version) {
-                if (typeof window.showWhatsNew === "function") window.showWhatsNew(latestEntry);
+                showWhatsNew(latestEntry);
             }
         }
 
@@ -221,14 +202,14 @@ export async function initializeApp() {
         });
     } catch (error) {
         console.error("Could not load version number:", error);
-        if (window.versionLabel) {
-            window.versionLabel.innerText = "Error";
+        const versionLabel = document.getElementById("version-number");
+        if (versionLabel) {
+            versionLabel.innerText = "Error";
         }
     } finally {
         hidePreloader();
     }
 }
-window.initializeApp = initializeApp;
 
 /**
  * Triggers the fade-out CSS animation on the spinner preloader, then removes it from the DOM.
@@ -244,50 +225,24 @@ function hidePreloader() {
         once: true,
     });
 }
-window.hidePreloader = hidePreloader;
 
 // Wire up global DOM events
-window.addEventListener("DOMContentLoaded", initializeApp);
-if (window.versionLabel) window.versionLabel.onclick = window.openChangelog;
-if (window.closeBtn) window.closeBtn.onclick = window.closeChangelog;
+window.addEventListener("DOMContentLoaded", () => {
+    setupAllEventBindings();
+    initializeApp();
+});
 
 apiService.onAuthStateChange((event, session) => {
     stateStore.set("currentUser", session?.user || null);
     if (event === "SIGNED_IN" || event === "SIGNED_OUT") init();
 
     if (event === "PASSWORD_RECOVERY") {
-        if (typeof window.openUpdatePasswordModal === "function") window.openUpdatePasswordModal();
+        openUpdatePasswordModal();
     }
 
-    if (typeof window.updateAuthUI === "function") window.updateAuthUI();
-    if (event === "SIGNED_IN" && typeof window.closeLoginModal === "function") {
-        window.closeLoginModal();
-    }
-});
-
-window.onclick = (event) => {
-    if (event.target == window.modal && typeof window.closeChangelog === "function") window.closeChangelog();
-    if (event.target == window.loginModal && typeof window.closeLoginModal === "function") window.closeLoginModal();
-    if (event.target == window.whatsNewModal && typeof window.closeWhatsNew === "function") window.closeWhatsNew();
-    if (event.target == window.updatePasswordModal && typeof window.closeUpdatePasswordModal === "function") window.closeUpdatePasswordModal();
-    if (event.target == document.getElementById("hero-select-modal") && typeof window.closeHeroSelectModal === "function")
-        window.closeHeroSelectModal();
-
-    const sortDropdown = document.getElementById("sort-dropdown-menu");
-    const sortContainer = document.getElementById("sort-dropdown-container");
-    if (
-        sortDropdown &&
-        sortDropdown.classList.contains("show") &&
-        sortContainer &&
-        !sortContainer.contains(event.target)
-    ) {
-        if (typeof window.closeSortDropdown === "function") window.closeSortDropdown();
-    }
-};
-
-document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") {
-        if (typeof window.closeHeroSelectModal === "function") window.closeHeroSelectModal();
+    updateAuthUI();
+    if (event === "SIGNED_IN") {
+        closeLoginModal();
     }
 });
 

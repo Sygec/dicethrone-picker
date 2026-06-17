@@ -1,3 +1,7 @@
+import { isHeroOwned } from './utils.js';
+import { renderList, updateSegmentedHighlights } from './filters.js';
+import { updateDropdownSort } from './randomizer.js';
+import { init } from './main.js';
 import * as apiService from './services/apiService.js';
 import * as stateStore from './stateStore.js';
 import * as adminView from './views/adminView.js';
@@ -5,44 +9,28 @@ import * as adminView from './views/adminView.js';
 export function renderAdminBuildInfo() {
     adminView.renderAdminBuildInfo();
 }
-window.renderAdminBuildInfo = renderAdminBuildInfo;
-
 export function openChangelog() {
     adminView.openChangelog();
 }
-window.openChangelog = openChangelog;
-
 export function closeChangelog() {
     adminView.closeChangelog();
 }
-window.closeChangelog = closeChangelog;
-
 export function showWhatsNew(entry) {
     adminView.showWhatsNew(entry);
     localStorage.setItem("lastSeenVersion", entry.version);
 }
-window.showWhatsNew = showWhatsNew;
-
 export function closeWhatsNew() {
     adminView.closeWhatsNew();
 }
-window.closeWhatsNew = closeWhatsNew;
-
 export function showSection(sectionName) {
     adminView.showSection(sectionName);
 }
-window.showSection = showSection;
-
 export function toggleAdminPanel(event, panelId) {
     adminView.toggleAdminPanel(event, panelId);
 }
-window.toggleAdminPanel = toggleAdminPanel;
-
 export function toggleHeroPanel(header) {
     adminView.toggleHeroPanel(header);
 }
-window.toggleHeroPanel = toggleHeroPanel;
-
 export function toggleCollectionGroup(groupId, event) {
     if (
         event.target.tagName === "INPUT" ||
@@ -54,8 +42,6 @@ export function toggleCollectionGroup(groupId, event) {
     stateStore.updateSet("expandedCollectionGroups", "toggle", groupId);
     renderCollectionView();
 }
-window.toggleCollectionGroup = toggleCollectionGroup;
-
 export function setOwnershipFilter(filterState) {
     const showOwnedCheckbox = document.getElementById("db-show-owned");
     const showNotOwnedCheckbox = document.getElementById("db-show-not-owned");
@@ -86,20 +72,16 @@ export function setOwnershipFilter(filterState) {
         }
     });
 
-    if (typeof window.updateSegmentedHighlights === "function") {
-        window.updateSegmentedHighlights();
+    if (true) {
+        updateSegmentedHighlights();
     }
-    if (typeof window.renderList === "function") {
-        window.renderList();
+    if (true) {
+        renderList();
     }
 }
-window.setOwnershipFilter = setOwnershipFilter;
-
 export function renderCollectionView() {
     adminView.renderCollectionView();
 }
-window.renderCollectionView = renderCollectionView;
-
 export async function toggleHeroOwned(heroId, isOwned) {
     if (!stateStore.get("currentUser")) {
         alert("Please log in to manage your collection.");
@@ -111,8 +93,8 @@ export async function toggleHeroOwned(heroId, isOwned) {
     if (hero) hero.is_owned = isOwned;
     
     renderCollectionView();
-    if (typeof window.renderList === "function") window.renderList();
-    if (typeof window.updateDropdownSort === "function") window.updateDropdownSort();
+    if (true) renderList();
+    if (true) updateDropdownSort();
 
     const adminCheckbox = document.getElementById(
         `admin-owned-${stateStore.get("currentUser").id}-${heroId}`,
@@ -131,16 +113,14 @@ export async function toggleHeroOwned(heroId, isOwned) {
         alert("Error updating ownership: " + error.message);
         if (hero) hero.is_owned = !isOwned;
         renderCollectionView();
-        if (typeof window.updateDropdownSort === "function") window.updateDropdownSort();
-        if (typeof window.renderList === "function") window.renderList();
+        if (true) updateDropdownSort();
+        if (true) renderList();
 
         if (adminCheckbox) {
             adminCheckbox.checked = !isOwned;
         }
     }
 }
-window.toggleHeroOwned = toggleHeroOwned;
-
 export async function toggleGroupOwned(groupId, isOwned) {
     if (!stateStore.get("currentUser")) {
         alert("Please log in to manage your collection.");
@@ -160,8 +140,8 @@ export async function toggleGroupOwned(groupId, isOwned) {
         }
     });
     renderCollectionView();
-    if (typeof window.renderList === "function") window.renderList();
-    if (typeof window.updateDropdownSort === "function") window.updateDropdownSort();
+    if (true) renderList();
+    if (true) updateDropdownSort();
 
     const groupHeroIds = characters
         .filter((h) => h.group_id === groupId)
@@ -179,12 +159,10 @@ export async function toggleGroupOwned(groupId, isOwned) {
             if (h.group_id === groupId) h.is_owned = !isOwned;
         });
         renderCollectionView();
-        if (typeof window.updateDropdownSort === "function") window.updateDropdownSort();
-        if (typeof window.renderList === "function") window.renderList();
+        if (true) updateDropdownSort();
+        if (true) renderList();
     }
 }
-window.toggleGroupOwned = toggleGroupOwned;
-
 export async function saveCharacter() {
     const name = document.getElementById("charName").value.trim();
     const groupId = document.getElementById("charGroup").value;
@@ -206,11 +184,9 @@ export async function saveCharacter() {
 
     if (error) return alert("Error saving: " + error.message);
 
-    if (typeof window.init === "function") await window.init();
+    if (true) await init();
     resetForm();
 }
-window.saveCharacter = saveCharacter;
-
 export function editChar(idx) {
     stateStore.set("editIndex", idx);
     renderHeroesList();
@@ -226,8 +202,6 @@ export function editChar(idx) {
         editPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
 }
-window.editChar = editChar;
-
 export function isElementFullyVisible(el) {
     const rect = el.getBoundingClientRect();
     return (
@@ -237,40 +211,26 @@ export function isElementFullyVisible(el) {
             (window.innerHeight || document.documentElement.clientHeight)
     );
 }
-window.isElementFullyVisible = isElementFullyVisible;
-
 export function resetForm() {
     stateStore.set("editIndex", -1);
     adminView.resetForm();
 }
-window.resetForm = resetForm;
-
 export function toggleHeroForm() {
     adminView.toggleHeroForm();
 }
-window.toggleHeroForm = toggleHeroForm;
-
 export function populateGroupDropdown() {
     adminView.populateGroupDropdown();
 }
-window.populateGroupDropdown = populateGroupDropdown;
-
 export function renderGroupsList() {
     adminView.renderGroupsList();
 }
-window.renderGroupsList = renderGroupsList;
-
 export function renderHeroesList() {
     adminView.renderHeroesList();
 }
-window.renderHeroesList = renderHeroesList;
-
 export function cancelHeroEdit() {
     stateStore.set("editIndex", -1);
     renderHeroesList();
 }
-window.cancelHeroEdit = cancelHeroEdit;
-
 export async function saveHeroInline(heroId, idx) {
     const name = document.getElementById(`heroName-${idx}`).value.trim();
     const groupId = document.getElementById(`heroGroup-${idx}`).value;
@@ -296,20 +256,16 @@ export async function saveHeroInline(heroId, idx) {
     if (error) return alert("Error saving: " + error.message);
 
     stateStore.set("editIndex", -1);
-    if (typeof window.init === "function") await window.init();
+    if (true) await init();
 }
-window.saveHeroInline = saveHeroInline;
-
 export async function deleteHero(heroId) {
     if (!confirm("Delete this hero? This action cannot be undone.")) return;
 
     const { error } = await apiService.deleteHero(heroId);
     if (error) return alert("Error deleting hero: " + error.message);
 
-    if (typeof window.init === "function") await window.init();
+    if (true) await init();
 }
-window.deleteHero = deleteHero;
-
 export async function saveGroup() {
     const name = document.getElementById("groupName").value.trim();
     const order_index = document.getElementById("groupOrder").value.trim();
@@ -329,10 +285,8 @@ export async function saveGroup() {
     if (error) return alert("Error saving group: " + error.message);
 
     resetGroupForm();
-    if (typeof window.init === "function") window.init();
+    if (true) init();
 }
-window.saveGroup = saveGroup;
-
 export function editGroup(groupId) {
     const groups = stateStore.get("groups");
     const group = groups.find((g) => g.id === groupId);
@@ -357,13 +311,9 @@ export function editGroup(groupId) {
     document.getElementById(`groupYear-${groupId}`).value = group.year || "";
     panel.classList.remove("hidden");
 }
-window.editGroup = editGroup;
-
 export function cancelGroupEdit(groupId) {
     adminView.resetGroupInlineEditPanel(groupId);
 }
-window.cancelGroupEdit = cancelGroupEdit;
-
 export async function saveGroupInline(groupId) {
     const name = document.getElementById(`groupName-${groupId}`).value.trim();
     const order_index = document
@@ -383,25 +333,17 @@ export async function saveGroupInline(groupId) {
 
     if (error) return alert("Error saving group: " + error.message);
 
-    if (typeof window.init === "function") window.init();
+    if (true) init();
 }
-window.saveGroupInline = saveGroupInline;
-
 export function resetGroupForm() {
     adminView.resetGroupForm();
 }
-window.resetGroupForm = resetGroupForm;
-
 export function toggleGroupForm() {
     adminView.toggleGroupForm();
 }
-window.toggleGroupForm = toggleGroupForm;
-
 export function renderPlayersList() {
     adminView.renderPlayersList();
 }
-window.renderPlayersList = renderPlayersList;
-
 export function editPlayer(playerId) {
     const player = stateStore.get("players").find((p) => p.id === playerId);
     if (!player) return;
@@ -422,13 +364,9 @@ export function editPlayer(playerId) {
     document.getElementById(`playerName-${playerId}`).value = player.name;
     panel.classList.remove("hidden");
 }
-window.editPlayer = editPlayer;
-
 export function cancelPlayerEdit(playerId) {
     adminView.resetPlayerInlineEditPanel(playerId);
 }
-window.cancelPlayerEdit = cancelPlayerEdit;
-
 export async function savePlayerInline(playerId) {
     const name = document.getElementById(`playerName-${playerId}`).value.trim();
 
@@ -449,13 +387,9 @@ export async function savePlayerInline(playerId) {
     cancelPlayerEdit(playerId);
     renderPlayersList();
 }
-window.savePlayerInline = savePlayerInline;
-
 export function renderUsersList() {
     adminView.renderUsersList();
 }
-window.renderUsersList = renderUsersList;
-
 export async function renderCollectionsList() {
     const container = document.getElementById("collectionsListContainer");
     if (!container) return;
@@ -520,8 +454,6 @@ export async function renderCollectionsList() {
 
     adminView.renderCollectionsListUI(userProfiles, allUserHeroes);
 }
-window.renderCollectionsList = renderCollectionsList;
-
 export async function toggleUserHeroOwned(userId, heroId, isOwned) {
     const currentUser = stateStore.get("currentUser");
     if (userId === currentUser?.id) {
@@ -529,8 +461,8 @@ export async function toggleUserHeroOwned(userId, heroId, isOwned) {
         const hero = characters.find((h) => h.id === heroId);
         if (hero) hero.is_owned = isOwned;
         renderCollectionView();
-        if (typeof window.renderList === "function") window.renderList();
-        if (typeof window.updateDropdownSort === "function") window.updateDropdownSort();
+        if (true) renderList();
+        if (true) updateDropdownSort();
     }
 
     const { error } = await apiService.upsertUserHero(
@@ -546,14 +478,12 @@ export async function toggleUserHeroOwned(userId, heroId, isOwned) {
             const hero = characters.find((h) => h.id === heroId);
             if (hero) hero.is_owned = !isOwned;
             renderCollectionView();
-            if (typeof window.renderList === "function") window.renderList();
-            if (typeof window.updateDropdownSort === "function") window.updateDropdownSort();
+            if (true) renderList();
+            if (true) updateDropdownSort();
         }
         renderCollectionsList();
     }
 }
-window.toggleUserHeroOwned = toggleUserHeroOwned;
-
 export async function deleteGroup(groupId) {
     if (!confirm("Delete this group?")) return;
 
@@ -562,15 +492,11 @@ export async function deleteGroup(groupId) {
     if (error) return alert("Error deleting group: " + error.message);
 
     resetGroupForm();
-    if (typeof window.init === "function") window.init();
+    if (true) init();
 }
-window.deleteGroup = deleteGroup;
-
 export function renderGamesList() {
     adminView.renderGamesList();
 }
-window.renderGamesList = renderGamesList;
-
 export function handleGamesSearchInput() {
     const searchInput = document.getElementById("games-search");
     const clearBtn = document.getElementById("clear-games-search");
@@ -579,8 +505,6 @@ export function handleGamesSearchInput() {
     }
     renderGamesList();
 }
-window.handleGamesSearchInput = handleGamesSearchInput;
-
 export function clearGamesSearch() {
     const searchInput = document.getElementById("games-search");
     if (searchInput) {
@@ -589,37 +513,25 @@ export function clearGamesSearch() {
     }
     handleGamesSearchInput();
 }
-window.clearGamesSearch = clearGamesSearch;
-
 export function toggleGameExpansion(gameId) {
     stateStore.updateSet("expandedGameIds", "toggle", gameId);
     renderGamesList();
 }
-window.toggleGameExpansion = toggleGameExpansion;
-
 export function toggleHistoryViewStyle() {
     const current = stateStore.get("gamesHistoryStyle") || "gorgeous";
     const next = current === "gorgeous" ? "admin" : "gorgeous";
     stateStore.set("gamesHistoryStyle", next);
     renderGamesList();
 }
-window.toggleHistoryViewStyle = toggleHistoryViewStyle;
-
 export function selectWinner(gameId) {
     adminView.openWinnerModal(gameId);
 }
-window.selectWinner = selectWinner;
-
 export function handleWinnerSelect(value) {
     adminView.handleWinnerSelect(value);
 }
-window.handleWinnerSelect = handleWinnerSelect;
-
 export function closeWinnerModal() {
     adminView.closeWinnerModal();
 }
-window.closeWinnerModal = closeWinnerModal;
-
 export async function submitWinner(gameId) {
     const selectedRadio = document.querySelector(
         'input[name="winner-selection"]:checked'
@@ -640,7 +552,7 @@ export async function submitWinner(gameId) {
         if (error) throw error;
 
         closeWinnerModal();
-        if (typeof window.init === "function") await window.init();
+        if (true) await init();
     } catch (err) {
         alert("Error updating winner: " + err.message);
     } finally {
@@ -648,8 +560,6 @@ export async function submitWinner(gameId) {
         btn.innerText = "Save Result";
     }
 }
-window.submitWinner = submitWinner;
-
 export async function deleteGame(gameId) {
     if (
         !confirm(
@@ -665,10 +575,8 @@ export async function deleteGame(gameId) {
         return alert("Failed to delete game: " + error.message);
     }
 
-    if (typeof window.init === "function") await window.init();
+    if (true) await init();
 }
-window.deleteGame = deleteGame;
-
 export function updateHeroStatsFromHistory() {
     let showNormal = true;
     let showHistorical = true;
@@ -724,8 +632,6 @@ export function updateHeroStatsFromHistory() {
         });
     });
 }
-window.updateHeroStatsFromHistory = updateHeroStatsFromHistory;
-
 // Helper to escape HTML characters
 function escapeHtml(text) {
     return String(text || "")

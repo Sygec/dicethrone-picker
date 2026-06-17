@@ -9,8 +9,13 @@ import {
     getHeroLink, 
     isHeroOwned, 
     getSoftWeight, 
-    escapeHtml 
+    escapeHtml,
+    isAdmin,
+    isUser
 } from '../utils.js';
+import { getFilterDrawerMatchingCount, parseDateString } from '../filters.js';
+import { updateHeroStatsFromHistory } from '../admin.js';
+import { renderDrawerBanList } from './rollView.js';
 
 // DOM Element references cache helper
 const getElements = () => ({
@@ -174,7 +179,7 @@ export function renderFilterDrawerDynamicSections() {
             const isChecked = stagedFilterPlayers.has(p.id) ? "checked" : "";
             return `
                 <label class="filter-checkbox-label">
-                    <input type="checkbox" value="${p.id}" data-type="player" ${isChecked} onchange="handleFilterDrawerCheckboxChange(this)" />
+                    <input type="checkbox" value="${p.id}" data-type="player" ${isChecked} />
                     ${p.name}
                 </label>
             `;
@@ -188,7 +193,7 @@ export function renderFilterDrawerDynamicSections() {
             const isChecked = stagedFilterGroups.has(g.id) ? "checked" : "";
             return `
                 <label class="filter-checkbox-label">
-                    <input type="checkbox" value="${g.id}" data-type="group" ${isChecked} onchange="handleFilterDrawerCheckboxChange(this)" />
+                    <input type="checkbox" value="${g.id}" data-type="group" ${isChecked} />
                     ${g.name}
                 </label>
             `;
@@ -289,25 +294,23 @@ export function updateSortButtonText() {
     const currentSortPlayerIndex = stateStore.get("currentSortPlayerIndex");
     const names = stateStore.get("NAMES");
 
-    let sortLabel = "";
+    let text = "Hero (A-Z)"; // Default
+
     if (currentSort === "name") {
-        sortLabel = "Hero Name";
-    } else if (currentSort === "group") {
-        sortLabel = "Group / Season";
+        text = sortAsc ? "Hero (A-Z)" : "Hero (Z-A)";
+    } else if (currentSort === "complexity") {
+        text = sortAsc ? "Complexity (1-6)" : "Complexity (6-1)";
     } else if (currentSort.startsWith("w")) {
         const pName = names[currentSortPlayerIndex] || `Player ${currentSortPlayerIndex + 1}`;
-        sortLabel = `${pName}'s Probability`;
+        text = sortAsc ? `${pName} % (Low to High)` : `${pName} % (High to Low)`;
     } else if (currentSort.startsWith("d")) {
         const pName = names[currentSortPlayerIndex] || `Player ${currentSortPlayerIndex + 1}`;
-        sortLabel = `${pName}'s Last Played`;
-    } else if (currentSort === "complexity") {
-        sortLabel = "Complexity";
-    } else {
-        sortLabel = currentSort.toUpperCase();
+        text = sortAsc ? `${pName} Played (Oldest)` : `${pName} Played (Newest)`;
+    } else if (currentSort === "group") {
+        text = sortAsc ? "Group (A-Z)" : "Group (Z-A)";
     }
 
-    const dirArrow = sortAsc ? "▲" : "▼";
-    el.sortTriggerBtn.innerHTML = `<span>Sort: ${sortLabel} ${dirArrow}</span><span class="sort-trigger-arrow">▾</span>`;
+    el.sortTriggerBtn.innerHTML = `<span class="action-icon">⇅</span> <strong style="font-weight: 700;">SORT:</strong> <span style="font-weight: 400; text-transform: none; margin-left: 2px;">${text}</span>`;
 }
 
 /**
@@ -319,69 +322,48 @@ export function renderSortDropdownOptions() {
 
     const currentSort = stateStore.get("currentSort");
     const sortAsc = stateStore.get("sortAsc");
-    const currentSortPlayerIndex = stateStore.get("currentSortPlayerIndex");
     const activePlayerIndices = stateStore.get("activePlayerIndices");
     const names = stateStore.get("NAMES");
 
-    let itemsHtml = "";
-
-    // 1. Basic sorting options
-    const isNameActive = currentSort === "name";
-    const nameArrow = isNameActive ? (sortAsc ? "▲" : "▼") : "";
-    itemsHtml += `
-        <div class="sort-dropdown-item ${isNameActive ? "active" : ""}" onclick="selectSortOption('name', ${isNameActive ? !sortAsc : true})">
-            <span>Hero Name</span>
-            <span>${nameArrow}</span>
-        </div>
+    let html = `
+        <div class="sort-dropdown-section-title">General</div>
+        <button type="button" class="sort-dropdown-item ${currentSort === 'name' && sortAsc ? 'active' : ''}" data-action="select-sort" data-sort-key="name" data-sort-asc="true">
+            Hero Name (A-Z)
+        </button>
+        <button type="button" class="sort-dropdown-item ${currentSort === 'name' && !sortAsc ? 'active' : ''}" data-action="select-sort" data-sort-key="name" data-sort-asc="false">
+            Hero Name (Z-A)
+        </button>
+        <button type="button" class="sort-dropdown-item ${currentSort === 'complexity' && sortAsc ? 'active' : ''}" data-action="select-sort" data-sort-key="complexity" data-sort-asc="true">
+            Complexity (1-6)
+        </button>
+        <button type="button" class="sort-dropdown-item ${currentSort === 'complexity' && !sortAsc ? 'active' : ''}" data-action="select-sort" data-sort-key="complexity" data-sort-asc="false">
+            Complexity (6-1)
+        </button>
     `;
 
-    const isGroupActive = currentSort === "group";
-    const groupArrow = isGroupActive ? (sortAsc ? "▲" : "▼") : "";
-    itemsHtml += `
-        <div class="sort-dropdown-item ${isGroupActive ? "active" : ""}" onclick="selectSortOption('group', ${isGroupActive ? !sortAsc : true})">
-            <span>Group / Season</span>
-            <span>${groupArrow}</span>
-        </div>
-    `;
+    if (activePlayerIndices && activePlayerIndices.length > 0) {
+        html += `<div class="sort-dropdown-divider"></div>`;
+        activePlayerIndices.forEach(idx => {
+            const playerName = names[idx] || `Player ${idx + 1}`;
+            html += `
+                <div class="sort-dropdown-section-title" style="color: var(--p${idx + 1}, #fff);">${playerName}</div>
+                <button type="button" class="sort-dropdown-item ${currentSort === 'w' + idx && !sortAsc ? 'active' : ''}" data-action="select-sort" data-sort-key="w${idx}" data-sort-asc="false">
+                    Probability (High to Low)
+                </button>
+                <button type="button" class="sort-dropdown-item ${currentSort === 'w' + idx && sortAsc ? 'active' : ''}" data-action="select-sort" data-sort-key="w${idx}" data-sort-asc="true">
+                    Probability (Low to High)
+                </button>
+                <button type="button" class="sort-dropdown-item ${currentSort === 'd' + idx && !sortAsc ? 'active' : ''}" data-action="select-sort" data-sort-key="d${idx}" data-sort-asc="false">
+                    Last Played (Newest)
+                </button>
+                <button type="button" class="sort-dropdown-item ${currentSort === 'd' + idx && sortAsc ? 'active' : ''}" data-action="select-sort" data-sort-key="d${idx}" data-sort-asc="true">
+                    Last Played (Oldest)
+                </button>
+            `;
+        });
+    }
 
-    const isComplexityActive = currentSort === "complexity";
-    const complexityArrow = isComplexityActive ? (sortAsc ? "▲" : "▼") : "";
-    itemsHtml += `
-        <div class="sort-dropdown-item ${isComplexityActive ? "active" : ""}" onclick="selectSortOption('complexity', ${isComplexityActive ? !sortAsc : true})">
-            <span>Complexity</span>
-            <span>${complexityArrow}</span>
-        </div>
-    `;
-
-    // 2. Player-specific sorting options (only for visible/active players)
-    activePlayerIndices.forEach((pIdx) => {
-        const pName = names[pIdx] || `Player ${pIdx + 1}`;
-        const pColorVar = `--p${pIdx + 1}`;
-
-        // Probability
-        const probKey = `w${pIdx}`;
-        const isProbActive = currentSort === probKey;
-        const probArrow = isProbActive ? (sortAsc ? "▲" : "▼") : "";
-        itemsHtml += `
-            <div class="sort-dropdown-item player-sort-item ${isProbActive ? "active" : ""}" style="--p-color: var(${pColorVar});" onclick="selectSortOption('${probKey}', ${isProbActive ? !sortAsc : false})">
-                <span>${pName}'s Probability</span>
-                <span>${probArrow}</span>
-            </div>
-        `;
-
-        // Last Played
-        const dateKey = `d${pIdx}`;
-        const isDateActive = currentSort === dateKey;
-        const dateArrow = isDateActive ? (sortAsc ? "▲" : "▼") : "";
-        itemsHtml += `
-            <div class="sort-dropdown-item player-sort-item ${isDateActive ? "active" : ""}" style="--p-color: var(${pColorVar});" onclick="selectSortOption('${dateKey}', ${isDateActive ? !sortAsc : false})">
-                <span>${pName}'s Last Played</span>
-                <span>${dateArrow}</span>
-            </div>
-        `;
-    });
-
-    el.sortDropdownMenu.innerHTML = itemsHtml;
+    el.sortDropdownMenu.innerHTML = html;
 }
 
 /**
@@ -420,7 +402,7 @@ export function closeSortDropdown() {
 export function updateFilterDrawerHeroCountUI() {
     const el = getElements();
     if (!el.leftHeroCountLabel) return;
-    const matchingCount = window.getFilterDrawerMatchingCount ? window.getFilterDrawerMatchingCount() : 0;
+    const matchingCount = getFilterDrawerMatchingCount();
     el.leftHeroCountLabel.innerText = `${matchingCount} heroes match`;
 }
 
@@ -495,7 +477,7 @@ export function renderHistoryFilterDrawerBody(body) {
             <div style="display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 1;">
                 <button type="button" class="player-filter-btn ${isActive ? "active" : ""}" 
                         style="background-color: var(--p${i + 1}); width: 100%; min-width: 60px; padding: 8px 4px; font-size: 0.8rem; font-weight: bold; border-radius: 6px;" 
-                        onclick="toggleStagedPlayerGameFilter(${i})">
+                        data-action="toggle-staged-player-game-filter" data-player-idx="${i}">
                     ${p.name}
                 </button>
                 <div style="font-size: 0.75rem; opacity: 0.8; text-align: center; line-height: 1.2;">
@@ -511,7 +493,7 @@ export function renderHistoryFilterDrawerBody(body) {
         <div style="display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 1;">
             <button type="button" class="player-filter-btn ${isInviteeActive ? "active" : ""}" 
                     style="background-color: var(--p5); width: 100%; min-width: 60px; padding: 8px 4px; font-size: 0.8rem; font-weight: bold; border-radius: 6px;" 
-                    onclick="toggleStagedPlayerGameFilter(4)">
+                    data-action="toggle-staged-player-game-filter" data-player-idx="4">
                 Invitee
             </button>
             <div style="font-size: 0.75rem; opacity: 0.8; text-align: center; line-height: 1.2;">
@@ -531,7 +513,7 @@ export function renderHistoryFilterDrawerBody(body) {
                         type="checkbox"
                         id="drawer-games-use-historical"
                         ${useHistorical ? "checked" : ""}
-                        onchange="toggleStagedGamesHistorical(this.checked)"
+                        data-action="toggle-use-historical"
                         style="width: 18px; height: 18px;" />
                     Include Historical Data (before May 8th 2026)
                 </label>
@@ -553,7 +535,7 @@ export function renderHistoryFilterDrawerBody(body) {
                     type="checkbox"
                     id="drawer-games-winner-only"
                     ${stagedGamesWinnerOnly ? "checked" : ""}
-                    onchange="window.stagedGamesWinnerOnly = this.checked"
+                    data-action="toggle-staged-winner-only"
                     style="
                         width: 18px;
                         height: 18px;
@@ -596,14 +578,14 @@ export function renderDrawerBody() {
             <div class="panel-row-new">
                 <span class="panel-row-title" style="font-weight: 700;">Sort Visible Heroes:</span>
                 <div class="sort-controls-new" style="margin-top: 10px;">
-                    <select id="drawer-sort-type-select" class="sort-select-new" onchange="handleDrawerSortTypeChange(this.value)">
+                    <select id="drawer-sort-type-select" class="sort-select-new" data-action="drawer-sort-type-change">
                         <option value="name">Hero Name</option>
                         <option value="group">Group (Season)</option>
                         <option value="probability">Roll Probability (%)</option>
                         <option value="lastPlayed">Last Played Date</option>
                     </select>
                     
-                    <button type="button" id="drawer-sort-direction-btn" class="btn-direction-new" onclick="toggleDrawerSortDirection()">
+                    <button type="button" id="drawer-sort-direction-btn" class="btn-direction-new" data-action="toggle-drawer-sort-direction">
                         <span id="drawer-sort-direction-text">Ascending</span>
                         <span id="drawer-sort-direction-arrow">▲</span>
                     </button>
@@ -653,7 +635,7 @@ export function renderDrawerBody() {
                     ? `active p${i + 1}-color`
                     : "inactive";
                 return `
-                <button type="button" class="pill-toggle ${activeClass}" onclick="toggleDrawerPlayerFilter(${i})">
+                <button type="button" class="pill-toggle ${activeClass}" data-action="toggle-drawer-player-filter" data-player-idx="${i}">
                     ${name}
                 </button>
             `;
@@ -677,7 +659,7 @@ export function renderDrawerBody() {
                             type="checkbox"
                             id="drawer-use-historical-data"
                             ${stagedUseHistorical ? "checked" : ""}
-                            onchange="stagedUseHistorical = this.checked"
+                            data-action="toggle-use-historical"
                             style="width: 18px; height: 18px;" />
                         Include Historical Data (before May 8th 2026)
                     </label>
@@ -696,7 +678,7 @@ export function renderDrawerBody() {
                 const isActive = stagedDraftCount === c;
                 const activeClass = isActive ? "active" : "";
                 return `
-                    <button type="button" class="pill-toggle active-red ${activeClass}" onclick="setStagedDraftCount(${c})">
+                    <button type="button" class="pill-toggle active-red ${activeClass}" data-action="set-staged-draft-count" data-count="${c}">
                         ${c} Candidates
                     </button>
                 `;
@@ -706,8 +688,8 @@ export function renderDrawerBody() {
         el.drawerBody.innerHTML = `
             <div class="drawer-tabs-container" style="flex-shrink: 0;">
                 <div class="drawer-tabs">
-                    <button type="button" class="drawer-tab-btn ${stagedRollSettingsTab === "draft" ? "active" : ""}" onclick="switchRollSettingsTab('draft')">Draft Mode</button>
-                    <button type="button" class="drawer-tab-btn ${stagedRollSettingsTab === "ban" ? "active" : ""}" onclick="switchRollSettingsTab('ban')">Ban List</button>
+                    <button type="button" class="drawer-tab-btn ${stagedRollSettingsTab === "draft" ? "active" : ""}" data-action="switch-roll-settings-tab" data-tab="draft">Draft Mode</button>
+                    <button type="button" class="drawer-tab-btn ${stagedRollSettingsTab === "ban" ? "active" : ""}" data-action="switch-roll-settings-tab" data-tab="ban">Ban List</button>
                     <div class="drawer-tab-underline" style="left: ${stagedRollSettingsTab === "draft" ? "0%" : "50%"};"></div>
                 </div>
             </div>
@@ -716,7 +698,7 @@ export function renderDrawerBody() {
                 <div class="panel-row-new">
                     <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
                         <label class="toggle-switch">
-                            <input type="checkbox" id="drawer-draft-mode-checkbox" onchange="toggleStagedDraftMode(this.checked)" ${draftModeChecked}>
+                            <input type="checkbox" id="drawer-draft-mode-checkbox" data-action="toggle-staged-draft-mode" ${draftModeChecked}>
                             <span class="toggle-slider"></span>
                         </label>
                         <span style="font-size: 0.9em; opacity: 0.8;">Enable Turn-Based Drafting</span>
@@ -733,16 +715,14 @@ export function renderDrawerBody() {
 
             <div id="roll-settings-ban-tab" style="display: ${stagedRollSettingsTab === "ban" ? "flex" : "none"}; flex-direction: column; flex: 1; min-height: 0; font-size: 1rem;">
                 <div class="panel-row-new" style="display: flex; flex-direction: column; flex: 1; min-height: 0; margin-top: 8px;">
-                    <input type="text" id="ban-search-input" class="ban-search-input" placeholder="Search heroes to ban..." oninput="handleBanSearch(this.value)" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.2); color: #fff; margin-bottom: 15px; flex-shrink: 0;" value="${stagedBanSearchQuery || ""}">
+                    <input type="text" id="ban-search-input" class="ban-search-input" placeholder="Search heroes to ban..." data-action="ban-search-input" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.2); color: #fff; margin-bottom: 15px; flex-shrink: 0;" value="${stagedBanSearchQuery || ""}">
                     <div id="drawer-ban-list-container" class="ban-list-container" style="flex: 1; min-height: 0; overflow-y: auto; padding-right: 4px; max-height: 350px;">
                     </div>
                 </div>
             </div>
         `;
 
-        if (typeof window.renderDrawerBanList === "function") {
-            window.renderDrawerBanList();
-        }
+        renderDrawerBanList();
     }
 }
 
@@ -784,7 +764,7 @@ export function updateDrawerPlayerSortPillsUI() {
                 const isColumnActive = activePlayerIndices.includes(i);
                 const columnStyle = isColumnActive ? "" : "opacity: 0.5;";
                 return `
-                <button type="button" class="pill-toggle ${activeClass}" style="${columnStyle}" onclick="handleDrawerSortPlayerChange(${i})">
+                <button type="button" class="pill-toggle ${activeClass}" style="${columnStyle}" data-action="drawer-sort-player-change" data-player-idx="${i}">
                     ${name}
                 </button>
             `;
@@ -834,7 +814,7 @@ export function renderDrawerComplexityFilters() {
 
         html += `
             <div class="group-badge-card group-complexity ${activeClass} ${isDisabled ? "disabled" : ""}" 
-                 onclick="${isDisabled ? "" : `toggleDrawerLevel(${i})`}" 
+                 data-action="toggle-drawer-level" data-level="${i}" data-disabled="${isDisabled}"
                  title="Level ${i} (${potentialMatchesCount} heroes)">
                 <img src="images/dice/d${i}.png" class="complexity-dice-img" alt="Level ${i}">
                 <span class="group-badge-count">${potentialMatchesCount}</span>
@@ -856,7 +836,7 @@ export function renderDrawerComplexityFilters() {
 
     html += `
         <div class="group-badge-card group-complexity group-complexity-all ${allActiveClass} ${isAllDisabled ? "disabled" : ""}" 
-             onclick="${isAllDisabled ? "" : "toggleDrawerLevel('all')"}" 
+             data-action="toggle-drawer-level" data-level="all" data-disabled="${isAllDisabled}"
              title="All Levels (${totalMatchingHeroes} heroes)">
             <img src="images/dice/d_all.png" class="complexity-dice-img" alt="All">
             <span class="group-badge-count">${totalMatchingHeroes}</span>
@@ -961,7 +941,7 @@ export function renderDrawerGroupFilters() {
 
             return `
                 <div class="group-badge-card ${themeClass} ${activeClass} ${isDisabled ? "disabled" : ""}" 
-                     onclick="${isDisabled ? "" : `toggleDrawerGroupFilter('${g.id}')`}" 
+                     data-action="toggle-drawer-group" data-group-id="${g.id}" data-disabled="${isDisabled}"
                      title="${escapeHtml(g.name)} (${potentialMatchesCount} heroes)">
                     <span class="group-badge-initials">${initials}</span>
                     <span class="group-badge-count">${potentialMatchesCount}</span>
@@ -984,7 +964,7 @@ export function renderDrawerGroupFilters() {
 
     const allHtml = `
         <div class="group-badge-card group-all ${allActiveClass} ${isAllDisabled ? "disabled" : ""}" 
-             onclick="${isAllDisabled ? "" : "toggleDrawerGroupFilter('all')"}" 
+             data-action="toggle-drawer-group" data-group-id="all" data-disabled="${isAllDisabled}"
              title="All Groups" style="height: 100%;">
             <span class="group-badge-initials">ALL</span>
             <span class="group-badge-count">${totalMatchingHeroes}</span>
@@ -1021,7 +1001,7 @@ export function updateActiveFilterChips() {
     if (searchTerm) {
         html += `
             <div class="filter-chip" title="Active Search Filter">
-                <span class="filter-chip-remove" onclick="clearSearchFilter()" title="Remove search filter">✖</span>
+                <span class="filter-chip-remove" data-action="clear-search-filter" title="Remove search filter">✖</span>
                 <span class="filter-chip-label">Search: "${searchTerm}"</span>
             </div>
         `;
@@ -1035,7 +1015,7 @@ export function updateActiveFilterChips() {
         sortedDataHistories.forEach(dh => {
             html += `
                 <div class="filter-chip" title="Active Data History Filter">
-                    <span class="filter-chip-remove" onclick="removeFilterChip('data-history', '${dh}')" title="Remove filter">✖</span>
+                    <span class="filter-chip-remove" data-action="remove-filter-chip" data-type="data-history" data-value="${dh}" title="Remove filter">✖</span>
                     <span class="filter-chip-label">Data: ${dh}</span>
                 </div>
             `;
@@ -1055,7 +1035,7 @@ export function updateActiveFilterChips() {
             const name = pObj ? pObj.name : pId;
             html += `
                 <div class="filter-chip" title="Active Player Filter">
-                    <span class="filter-chip-remove" onclick="removeFilterChip('player', '${pId}')" title="Remove filter">✖</span>
+                    <span class="filter-chip-remove" data-action="remove-filter-chip" data-type="player" data-value="${pId}" title="Remove filter">✖</span>
                     <span class="filter-chip-label">${name}</span>
                 </div>
             `;
@@ -1067,7 +1047,7 @@ export function updateActiveFilterChips() {
         sortedComplexities.forEach(cVal => {
             html += `
                 <div class="filter-chip" title="Active Complexity Filter">
-                    <span class="filter-chip-remove" onclick="removeFilterChip('complexity', ${cVal})" title="Remove filter">✖</span>
+                    <span class="filter-chip-remove" data-action="remove-filter-chip" data-type="complexity" data-value="${cVal}" title="Remove filter">✖</span>
                     <span class="filter-chip-label">Complexity: ${cVal}</span>
                 </div>
             `;
@@ -1087,7 +1067,7 @@ export function updateActiveFilterChips() {
             const name = gObj ? gObj.name : gId;
             html += `
                 <div class="filter-chip" title="Active Group Filter">
-                    <span class="filter-chip-remove" onclick="removeFilterChip('group', '${gId}')" title="Remove filter">✖</span>
+                    <span class="filter-chip-remove" data-action="remove-filter-chip" data-type="group" data-value="${gId}" title="Remove filter">✖</span>
                     <span class="filter-chip-label">${name}</span>
                 </div>
             `;
@@ -1104,9 +1084,7 @@ export function renderList() {
     const el = getElements();
     if (!el.heroContainer) return;
 
-    if (typeof window.updateHeroStatsFromHistory === "function") {
-        window.updateHeroStatsFromHistory();
-    }
+    updateHeroStatsFromHistory();
 
     const searchTerm = el.heroSearchInput?.value.toLowerCase() || "";
     const showOwned = el.dbShowOwnedCheckbox?.checked ?? true;
@@ -1139,7 +1117,7 @@ export function renderList() {
             lastPlayed !== "Never" &&
             lastPlayed !== "Unknown"
         ) {
-            const lastDate = window.parseDateString ? window.parseDateString(lastPlayed) : null;
+            const lastDate = parseDateString(lastPlayed);
             if (lastDate) {
                 try {
                     const today = new Date();
@@ -1167,7 +1145,7 @@ export function renderList() {
     const getDaysAgoClean = (dateString) => {
         if (!dateString || dateString === "Never") return "";
         if (dateString === "Unknown") return "Date unknown (historical)";
-        const lastDate = window.parseDateString ? window.parseDateString(dateString) : null;
+        const lastDate = parseDateString(dateString);
         if (!lastDate) return "";
         try {
             const today = new Date();
@@ -1383,21 +1361,21 @@ export function renderList() {
             <div class="hero-item collapsed">
                 <img src="${getImgUrl(c.slug)}" class="char-bg-img" alt="${c.name}">
                 
-                <div class="hero-header" onclick="toggleHeroPanel(this)">
+                <div class="hero-header" data-action="toggle-hero-panel">
                     <div class="header-title-collapsed">
-                        <a href="${getHeroLink(c.slug)}" target="_blank" class="hero-name-link" onclick="event.stopPropagation()">
+                        <a href="${getHeroLink(c.slug)}" target="_blank" class="hero-name-link">
                             <span class="hero-name">${c.name}</span>
                         </a>
                     </div>
                     
                     <div class="header-title-expanded">
-                        <a href="${getHeroLink(c.slug)}" target="_blank" class="hero-name-link" onclick="event.stopPropagation()">
+                        <a href="${getHeroLink(c.slug)}" target="_blank" class="hero-name-link">
                             <div class="expanded-name">${c.name}</div>
                         </a>
                         <div class="expanded-group">${c.group || "Season ?"}</div>
                     </div>
                     
-                    <div class="complexity-dice-bar" onclick="event.stopPropagation()">
+                    <div class="complexity-dice-bar">
                         ${complexityDiceHtml}
                     </div>
                     
