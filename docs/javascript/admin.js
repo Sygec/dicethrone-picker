@@ -1,184 +1,48 @@
 import * as apiService from './services/apiService.js';
 import * as stateStore from './stateStore.js';
+import * as adminView from './views/adminView.js';
 
-/**
- * Renders environmental build metadata in the admin interface (e.g. host name, production/development status, target DB).
- * @function renderAdminBuildInfo
- */
 export function renderAdminBuildInfo() {
-    const infoDiv = document.getElementById("admin-build-info");
-    if (!infoDiv) return;
-
-    const host = window.location.hostname;
-    let platform = "Localhost";
-    if (host.includes("github.io")) platform = "GitHub Pages";
-    else if (host.includes("workers.dev")) platform = "Cloudflare Workers";
-
-    const env = window.isProd ? "Production" : "Development";
-    const dbName = window.isProd ? "Supabase PROD" : "Supabase DEV";
-    const branchHint = window.isProd ? "main" : "dev/local";
-
-    infoDiv.innerHTML = `
-        <div><b>Platform:</b> ${platform} (${host})</div>
-        <div><b>Environment:</b> ${env} (Targeting: ${branchHint})</div>
-        <div><b>Database:</b> ${dbName}</div>
-        ${!window.isProd ? '<div style="margin-top:5px; color:var(--danger); font-style:italic;">Note: Dev heroes are prefixed with "DEV-" in this database.</div>' : ""}
-    `;
+    adminView.renderAdminBuildInfo();
 }
 window.renderAdminBuildInfo = renderAdminBuildInfo;
 
-/**
- * Opens the application changelog modal, populating it with cached version history.
- * @function openChangelog
- */
 export function openChangelog() {
-    if (!window.cachedChangelog) return;
-
-    const container = document.getElementById("changelog-container");
-    container.innerHTML = window.cachedChangelog
-        .map(
-            (entry) => `
-        <div>
-            <h3>v${entry.version}</h3>
-            <ul>
-                ${entry.changes.map((change) => `<li>${change}</li>`).join("")}
-            </ul>
-        </div>
-    `,
-        )
-        .join("");
-
-    const modal = document.getElementById("changelog-modal");
-    modal.style.display = "flex";
-    document.body.style.overflow = "hidden";
+    adminView.openChangelog();
 }
 window.openChangelog = openChangelog;
 
-/**
- * Closes the application changelog modal.
- * @function closeChangelog
- */
 export function closeChangelog() {
-    const modal = document.getElementById("changelog-modal");
-    if (modal) modal.style.display = "none";
-    document.body.style.overflow = "auto";
+    adminView.closeChangelog();
 }
 window.closeChangelog = closeChangelog;
 
-/**
- * Displays the "What's New" modal with release updates for a specific version entry.
- * @function showWhatsNew
- * @param {Object} entry - Version changelog entry containing version and changes list.
- */
 export function showWhatsNew(entry) {
-    const whatsNewContainer = document.getElementById("whats-new-container");
-    whatsNewContainer.innerHTML = `
-        <div>
-            <h3>v${entry.version}</h3>
-            <ul style="text-align: left;">
-                ${entry.changes.map((change) => `<li>${change}</li>`).join("")}
-            </ul>
-        </div>
-    `;
-    const whatsNewModal = document.getElementById("whats-new-modal");
-    whatsNewModal.style.display = "flex";
-    document.body.style.overflow = "hidden";
+    adminView.showWhatsNew(entry);
     localStorage.setItem("lastSeenVersion", entry.version);
 }
 window.showWhatsNew = showWhatsNew;
 
-/**
- * Closes the "What's New" version updates modal.
- * @function closeWhatsNew
- */
 export function closeWhatsNew() {
-    const whatsNewModal = document.getElementById("whats-new-modal");
-    if (whatsNewModal) whatsNewModal.style.display = "none";
-    document.body.style.overflow = "auto";
+    adminView.closeWhatsNew();
 }
 window.closeWhatsNew = closeWhatsNew;
 
-/**
- * Handles navigation switching by showing the target section and hiding others.
- * @function showSection
- * @param {string} sectionName - The section identifier (e.g. 'roll', 'database', 'history', 'collection', 'admin').
- */
 export function showSection(sectionName) {
-    if (sectionName === "admin" && !window.isAdmin()) return;
-
-    const sections = {
-        roll: "rollSection",
-        database: "dbSection",
-        history: "gamesSection",
-        collection: "collectionSection",
-        admin: "adminSection"
-    };
-
-    const targetId = sections[sectionName];
-    if (!targetId) return;
-
-    Object.values(sections).forEach((id) => {
-        const el = document.getElementById(id);
-        if (el) {
-            if (id === targetId) {
-                el.classList.remove("hidden");
-            } else {
-                el.classList.add("hidden");
-            }
-        }
-    });
-
-    if (sectionName === "database") {
-        if (typeof window.updateSegmentedHighlights === "function") {
-            setTimeout(window.updateSegmentedHighlights, 50);
-        }
-    } else if (sectionName === "history") {
-        renderGamesList();
-    } else if (sectionName === "collection") {
-        renderCollectionView();
-    }
+    adminView.showSection(sectionName);
 }
 window.showSection = showSection;
 
-/**
- * Toggles the visibility state of an admin accordion panel.
- * @function toggleAdminPanel
- * @param {Event} event - The triggering click event.
- * @param {string} panelId - ID of the target panel element.
- */
 export function toggleAdminPanel(event, panelId) {
-    const panel = document.getElementById(panelId);
-    const header =
-        event.currentTarget.closest(".panel-header") || event.currentTarget;
-    const button = header.querySelector(".panel-toggle");
-    if (!panel || !button) return;
-
-    const isHidden = panel.classList.toggle("hidden");
-    button.classList.toggle("open", !isHidden);
-    button.setAttribute("aria-expanded", String(!isHidden));
+    adminView.toggleAdminPanel(event, panelId);
 }
 window.toggleAdminPanel = toggleAdminPanel;
 
-/**
- * Collapses or expands a specific hero detail panel in the admin list.
- * @function toggleHeroPanel
- * @param {HTMLElement} header - The header element of the panel.
- */
 export function toggleHeroPanel(header) {
-    const item = header.closest(".hero-item");
-    const button = header.querySelector(".panel-toggle");
-    const isNowCollapsed = item.classList.toggle("collapsed");
-    button.classList.toggle("open", !isNowCollapsed);
-    button.setAttribute("aria-expanded", String(!isNowCollapsed));
+    adminView.toggleHeroPanel(header);
 }
 window.toggleHeroPanel = toggleHeroPanel;
 
-/**
- * Expands or collapses a season/group category list in the collection view.
- * @function toggleCollectionGroup
- * @param {string} groupId - The ID of the group/season.
- * @param {Event} event - The triggering mouse/pointer event.
- */
 export function toggleCollectionGroup(groupId, event) {
     if (
         event.target.tagName === "INPUT" ||
@@ -192,11 +56,6 @@ export function toggleCollectionGroup(groupId, event) {
 }
 window.toggleCollectionGroup = toggleCollectionGroup;
 
-/**
- * Applies a filter to the collection database view based on ownership.
- * @function setOwnershipFilter
- * @param {string} filterState - The filter state identifier ('owned', 'unowned', 'all').
- */
 export function setOwnershipFilter(filterState) {
     const showOwnedCheckbox = document.getElementById("db-show-owned");
     const showNotOwnedCheckbox = document.getElementById("db-show-not-owned");
@@ -236,109 +95,34 @@ export function setOwnershipFilter(filterState) {
 }
 window.setOwnershipFilter = setOwnershipFilter;
 
-/**
- * Renders the user collection view, grouping characters by season/group and displaying ownership checkbox states.
- * @function renderCollectionView
- */
 export function renderCollectionView() {
-    const container = document.getElementById("collectionContainer");
-    const countLabel = document.getElementById("collection-count-stats");
-    if (!container) return;
-
-    const totalHeroes = window.characters.length;
-    const ownedHeroes = window.characters.filter(window.isHeroOwned).length;
-
-    if (countLabel) {
-        countLabel.innerText = `Owned ${ownedHeroes} of ${totalHeroes} heroes`;
-    }
-
-    const sortedGroups = [...window.groups].sort((a, b) => {
-        const orderA = a.order_index ?? Number.MAX_SAFE_INTEGER;
-        const orderB = b.order_index ?? Number.MAX_SAFE_INTEGER;
-        if (orderA !== orderB) {
-            return orderA - orderB;
-        }
-        return a.name.localeCompare(b.name);
-    });
-
-    const isDisabled = window.currentUser ? "" : "disabled";
-
-    container.innerHTML = sortedGroups
-        .map((group) => {
-            const groupHeroes = window.characters
-                .filter((c) => c.group_id === group.id)
-                .sort((a, b) => a.name.localeCompare(b.name));
-
-            if (groupHeroes.length === 0) return "";
-
-            const allOwned = groupHeroes.every(window.isHeroOwned);
-
-            const heroesHtml = groupHeroes
-                .map((h) => {
-                    const isSelected = window.isHeroOwned(h);
-                    return `
-            <div class="collection-hero-card ${isSelected ? "selected" : ""} ${isDisabled ? "disabled" : ""}" onclick="toggleHeroOwned('${h.id}', ${!isSelected})">
-                <img src="${window.getImgUrl(h.slug)}" class="collection-hero-card-img" alt="${h.name}">
-                <div class="collection-hero-card-name">${h.name}</div>
-            </div>
-        `;
-                })
-                .join("");
-
-            const isExpanded = window.expandedCollectionGroups.has(group.id);
-            const totalGroup = groupHeroes.length;
-            const ownedGroup = groupHeroes.filter(window.isHeroOwned).length;
-
-            return `
-            <div class="collection-group${isExpanded ? "" : " collapsed"}">
-                <div class="collection-group-header" onclick="toggleCollectionGroup('${group.id}', event)" style="cursor: pointer;">
-                    <input type="checkbox" id="owned-group-${group.id}" ${allOwned ? "checked" : ""} ${isDisabled} onchange="toggleGroupOwned('${group.id}', this.checked)" onclick="event.stopPropagation();">
-                    <label for="owned-group-${group.id}" onclick="event.stopPropagation();">
-                        <strong>${group.name}</strong>
-                        ${group.year ? ` <span style="opacity: 0.6; font-size: 0.85em;">(${group.year})</span>` : ""}
-                        <span class="stats-divider" style="margin: 0 8px;">|</span>
-                        <span style="opacity: 0.6; font-size: 0.85em;">Owned: <strong style="color: #fff;">${ownedGroup}</strong>/<strong style="color: #fff;">${totalGroup}</strong></span>
-                    </label>
-                    <button type="button" class="panel-toggle${isExpanded ? " open" : ""}" aria-expanded="${isExpanded}">V</button>
-                </div>
-                <div class="collection-heroes-list">
-                    ${heroesHtml}
-                </div>
-            </div>
-        `;
-        })
-        .join("");
+    adminView.renderCollectionView();
 }
 window.renderCollectionView = renderCollectionView;
 
-/**
- * Toggles ownership status of a single hero for the logged-in user, updating local memory and database.
- * @async
- * @function toggleHeroOwned
- * @param {string} heroId - Hero UUID.
- * @param {boolean} isOwned - Ownership boolean.
- */
 export async function toggleHeroOwned(heroId, isOwned) {
-    if (!window.currentUser) {
+    if (!stateStore.get("currentUser")) {
         alert("Please log in to manage your collection.");
         return;
     }
 
-    const hero = window.characters.find((h) => h.id === heroId);
+    const characters = stateStore.get("characters");
+    const hero = characters.find((h) => h.id === heroId);
     if (hero) hero.is_owned = isOwned;
+    
     renderCollectionView();
     if (typeof window.renderList === "function") window.renderList();
     if (typeof window.updateDropdownSort === "function") window.updateDropdownSort();
 
     const adminCheckbox = document.getElementById(
-        `admin-owned-${window.currentUser.id}-${heroId}`,
+        `admin-owned-${stateStore.get("currentUser").id}-${heroId}`,
     );
     if (adminCheckbox) {
         adminCheckbox.checked = isOwned;
     }
 
     const { error } = await apiService.upsertUserHero(
-        window.currentUser.id,
+        stateStore.get("currentUser").id,
         heroId,
         isOwned,
     );
@@ -357,24 +141,18 @@ export async function toggleHeroOwned(heroId, isOwned) {
 }
 window.toggleHeroOwned = toggleHeroOwned;
 
-/**
- * Toggles ownership of all heroes in a group/season.
- * @async
- * @function toggleGroupOwned
- * @param {string} groupId - Group/Season UUID.
- * @param {boolean} isOwned - Target ownership state.
- */
 export async function toggleGroupOwned(groupId, isOwned) {
-    if (!window.currentUser) {
+    if (!stateStore.get("currentUser")) {
         alert("Please log in to manage your collection.");
         return;
     }
 
-    window.characters.forEach((h) => {
+    const characters = stateStore.get("characters");
+    characters.forEach((h) => {
         if (h.group_id === groupId) {
             h.is_owned = isOwned;
             const adminCheckbox = document.getElementById(
-                `admin-owned-${window.currentUser.id}-${h.id}`,
+                `admin-owned-${stateStore.get("currentUser").id}-${h.id}`,
             );
             if (adminCheckbox) {
                 adminCheckbox.checked = isOwned;
@@ -385,10 +163,10 @@ export async function toggleGroupOwned(groupId, isOwned) {
     if (typeof window.renderList === "function") window.renderList();
     if (typeof window.updateDropdownSort === "function") window.updateDropdownSort();
 
-    const groupHeroIds = window.characters
+    const groupHeroIds = characters
         .filter((h) => h.group_id === groupId)
         .map((h) => ({
-            user_id: window.currentUser.id,
+            user_id: stateStore.get("currentUser").id,
             hero_id: h.id,
             is_owned: isOwned,
         }));
@@ -397,7 +175,7 @@ export async function toggleGroupOwned(groupId, isOwned) {
 
     if (error) {
         alert("Error updating group ownership: " + error.message);
-        window.characters.forEach((h) => {
+        characters.forEach((h) => {
             if (h.group_id === groupId) h.is_owned = !isOwned;
         });
         renderCollectionView();
@@ -407,11 +185,6 @@ export async function toggleGroupOwned(groupId, isOwned) {
 }
 window.toggleGroupOwned = toggleGroupOwned;
 
-/**
- * Saves a new character entry from the form input values.
- * @async
- * @function saveCharacter
- */
 export async function saveCharacter() {
     const name = document.getElementById("charName").value.trim();
     const groupId = document.getElementById("charGroup").value;
@@ -426,7 +199,7 @@ export async function saveCharacter() {
         slug,
         complexity: complexity ? parseInt(complexity) : null,
         group_id: groupId,
-        last_updated_by: window.currentUser.id,
+        last_updated_by: stateStore.get("currentUser").id,
     };
 
     const { error } = await apiService.insertHero(charData);
@@ -438,20 +211,16 @@ export async function saveCharacter() {
 }
 window.saveCharacter = saveCharacter;
 
-/**
- * Opens edit panel for a specific character from the character index.
- * @function editChar
- * @param {number} idx - Index in window.characters.
- */
 export function editChar(idx) {
-    window.editIndex = idx;
+    stateStore.set("editIndex", idx);
     renderHeroesList();
 
     const adminSection = document.getElementById("adminSection");
     if (adminSection.classList.contains("hidden")) showSection("admin");
 
+    const characters = stateStore.get("characters");
     const editPanel = document.getElementById(
-        `heroEditPanel-${window.characters[idx]?.id}`,
+        `heroEditPanel-${characters[idx]?.id}`,
     );
     if (editPanel && !isElementFullyVisible(editPanel)) {
         editPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -459,12 +228,6 @@ export function editChar(idx) {
 }
 window.editChar = editChar;
 
-/**
- * Utility to determine if a DOM element is fully visible in the browser viewport.
- * @function isElementFullyVisible
- * @param {HTMLElement} el - Element to inspect.
- * @returns {boolean} True if the element is fully inside viewport.
- */
 export function isElementFullyVisible(el) {
     const rect = el.getBoundingClientRect();
     return (
@@ -476,201 +239,38 @@ export function isElementFullyVisible(el) {
 }
 window.isElementFullyVisible = isElementFullyVisible;
 
-/**
- * Resets the active editing hero form state back to Add mode.
- * @function resetForm
- */
 export function resetForm() {
-    window.editIndex = -1;
-
-    document.getElementById("charName").value = "";
-    document.getElementById("charSlug").value = "";
-    document.getElementById("charGroup").value = "";
-    document.getElementById("charComplexity").value = "";
-
-    document.getElementById("formTitle").innerText = "Add New Hero";
-
-    const form = document.getElementById("heroForm");
-    const button = document.getElementById("addHeroBtn");
-    if (form && button) {
-        form.classList.add("hidden");
-        button.innerText = "Add Hero";
-    }
+    stateStore.set("editIndex", -1);
+    adminView.resetForm();
 }
 window.resetForm = resetForm;
 
-/**
- * Collapses or expands the hero creator form.
- * @function toggleHeroForm
- */
 export function toggleHeroForm() {
-    const form = document.getElementById("heroForm");
-    const button = document.getElementById("addHeroBtn");
-    if (!form || !button) return;
-
-    const isHidden = form.classList.toggle("hidden");
-    button.innerText = isHidden ? "Add Hero" : "Hide Hero Form";
-
-    if (!isHidden) {
-        document.getElementById("charName")?.focus();
-    }
+    adminView.toggleHeroForm();
 }
 window.toggleHeroForm = toggleHeroForm;
 
-/**
- * Populates the hero form group dropdown with loaded seasons/groups.
- * @function populateGroupDropdown
- */
 export function populateGroupDropdown() {
-    const select = document.getElementById("charGroup");
-    if (!select) return;
-    const options = window.groups
-        .map((g) => `<option value="${g.id}">${g.name}</option>`)
-        .join("");
-    select.innerHTML = '<option value="">-- Select Group --</option>' + options;
+    adminView.populateGroupDropdown();
 }
 window.populateGroupDropdown = populateGroupDropdown;
 
-/**
- * Renders the list of seasons/groups in the admin management dashboard.
- * @function renderGroupsList
- */
 export function renderGroupsList() {
-    const container = document.getElementById("groupsListContainer");
-    if (!container) return;
-
-    if (window.groups.length === 0) {
-        container.innerHTML =
-            '<p style="opacity: 0.6; font-style: italic;">No groups yet. Create one above.</p>';
-        return;
-    }
-
-    const html = window.groups
-        .map(
-            (g) => `
-        <div id="groupRow-${g.id}" class="group-row" style="margin: 5px 0; background: rgba(255,255,255,0.05);">
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px;">
-                <div>
-                    <strong>${window.escapeHtml(g.name)}</strong>
-                    ${g.year ? ` <span style="opacity: 0.6;">(${g.year})</span>` : ""}
-                </div>
-                <div style="display: flex; gap: 5px;">
-                    <button type="button" class="btn-save btn-inline" onclick="editGroup('${g.id}')">Edit</button>
-                    <button type="button" class="btn-cancel btn-inline" onclick="deleteGroup('${g.id}')">Delete</button>
-                </div>
-            </div>
-            <div id="groupEditPanel-${g.id}" class="group-edit-panel hidden">
-                <div class="form-grid">
-                    <input type="text" id="groupName-${g.id}" placeholder="Group Name" value="${window.escapeHtml(g.name)}">
-                    <input type="number" id="groupOrder-${g.id}" placeholder="Order Index" value="${g.order_index ?? ""}">
-                    <input type="number" id="groupYear-${g.id}" placeholder="Release Year" value="${g.year ?? ""}">
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <button type="button" class="btn-save" onclick="saveGroupInline('${g.id}')">Save</button>
-                    <button type="button" class="btn-cancel" onclick="cancelGroupEdit('${g.id}')">Cancel</button>
-                </div>
-            </div>
-        </div>
-    `,
-        )
-        .join("");
-
-    container.innerHTML = html;
+    adminView.renderGroupsList();
 }
 window.renderGroupsList = renderGroupsList;
 
-
-/**
- * Renders the admin heroes list, allowing inline configuration updates and deletes.
- * @function renderHeroesList
- */
 export function renderHeroesList() {
-    const container = document.getElementById("heroesListContainer");
-    if (!container) return;
-
-    if (window.characters.length === 0) {
-        container.innerHTML =
-            '<p style="opacity: 0.6; font-style: italic;">No heroes yet. Add one above.</p>';
-        return;
-    }
-
-    const html = window.characters
-        .map((c, idx) => {
-            const isEditing = window.editIndex === idx;
-            const editBtn = window.isAdmin()
-                ? `<button class="btn-save btn-inline" onclick="editChar(${idx})">Edit</button>`
-                : "";
-            const deleteBtn = window.isAdmin()
-                ? `<button class="btn-cancel btn-inline" onclick="deleteHero('${c.id}')">Delete</button>`
-                : "";
-            const groupOptions = window.groups
-                .map(
-                    (g) =>
-                        `<option value="${g.id}" ${g.id === c.group_id ? "selected" : ""}>${window.escapeHtml(g.name)}</option>`,
-                )
-                .join("");
-
-            return `
-            <div id="heroRow-${c.id}" class="group-row hero-admin-row${isEditing ? " editing" : ""}">
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; gap: 10px;">
-                    <div>
-                        <strong>${window.escapeHtml(c.name)}</strong>
-                    </div>
-                    <div style="display: flex; gap: 8px;">
-                        ${editBtn}
-                        ${deleteBtn}
-                    </div>
-                </div>
-                <div id="heroEditPanel-${c.id}" class="group-edit-panel${isEditing ? "" : " hidden"}">
-                    <div class="form-grid">
-                        <input type="text" id="heroName-${idx}" placeholder="Hero Name" value="${window.escapeHtml(c.name)}">
-                        <select id="heroGroup-${idx}">
-                            <option value="">-- Select Group --</option>
-                            ${groupOptions}
-                        </select>
-                    </div>
-                    <div class="form-grid">
-                        <input type="text" id="heroSlug-${idx}" placeholder="Slug (for image)" value="${window.escapeHtml(c.slug)}">
-                        <select id="heroComplexity-${idx}">
-                            <option value="">-- Complexity --</option>
-                            ${[1, 2, 3, 4, 5, 6].map((value) => `<option value="${value}" ${c.complexity == value ? "selected" : ""}>${value}</option>`).join("")}
-                        </select>
-                    </div>
-                    <div style="display: flex; gap: 10px;">
-                        <button class="btn-save" onclick="saveHeroInline('${c.id}', ${idx})">Save</button>
-                        <button class="btn-cancel" onclick="cancelHeroEdit()">Cancel</button>
-                    </div>
-                </div>
-            </div>`;
-        })
-        .join("");
-
-    container.innerHTML = html;
-    if (window.editIndex !== -1) {
-        container.classList.add("group-edit-active");
-    } else {
-        container.classList.remove("group-edit-active");
-    }
+    adminView.renderHeroesList();
 }
 window.renderHeroesList = renderHeroesList;
 
-/**
- * Cancels the active hero inline editing, resetting the edit index.
- * @function cancelHeroEdit
- */
 export function cancelHeroEdit() {
-    window.editIndex = -1;
+    stateStore.set("editIndex", -1);
     renderHeroesList();
 }
 window.cancelHeroEdit = cancelHeroEdit;
 
-/**
- * Saves the modified inline hero details back to the database.
- * @async
- * @function saveHeroInline
- * @param {string} heroId - Hero UUID.
- * @param {number} idx - Index of hero in the characters list.
- */
 export async function saveHeroInline(heroId, idx) {
     const name = document.getElementById(`heroName-${idx}`).value.trim();
     const groupId = document.getElementById(`heroGroup-${idx}`).value;
@@ -688,24 +288,18 @@ export async function saveHeroInline(heroId, idx) {
         slug,
         complexity: complexity ? parseInt(complexity) : null,
         group_id: groupId,
-        last_updated_by: window.currentUser.id,
+        last_updated_by: stateStore.get("currentUser").id,
     };
 
     const { error } = await apiService.upsertHero(charData);
 
     if (error) return alert("Error saving: " + error.message);
 
-    window.editIndex = -1;
+    stateStore.set("editIndex", -1);
     if (typeof window.init === "function") await window.init();
 }
 window.saveHeroInline = saveHeroInline;
 
-/**
- * Deletes a hero record from the database.
- * @async
- * @function deleteHero
- * @param {string} heroId - Hero UUID.
- */
 export async function deleteHero(heroId) {
     if (!confirm("Delete this hero? This action cannot be undone.")) return;
 
@@ -716,11 +310,6 @@ export async function deleteHero(heroId) {
 }
 window.deleteHero = deleteHero;
 
-/**
- * Saves a new season/group from the group creation form input fields.
- * @async
- * @function saveGroup
- */
 export async function saveGroup() {
     const name = document.getElementById("groupName").value.trim();
     const order_index = document.getElementById("groupOrder").value.trim();
@@ -744,13 +333,9 @@ export async function saveGroup() {
 }
 window.saveGroup = saveGroup;
 
-/**
- * Opens the inline edit panel for a specific season/group.
- * @function editGroup
- * @param {string} groupId - Season/Group ID.
- */
 export function editGroup(groupId) {
-    const group = window.groups.find((g) => g.id === groupId);
+    const groups = stateStore.get("groups");
+    const group = groups.find((g) => g.id === groupId);
     if (!group) return;
 
     const listContainer = document.getElementById("groupsListContainer");
@@ -774,28 +359,11 @@ export function editGroup(groupId) {
 }
 window.editGroup = editGroup;
 
-/**
- * Cancels the inline editing view for a season/group.
- * @function cancelGroupEdit
- * @param {string} groupId - Season/Group ID.
- */
 export function cancelGroupEdit(groupId) {
-    const panel = document.getElementById(`groupEditPanel-${groupId}`);
-    const activeRow = document.getElementById(`groupRow-${groupId}`);
-    const listContainer = document.getElementById("groupsListContainer");
-
-    if (panel) panel.classList.add("hidden");
-    if (activeRow) activeRow.classList.remove("editing");
-    if (listContainer) listContainer.classList.remove("group-edit-active");
+    adminView.resetGroupInlineEditPanel(groupId);
 }
 window.cancelGroupEdit = cancelGroupEdit;
 
-/**
- * Saves inline edits of a season/group to the database.
- * @async
- * @function saveGroupInline
- * @param {string} groupId - Season/Group ID.
- */
 export async function saveGroupInline(groupId) {
     const name = document.getElementById(`groupName-${groupId}`).value.trim();
     const order_index = document
@@ -819,80 +387,23 @@ export async function saveGroupInline(groupId) {
 }
 window.saveGroupInline = saveGroupInline;
 
-/**
- * Resets the season/group creation form values and visibility state.
- * @function resetGroupForm
- */
 export function resetGroupForm() {
-    document.getElementById("groupName").value = "";
-    document.getElementById("groupOrder").value = "";
-    document.getElementById("groupYear").value = "";
-
-    const form = document.getElementById("groupForm");
-    const button = document.getElementById("addGroupBtn");
-    if (form && button) {
-        form.classList.add("hidden");
-        button.innerText = "Add Group";
-    }
+    adminView.resetGroupForm();
 }
 window.resetGroupForm = resetGroupForm;
 
-/**
- * Renders the players administration list, supporting inline name edits and color picks.
- * @function renderPlayersList
- */
+export function toggleGroupForm() {
+    adminView.toggleGroupForm();
+}
+window.toggleGroupForm = toggleGroupForm;
+
 export function renderPlayersList() {
-    const container = document.getElementById("playersListContainer");
-    if (!container) return;
-
-    container.innerHTML = "";
-
-    window.players.forEach((player) => {
-        const row = document.createElement("div");
-        row.className = "player-admin-row";
-        row.id = `playerRow-${player.id}`;
-
-        const displayDiv = document.createElement("div");
-        displayDiv.className = "player-display";
-        displayDiv.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span class="player-color-dot" style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--${player.id}); border: 1px solid rgba(255,255,255,0.2);"></span>
-                <strong>${window.escapeHtml(player.name)}</strong>
-            </div>
-            <div class="player-actions">
-                <label class="color-picker-button" title="Choose player color">
-                    <span>🎨</span>
-                    <input type="color" id="playerColor-${player.id}" value="${window.escapeHtml(window.getPlayerColor(player))}" onchange="handlePlayerColorChange('${player.id}', this)">
-                </label>
-                <button type="button" class="btn-save btn-inline" onclick="editPlayer('${player.id}')">Edit</button>
-            </div>
-        `;
-
-        const editPanel = document.createElement("div");
-        editPanel.className = "player-edit-panel hidden";
-        editPanel.id = `playerEditPanel-${player.id}`;
-        editPanel.innerHTML = `
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <input type="text" id="playerName-${player.id}" value="${player.name}" style="flex: 1;">
-                <button type="button" class="btn-save" onclick="savePlayerInline('${player.id}')">Save</button>
-                <button type="button" class="btn-cancel" onclick="cancelPlayerEdit('${player.id}')">Cancel</button>
-            </div>
-        `;
-
-        row.appendChild(displayDiv);
-        row.appendChild(editPanel);
-        container.appendChild(row);
-    });
+    adminView.renderPlayersList();
 }
 window.renderPlayersList = renderPlayersList;
 
-/**
- * Opens the inline edit panel for editing a player's name.
- * @function editPlayer
- * @param {string} playerId - The ID of the player to edit.
- */
 export function editPlayer(playerId) {
-    const player = window.players.find((p) => p.id === playerId);
+    const player = stateStore.get("players").find((p) => p.id === playerId);
     if (!player) return;
 
     const listContainer = document.getElementById("playersListContainer");
@@ -913,28 +424,11 @@ export function editPlayer(playerId) {
 }
 window.editPlayer = editPlayer;
 
-/**
- * Cancels a player's inline name editing panel.
- * @function cancelPlayerEdit
- * @param {string} playerId - The ID of the player.
- */
 export function cancelPlayerEdit(playerId) {
-    const panel = document.getElementById(`playerEditPanel-${playerId}`);
-    const activeRow = document.getElementById(`playerRow-${playerId}`);
-    const listContainer = document.getElementById("playersListContainer");
-
-    if (panel) panel.classList.add("hidden");
-    if (activeRow) activeRow.classList.remove("editing");
-    if (listContainer) listContainer.classList.remove("player-edit-active");
+    adminView.resetPlayerInlineEditPanel(playerId);
 }
 window.cancelPlayerEdit = cancelPlayerEdit;
 
-/**
- * Saves the modified player name inline to the database.
- * @async
- * @function savePlayerInline
- * @param {string} playerId - Player UUID/ID.
- */
 export async function savePlayerInline(playerId) {
     const name = document.getElementById(`playerName-${playerId}`).value.trim();
 
@@ -944,10 +438,12 @@ export async function savePlayerInline(playerId) {
 
     if (error) return alert("Error saving player: " + error.message);
 
-    const playerIndex = window.players.findIndex((p) => p.id === playerId);
+    const players = stateStore.get("players");
+    const NAMES = stateStore.get("NAMES");
+    const playerIndex = players.findIndex((p) => p.id === playerId);
     if (playerIndex !== -1) {
-        window.players[playerIndex].name = name;
-        window.NAMES[playerIndex] = name;
+        players[playerIndex].name = name;
+        NAMES[playerIndex] = name;
     }
 
     cancelPlayerEdit(playerId);
@@ -955,47 +451,11 @@ export async function savePlayerInline(playerId) {
 }
 window.savePlayerInline = savePlayerInline;
 
-/**
- * Renders the authorized database users list.
- * @function renderUsersList
- */
 export function renderUsersList() {
-    const container = document.getElementById("usersListContainer");
-    if (!container) return;
-
-    container.innerHTML = "";
-
-    if (!window.authUsers.length) {
-        container.innerHTML =
-            '<p style="opacity: 0.7; font-style: italic;">No auth users available or permission denied.</p>';
-        return;
-    }
-
-    window.authUsers.forEach((user) => {
-        const linkedPlayer = window.players.find((p) => p.user_id === user.id);
-        const row = document.createElement("div");
-        row.className = "group-row user-admin-row";
-        row.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; gap: 10px;">
-                <div style="min-width: 0;">
-                    <div><strong>${window.escapeHtml(user.email || "No email")}</strong></div>
-                    <div style="opacity: 0.7; font-size: 0.85rem; word-break: break-all;">ID: ${window.escapeHtml(user.id)}</div>
-                </div>
-                <div style="text-align: right; min-width: 130px;">
-                    ${linkedPlayer ? `<div style="opacity: 0.7; font-size: 0.85rem;">Linked Player</div><div><strong>${window.escapeHtml(linkedPlayer.name)}</strong></div>` : '<div style="opacity: 0.7; font-size: 0.85rem;">No linked player</div>'}
-                </div>
-            </div>
-        `;
-        container.appendChild(row);
-    });
+    adminView.renderUsersList();
 }
 window.renderUsersList = renderUsersList;
 
-/**
- * Renders the collection spreadsheet overview of all users and their owned heroes.
- * @async
- * @function renderCollectionsList
- */
 export async function renderCollectionsList() {
     const container = document.getElementById("collectionsListContainer");
     if (!container) return;
@@ -1008,18 +468,19 @@ export async function renderCollectionsList() {
         const { data, error } = await apiService.getAllUserHeroes();
 
         if (error) {
-            container.innerHTML = `<p style="color: var(--danger); padding: 10px;">Error loading collections: ${window.escapeHtml(error.message)}</p>`;
+            container.innerHTML = `<p style="color: var(--danger); padding: 10px;">Error loading collections: ${escapeHtml(error.message)}</p>`;
             return;
         }
         allUserHeroes = data || [];
     } catch (e) {
-        container.innerHTML = `<p style="color: var(--danger); padding: 10px;">Error connecting to database: ${window.escapeHtml(e.message)}</p>`;
+        container.innerHTML = `<p style="color: var(--danger); padding: 10px;">Error connecting to database: ${escapeHtml(e.message)}</p>`;
         return;
     }
 
     const userProfiles = [];
+    const players = stateStore.get("players");
 
-    window.players.forEach((p) => {
+    players.forEach((p) => {
         if (p.user_id) {
             userProfiles.push({
                 user_id: p.user_id,
@@ -1039,106 +500,33 @@ export async function renderCollectionsList() {
         }
     });
 
+    const currentUser = stateStore.get("currentUser");
     if (
-        window.currentUser &&
-        !userProfiles.some((up) => up.user_id === window.currentUser.id)
+        currentUser &&
+        !userProfiles.some((up) => up.user_id === currentUser.id)
     ) {
-        const linkedPlayer = window.players.find((p) => p.user_id === window.currentUser.id);
+        const linkedPlayer = players.find((p) => p.user_id === currentUser.id);
         const name = linkedPlayer
             ? linkedPlayer.name
-            : window.currentUser.email
-              ? window.currentUser.email.split("@")[0]
+            : currentUser.email
+              ? currentUser.email.split("@")[0]
               : "Admin";
         userProfiles.push({
-            user_id: window.currentUser.id,
+            user_id: currentUser.id,
             name: name,
             isLinked: !!linkedPlayer,
         });
     }
 
-    if (userProfiles.length === 0) {
-        container.innerHTML =
-            '<p style="opacity: 0.7; font-style: italic; padding: 10px;">No user profiles available.</p>';
-        return;
-    }
-
-    const ownershipMap = {};
-    allUserHeroes.forEach((row) => {
-        ownershipMap[`${row.user_id}_${row.hero_id}`] = row.is_owned;
-    });
-
-    const tableWrapper = document.createElement("div");
-    tableWrapper.style.overflowX = "auto";
-    tableWrapper.style.marginTop = "10px";
-
-    const headersHtml = userProfiles
-        .map(
-            (up) =>
-                `<th style="padding: 10px; font-weight: 600; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem;">${window.escapeHtml(up.name)}</th>`,
-        )
-        .join("");
-
-    const rowsHtml = window.characters
-        .map((hero) => {
-            const cellsHtml = userProfiles
-                .map((up) => {
-                    const key = `${up.user_id}_${hero.id}`;
-                    const isOwned = ownershipMap[key] !== false;
-                    return `
-                        <td style="padding: 8px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                            <input 
-                                type="checkbox" 
-                                id="admin-owned-${up.user_id}-${hero.id}"
-                                ${isOwned ? "checked" : ""} 
-                                onchange="toggleUserHeroOwned('${up.user_id}', '${hero.id}', this.checked)"
-                                style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent);"
-                            >
-                        </td>
-                    `;
-                })
-                .join("");
-
-            return `
-                <tr>
-                    <td style="padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: 500; font-size: 0.9rem;">
-                        ${window.escapeHtml(hero.name)}
-                    </td>
-                    ${cellsHtml}
-                </tr>
-            `;
-        })
-        .join("");
-
-    tableWrapper.innerHTML = `
-        <table style="width: 100%; border-collapse: collapse; text-align: left;">
-            <thead>
-                <tr>
-                    <th style="padding: 10px; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem;">Hero</th>
-                    ${headersHtml}
-                </tr>
-            </thead>
-            <tbody>
-                ${rowsHtml}
-            </tbody>
-        </table>
-    `;
-
-    container.innerHTML = "";
-    container.appendChild(tableWrapper);
+    adminView.renderCollectionsListUI(userProfiles, allUserHeroes);
 }
 window.renderCollectionsList = renderCollectionsList;
 
-/**
- * Toggles user collection ownership for a hero, updating local state if it is the current user.
- * @async
- * @function toggleUserHeroOwned
- * @param {string} userId - User UUID.
- * @param {string} heroId - Hero UUID.
- * @param {boolean} isOwned - Ownership boolean.
- */
 export async function toggleUserHeroOwned(userId, heroId, isOwned) {
-    if (userId === window.currentUser?.id) {
-        const hero = window.characters.find((h) => h.id === heroId);
+    const currentUser = stateStore.get("currentUser");
+    if (userId === currentUser?.id) {
+        const characters = stateStore.get("characters");
+        const hero = characters.find((h) => h.id === heroId);
         if (hero) hero.is_owned = isOwned;
         renderCollectionView();
         if (typeof window.renderList === "function") window.renderList();
@@ -1153,8 +541,9 @@ export async function toggleUserHeroOwned(userId, heroId, isOwned) {
 
     if (error) {
         alert("Error updating user collection: " + error.message);
-        if (userId === window.currentUser?.id) {
-            const hero = window.characters.find((h) => h.id === heroId);
+        if (userId === currentUser?.id) {
+            const characters = stateStore.get("characters");
+            const hero = characters.find((h) => h.id === heroId);
             if (hero) hero.is_owned = !isOwned;
             renderCollectionView();
             if (typeof window.renderList === "function") window.renderList();
@@ -1165,30 +554,6 @@ export async function toggleUserHeroOwned(userId, heroId, isOwned) {
 }
 window.toggleUserHeroOwned = toggleUserHeroOwned;
 
-/**
- * Toggles the visibility state of the group creator form.
- * @function toggleGroupForm
- */
-export function toggleGroupForm() {
-    const form = document.getElementById("groupForm");
-    const button = document.getElementById("addGroupBtn");
-    if (!form || !button) return;
-
-    const isHidden = form.classList.toggle("hidden");
-    button.innerText = isHidden ? "Add Group" : "Hide Group Form";
-
-    if (!isHidden) {
-        document.getElementById("groupName")?.focus();
-    }
-}
-window.toggleGroupForm = toggleGroupForm;
-
-/**
- * Deletes a season/group from the database.
- * @async
- * @function deleteGroup
- * @param {string} groupId - Season/Group ID.
- */
 export async function deleteGroup(groupId) {
     if (!confirm("Delete this group?")) return;
 
@@ -1201,435 +566,63 @@ export async function deleteGroup(groupId) {
 }
 window.deleteGroup = deleteGroup;
 
-
-/**
- * Renders the match session/games history cards with filters, winners/losers, status badges, and management options.
- * @function renderGamesList
- */
 export function renderGamesList() {
-    const container = document.getElementById("gamesContainer");
-    const countLabel = document.getElementById("game-count-stats");
-    if (!container || !window.games) return;
-
-    const showWinsOnly = window.gamesWinnerOnly;
-    const searchTerm = (document.getElementById("games-search")?.value || "")
-        .toLowerCase()
-        .trim();
-
-    const totalVisibleGames = window.games.filter((g) => !g.is_historical).length;
-
-    window.games.forEach((game) => {
-        const winners = game.game_players.filter((p) => p.is_winner === true);
-        const explicitLosers = game.game_players.filter(
-            (p) => p.is_winner === false,
-        );
-        const isDraw =
-            winners.length === 0 &&
-            explicitLosers.length > 0 &&
-            explicitLosers.length === game.game_players.length;
-        const isInProgress = winners.length === 0 && !isDraw;
-        if (isInProgress) {
-            stateStore.updateSet("expandedGameIds", "add", game.id);
-        }
-    });
-
-    const filteredGames = window.games.filter((game) => {
-        if (game.is_historical) return false;
-
-        let playerMatches = true;
-        if (window.selectedGamePlayerIndex !== null) {
-            playerMatches = game.game_players.some((gp) => {
-                const pIdx = parseInt(gp.player_id.substring(1)) - 1;
-                let match = false;
-
-                if (
-                    window.selectedGamePlayerIndex >= 0 &&
-                    window.selectedGamePlayerIndex <= 3
-                ) {
-                    match = pIdx === window.selectedGamePlayerIndex;
-                } else if (window.selectedGamePlayerIndex === 4) {
-                    match = pIdx === 4 || pIdx === 5;
-                }
-
-                if (match && showWinsOnly) return gp.is_winner === true;
-                return match;
-            });
-        }
-        if (!playerMatches) return false;
-
-        if (searchTerm) {
-            const heroes = (game.game_players || [])
-                .map((gp) => gp.heroes?.name || "")
-                .join(" ");
-            const hay = heroes.toLowerCase();
-            if (!hay.includes(searchTerm)) return false;
-        }
-
-        return true;
-    });
-
-    if (countLabel) {
-        countLabel.innerText = `Showing ${filteredGames.length} of ${totalVisibleGames} games`;
-    }
-
-    container.innerHTML = filteredGames
-        .map((game) => {
-            let rawDate = game.played_at || "";
-            if (rawDate && !rawDate.includes("T"))
-                rawDate = rawDate.replace(" ", "T");
-            if (rawDate && !rawDate.includes("Z") && !rawDate.includes("+"))
-                rawDate += "Z";
-
-            const dateStr = new Date(rawDate).toLocaleString("en-CA", {
-                timeZone: "America/Montreal",
-                dateStyle: "medium",
-                timeStyle: "short",
-            });
-
-            const winners = game.game_players.filter(
-                (p) => p.is_winner === true,
-            );
-            const explicitLosers = game.game_players.filter(
-                (p) => p.is_winner === false,
-            );
-            const isDraw =
-                winners.length === 0 &&
-                explicitLosers.length > 0 &&
-                explicitLosers.length === game.game_players.length;
-
-            const isInProgress = winners.length === 0 && !isDraw;
-            const isExpanded = window.expandedGameIds.has(game.id);
-            const expandedClass = isExpanded ? "expanded" : "";
-
-            let bgImgHtml = "";
-            if (winners.length > 0 && winners[0].heroes?.slug) {
-                bgImgHtml = `<img src="${window.getImgUrl(winners[0].heroes.slug)}" class="game-card-bg-img" alt="">`;
-            }
-
-            const playerNamesMap = {};
-            game.game_players.forEach((gp) => {
-                const pIdx = parseInt(gp.player_id.substring(1)) - 1;
-                let rawName = window.NAMES[pIdx] || "Unknown";
-                if (
-                    rawName.toLowerCase().startsWith("player ") &&
-                    rawName.length > 7
-                ) {
-                    rawName = "P" + rawName.substring(7);
-                }
-                playerNamesMap[gp.player_id] = rawName;
-            });
-
-            const firstLetters = Object.values(playerNamesMap).map((name) =>
-                name.charAt(0).toUpperCase(),
-            );
-
-            const playerLabelsMap = {};
-            game.game_players.forEach((gp) => {
-                const name = playerNamesMap[gp.player_id];
-                const firstChar = name.charAt(0).toUpperCase();
-                const count = firstLetters.filter(
-                    (l) => l === firstChar,
-                ).length;
-                let label = firstChar;
-                if (count > 1 && name.length > 1) {
-                    label = firstChar + name.charAt(1).toLowerCase();
-                }
-                playerLabelsMap[gp.player_id] = label;
-            });
-
-            const sortedPlayersForSummary = [...game.game_players].sort(
-                (a, b) => {
-                    if (a.is_winner && !b.is_winner) return -1;
-                    if (!a.is_winner && b.is_winner) return 1;
-                    return 0;
-                },
-            );
-
-            const portraitStrip = sortedPlayersForSummary
-                .map((gp) => {
-                    const pIdx = parseInt(gp.player_id.substring(1)) - 1;
-                    const heroSlug = gp.heroes?.slug || "";
-                    const heroName = gp.heroes?.name || "Unknown";
-                    const isHeroWinner = gp.is_winner === true;
-                    const winnerClass = isHeroWinner ? "winner-highlight" : "";
-                    const trophyHtml = isHeroWinner
-                        ? '<span class="mini-winner-trophy">🏆</span>'
-                        : "";
-                    const playerLabel = playerLabelsMap[gp.player_id];
-                    return `
-                        <a href="${window.getHeroLink(heroSlug)}" target="_blank" class="mini-portrait-wrapper ${winnerClass}" title="${heroName}" onclick="event.stopPropagation()">
-                            ${trophyHtml}
-                            <img src="${window.getImgUrl(heroSlug)}" class="mini-portrait-img" alt="${heroName}">
-                            <div class="mini-portrait-pill" style="background-color: var(--p${pIdx + 1});">${playerLabel}</div>
-                        </a>
-                    `;
-                })
-                .join("");
-
-            const statusLabel = isInProgress
-                ? '<span class="game-card-status-badge">In Progress</span>'
-                : "";
-            const drawStampHtml = isDraw
-                ? '<div class="player-plate-draw-badge">DRAW</div>'
-                : "";
-            const headerHtml = `
-            <div class="game-card-header" onclick="toggleGameExpansion('${game.id}')">
-                <div class="game-card-title-group">
-                    <span class="game-card-date">${dateStr}</span>
-                    ${statusLabel}
-                </div>
-                <div class="game-card-collapsed-summary">
-                    <div class="mini-portrait-strip">
-                        ${portraitStrip}
-                        ${drawStampHtml}
-                    </div>
-                    <span class="chevron-icon">▼</span>
-                </div>
-            </div>`;
-
-            const canManage =
-                window.isAdmin() || game.last_updated_by === window.currentUser?.id;
-            const gameActions = canManage
-                ? `
-                <div class="game-card-actions">
-                    <button class="btn-game-action" onclick="selectWinner('${game.id}')" title="Select Winner">🏆</button>
-                    <!-- <button class="btn-game-action delete" onclick="deleteGame('${game.id}')" title="Delete Game">🗑️</button> -->
-                </div>
-            `
-                : "";
-
-            const platesArray = game.game_players.map((gp) => {
-                const pIdx = parseInt(gp.player_id.substring(1)) - 1;
-                const heroName = gp.heroes?.name || "Unknown";
-                const heroSlug = gp.heroes?.slug || "";
-                const isSearchMatch = Boolean(
-                    searchTerm && heroName.toLowerCase().includes(searchTerm),
-                );
-
-                let isPlayerFilterMatch = false;
-                if (window.selectedGamePlayerIndex !== null) {
-                    if (
-                        window.selectedGamePlayerIndex >= 0 &&
-                        window.selectedGamePlayerIndex <= 3
-                    ) {
-                        isPlayerFilterMatch = pIdx === window.selectedGamePlayerIndex;
-                    } else if (window.selectedGamePlayerIndex === 4) {
-                        isPlayerFilterMatch = pIdx === 4 || pIdx === 5;
-                    }
-                }
-
-                let plateClass = "draw";
-                if (winners.length > 0) {
-                    plateClass = gp.is_winner ? "winner" : "loser";
-                } else if (isDraw) {
-                    plateClass = "draw";
-                } else if (isInProgress) {
-                    plateClass = "in-progress";
-                } else {
-                    plateClass = gp.is_winner === false ? "loser" : "draw";
-                }
-
-                let borderStyle = "";
-                if (isSearchMatch || isPlayerFilterMatch) {
-                    borderStyle =
-                        "box-shadow: 0 0 8px var(--accent), 0 0 20px color-mix(in srgb, var(--accent) 50%, transparent);";
-                }
-
-                const trophyHtml = gp.is_winner
-                    ? '<div class="player-plate-trophy">🏆</div>'
-                    : "";
-                const drawBadgeHtml = isDraw
-                    ? '<div class="player-plate-draw-badge">DRAW</div>'
-                    : "";
-
-                let statsHtml = "";
-                if (gp.is_winner) {
-                    let heroPlayCount = 0;
-                    let heroWinCount = 0;
-                    const useHistorical = window.gamesUseHistorical;
-                    window.games.forEach((g) => {
-                        if (!useHistorical && g.is_historical) return;
-                        g.game_players.forEach((otherGp) => {
-                            if (
-                                otherGp.player_id === gp.player_id &&
-                                otherGp.hero_id === gp.hero_id
-                            ) {
-                                heroPlayCount++;
-                                if (otherGp.is_winner) {
-                                    heroWinCount++;
-                                }
-                            }
-                        });
-                    });
-                    const pct =
-                        heroPlayCount > 0
-                            ? (heroWinCount / heroPlayCount).toFixed(3)
-                            : ".000";
-                    const pctStr = pct.startsWith("0") ? pct.substring(1) : pct;
-                    statsHtml = `
-                            <div class="player-plate-winner-stats">${heroWinCount}🏆 / ${heroPlayCount}🎲</div>
-                            <div class="player-plate-winner-pct">( ${pctStr})</div>
-                        `;
-                }
-
-                return `
-                    <a href="${window.getHeroLink(heroSlug)}" target="_blank" class="player-plate ${plateClass}" style="${borderStyle}">
-                        <img src="${window.getImgUrl(heroSlug)}" class="player-plate-bg-art" alt="${heroName}">
-                        <div class="player-plate-overlay"></div>
-                        ${trophyHtml}
-                        ${drawBadgeHtml}
-                        <div class="player-plate-tag" style="background-color: var(--p${pIdx + 1});">${window.NAMES[pIdx]}</div>
-                        <div class="player-plate-info">
-                            <div class="player-plate-hero-name">${heroName}</div>
-                            ${statsHtml}
-                        </div>
-                    </a>`;
-            });
-
-            const playerPlatesHtml = platesArray.join("");
-
-            return `
-            <div class="game-history-card ${expandedClass}">
-                ${bgImgHtml}
-                ${headerHtml}
-                <div class="game-card-body">
-                    <div class="player-responsive-grid">
-                        ${playerPlatesHtml}
-                    </div>
-                    ${gameActions}
-                </div>
-            </div>`;
-        })
-        .join("");
-
-    if (window.games.length === 0) {
-        container.innerHTML =
-            '<p style="text-align:center; opacity:0.6;">No games recorded yet.</p>';
-    }
+    adminView.renderGamesList();
 }
 window.renderGamesList = renderGamesList;
 
-/**
- * Expands or collapses a match detail card in the games list.
- * @function toggleGameExpansion
- * @param {string} gameId - Match UUID/ID.
- */
+export function handleGamesSearchInput() {
+    const searchInput = document.getElementById("games-search");
+    const clearBtn = document.getElementById("clear-games-search");
+    if (searchInput && clearBtn) {
+        clearBtn.classList.toggle("hidden", searchInput.value.trim().length === 0);
+    }
+    renderGamesList();
+}
+window.handleGamesSearchInput = handleGamesSearchInput;
+
+export function clearGamesSearch() {
+    const searchInput = document.getElementById("games-search");
+    if (searchInput) {
+        searchInput.value = "";
+        searchInput.focus();
+    }
+    handleGamesSearchInput();
+}
+window.clearGamesSearch = clearGamesSearch;
+
 export function toggleGameExpansion(gameId) {
     stateStore.updateSet("expandedGameIds", "toggle", gameId);
     renderGamesList();
 }
 window.toggleGameExpansion = toggleGameExpansion;
 
-/**
- * Opens the modal for selecting/updating the winner of a game session.
- * @async
- * @function selectWinner
- * @param {string} gameId - Match UUID/ID.
- */
-export async function selectWinner(gameId) {
-    const game = window.games.find((g) => g.id == gameId);
-    if (!game) return;
+export function toggleHistoryViewStyle() {
+    const current = stateStore.get("gamesHistoryStyle") || "gorgeous";
+    const next = current === "gorgeous" ? "admin" : "gorgeous";
+    stateStore.set("gamesHistoryStyle", next);
+    renderGamesList();
+}
+window.toggleHistoryViewStyle = toggleHistoryViewStyle;
 
-    const container = document.getElementById("winner-selection-container");
-    const confirmBtn = document.getElementById("confirm-winner-btn");
-
-    const winners = game.game_players.filter((p) => p.is_winner === true);
-    const explicitLosers = game.game_players.filter(
-        (p) => p.is_winner === false,
-    );
-    const isDraw =
-        winners.length === 0 &&
-        explicitLosers.length > 0 &&
-        explicitLosers.length === game.game_players.length;
-
-    const isTwoRows =
-        game.game_players.length === 4 || game.game_players.length === 2;
-    const gridClass = isTwoRows
-        ? "winner-select-grid two-rows"
-        : "winner-select-grid";
-    let optionsHtml = `<div class="${gridClass}">`;
-
-    optionsHtml += game.game_players
-        .map((gp) => {
-            const pIdx = parseInt(gp.player_id.substring(1)) - 1;
-            const heroName = gp.heroes?.name || "Unknown";
-            const heroSlug = gp.heroes?.slug || "";
-            const isSelected = gp.is_winner === true;
-            const isChecked = isSelected ? "checked" : "";
-            const selectedClass = isSelected ? "selected" : "";
-            return `
-            <div class="winner-card ${selectedClass}" onclick="handleWinnerSelect('${gp.player_id}')">
-                <input type="radio" name="winner-choice" value="${gp.player_id}" ${isChecked} style="display: none;">
-                <img src="${window.getImgUrl(heroSlug)}" class="winner-card-img" alt="${heroName}">
-                <div class="winner-card-player-name">${window.NAMES[pIdx]}</div>
-                <div class="winner-card-hero-name">${heroName}</div>
-            </div>
-        `;
-        })
-        .join("");
-
-    const isDrawChecked = isDraw ? "checked" : "";
-    const drawSelectedClass = isDraw ? "selected" : "";
-    optionsHtml += `
-            <div class="winner-draw-card ${drawSelectedClass}" onclick="handleWinnerSelect('draw')">
-                <input type="radio" name="winner-choice" value="draw" ${isDrawChecked} style="display: none;">
-                <span style="font-size: 1.5rem; line-height: 1;">🤝</span>
-                <div style="text-align: left;">
-                    <div class="winner-card-player-name" style="font-size: 0.9rem;">Select a Draw</div>
-                    <div class="winner-card-hero-name" style="font-size: 0.7rem; opacity: 0.7;">No winner for this match</div>
-                </div>
-            </div>
-        </div>
-    `;
-
-    container.innerHTML = optionsHtml;
-    confirmBtn.onclick = () => submitWinner(gameId);
-
-    document.getElementById("winner-modal").style.display = "flex";
-    document.body.style.overflow = "hidden";
+export function selectWinner(gameId) {
+    adminView.openWinnerModal(gameId);
 }
 window.selectWinner = selectWinner;
 
-/**
- * Updates selected styling when a winner choice radio card is selected in the modal.
- * @function handleWinnerSelect
- * @param {string} value - Selected radio value ('draw' or player_id).
- */
 export function handleWinnerSelect(value) {
-    const cards = document.querySelectorAll(".winner-card, .winner-draw-card");
-    cards.forEach((card) => {
-        const radio = card.querySelector('input[name="winner-choice"]');
-        if (radio) {
-            if (radio.value === value) {
-                radio.checked = true;
-                card.classList.add("selected");
-            } else {
-                card.classList.remove("selected");
-            }
-        }
-    });
+    adminView.handleWinnerSelect(value);
 }
 window.handleWinnerSelect = handleWinnerSelect;
 
-/**
- * Closes the winner selection modal.
- * @function closeWinnerModal
- */
 export function closeWinnerModal() {
-    document.getElementById("winner-modal").style.display = "none";
-    document.body.style.overflow = "auto";
+    adminView.closeWinnerModal();
 }
 window.closeWinnerModal = closeWinnerModal;
 
-/**
- * Submits the selected winner (or draw) to the database and refreshes application data.
- * @async
- * @function submitWinner
- * @param {string} gameId - Match UUID/ID.
- */
 export async function submitWinner(gameId) {
     const selectedRadio = document.querySelector(
-        'input[name="winner-choice"]:checked',
+        'input[name="winner-selection"]:checked'
     );
     if (!selectedRadio) return alert("Please select a winner.");
 
@@ -1642,7 +635,7 @@ export async function submitWinner(gameId) {
         const { error } = await apiService.updateGameWinner(
             gameId,
             winnerPlayerId,
-            window.currentUser.id,
+            stateStore.get("currentUser").id,
         );
         if (error) throw error;
 
@@ -1657,12 +650,6 @@ export async function submitWinner(gameId) {
 }
 window.submitWinner = submitWinner;
 
-/**
- * Deletes a game record completely from the database.
- * @async
- * @function deleteGame
- * @param {string} gameId - Match UUID/ID.
- */
 export async function deleteGame(gameId) {
     if (
         !confirm(
@@ -1682,16 +669,13 @@ export async function deleteGame(gameId) {
 }
 window.deleteGame = deleteGame;
 
-/**
- * Recalculates play count, win count, and last played date for all heroes based on filtered history logs.
- * @function updateHeroStatsFromHistory
- */
 export function updateHeroStatsFromHistory() {
     let showNormal = true;
     let showHistorical = true;
     
-    const hasNormalOnly = window.activeFilterDataHistories.has("Normal only");
-    const hasHistoricalOnly = window.activeFilterDataHistories.has("Historical only");
+    const activeFilterDataHistories = stateStore.get("activeFilterDataHistories");
+    const hasNormalOnly = activeFilterDataHistories.has("Normal only");
+    const hasHistoricalOnly = activeFilterDataHistories.has("Historical only");
     
     if (hasNormalOnly && !hasHistoricalOnly) {
         showNormal = true;
@@ -1701,15 +685,17 @@ export function updateHeroStatsFromHistory() {
         showHistorical = true;
     }
 
-    window.characters.forEach((char) => {
+    const characters = stateStore.get("characters");
+    characters.forEach((char) => {
         char.playCount = [0, 0, 0, 0];
         char.lastPlayed = ["Never", "Never", "Never", "Never"];
         char.winCount = [0, 0, 0, 0];
     });
 
-    if (!window.games) return;
+    const games = stateStore.get("games");
+    if (!games) return;
 
-    window.games.forEach((game) => {
+    games.forEach((game) => {
         const isGameHistorical = !!game.is_historical;
         if (isGameHistorical && !showHistorical) return;
         if (!isGameHistorical && !showNormal) return;
@@ -1717,7 +703,7 @@ export function updateHeroStatsFromHistory() {
         game.game_players.forEach((gp) => {
             const pIdx = parseInt(gp.player_id?.substring(1) || "0", 10) - 1;
             if (pIdx >= 0 && pIdx < 4) {
-                const char = window.characters.find((c) => c.id === gp.hero_id);
+                const char = characters.find((c) => c.id === gp.hero_id);
                 if (!char) return;
 
                 char.playCount[pIdx]++;
@@ -1740,3 +726,12 @@ export function updateHeroStatsFromHistory() {
 }
 window.updateHeroStatsFromHistory = updateHeroStatsFromHistory;
 
+// Helper to escape HTML characters
+function escapeHtml(text) {
+    return String(text || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}

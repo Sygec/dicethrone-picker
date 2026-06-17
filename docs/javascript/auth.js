@@ -4,6 +4,7 @@
  */
 
 import * as apiService from './services/apiService.js';
+import * as authView from './views/authView.js';
 
 /**
  * Synchronizes the UI elements, buttons, and navigation options based on the user's login status.
@@ -11,29 +12,7 @@ import * as apiService from './services/apiService.js';
  * @function updateAuthUI
  */
 export function updateAuthUI() {
-    const adminNav = document.querySelector(".bottom-nav .admin-only");
-
-    if (window.currentUser) {
-        if (window.loggedInPlayerIndex !== -1) {
-            authBtn.innerText = `Logout (${window.NAMES[window.loggedInPlayerIndex]})`;
-        } else {
-            authBtn.innerText = `Logout (${window.currentUser.email.split("@")[0]})`;
-        }
-        authBtn.onclick = handleLogout;
-        if (adminNav) adminNav.style.display = window.isAdmin() ? "flex" : "none";
-    } else {
-        authBtn.innerText = "Login";
-        authBtn.onclick = openLoginModal;
-        if (adminNav) adminNav.style.display = "none";
-        if (document.getElementById("adminSection"))
-            document.getElementById("adminSection").classList.add("hidden");
-        const actionButtons = document.getElementById("action-buttons");
-        if (actionButtons) actionButtons.style.display = "none";
-        const rollBtnContainer = document.getElementById("rollBtnContainer");
-        if (rollBtnContainer) rollBtnContainer.style.display = "flex";
-        const rollBtn = document.getElementById("rollBtn");
-        if (rollBtn) rollBtn.style.display = "block";
-    }
+    authView.updateAuthUI();
 
     // Refresh lists to show/hide edit buttons
     if (typeof window.renderList === "function") window.renderList();
@@ -47,19 +26,7 @@ window.updateAuthUI = updateAuthUI;
  * @function renderPlayerToggles
  */
 export function renderPlayerToggles() {
-    const container = document.getElementById("player-toggle-zone-top");
-    if (!container || window.players.length === 0) return;
-
-    container.innerHTML = window.players
-        .map((p, i) => {
-            const isChecked = i < 4 ? "checked" : "";
-            return `
-            <label class="player-card" style="--player-color: var(--${p.id})">
-                <input type="checkbox" id="use${i}" ${isChecked} onclick="handlePlayerToggleClick(event, ${i})">
-                <span class="player-card-name">${p.name}</span>
-            </label>`;
-        })
-        .join("");
+    authView.renderPlayerToggles();
 }
 window.renderPlayerToggles = renderPlayerToggles;
 
@@ -68,9 +35,7 @@ window.renderPlayerToggles = renderPlayerToggles;
  * @function openLoginModal
  */
 export function openLoginModal() {
-    loginModal.style.display = "flex";
-    document.getElementById("login-error").style.display = "none";
-    document.body.style.overflow = "hidden";
+    authView.openLoginModal();
     // Add key handler so Escape cancels (form submit handles Enter)
     window.loginModalKeyHandler = (e) => {
         if (e.key === "Escape") {
@@ -86,8 +51,7 @@ window.openLoginModal = openLoginModal;
  * @function closeLoginModal
  */
 export function closeLoginModal() {
-    loginModal.style.display = "none";
-    document.body.style.overflow = "auto";
+    authView.closeLoginModal();
     // Remove key handler when modal is closed
     if (window.loginModalKeyHandler) {
         document.removeEventListener("keydown", window.loginModalKeyHandler);
@@ -106,13 +70,11 @@ window.closeLoginModal = closeLoginModal;
 export async function handleLogin() {
     const email = document.getElementById("login-email").value;
     const password = document.getElementById("login-password").value;
-    const errorDiv = document.getElementById("login-error");
 
     const { error } = await apiService.signInWithPassword({ email, password });
 
     if (error) {
-        errorDiv.innerText = error.message;
-        errorDiv.style.display = "block";
+        authView.showLoginError(error.message);
     }
 }
 window.handleLogin = handleLogin;
@@ -126,28 +88,18 @@ window.handleLogin = handleLogin;
  */
 export async function handlePasswordReset() {
     const email = document.getElementById("login-email").value;
-    const errorDiv = document.getElementById("login-error");
 
     if (!email) {
-        errorDiv.innerText =
-            "Please enter your email address first to reset password.";
-        errorDiv.style.display = "block";
+        authView.showLoginError("Please enter your email address first to reset password.");
         return;
     }
 
     const { error } = await apiService.resetPasswordForEmail(email);
 
     if (error) {
-        errorDiv.innerText = error.message;
-        errorDiv.style.display = "block";
+        authView.showLoginError(error.message);
     } else {
-        errorDiv.innerText =
-            "Password reset email sent. Please check your inbox.";
-        errorDiv.style.color = "#4CAF50";
-        errorDiv.style.display = "block";
-        setTimeout(() => {
-            errorDiv.style.color = "var(--danger)";
-        }, 5000);
+        authView.showUpdatePasswordSuccessFeedback();
     }
 }
 window.handlePasswordReset = handlePasswordReset;
@@ -157,15 +109,7 @@ window.handlePasswordReset = handlePasswordReset;
  * @function openUpdatePasswordModal
  */
 export function openUpdatePasswordModal() {
-    updatePasswordModal.style.display = "block";
-    document.getElementById("update-password-error").style.display = "none";
-    document.body.style.overflow = "hidden";
-
-    // Populate hidden username field for password manager context
-    const usernameInput = document.getElementById("update-password-username");
-    if (usernameInput && window.currentUser) {
-        usernameInput.value = window.currentUser.email || "";
-    }
+    authView.openUpdatePasswordModal();
 }
 window.openUpdatePasswordModal = openUpdatePasswordModal;
 
@@ -174,8 +118,7 @@ window.openUpdatePasswordModal = openUpdatePasswordModal;
  * @function closeUpdatePasswordModal
  */
 export function closeUpdatePasswordModal() {
-    updatePasswordModal.style.display = "none";
-    document.body.style.overflow = "auto";
+    authView.closeUpdatePasswordModal();
 }
 window.closeUpdatePasswordModal = closeUpdatePasswordModal;
 
@@ -187,11 +130,9 @@ window.closeUpdatePasswordModal = closeUpdatePasswordModal;
  */
 export async function handleUpdatePassword() {
     const newPassword = document.getElementById("new-password").value;
-    const errorDiv = document.getElementById("update-password-error");
 
     if (!newPassword) {
-        errorDiv.innerText = "Please enter a new password.";
-        errorDiv.style.display = "block";
+        authView.showUpdatePasswordError("Please enter a new password.");
         return;
     }
 
@@ -200,12 +141,11 @@ export async function handleUpdatePassword() {
     });
 
     if (error) {
-        errorDiv.innerText = error.message;
-        errorDiv.style.display = "block";
+        authView.showUpdatePasswordError(error.message);
     } else {
         alert("Password updated successfully!");
         closeUpdatePasswordModal();
-        document.getElementById("new-password").value = "";
+        authView.resetPasswordUpdateForm();
     }
 }
 window.handleUpdatePassword = handleUpdatePassword;
@@ -222,4 +162,3 @@ export async function handleLogout() {
     }
 }
 window.handleLogout = handleLogout;
-

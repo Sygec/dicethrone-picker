@@ -73,6 +73,7 @@ const state = {
     activeDraftCandidates: {}, // pIdx -> array of candidate heroes
     draftWheelAngles: {}, // pIdx -> cumulative rotation angle
     draftWheelFrontCardIndices: {}, // pIdx -> index of the card physically in front
+    gamesHistoryStyle: "gorgeous",
 };
 
 // Queue of registered listeners

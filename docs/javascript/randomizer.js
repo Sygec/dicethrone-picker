@@ -5,6 +5,8 @@
 
 import * as apiService from './services/apiService.js';
 import * as stateStore from './stateStore.js';
+import * as rollView from './views/rollView.js';
+import * as filterView from './views/filterView.js';
 
 /**
  * Executes a hero roll for all active players, selecting unique characters.
@@ -12,19 +14,22 @@ import * as stateStore from './stateStore.js';
  * @function pickCharacters
  */
 export function pickCharacters() {
-    const active = window.NAMES.map((_, i) => i).filter(
+    const NAMES = stateStore.get("NAMES");
+    const characters = stateStore.get("characters");
+    const bannedHeroIds = stateStore.get("bannedHeroIds");
+
+    const active = NAMES.map((_, i) => i).filter(
         (i) => document.getElementById(`use${i}`).checked,
     );
 
     if (active.length === 0) return alert("Select players!");
 
     const selectionOrder = [...active].sort(() => Math.random() - 0.5);
-
     const resultsDiv = document.getElementById("results");
-    resultsDiv.innerHTML = "";
+    if (resultsDiv) resultsDiv.innerHTML = "";
 
-    let pool = window.characters
-        .filter((c) => window.isHeroOwned(c) && !window.bannedHeroIds.has(c.id))
+    let pool = characters
+        .filter((c) => window.isHeroOwned(c) && !bannedHeroIds.has(c.id))
         .map((c) => structuredClone(c));
 
     if (pool.length < active.length) {
@@ -33,27 +38,27 @@ export function pickCharacters() {
         );
     }
 
-    if (window.draftModeEnabled) {
+    if (stateStore.get("draftModeEnabled")) {
         const rollBtnContainer = document.getElementById("rollBtnContainer");
         if (rollBtnContainer) rollBtnContainer.style.display = "none";
 
         const actionButtons = document.getElementById("action-buttons");
         if (actionButtons) actionButtons.style.display = "none";
 
-        window.activeDraftOrder = selectionOrder;
-        window.activeDraftStep = 0;
-        window.selectedDraftHeroes = {};
-        window.activeDraftCandidates = {};
-        window.draftWheelAngles = {};
-        window.draftWheelFrontCardIndices = {};
+        stateStore.set("activeDraftOrder", selectionOrder);
+        stateStore.set("activeDraftStep", 0);
+        stateStore.set("selectedDraftHeroes", {});
+        stateStore.set("activeDraftCandidates", {});
+        stateStore.set("draftWheelAngles", {});
+        stateStore.set("draftWheelFrontCardIndices", {});
 
         const sortedActive = [...active].sort((a, b) => a - b);
         sortedActive.forEach((pIdx) => {
-            renderPlayerRowWaiting(pIdx, window.NAMES[window.activeDraftOrder[0]]);
+            rollView.renderPlayerRowWaiting(pIdx, NAMES[selectionOrder[0]]);
         });
 
         if (typeof window.showSection === "function") window.showSection("roll");
-        resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
+        if (resultsDiv) resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
 
         startDraftStep();
         return;
@@ -115,19 +120,18 @@ export function pickCharacters() {
     const actionButtons = document.getElementById("action-buttons");
     if (actionButtons) actionButtons.style.display = "none";
 
-    window.isRollActive = false;
+    stateStore.set("isRollActive", false);
 
     const sortedActive = [...active].sort((a, b) => a - b);
-
     sortedActive.forEach((pIdx) => {
-        renderPlayerRowSkeleton(pIdx);
+        rollView.renderPlayerRowSkeleton(pIdx);
     });
 
     if (typeof window.showSection === "function") window.showSection("roll");
-    resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (resultsDiv) resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
 
-    const ownedHeroes = window.characters.filter(
-        (c) => window.isHeroOwned(c) && !window.bannedHeroIds.has(c.id),
+    const ownedHeroes = characters.filter(
+        (c) => window.isHeroOwned(c) && !bannedHeroIds.has(c.id),
     );
 
     sortedActive.forEach((pIdx) => {
@@ -152,13 +156,12 @@ export function pickCharacters() {
                     rollBtn.style.cursor = "pointer";
                 }
             }
-            window.isRollActive = true;
+            stateStore.set("isRollActive", true);
             return;
         }
 
         const pIdx = selectionOrder[currentRevealIndex];
         const finalHero = rollResults[pIdx];
-
         const duration = 500 + Math.random() * 500;
 
         setTimeout(() => {
@@ -172,277 +175,59 @@ export function pickCharacters() {
 }
 window.pickCharacters = pickCharacters;
 
-/**
- * Refreshes valid selections after a dropdown sorting update.
- * @function updateDropdownSort
- */
 export function updateDropdownSort() {
     validateSelection();
 }
 window.updateDropdownSort = updateDropdownSort;
 
-/**
- * Appends a player row placeholder with animatable text inside the results container.
- * @function renderPlayerRowSkeleton
- * @param {number} pIdx - The index of the player slot.
- */
 export function renderPlayerRowSkeleton(pIdx) {
-    const resultsDiv = document.getElementById("results");
-
-    resultsDiv.innerHTML += `
-        <div class="player-row randomizing" id="player-row-${pIdx}" style="--player-color: var(--p${pIdx + 1}); border-color: var(--p${pIdx + 1});">
-            <img src="" class="char-bg-img scramble-img" id="bg-img-${pIdx}" alt="Randomizing">
-            
-            <div class="player-row-content">
-                <div class="hero-info-container" id="info-container-${pIdx}">
-                    <div class="hero-header-row">
-                        <div class="hero-header-left">
-                            <span class="player-name-caps" style="color: var(--player-color);">${window.NAMES[pIdx].toUpperCase()}</span>
-                            <span class="hero-name-divider">:</span>
-                            <a href="#" target="_blank" class="hero-name hero-name-link scramble-text" id="hero-name-title-${pIdx}">ROLLING...</a>
-                        </div>
-                    </div>
-                    
-                    <span class="expanded-group scramble-hidden opacity-0" id="hero-group-${pIdx}">Group</span>
-                    
-                    <div class="hero-stats-row scramble-hidden opacity-0" id="stats-row-${pIdx}">
-                        <span>Plays: --</span>
-                        <span class="stats-divider">|</span>
-                        <span>Last: --</span>
-                        <span class="stats-divider">|</span>
-                        <span id="hero-prob-${pIdx}">Prob: --</span>
-                    </div>
-                </div>
-                
-                <div class="hero-select-container scramble-hidden opacity-0" id="select-container-${pIdx}">
-                    <input type="hidden" class="char-select" data-player="${pIdx}" id="select-${pIdx}">
-                    <button class="edit-icon-btn" type="button" onclick="openHeroSelectModal(${pIdx})" aria-label="Select hero">
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                            <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
+    rollView.renderPlayerRowSkeleton(pIdx);
 }
 window.renderPlayerRowSkeleton = renderPlayerRowSkeleton;
 
-/**
- * Opens the manual hero selection modal for a specific player slot.
- * @function openHeroSelectModal
- * @param {number} pIdx - The target player index.
- */
 export function openHeroSelectModal(pIdx) {
-    window.activeSelectPlayerIdx = pIdx;
-
-    const modal = document.getElementById("hero-select-modal");
-    if (!modal) return;
-
-    modal.style.display = "flex";
-    document.body.style.overflow = "hidden";
-
-    const titleEl = document.getElementById("hero-select-modal-title");
-    if (titleEl && window.NAMES[pIdx]) {
-        titleEl.innerText = `Select Hero for ${window.NAMES[pIdx]}`;
-    }
-
-    const searchInput = document.getElementById("hero-select-search");
-    if (searchInput) {
-        searchInput.value = "";
-    }
-
-    setModalSort("name");
-    if (typeof window.updateSegmentedHighlights === "function") {
-        setTimeout(window.updateSegmentedHighlights, 50);
-    }
+    stateStore.set("activeSelectPlayerIdx", pIdx);
+    rollView.openHeroSelectModal(pIdx);
 }
 window.openHeroSelectModal = openHeroSelectModal;
 
-/**
- * Closes the manual hero selection modal.
- * @function closeHeroSelectModal
- */
 export function closeHeroSelectModal() {
-    const modal = document.getElementById("hero-select-modal");
-    if (modal) {
-        modal.style.display = "none";
-    }
-    document.body.style.overflow = "";
-    window.activeSelectPlayerIdx = null;
+    rollView.closeHeroSelectModal();
+    stateStore.set("activeSelectPlayerIdx", null);
 }
 window.closeHeroSelectModal = closeHeroSelectModal;
 
-/**
- * Sets the active sort criteria inside the manual selection modal.
- * @function setModalSort
- * @param {string} mode - Sorting key ("name" or "weight").
- */
 export function setModalSort(mode) {
-    window.modalSortMode = mode;
-
-    const namePill = document.getElementById("modal-sort-name");
-    const weightPill = document.getElementById("modal-sort-weight");
-
-    if (namePill) namePill.classList.toggle("active", mode === "name");
-    if (weightPill) weightPill.classList.toggle("active", mode === "weight");
-
-    if (typeof window.updateSegmentedHighlights === "function") {
-        window.updateSegmentedHighlights();
-    }
+    stateStore.set("modalSortMode", mode);
+    rollView.setModalSort(mode);
     filterHeroSelectOptions();
 }
 window.setModalSort = setModalSort;
 
-/**
- * Re-evaluates search queries typed into the hero override search bar.
- * @function filterHeroSelectOptions
- */
 export function filterHeroSelectOptions() {
-    const searchInput = document.getElementById("hero-select-search");
-    const searchTerm = searchInput ? searchInput.value : "";
-    renderHeroSelectOptions(searchTerm);
+    rollView.renderHeroSelectOptions();
 }
 window.filterHeroSelectOptions = filterHeroSelectOptions;
 
-/**
- * Generates options inside the manual hero selection modal container.
- * @function renderHeroSelectOptions
- * @param {string} [searchTerm=""] - Search term filters.
- */
-export function renderHeroSelectOptions(searchTerm = "") {
-    const container = document.getElementById("hero-select-options-container");
-    if (!container) return;
-
-    const pIdx = window.activeSelectPlayerIdx;
-    if (pIdx === null) return;
-
-    let owned = window.characters.filter((c) => window.isHeroOwned(c));
-
-    if (searchTerm.trim() !== "") {
-        const term = searchTerm.toLowerCase().trim();
-        owned = owned.filter((c) => {
-            const nameMatch = c.name.toLowerCase().includes(term);
-            const groupMatch = (c.group || "").toLowerCase().includes(term);
-            return nameMatch || groupMatch;
-        });
-    }
-
-    let totalWeight = 0;
-    if (window.modalSortMode === "weight" && pIdx < 4) {
-        owned.forEach((c) => (totalWeight += window.getSoftWeight(c, pIdx)));
-    }
-
-    owned.sort((a, b) => {
-        if (window.modalSortMode === "weight" && pIdx < 4) {
-            const wA = window.getSoftWeight(a, pIdx);
-            const wB = window.getSoftWeight(b, pIdx);
-            if (wA !== wB) return wB - wA;
-        }
-        return a.name.localeCompare(b.name);
-    });
-
-    const currentVal = document.getElementById(`select-${pIdx}`)?.value;
-
-    if (owned.length === 0) {
-        container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #888; padding: 20px;">No matching owned heroes found.</div>`;
-        return;
-    }
-
-    container.innerHTML = owned
-        .map((c) => {
-            const isSelected = c.name === currentVal;
-            let pctLabel = "";
-            if (window.modalSortMode === "weight" && pIdx < 4 && totalWeight > 0) {
-                const weight = window.getSoftWeight(c, pIdx);
-                const pct = ((weight / totalWeight) * 100).toFixed(1);
-                pctLabel = `<div class="hero-select-card-pct">${pct}%</div>`;
-            }
-
-            return `
-            <div class="hero-select-card ${isSelected ? "selected" : ""}" onclick="selectHeroForPlayer('${c.name.replace(/'/g, "\\'")}')">
-                <img src="${window.getImgUrl(c.slug)}" class="hero-select-card-img" alt="${c.name}">
-                <div class="hero-select-card-name">${c.name}</div>
-                ${pctLabel}
-            </div>
-        `;
-        })
-        .join("");
-}
-window.renderHeroSelectOptions = renderHeroSelectOptions;
-
-/**
- * Manually overrides a rolled selection for a player slot, updates UI attributes, and closes the modal.
- * @function selectHeroForPlayer
- * @param {string} heroName - Name of the selected hero.
- */
 export function selectHeroForPlayer(heroName) {
-    const pIdx = window.activeSelectPlayerIdx;
+    const pIdx = stateStore.get("activeSelectPlayerIdx");
     if (pIdx === null) return;
 
-    const char = window.characters.find((c) => c.name === heroName);
+    const characters = stateStore.get("characters");
+    const char = characters.find((c) => c.name === heroName);
     if (!char) return;
 
-    if (window.draftModeEnabled) {
-        window.selectedDraftHeroes[pIdx] = char;
-    }
-    const rowEl = document.getElementById(`player-row-${pIdx}`);
-    if (rowEl) {
-        rowEl.classList.remove("active-draft", "waiting-draft");
+    if (stateStore.get("draftModeEnabled")) {
+        stateStore.get("selectedDraftHeroes")[pIdx] = char;
     }
 
-    const selectEl = document.getElementById(`select-${pIdx}`);
-    if (selectEl) {
-        selectEl.value = char.name;
-    }
-
-    const bgImgEl = document.getElementById(`bg-img-${pIdx}`);
-    if (bgImgEl) {
-        bgImgEl.src = window.getImgUrl(char.slug);
-        bgImgEl.alt = char.name;
-    }
-
-    const nameTitle = document.getElementById(`hero-name-title-${pIdx}`);
-    if (nameTitle) {
-        nameTitle.innerText = char.name;
-        nameTitle.classList.remove("scramble-text");
-        nameTitle.classList.add("resolved");
-        nameTitle.href = window.getHeroLink(char.slug);
-    }
-
-    const groupEl = document.getElementById(`hero-group-${pIdx}`);
-    if (groupEl) groupEl.innerText = char.group || "Unknown";
-
-    const statsDiv = document.getElementById(`stats-row-${pIdx}`);
-    if (statsDiv) {
-        const probText = `Prob: <b>${window.getHeroProbabilityText(char, pIdx)}</b>`;
-        if (pIdx < 4) {
-            const playCount = char.playCount?.[pIdx] || 0;
-            const lastPlayed = char.lastPlayed?.[pIdx] || "Never";
-            statsDiv.innerHTML = `
-                <span>Plays: <b>${playCount}</b></span>
-                <span class="stats-divider">|</span>
-                <span>Last: <b>${lastPlayed}</b></span>
-                <span class="stats-divider">|</span>
-                <span>${probText}</span>
-            `;
-        } else {
-            statsDiv.innerHTML = `<span>${probText}</span>`;
-        }
-    }
-
+    rollView.updatePlayerCardUI(pIdx, char);
     validateSelection();
     closeHeroSelectModal();
 }
 window.selectHeroForPlayer = selectHeroForPlayer;
+window.selectHeroFromModal = selectHeroForPlayer;
 
-/**
- * Starts scramble animations inside a player's results card.
- * @function startPanelScramble
- * @param {number} pIdx - Player index.
- * @param {Object[]} ownedHeroes - Array of owned hero objects.
- */
 export function startPanelScramble(pIdx, ownedHeroes) {
     if (ownedHeroes.length === 0) return;
 
@@ -466,12 +251,6 @@ export function startPanelScramble(pIdx, ownedHeroes) {
 }
 window.startPanelScramble = startPanelScramble;
 
-/**
- * Stops scramble animations, locking visual states to the selected hero attributes.
- * @function stopPanelScramble
- * @param {number} pIdx - Player index.
- * @param {Object} finalHero - Rolled hero object.
- */
 export function stopPanelScramble(pIdx, finalHero) {
     const intervals = stateStore.get("scrambleIntervals");
     if (intervals[pIdx]) {
@@ -479,70 +258,12 @@ export function stopPanelScramble(pIdx, finalHero) {
         stateStore.updateObject("scrambleIntervals", pIdx, undefined);
     }
 
-    const rowEl = document.getElementById(`player-row-${pIdx}`);
-    if (rowEl) {
-        rowEl.classList.remove("randomizing");
-        rowEl.classList.add("revealed");
-    }
-
-    const bgImgEl = document.getElementById(`bg-img-${pIdx}`);
-    const nameEl = document.getElementById(`hero-name-title-${pIdx}`);
-
     if (finalHero) {
-        if (bgImgEl) {
-            bgImgEl.src = window.getImgUrl(finalHero.slug);
-            bgImgEl.alt = finalHero.name;
-            bgImgEl.classList.remove("scramble-img");
-        }
-        if (nameEl) {
-            nameEl.innerText = finalHero.name;
-            nameEl.classList.remove("scramble-text");
-            nameEl.classList.add("resolved");
-            nameEl.href = window.getHeroLink(finalHero.slug);
-        }
-
-        const groupEl = document.getElementById(`hero-group-${pIdx}`);
-        if (groupEl) {
-            groupEl.innerText = finalHero.group || "Unknown";
-        }
-
-        const statsRow = document.getElementById(`stats-row-${pIdx}`);
-        if (statsRow) {
-            const probText = `Prob: <b>${window.getHeroProbabilityText(finalHero, pIdx)}</b>`;
-            if (pIdx < 4) {
-                const plays = finalHero.playCount[pIdx] || 0;
-                const last = finalHero.lastPlayed[pIdx] || "Never";
-                statsRow.innerHTML = `
-                    <span>Plays: <b>${plays}</b></b></span>
-                    <span class="stats-divider">|</span>
-                    <span>Last: <b>${last}</b></b></span>
-                    <span class="stats-divider">|</span>
-                    <span>${probText}</span>
-                `;
-            } else {
-                statsRow.innerHTML = `<span>${probText}</span>`;
-            }
-        }
-
-        const selectEl = document.getElementById(`select-${pIdx}`);
-        if (selectEl) {
-            selectEl.value = finalHero.name;
-        }
+        rollView.updatePlayerCardUI(pIdx, finalHero);
     }
-
-    const hiddenContainers = rowEl?.querySelectorAll(".scramble-hidden");
-    hiddenContainers?.forEach((c) => {
-        c.classList.remove("opacity-0");
-        c.classList.add("fade-in-resolve");
-    });
 }
 window.stopPanelScramble = stopPanelScramble;
 
-/**
- * Validates selected items across player slots, checking for duplicates or unowned entries.
- * Adjusts lock buttons.
- * @function validateSelection
- */
 export function validateSelection() {
     const dropdowns = document.querySelectorAll(".char-select");
     const names = Array.from(dropdowns).map((d) => d.value);
@@ -553,8 +274,9 @@ export function validateSelection() {
     }, {});
     const hasDupes = Object.values(counts).some((count) => count > 1);
 
+    const characters = stateStore.get("characters");
     const unownedSelectedHeroes = names.filter((name) => {
-        const hero = window.characters.find((c) => c.name === name);
+        const hero = characters.find((c) => c.name === name);
         return hero && !window.isHeroOwned(hero);
     });
     const hasUnownedHeroes = unownedSelectedHeroes.length > 0;
@@ -591,13 +313,6 @@ export function validateSelection() {
 }
 window.validateSelection = validateSelection;
 
-/**
- * Submits rolled selection results, logging a new entry inside the database, 
- * updating play count weights, and clearing results.
- * @function applyResults
- * @async
- * @returns {Promise<void>}
- */
 export async function applyResults() {
     const confirmBtn = document.getElementById("confirmBtn");
     const originalText = confirmBtn ? confirmBtn.innerText : "Lock In";
@@ -609,8 +324,9 @@ export async function applyResults() {
     const selectedHeroNames = Array.from(
         document.querySelectorAll(".char-select"),
     ).map((d) => d.value);
+    const characters = stateStore.get("characters");
     const unownedSelectedHeroes = selectedHeroNames.filter((name) => {
-        const hero = window.characters.find((c) => c.name === name);
+        const hero = characters.find((c) => c.name === name);
         return hero && !window.isHeroOwned(hero);
     });
 
@@ -639,7 +355,7 @@ export async function applyResults() {
         ]),
     );
 
-    const { data: game, error: gameError } = await apiService.insertGame(window.currentUser.id);
+    const { data: game, error: gameError } = await apiService.insertGame(stateStore.get("currentUser").id);
     if (gameError) {
         if (confirmBtn) {
             confirmBtn.disabled = false;
@@ -648,7 +364,7 @@ export async function applyResults() {
         return alert("Error creating game: " + gameError.message);
     }
 
-    window.characters.forEach((char) => {
+    characters.forEach((char) => {
         [0, 1, 2, 3, 4, 5].forEach((pIdx) => {
             const playerChoice = activePicks.get(pIdx);
 
@@ -658,7 +374,7 @@ export async function applyResults() {
                     player_id: `p${pIdx + 1}`,
                     hero_id: char.id,
                     is_winner: null,
-                    last_updated_by: window.currentUser.id,
+                    last_updated_by: stateStore.get("currentUser").id,
                 });
             }
 
@@ -673,7 +389,7 @@ export async function applyResults() {
                     hero_id: char.id,
                     player_id: `p${pIdx + 1}`,
                     weight: newWeight,
-                    last_updated_by: window.currentUser.id,
+                    last_updated_by: stateStore.get("currentUser").id,
                 });
             }
         });
@@ -700,7 +416,8 @@ export async function applyResults() {
 
     if (typeof window.init === "function") await window.init();
 
-    document.getElementById("action-buttons").style.display = "none";
+    const actionButtons = document.getElementById("action-buttons");
+    if (actionButtons) actionButtons.style.display = "none";
     const rollBtnContainer = document.getElementById("rollBtnContainer");
     if (rollBtnContainer) {
         rollBtnContainer.style.display = "flex";
@@ -712,25 +429,28 @@ export async function applyResults() {
         rollBtnEl.style.opacity = "1";
         rollBtnEl.style.cursor = "pointer";
     }
-    document.getElementById("results").innerHTML = `
-        <p style="color:#28a745; text-align:center; font-weight:bold;">
-            Session Logged! Game record created and stats updated.
-        </p>`;
-    window.isRollActive = false;
+    const resultsDiv = document.getElementById("results");
+    if (resultsDiv) {
+        resultsDiv.innerHTML = `
+            <p style="color:#28a745; text-align:center; font-weight:bold;">
+                Session Logged! Game record created and stats updated.
+            </p>`;
+    }
+    stateStore.set("isRollActive", false);
 }
 window.applyResults = applyResults;
 
-/**
- * Resets visual states, halts scramble animations, and cancels the current active roll.
- * @function cancelRoll
- */
 export function cancelRoll() {
-    document.getElementById("results").innerHTML =
-        '<p style="text-align: center; opacity: 0.6;">Select players and roll.</p>';
-    document.getElementById("action-buttons").style.display = "none";
+    const resultsDiv = document.getElementById("results");
+    if (resultsDiv) {
+        resultsDiv.innerHTML = '<p style="text-align: center; opacity: 0.6;">Select players and roll.</p>';
+    }
+    const actionButtons = document.getElementById("action-buttons");
+    if (actionButtons) actionButtons.style.display = "none";
 
-    if (window.activeDraftOrder) {
-        window.activeDraftOrder.forEach((pIdx) => {
+    const activeDraftOrder = stateStore.get("activeDraftOrder");
+    if (activeDraftOrder) {
+        activeDraftOrder.forEach((pIdx) => {
             const intervals = stateStore.get("scrambleIntervals");
             if (intervals[pIdx]) {
                 clearInterval(intervals[pIdx]);
@@ -750,77 +470,40 @@ export function cancelRoll() {
         rollBtnEl.style.opacity = "1";
         rollBtnEl.style.cursor = "pointer";
     }
-    window.isRollActive = false;
+    stateStore.set("isRollActive", false);
 }
 window.cancelRoll = cancelRoll;
 
-/**
- * Handles confirmation prompt when players checkbox configuration is modified during an active roll.
- * @function handlePlayerToggleClick
- * @param {Event} event - Toggle event.
- * @param {number} index - Player index context.
- */
-export function handlePlayerToggleClick(event, index) {
-    if (window.isRollActive) {
-        const confirmed = confirm(
-            "Changing player selection will reset the current roll. Do you want to proceed?",
-        );
-        if (!confirmed) {
-            event.preventDefault();
-        } else {
-            cancelRoll();
-        }
-    }
-}
-window.handlePlayerToggleClick = handlePlayerToggleClick;
-
-/**
- * Opens the roll settings drawer and initializes the staged draft and ban configuration.
- * @function openRollSettingsDrawer
- */
 export function openRollSettingsDrawer() {
-    window.currentDrawerMode = "roll-settings";
+    stateStore.set("currentDrawerMode", "roll-settings");
+
+    // Stage current configuration
+    stateStore.set("stagedDraftModeEnabled", stateStore.get("draftModeEnabled"));
+    stateStore.set("stagedDraftCount", stateStore.get("draftCount"));
+    stateStore.set("stagedBannedHeroIds", new Set(stateStore.get("bannedHeroIds")));
+    stateStore.set("stagedBanSearchQuery", "");
+    stateStore.set("stagedRollSettingsTab", "draft");
+
     const drawer = document.getElementById("sort-filter-drawer");
     const title = document.getElementById("drawer-title-text");
     const footer = document.getElementById("drawer-footer-content");
-    if (!drawer) return;
 
-    title.innerText = "Roll Settings";
-    footer.style.display = "flex";
+    if (title) title.innerText = "Roll Configuration";
+    if (footer) footer.style.display = "flex";
 
-    window.stagedDraftModeEnabled = window.draftModeEnabled;
-    window.stagedDraftCount = window.draftCount;
-    window.stagedBannedHeroIds = new Set(window.bannedHeroIds);
-    window.stagedBanSearchQuery = "";
-    window.stagedRollSettingsTab = "draft";
-
-    if (typeof window.renderDrawerBody === "function") {
-        window.renderDrawerBody();
-    }
-    drawer.classList.add("open");
+    if (typeof window.renderDrawerBody === "function") window.renderDrawerBody();
+    if (drawer) drawer.classList.add("open");
 }
 window.openRollSettingsDrawer = openRollSettingsDrawer;
 
-/**
- * Switches the active tab in the roll settings drawer and re-renders the body.
- * @function switchRollSettingsTab
- * @param {string} tabName - The name of the tab to switch to (e.g. 'draft', 'ban').
- */
 export function switchRollSettingsTab(tabName) {
-    window.stagedRollSettingsTab = tabName;
-    if (typeof window.renderDrawerBody === "function") {
-        window.renderDrawerBody();
-    }
+    stateStore.set("stagedRollSettingsTab", tabName);
+    if (typeof window.renderDrawerBody === "function") window.renderDrawerBody();
 }
 window.switchRollSettingsTab = switchRollSettingsTab;
 
-/**
- * Toggles draft mode in the staged settings.
- * @function toggleStagedDraftMode
- * @param {boolean} enabled - True if draft mode is enabled.
- */
 export function toggleStagedDraftMode(enabled) {
-    window.stagedDraftModeEnabled = enabled;
+    stateStore.set("stagedDraftModeEnabled", enabled);
     const section = document.getElementById("drawer-draft-count-section");
     if (section) {
         section.style.display = enabled ? "block" : "none";
@@ -828,148 +511,43 @@ export function toggleStagedDraftMode(enabled) {
 }
 window.toggleStagedDraftMode = toggleStagedDraftMode;
 
-/**
- * Sets the draft card count in the staged settings and re-renders the drawer.
- * @function setStagedDraftCount
- * @param {number} count - The number of cards to draft.
- */
 export function setStagedDraftCount(count) {
-    window.stagedDraftCount = count;
-    if (typeof window.renderDrawerBody === "function") {
-        window.renderDrawerBody();
-    }
+    stateStore.set("stagedDraftCount", count);
+    if (typeof window.renderDrawerBody === "function") window.renderDrawerBody();
 }
 window.setStagedDraftCount = setStagedDraftCount;
 
-/**
- * Toggles a hero's ban status in the staged settings and updates the ban list UI.
- * @function toggleStagedBan
- * @param {string} heroId - The ID of the hero to toggle ban status for.
- */
 export function toggleStagedBan(heroId) {
     stateStore.updateSet("stagedBannedHeroIds", "toggle", heroId);
-    renderDrawerBanList();
+    rollView.renderDrawerBanList();
 }
 window.toggleStagedBan = toggleStagedBan;
 
-/**
- * Toggles bans for all heroes within a specific group/season.
- * @function toggleBanGroup
- * @param {string} groupId - The ID of the group/season.
- * @param {boolean} banAll - True to ban all, false to unban all.
- */
-export function toggleBanGroup(groupId, banAll) {
-    window.characters.forEach((c) => {
-        if (c.group_id === groupId) {
-            if (banAll) {
-                stateStore.updateSet("stagedBannedHeroIds", "add", c.id);
-            } else {
-                stateStore.updateSet("stagedBannedHeroIds", "delete", c.id);
-            }
-        }
-    });
-    renderDrawerBanList();
-}
-window.toggleBanGroup = toggleBanGroup;
-
-/**
- * Handles typing in the ban search box.
- * @function handleBanSearch
- * @param {string} query - The search query string.
- */
 export function handleBanSearch(query) {
-    window.stagedBanSearchQuery = query;
-    renderDrawerBanList();
+    stateStore.set("stagedBanSearchQuery", query);
+    rollView.renderDrawerBanList();
 }
 window.handleBanSearch = handleBanSearch;
 
-/**
- * Renders the categorized list of heroes for banning in the drawer.
- * @function renderDrawerBanList
- */
 export function renderDrawerBanList() {
-    const container = document.getElementById("drawer-ban-list-container");
-    if (!container) return;
-
-    const query = (window.stagedBanSearchQuery || "").toLowerCase();
-    let html = "";
-
-    window.groups.forEach((g) => {
-        const groupChars = window.characters.filter(
-            (c) => c.group_id === g.id && c.name.toLowerCase().includes(query),
-        );
-        if (groupChars.length === 0) return;
-
-        const allGroupBanned = groupChars.every((c) =>
-            window.stagedBannedHeroIds.has(c.id),
-        );
-        const groupBtnText = allGroupBanned ? "Unban All" : "Ban All";
-
-        html += `
-            <div class="ban-group-section" data-group-id="${g.id}">
-                <div class="ban-group-header">
-                    <span class="ban-group-title">${g.name}</span>
-                    <button type="button" class="btn-ban-group-select" onclick="toggleBanGroup('${g.id}', ${!allGroupBanned})">
-                        ${groupBtnText}
-                    </button>
-                </div>
-                <div class="ban-hero-grid">
-        `;
-
-        groupChars.forEach((c) => {
-            const isBanned = window.stagedBannedHeroIds.has(c.id);
-            const bannedClass = isBanned ? "banned" : "";
-            html += `
-                <div class="ban-hero-item ${bannedClass}" onclick="toggleStagedBan('${c.id}')">
-                    <img src="${window.getImgUrl(c.slug)}" alt="${c.name}" class="ban-hero-img">
-                    <span class="ban-hero-name">${c.name}</span>
-                </div>
-            `;
-        });
-
-        html += `
-                </div>
-            </div>
-        `;
-    });
-
-    container.innerHTML =
-        html ||
-        '<p style="text-align: center; opacity: 0.5; margin: 20px 0;">No heroes found.</p>';
+    rollView.renderDrawerBanList();
 }
 window.renderDrawerBanList = renderDrawerBanList;
 
-/**
- * Updates the roll settings badge and button styling depending on whether draft mode or bans are active.
- * @function updateRollSettingsBadge
- */
 export function updateRollSettingsBadge() {
-    const badge = document.getElementById("roll-settings-badge");
-    const btn = document.getElementById("rollSettingsBtn");
-    if (!badge || !btn) return;
-
-    let activeCount = 0;
-    if (window.draftModeEnabled) activeCount++;
-    if (window.bannedHeroIds.size > 0) activeCount += window.bannedHeroIds.size;
-
-    if (activeCount > 0) {
-        badge.innerText = activeCount;
-        badge.style.display = "flex";
-        btn.classList.add("has-settings");
-    } else {
-        badge.style.display = "none";
-        btn.classList.remove("has-settings");
-    }
+    rollView.updateRollSettingsBadge();
 }
 window.updateRollSettingsBadge = updateRollSettingsBadge;
 
-/**
- * Starts the draft step for the current active drafting player.
- * Resolves roll once all drafting players are completed.
- * @function startDraftStep
- */
 export function startDraftStep() {
-    if (window.activeDraftStep >= window.activeDraftOrder.length) {
+    const activeDraftStep = stateStore.get("activeDraftStep");
+    const activeDraftOrder = stateStore.get("activeDraftOrder");
+    const NAMES = stateStore.get("NAMES");
+    const characters = stateStore.get("characters");
+    const bannedHeroIds = stateStore.get("bannedHeroIds");
+    const selectedDraftHeroes = stateStore.get("selectedDraftHeroes");
+
+    if (activeDraftStep >= activeDraftOrder.length) {
         validateSelection();
         const actionButtons = document.getElementById("action-buttons");
         if (actionButtons) actionButtons.style.display = "flex";
@@ -977,31 +555,31 @@ export function startDraftStep() {
         const rollBtnContainer = document.getElementById("rollBtnContainer");
         if (rollBtnContainer) rollBtnContainer.style.display = "none";
 
-        window.isRollActive = true;
+        stateStore.set("isRollActive", true);
         return;
     }
 
-    const pIdx = window.activeDraftOrder[window.activeDraftStep];
-    const activePlayerName = window.NAMES[pIdx];
+    const pIdx = activeDraftOrder[activeDraftStep];
+    const activePlayerName = NAMES[pIdx];
 
-    window.activeDraftOrder.forEach((tempIdx) => {
-        const stepIdx = window.activeDraftOrder.indexOf(tempIdx);
-        if (stepIdx < window.activeDraftStep) {
+    activeDraftOrder.forEach((tempIdx) => {
+        const stepIdx = activeDraftOrder.indexOf(tempIdx);
+        if (stepIdx < activeDraftStep) {
             // drafted and collapsed
-        } else if (stepIdx === window.activeDraftStep) {
-            renderPlayerRowDraftingActive(tempIdx);
+        } else if (stepIdx === activeDraftStep) {
+            rollView.renderPlayerRowDraftingActive(tempIdx);
         } else {
-            renderPlayerRowWaiting(tempIdx, activePlayerName);
+            rollView.renderPlayerRowWaiting(tempIdx, activePlayerName);
         }
     });
 
-    const chosenHeroNames = Object.values(window.selectedDraftHeroes).map(
+    const chosenHeroNames = Object.values(selectedDraftHeroes).map(
         (h) => h?.name,
     );
-    const pool = window.characters.filter(
+    const pool = characters.filter(
         (c) =>
             window.isHeroOwned(c) &&
-            !window.bannedHeroIds.has(c.id) &&
+            !bannedHeroIds.has(c.id) &&
             !chosenHeroNames.includes(c.name),
     );
 
@@ -1009,23 +587,17 @@ export function startDraftStep() {
 
     setTimeout(() => {
         const candidates = generateDraftCandidates(pIdx, pool);
-        window.activeDraftCandidates[pIdx] = candidates;
+        stateStore.get("activeDraftCandidates")[pIdx] = candidates;
         stopDraftWheelScramble(pIdx, candidates);
     }, 1000);
 }
 window.startDraftStep = startDraftStep;
 
-/**
- * Generates random or weighted draft candidate heroes for a player from the available pool.
- * @function generateDraftCandidates
- * @param {number} pIdx - The index of the player drafting.
- * @param {Array<Object>} pool - The pool of unbanned, owned, and unpicked heroes.
- * @returns {Array<Object>} The array of candidate heroes.
- */
 export function generateDraftCandidates(pIdx, pool) {
     let candidates = [];
     let tempPool = [...pool];
-    const count = Math.min(window.draftCount, tempPool.length);
+    const draftCount = stateStore.get("draftCount");
+    const count = Math.min(draftCount, tempPool.length);
 
     for (let i = 0; i < count; i++) {
         let selectedHero = null;
@@ -1069,20 +641,14 @@ export function generateDraftCandidates(pIdx, pool) {
 }
 window.generateDraftCandidates = generateDraftCandidates;
 
-/**
- * Initializes and starts the scrambling visual animation on the draft wheel.
- * @function startDraftWheelScramble
- * @param {number} pIdx - The index of the player.
- * @param {Array<Object>} pool - The available hero pool to scramble images from.
- */
 export function startDraftWheelScramble(pIdx, pool) {
     const wheel = document.getElementById(`draft-wheel-${pIdx}`);
     if (!wheel) return;
 
     let html = "";
-    const count = window.draftCount;
-    const angleStep = 360 / count;
-    for (let i = 0; i < count; i++) {
+    const draftCount = stateStore.get("draftCount");
+    const angleStep = 360 / draftCount;
+    for (let i = 0; i < draftCount; i++) {
         const angle = i * angleStep;
         const radius = 150;
         html += `
@@ -1111,7 +677,7 @@ export function startDraftWheelScramble(pIdx, pool) {
     wheel.innerHTML = html;
 
     const intervalId = setInterval(() => {
-        for (let i = 0; i < count; i++) {
+        for (let i = 0; i < draftCount; i++) {
             const randomHero = pool[Math.floor(Math.random() * pool.length)];
             if (!randomHero) continue;
             const imgEl = document.getElementById(
@@ -1140,12 +706,6 @@ export function startDraftWheelScramble(pIdx, pool) {
 }
 window.startDraftWheelScramble = startDraftWheelScramble;
 
-/**
- * Stops scrambling and displays the actual draft options on the 3D draft wheel.
- * @function stopDraftWheelScramble
- * @param {number} pIdx - The index of the player.
- * @param {Array<Object>} candidates - The resolved candidate heroes.
- */
 export function stopDraftWheelScramble(pIdx, candidates) {
     const intervals = stateStore.get("scrambleIntervals");
     if (intervals[pIdx]) {
@@ -1159,8 +719,8 @@ export function stopDraftWheelScramble(pIdx, candidates) {
     let html = "";
     const count = candidates.length;
     wheel.style.transform = "rotateY(0deg)";
-    window.draftWheelFrontCardIndices[pIdx] = 0;
-    window.draftWheelAngles[pIdx] = 0;
+    stateStore.get("draftWheelFrontCardIndices")[pIdx] = 0;
+    stateStore.get("draftWheelAngles")[pIdx] = 0;
 
     const angleStep = 360 / count;
     candidates.forEach((hero, i) => {
@@ -1208,13 +768,6 @@ export function stopDraftWheelScramble(pIdx, candidates) {
 }
 window.stopDraftWheelScramble = stopDraftWheelScramble;
 
-/**
- * Attaches swipe/drag event listeners to rotate the draft wheel on touch or mouse drag.
- * @function setupDraftWheelSwipe
- * @param {number} pIdx - The index of the player.
- * @param {HTMLElement} container - The container element for the draft wheel.
- * @param {number} count - The number of cards in the wheel.
- */
 export function setupDraftWheelSwipe(pIdx, container, count) {
     let startX = 0;
     let isSwiping = false;
@@ -1290,34 +843,29 @@ export function setupDraftWheelSwipe(pIdx, container, count) {
 }
 window.setupDraftWheelSwipe = setupDraftWheelSwipe;
 
-/**
- * Rotates the draft wheel by a single position left (-1) or right (1).
- * @function rotateDraftWheelDirection
- * @param {number} pIdx - The index of the player.
- * @param {number} dir - Direction of rotation (-1 or 1).
- * @param {number} count - Total card count in the wheel.
- */
 export function rotateDraftWheelDirection(pIdx, dir, count) {
-    const candidates = window.activeDraftCandidates[pIdx];
+    const candidates = stateStore.get("activeDraftCandidates")[pIdx];
     if (!candidates || candidates.length === 0) return;
 
-    if (window.draftWheelFrontCardIndices[pIdx] === undefined) {
-        window.draftWheelFrontCardIndices[pIdx] = 0;
+    const draftWheelFrontCardIndices = stateStore.get("draftWheelFrontCardIndices");
+    if (draftWheelFrontCardIndices[pIdx] === undefined) {
+        draftWheelFrontCardIndices[pIdx] = 0;
     }
-    let currentIdx = window.draftWheelFrontCardIndices[pIdx];
+    let currentIdx = draftWheelFrontCardIndices[pIdx];
 
     let newIdx = (currentIdx + dir) % count;
     if (newIdx < 0) newIdx += count;
-    window.draftWheelFrontCardIndices[pIdx] = newIdx;
+    draftWheelFrontCardIndices[pIdx] = newIdx;
 
     const angleStep = 360 / count;
 
-    if (window.draftWheelAngles[pIdx] === undefined) {
-        window.draftWheelAngles[pIdx] = 0;
+    const draftWheelAngles = stateStore.get("draftWheelAngles");
+    if (draftWheelAngles[pIdx] === undefined) {
+        draftWheelAngles[pIdx] = 0;
     }
-    const currentAngle = window.draftWheelAngles[pIdx];
+    const currentAngle = draftWheelAngles[pIdx];
     const targetAngle = currentAngle + dir * angleStep;
-    window.draftWheelAngles[pIdx] = targetAngle;
+    draftWheelAngles[pIdx] = targetAngle;
 
     const wheel = document.getElementById(`draft-wheel-${pIdx}`);
     if (wheel) {
@@ -1328,13 +876,6 @@ export function rotateDraftWheelDirection(pIdx, dir, count) {
 }
 window.rotateDraftWheelDirection = rotateDraftWheelDirection;
 
-/**
- * Computes the shortest rotation angle in degrees from current orientation to target angle.
- * @function getShortestRotationAngle
- * @param {number} currentAngle - The current rotation angle of the wheel.
- * @param {number} targetBaseAngle - The target rotation angle base.
- * @returns {number} The absolute target angle containing shortest path.
- */
 export function getShortestRotationAngle(currentAngle, targetBaseAngle) {
     let diff = (targetBaseAngle - currentAngle) % 360;
     if (diff < -180) {
@@ -1346,11 +887,6 @@ export function getShortestRotationAngle(currentAngle, targetBaseAngle) {
 }
 window.getShortestRotationAngle = getShortestRotationAngle;
 
-/**
- * Resets the selection state for draft pick. Deselects cards and disables confirmation.
- * @function deselectDraftHero
- * @param {number} pIdx - Player index.
- */
 export function deselectDraftHero(pIdx) {
     const selectEl = document.getElementById(`select-${pIdx}`);
     const confirmBtn = document.getElementById(`confirm-draft-btn-${pIdx}`);
@@ -1373,23 +909,14 @@ export function deselectDraftHero(pIdx) {
         confirmBtn.disabled = true;
     }
 
-    window.selectedDraftHeroes[pIdx] = null;
+    stateStore.get("selectedDraftHeroes")[pIdx] = null;
 }
 window.deselectDraftHero = deselectDraftHero;
 
-/**
- * Selects a specific hero card in the draft wheel, snapping/rotating the wheel to it.
- * @function selectDraftHero
- * @param {number} pIdx - Player index.
- * @param {string} heroName - Name of the hero.
- * @param {string} heroSlug - URL-friendly name/slug of the hero.
- * @param {string} heroId - Database UUID of the hero.
- * @param {number} cardAngle - Base rotation angle of the card.
- * @param {number} cardIdx - Index of the card on the wheel.
- */
 export function selectDraftHero(pIdx, heroName, heroSlug, heroId, cardAngle, cardIdx) {
+    const selectedDraftHeroes = stateStore.get("selectedDraftHeroes");
     const isAlreadySelected =
-        window.selectedDraftHeroes[pIdx] && window.selectedDraftHeroes[pIdx].id === heroId;
+        selectedDraftHeroes[pIdx] && selectedDraftHeroes[pIdx].id === heroId;
 
     if (isAlreadySelected) {
         deselectDraftHero(pIdx);
@@ -1405,14 +932,15 @@ export function selectDraftHero(pIdx, heroName, heroSlug, heroId, cardAngle, car
 
     if (selectEl) selectEl.value = heroName;
 
-    window.draftWheelFrontCardIndices[pIdx] = cardIdx;
+    stateStore.get("draftWheelFrontCardIndices")[pIdx] = cardIdx;
 
-    if (window.draftWheelAngles[pIdx] === undefined) {
-        window.draftWheelAngles[pIdx] = 0;
+    const draftWheelAngles = stateStore.get("draftWheelAngles");
+    if (draftWheelAngles[pIdx] === undefined) {
+        draftWheelAngles[pIdx] = 0;
     }
-    const currentAngle = window.draftWheelAngles[pIdx];
+    const currentAngle = draftWheelAngles[pIdx];
     const shortestAngle = getShortestRotationAngle(currentAngle, cardAngle);
-    window.draftWheelAngles[pIdx] = shortestAngle;
+    draftWheelAngles[pIdx] = shortestAngle;
 
     const wheel = document.getElementById(`draft-wheel-${pIdx}`);
     if (wheel) {
@@ -1436,196 +964,34 @@ export function selectDraftHero(pIdx, heroName, heroSlug, heroId, cardAngle, car
         confirmBtn.disabled = false;
     }
 
-    window.selectedDraftHeroes[pIdx] = window.characters.find((c) => c.id === heroId);
+    const characters = stateStore.get("characters");
+    selectedDraftHeroes[pIdx] = characters.find((c) => c.id === heroId);
 }
 window.selectDraftHero = selectDraftHero;
 
-/**
- * Collapses the draft row view to show the final selected character's stats and edit triggers.
- * @function collapsePlayerRowToResolved
- * @param {number} pIdx - Player index.
- * @param {Object} finalHero - The hero object that was drafted.
- */
 export function collapsePlayerRowToResolved(pIdx, finalHero) {
-    const rowEl = document.getElementById(`player-row-${pIdx}`);
-    if (!rowEl) return;
-
-    rowEl.className = "player-row revealed";
-    rowEl.style.cssText = `--player-color: var(--p${pIdx + 1}); border-color: var(--p${pIdx + 1});`;
-
-    rowEl.innerHTML = `
-        <img src="${window.getImgUrl(finalHero.slug)}" class="char-bg-img" id="bg-img-${pIdx}" alt="${finalHero.name}" style="opacity: 0.25;">
-        <div class="player-row-content">
-            <div class="hero-info-container" id="info-container-${pIdx}">
-                <div class="hero-header-row">
-                    <div class="hero-header-left">
-                        <span class="player-name-caps" style="color: var(--player-color);">${window.NAMES[pIdx].toUpperCase()}</span>
-                        <span class="hero-name-divider">:</span>
-                        <a href="${window.getHeroLink(finalHero.slug)}" target="_blank" class="hero-name hero-name-link resolved" id="hero-name-title-${pIdx}">${finalHero.name}</a>
-                    </div>
-                </div>
-                <span class="expanded-group" id="hero-group-${pIdx}">${finalHero.group || "Unknown"}</span>
-                <div class="hero-stats-row" id="stats-row-${pIdx}">
-                </div>
-            </div>
-            <div class="hero-select-container" id="select-container-${pIdx}">
-                <input type="hidden" class="char-select" data-player="${pIdx}" id="select-${pIdx}" value="${finalHero.name}">
-                <button class="edit-icon-btn" type="button" onclick="openHeroSelectModal(${pIdx})" aria-label="Select hero">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                        <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
-    `;
-
-    const statsRow = document.getElementById(`stats-row-${pIdx}`);
-    if (statsRow) {
-        const probText = `Prob: <b>${window.getHeroProbabilityText(finalHero, pIdx)}</b>`;
-        if (pIdx < 4) {
-            const plays = finalHero.playCount[pIdx] || 0;
-            const last = finalHero.lastPlayed[pIdx] || "Never";
-            statsRow.innerHTML = `
-                <span>Plays: <b>${plays}</b></span>
-                <span class="stats-divider">|</span>
-                <span>Last: <b>${last}</b></span>
-                <span class="stats-divider">|</span>
-                <span>${probText}</span>
-            `;
-        } else {
-            statsRow.innerHTML = `<span>${probText}</span>`;
-        }
-    }
+    rollView.collapsePlayerRowToResolved(pIdx, finalHero);
 }
 window.collapsePlayerRowToResolved = collapsePlayerRowToResolved;
 
-/**
- * Confirms the currently selected draft hero for a player and moves on to the next player's draft step.
- * @function confirmDraftPick
- * @param {number} pIdx - Player index.
- */
 export function confirmDraftPick(pIdx) {
-    const chosenHero = window.selectedDraftHeroes[pIdx];
+    const selectedDraftHeroes = stateStore.get("selectedDraftHeroes");
+    const chosenHero = selectedDraftHeroes[pIdx];
     if (!chosenHero) return;
 
     collapsePlayerRowToResolved(pIdx, chosenHero);
 
-    window.activeDraftStep++;
+    stateStore.set("activeDraftStep", stateStore.get("activeDraftStep") + 1);
     startDraftStep();
 }
 window.confirmDraftPick = confirmDraftPick;
 
-/**
- * Renders the placeholder view for a player waiting for their turn to draft.
- * @function renderPlayerRowWaiting
- * @param {number} pIdx - Player index.
- * @param {string} activePlayerName - The name of the player currently drafting.
- */
 export function renderPlayerRowWaiting(pIdx, activePlayerName) {
-    const resultsDiv = document.getElementById("results");
-    let rowEl = document.getElementById(`player-row-${pIdx}`);
-    if (!rowEl) {
-        rowEl = document.createElement("div");
-        rowEl.id = `player-row-${pIdx}`;
-        resultsDiv.appendChild(rowEl);
-    }
-
-    rowEl.className = "player-row waiting-draft";
-    rowEl.style.cssText = `--player-color: var(--p${pIdx + 1}); border-color: var(--p${pIdx + 1});`;
-    rowEl.innerHTML = `
-        <div class="player-row-content">
-            <span class="player-name-caps" style="color: var(--player-color);">${window.NAMES[pIdx].toUpperCase()}</span>
-            <span class="draft-waiting-status">Waiting for ${activePlayerName}...</span>
-        </div>
-    `;
+    rollView.renderPlayerRowWaiting(pIdx, activePlayerName);
 }
 window.renderPlayerRowWaiting = renderPlayerRowWaiting;
 
-/**
- * Renders the active drafting interface (complete with 3D carousel and controls) for a player.
- * @function renderPlayerRowDraftingActive
- * @param {number} pIdx - Player index.
- */
 export function renderPlayerRowDraftingActive(pIdx) {
-    const resultsDiv = document.getElementById("results");
-    let rowEl = document.getElementById(`player-row-${pIdx}`);
-    if (!rowEl) {
-        rowEl = document.createElement("div");
-        rowEl.id = `player-row-${pIdx}`;
-        resultsDiv.appendChild(rowEl);
-    }
-
-    rowEl.className = "player-row active-draft";
-    rowEl.style.cssText = `--player-color: var(--p${pIdx + 1}); border-color: var(--p${pIdx + 1});`;
-
-    rowEl.innerHTML = `
-        <style>
-            .btn-cancel-roll {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 30px;
-                height: 30px;
-                border-radius: 50%;
-                background: rgba(255, 77, 77, 0.12);
-                border: 1px solid rgba(255, 77, 77, 0.25);
-                color: #ff4d4d;
-                cursor: pointer;
-                transition: all 0.2s ease;
-                padding: 0;
-            }
-            @media (hover: hover) {
-                .btn-cancel-roll:hover {
-                    background: rgba(255, 77, 77, 0.25);
-                    border-color: #ff4d4d;
-                    color: #fff;
-                    transform: scale(1.08);
-                    box-shadow: 0 0 10px rgba(255, 77, 77, 0.3);
-                }
-            }
-            .btn-cancel-roll:active {
-                transform: scale(0.95);
-            }
-        </style>
-        <img src="" class="char-bg-img scramble-img" id="bg-img-${pIdx}" style="opacity: 0; transition: opacity 0.5s ease;">
-        <input type="hidden" class="char-select" data-player="${pIdx}" id="select-${pIdx}">
-        <div class="player-row-content draft-flow-content">
-            <div class="hero-header-row" style="width: 100%; display: flex; align-items: center; justify-content: space-between;">
-                <div>
-                    <span class="player-name-caps" style="color: var(--player-color);">${window.NAMES[pIdx].toUpperCase()}</span>
-                    <span class="hero-name-divider">:</span>
-                    <span class="draft-title" style="font-weight: 700; color: #ffd700;">CHOOSE YOUR HERO</span>
-                </div>
-                <button class="btn-cancel-roll" type="button" onclick="cancelRoll()" aria-label="Cancel roll">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
-            </div>
-            <div class="draft-wheel-container" id="draft-wheel-container-${pIdx}">
-                <button type="button" class="draft-arrow left-arrow" onclick="rotateDraftWheelDirection(${pIdx}, -1, draftCount)" aria-label="Previous hero">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="15 18 9 12 15 6"></polyline>
-                    </svg>
-                </button>
-
-                <div class="draft-wheel" id="draft-wheel-${pIdx}">
-                </div>
-
-                <button type="button" class="draft-arrow right-arrow" onclick="rotateDraftWheelDirection(${pIdx}, 1, draftCount)" aria-label="Next hero">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="9 18 15 12 9 6"></polyline>
-                    </svg>
-                </button>
-            </div>
-            <div class="draft-actions">
-                <button type="button" class="btn-confirm-draft" id="confirm-draft-btn-${pIdx}" onclick="confirmDraftPick(${pIdx})" disabled>
-                    CONFIRM PICK
-                </button>
-            </div>
-        </div>
-    `;
+    rollView.renderPlayerRowDraftingActive(pIdx);
 }
 window.renderPlayerRowDraftingActive = renderPlayerRowDraftingActive;
