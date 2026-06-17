@@ -469,7 +469,10 @@ export function openRollSettingsDrawer() {
     if (footer) footer.style.display = "flex";
 
     renderDrawerBody();
-    if (drawer) drawer.classList.add("open");
+    if (drawer) {
+        drawer.classList.add("open");
+        document.body.style.overflow = "hidden"; // Prevent background scroll
+    }
 }
 export function switchRollSettingsTab(tabName) {
     stateStore.set("stagedRollSettingsTab", tabName);

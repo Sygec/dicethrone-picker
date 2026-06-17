@@ -88,6 +88,7 @@ export function openSortFilterDrawer() {
 
     renderDrawerBody();
     el.sortFilterDrawer.classList.add("open");
+    document.body.style.overflow = "hidden"; // Prevent background scroll
 }
 
 /**
@@ -102,6 +103,7 @@ export function openColumnsDrawer() {
 
     renderDrawerBody();
     el.sortFilterDrawer.classList.add("open");
+    document.body.style.overflow = "hidden"; // Prevent background scroll
 }
 
 /**
@@ -116,6 +118,7 @@ export function openHistoryFilterDrawer() {
 
     renderDrawerBody();
     el.sortFilterDrawer.classList.add("open");
+    document.body.style.overflow = "hidden"; // Prevent background scroll
 }
 
 /**
@@ -157,6 +160,7 @@ export function closeDrawer(event = null, force = false) {
     const el = getElements();
     if (el.sortFilterDrawer) {
         el.sortFilterDrawer.classList.remove("open");
+        document.body.style.overflow = "auto"; // Restore background scroll
     }
 }
 
