@@ -706,36 +706,52 @@ export function openWinnerModal(gameId) {
     el.confirmWinnerBtn.setAttribute("data-game-id", gameId);
     el.confirmWinnerBtn.disabled = true;
 
-    let playersHtml = "";
+    // Check if game was a draw in its previous state
+    const winners = game.game_players.filter((p) => p.is_winner === true);
+    const explicitLosers = game.game_players.filter((p) => p.is_winner === false);
+    const isDraw = winners.length === 0 && explicitLosers.length > 0 && explicitLosers.length === game.game_players.length;
+
+    const isTwoRows = game.game_players.length > 3;
+    const gridClass = isTwoRows ? "winner-select-grid two-rows" : "winner-select-grid";
+
+    let playersHtml = `<div class="${gridClass}">`;
+
     game.game_players.forEach((gp) => {
         const pIdx = parseInt(gp.player_id.substring(1)) - 1;
-        let displayName = gp.heroes?.name || "Unknown";
-        let playerColorVar = `--p${pIdx + 1}`;
-        let playerLabelName = names[pIdx] || "Invitee";
+        const displayName = gp.heroes?.name || "Unknown";
+        const heroSlug = gp.heroes?.slug || "";
+        const isSelected = gp.is_winner === true;
+        const isChecked = isSelected ? "checked" : "";
+        const selectedClass = isSelected ? "selected" : "";
 
+        let playerLabelName = names[pIdx] || "Invitee";
         if (pIdx >= 4) {
-            playerColorVar = "--p5";
             playerLabelName = `Invitee (${gp.player_id === "p5" ? "1" : "2"})`;
         }
 
         playersHtml += `
-            <label class="winner-player-card" style="--player-color: var(${playerColorVar}); font-size: 0.95rem;">
-                <input type="radio" name="winner-selection" value="${gp.player_id}" data-action="winner-selection-change">
-                <div class="winner-card-content">
-                    <span class="winner-player-name">${playerLabelName}</span>
-                    <span class="winner-hero-name" style="opacity: 0.7; font-size: 0.85em;">${displayName}</span>
-                </div>
-            </label>
+            <div class="winner-card ${selectedClass}" data-action="winner-card-click" data-value="${gp.player_id}">
+                <input type="radio" name="winner-selection" value="${gp.player_id}" ${isChecked} style="display: none;">
+                <img src="${getImgUrl(heroSlug)}" class="winner-card-img" alt="${displayName}">
+                <div class="winner-card-player-name">${playerLabelName}</div>
+                <div class="winner-card-hero-name">${displayName}</div>
+            </div>
         `;
     });
 
+    const isDrawChecked = isDraw ? "checked" : "";
+    const drawSelectedClass = isDraw ? "selected" : "";
+
     playersHtml += `
-        <label class="winner-player-card draw-card" style="--player-color: var(--accent); grid-column: 1 / -1;">
-            <input type="radio" name="winner-selection" value="draw" data-action="winner-selection-change">
-            <div class="winner-card-content" style="text-align: center;">
-                <span class="winner-player-name">Draw / Tie Game</span>
+            <div class="winner-draw-card ${drawSelectedClass}" data-action="winner-card-click" data-value="draw">
+                <input type="radio" name="winner-selection" value="draw" ${isDrawChecked} style="display: none;">
+                <span style="font-size: 1.5rem; line-height: 1;">🤝</span>
+                <div style="text-align: left;">
+                    <div class="winner-card-player-name" style="font-size: 0.9rem;">Select a Draw</div>
+                    <div class="winner-card-hero-name" style="font-size: 0.7rem; opacity: 0.7;">No winner for this match</div>
+                </div>
             </div>
-        </label>
+        </div>
     `;
 
     el.winnerContainer.innerHTML = playersHtml;

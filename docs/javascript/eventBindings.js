@@ -595,14 +595,21 @@ export function setupAllEventBindings() {
         });
     }
 
-    // Winner selection radio options changes
+    // Winner selection card click handler (updates selected states and radio inputs)
     const winnerSelection = document.getElementById("winner-selection-container");
     if (winnerSelection) {
-        winnerSelection.addEventListener("change", (e) => {
-            const radio = e.target.closest('[data-action="winner-selection-change"]');
-            if (radio) {
-                const confirmWinnerBtn = document.getElementById("confirm-winner-btn");
-                if (confirmWinnerBtn) confirmWinnerBtn.disabled = false;
+        winnerSelection.addEventListener("click", (e) => {
+            const card = e.target.closest('[data-action="winner-card-click"]');
+            if (card) {
+                const radio = card.querySelector('input[name="winner-selection"]');
+                if (radio) {
+                    radio.checked = true;
+                    winnerSelection.querySelectorAll('.winner-card, .winner-draw-card').forEach(c => {
+                        c.classList.toggle('selected', c === card);
+                    });
+                    const confirmWinnerBtn = document.getElementById("confirm-winner-btn");
+                    if (confirmWinnerBtn) confirmWinnerBtn.disabled = false;
+                }
             }
         });
     }

@@ -526,9 +526,6 @@ export function toggleHistoryViewStyle() {
 export function selectWinner(gameId) {
     adminView.openWinnerModal(gameId);
 }
-export function handleWinnerSelect(value) {
-    adminView.handleWinnerSelect(value);
-}
 export function closeWinnerModal() {
     adminView.closeWinnerModal();
 }
