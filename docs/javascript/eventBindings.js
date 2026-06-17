@@ -222,6 +222,14 @@ export function setupAllEventBindings() {
                 return;
             }
 
+            // Staged player game filter toggle (game history)
+            const gamePlayerFilter = target.closest('[data-action="toggle-staged-player-game-filter"]');
+            if (gamePlayerFilter) {
+                const idx = parseInt(gamePlayerFilter.getAttribute("data-player-idx"), 10);
+                filters.toggleStagedPlayerGameFilter(idx);
+                return;
+            }
+
             // Staged draft count candidate pills
             const draftCount = target.closest('[data-action="set-staged-draft-count"]');
             if (draftCount) {
