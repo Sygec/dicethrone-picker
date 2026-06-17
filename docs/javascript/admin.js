@@ -1,4 +1,4 @@
-import { db } from './db.js';
+import * as apiService from './services/apiService.js';
 
 /**
  * Renders environmental build metadata in the admin interface (e.g. host name, production/development status, target DB).
@@ -340,11 +340,11 @@ export async function toggleHeroOwned(heroId, isOwned) {
         adminCheckbox.checked = isOwned;
     }
 
-    const { error } = await db.from("user_heroes").upsert({
-        user_id: window.currentUser.id,
-        hero_id: heroId,
-        is_owned: isOwned,
-    });
+    const { error } = await apiService.upsertUserHero(
+        window.currentUser.id,
+        heroId,
+        isOwned,
+    );
 
     if (error) {
         alert("Error updating ownership: " + error.message);
@@ -396,7 +396,7 @@ export async function toggleGroupOwned(groupId, isOwned) {
             is_owned: isOwned,
         }));
 
-    const { error } = await db.from("user_heroes").upsert(groupHeroIds);
+    const { error } = await apiService.upsertUserHeroesGroup(groupHeroIds);
 
     if (error) {
         alert("Error updating group ownership: " + error.message);
@@ -432,11 +432,7 @@ export async function saveCharacter() {
         last_updated_by: window.currentUser.id,
     };
 
-    const { error } = await db
-        .from("heroes")
-        .insert(charData)
-        .select()
-        .single();
+    const { error } = await apiService.insertHero(charData);
 
     if (error) return alert("Error saving: " + error.message);
 
@@ -698,11 +694,7 @@ export async function saveHeroInline(heroId, idx) {
         last_updated_by: window.currentUser.id,
     };
 
-    const { error } = await db
-        .from("heroes")
-        .upsert(charData)
-        .select()
-        .single();
+    const { error } = await apiService.upsertHero(charData);
 
     if (error) return alert("Error saving: " + error.message);
 
@@ -720,7 +712,7 @@ window.saveHeroInline = saveHeroInline;
 export async function deleteHero(heroId) {
     if (!confirm("Delete this hero? This action cannot be undone.")) return;
 
-    const { error } = await db.from("heroes").delete().eq("id", heroId);
+    const { error } = await apiService.deleteHero(heroId);
     if (error) return alert("Error deleting hero: " + error.message);
 
     if (typeof window.init === "function") await window.init();
@@ -746,11 +738,7 @@ export async function saveGroup() {
         is_active: true,
     };
 
-    const { error } = await db
-        .from("groups")
-        .upsert(groupData)
-        .select()
-        .single();
+    const { error } = await apiService.upsertGroup(groupData);
 
     if (error) return alert("Error saving group: " + error.message);
 
@@ -820,17 +808,13 @@ export async function saveGroupInline(groupId) {
 
     if (!name) return alert("Group name is required");
 
-    const { error } = await db
-        .from("groups")
-        .upsert({
-            id: groupId,
-            name,
-            order_index: order_index ? parseInt(order_index) : null,
-            year: year ? parseInt(year) : null,
-            is_active: true,
-        })
-        .select()
-        .single();
+    const { error } = await apiService.upsertGroup({
+        id: groupId,
+        name,
+        order_index: order_index ? parseInt(order_index) : null,
+        year: year ? parseInt(year) : null,
+        is_active: true,
+    });
 
     if (error) return alert("Error saving group: " + error.message);
 
@@ -959,12 +943,7 @@ export async function savePlayerInline(playerId) {
 
     if (!name) return alert("Player name is required");
 
-    const { error } = await db
-        .from("players")
-        .update({ name })
-        .eq("id", playerId)
-        .select()
-        .single();
+    const { error } = await apiService.updatePlayerName(playerId, name);
 
     if (error) return alert("Error saving player: " + error.message);
 
@@ -1029,7 +1008,7 @@ export async function renderCollectionsList() {
 
     let allUserHeroes = [];
     try {
-        const { data, error } = await db.from("user_heroes").select("*");
+        const { data, error } = await apiService.getAllUserHeroes();
 
         if (error) {
             container.innerHTML = `<p style="color: var(--danger); padding: 10px;">Error loading collections: ${window.escapeHtml(error.message)}</p>`;
@@ -1169,11 +1148,11 @@ export async function toggleUserHeroOwned(userId, heroId, isOwned) {
         if (typeof window.updateDropdownSort === "function") window.updateDropdownSort();
     }
 
-    const { error } = await db.from("user_heroes").upsert({
-        user_id: userId,
-        hero_id: heroId,
-        is_owned: isOwned,
-    });
+    const { error } = await apiService.upsertUserHero(
+        userId,
+        heroId,
+        isOwned,
+    );
 
     if (error) {
         alert("Error updating user collection: " + error.message);
@@ -1216,7 +1195,7 @@ window.toggleGroupForm = toggleGroupForm;
 export async function deleteGroup(groupId) {
     if (!confirm("Delete this group?")) return;
 
-    const { error } = await db.from("groups").delete().eq("id", groupId);
+    const { error } = await apiService.deleteGroup(groupId);
 
     if (error) return alert("Error deleting group: " + error.message);
 
@@ -1667,27 +1646,12 @@ export async function submitWinner(gameId) {
     btn.innerText = "Saving...";
 
     try {
-        if (winnerPlayerId === "draw") {
-            const { error } = await db
-                .from("game_players")
-                .update({ is_winner: false, last_updated_by: window.currentUser.id })
-                .eq("game_id", gameId);
-            if (error) throw error;
-        } else {
-            const { error: winErr } = await db
-                .from("game_players")
-                .update({ is_winner: true, last_updated_by: window.currentUser.id })
-                .eq("game_id", gameId)
-                .eq("player_id", winnerPlayerId);
-            if (winErr) throw winErr;
-
-            const { error: loseErr } = await db
-                .from("game_players")
-                .update({ is_winner: false, last_updated_by: window.currentUser.id })
-                .eq("game_id", gameId)
-                .neq("player_id", winnerPlayerId);
-            if (loseErr) throw loseErr;
-        }
+        const { error } = await apiService.updateGameWinner(
+            gameId,
+            winnerPlayerId,
+            window.currentUser.id,
+        );
+        if (error) throw error;
 
         closeWinnerModal();
         if (typeof window.init === "function") await window.init();
@@ -1714,7 +1678,7 @@ export async function deleteGame(gameId) {
     )
         return;
 
-    const { error } = await db.from("games").delete().eq("id", gameId);
+    const { error } = await apiService.deleteGame(gameId);
 
     if (error) {
         console.error("Error deleting game:", error);

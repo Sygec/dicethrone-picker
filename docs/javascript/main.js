@@ -4,7 +4,7 @@
  */
 
 import './config.js';
-import { db } from './db.js';
+import * as apiService from './services/apiService.js';
 import './state.js';
 import './utils.js';
 import './auth.js';
@@ -60,11 +60,7 @@ export async function init() {
         window.updateRollSettingsBadge();
     }
 
-    const { data: groupsData, error: groupsError } = await db
-        .from("groups")
-        .select("*")
-        .eq("is_active", true)
-        .order("order_index", { ascending: true });
+    const { data: groupsData, error: groupsError } = await apiService.getGroups();
 
     if (!groupsError && groupsData) {
         window.groups = groupsData;
@@ -86,10 +82,7 @@ export async function init() {
         }
     }
 
-    const { data: playersData, error: playersError } = await db
-        .from("players")
-        .select("*")
-        .order("id", { ascending: true });
+    const { data: playersData, error: playersError } = await apiService.getPlayers();
 
     if (!playersError && playersData) {
         window.players = playersData;
@@ -115,15 +108,7 @@ export async function init() {
         if (typeof window.renderPlayerToggles === "function") window.renderPlayerToggles();
     }
 
-    const { data, error } = await db
-        .from("heroes")
-        .select(`
-            *,
-            groups (name),
-            player_hero_stats (*),
-            user_heroes (*)
-        `)
-        .order("name", { ascending: true });
+    const { data, error } = await apiService.getHeroes();
 
     if (error) return console.error("Error fetching heroes:", error);
 
@@ -157,26 +142,7 @@ export async function init() {
         return char;
     });
 
-    const { data: gamesData, error: gamesError } = await db
-        .from("games")
-        .select(`
-            id,
-            played_at,
-            last_updated_by,
-            is_historical,
-            game_players (
-                hero_id,
-                player_id,
-                is_winner,
-                heroes (
-                    name,
-                    slug,
-                    complexity
-                )
-            )
-        `)
-        .order("played_at", { ascending: false })
-        .order("player_id", { foreignTable: "game_players", ascending: true });
+    const { data: gamesData, error: gamesError } = await apiService.getGames();
 
     if (gamesError) {
         console.error("Error fetching games:", gamesError);
@@ -219,7 +185,7 @@ export async function initializeApp() {
     try {
         const {
             data: { session },
-        } = await db.auth.getSession();
+        } = await apiService.getSession();
         window.currentUser = session?.user || null;
         if (typeof window.updateAuthUI === "function") window.updateAuthUI();
 
@@ -240,33 +206,7 @@ export async function initializeApp() {
         }
 
         // Setup Realtime subscriptions
-        db.channel("schema-db-changes")
-            .on(
-                "postgres_changes",
-                { event: "*", schema: "public", table: "user_heroes" },
-                init,
-            )
-            .on(
-                "postgres_changes",
-                { event: "*", schema: "public", table: "player_hero_stats" },
-                init,
-            )
-            .on(
-                "postgres_changes",
-                { event: "*", schema: "public", table: "heroes" },
-                init,
-            )
-            .on(
-                "postgres_changes",
-                { event: "*", schema: "public", table: "games" },
-                init,
-            )
-            .on(
-                "postgres_changes",
-                { event: "*", schema: "public", table: "game_players" },
-                init,
-            )
-            .subscribe();
+        apiService.subscribeToDatabaseChanges(init);
     } catch (error) {
         console.error("Could not load version number:", error);
         if (window.versionLabel) {
@@ -299,7 +239,7 @@ window.addEventListener("DOMContentLoaded", initializeApp);
 if (window.versionLabel) window.versionLabel.onclick = window.openChangelog;
 if (window.closeBtn) window.closeBtn.onclick = window.closeChangelog;
 
-db.auth.onAuthStateChange((event, session) => {
+apiService.onAuthStateChange((event, session) => {
     window.currentUser = session?.user || null;
     if (event === "SIGNED_IN" || event === "SIGNED_OUT") init();
 

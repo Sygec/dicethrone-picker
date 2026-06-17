@@ -3,7 +3,7 @@
  * @module utils
  */
 
-import { db } from './db.js';
+import * as apiService from './services/apiService.js';
 
 /**
  * Generates the WebP portrait image URL for a given hero slug.
@@ -168,12 +168,7 @@ export async function handlePlayerColorChange(playerId, input) {
         return;
     }
 
-    const { error } = await db
-        .from("players")
-        .update({ player_color: newColor })
-        .eq("id", playerId)
-        .select()
-        .single();
+    const { error } = await apiService.updatePlayerColor(playerId, newColor);
 
     if (error) {
         alert("Error saving player color: " + error.message);

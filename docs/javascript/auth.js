@@ -3,7 +3,7 @@
  * @module auth
  */
 
-import { db } from './db.js';
+import * as apiService from './services/apiService.js';
 
 /**
  * Synchronizes the UI elements, buttons, and navigation options based on the user's login status.
@@ -108,7 +108,7 @@ export async function handleLogin() {
     const password = document.getElementById("login-password").value;
     const errorDiv = document.getElementById("login-error");
 
-    const { error } = await db.auth.signInWithPassword({ email, password });
+    const { error } = await apiService.signInWithPassword({ email, password });
 
     if (error) {
         errorDiv.innerText = error.message;
@@ -135,7 +135,7 @@ export async function handlePasswordReset() {
         return;
     }
 
-    const { error } = await db.auth.resetPasswordForEmail(email);
+    const { error } = await apiService.resetPasswordForEmail(email);
 
     if (error) {
         errorDiv.innerText = error.message;
@@ -195,7 +195,7 @@ export async function handleUpdatePassword() {
         return;
     }
 
-    const { error } = await db.auth.updateUser({
+    const { error } = await apiService.updateUser({
         password: newPassword,
     });
 
@@ -218,7 +218,7 @@ window.handleUpdatePassword = handleUpdatePassword;
  */
 export async function handleLogout() {
     if (confirm("Log out now?")) {
-        await db.auth.signOut();
+        await apiService.signOut();
     }
 }
 window.handleLogout = handleLogout;

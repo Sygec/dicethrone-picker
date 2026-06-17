@@ -3,7 +3,7 @@
  * @module randomizer
  */
 
-import { db } from './db.js';
+import * as apiService from './services/apiService.js';
 
 /**
  * Executes a hero roll for all active players, selecting unique characters.
@@ -636,11 +636,7 @@ export async function applyResults() {
         ]),
     );
 
-    const { data: game, error: gameError } = await db
-        .from("games")
-        .insert({ last_updated_by: window.currentUser.id })
-        .select()
-        .single();
+    const { data: game, error: gameError } = await apiService.insertGame(window.currentUser.id);
     if (gameError) {
         if (confirmBtn) {
             confirmBtn.disabled = false;
@@ -680,9 +676,7 @@ export async function applyResults() {
         });
     });
 
-    const { error: gpError } = await db
-        .from("game_players")
-        .insert(gameParticipants);
+    const { error: gpError } = await apiService.insertGamePlayers(gameParticipants);
     if (gpError) {
         if (confirmBtn) {
             confirmBtn.disabled = false;
@@ -691,7 +685,7 @@ export async function applyResults() {
         return alert("Error logging game participants: " + gpError.message);
     }
 
-    const { error } = await db.from("player_hero_stats").upsert(statsUpdates);
+    const { error } = await apiService.upsertPlayerHeroStats(statsUpdates);
 
     if (error) {
         if (confirmBtn) {
