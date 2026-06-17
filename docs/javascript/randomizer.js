@@ -24,7 +24,7 @@ export function pickCharacters() {
     const bannedHeroIds = stateStore.get("bannedHeroIds");
 
     const active = NAMES.map((_, i) => i).filter(
-        (i) => document.getElementById(`use${i}`).checked,
+        (i) => document.getElementById(`use${i}`)?.checked,
     );
 
     if (active.length === 0) return alert("Select players!");
