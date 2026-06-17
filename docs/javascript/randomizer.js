@@ -428,15 +428,14 @@ export function cancelRoll() {
     const actionButtons = document.getElementById("action-buttons");
     if (actionButtons) actionButtons.style.display = "none";
 
-    const activeDraftOrder = stateStore.get("activeDraftOrder");
-    if (activeDraftOrder) {
-        activeDraftOrder.forEach((pIdx) => {
-            const intervals = stateStore.get("scrambleIntervals");
+    const intervals = stateStore.get("scrambleIntervals");
+    if (intervals) {
+        Object.keys(intervals).forEach((pIdx) => {
             if (intervals[pIdx]) {
                 clearInterval(intervals[pIdx]);
-                stateStore.updateObject("scrambleIntervals", pIdx, undefined);
             }
         });
+        stateStore.set("scrambleIntervals", {});
     }
 
     const rollBtnContainer = document.getElementById("rollBtnContainer");
