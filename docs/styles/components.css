@@ -85,7 +85,7 @@ h1 {
     padding: 4px 2px;
     border-radius: 4px;
     font-weight: bold;
-    color: #1a1a2e;
+    color: var(--bg-panel);
     font-size: 0.7rem;
     text-transform: uppercase;
     text-align: center;
@@ -100,7 +100,7 @@ h1 {
     padding: 2px 4px;
     border-radius: 3px;
     font-weight: bold;
-    color: #1a1a2e;
+    color: var(--bg-panel);
     font-size: 0.5rem;
     text-transform: uppercase;
     text-align: center;
@@ -139,15 +139,15 @@ h1 {
     align-items: center;
     justify-content: center;
     padding: 14px 10px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1.5px solid rgba(255, 255, 255, 0.08);
+    background: rgba(var(--white-rgb), 0.02);
+    border: 1.5px solid rgba(var(--white-rgb), 0.08);
     border-radius: 10px;
     cursor: pointer;
     user-select: none;
     transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
     text-align: center;
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 15px rgba(var(--black-rgb), 0.2);
 }
 
 .player-card input[type="checkbox"] {
@@ -165,7 +165,7 @@ h1 {
     font-weight: 700;
     letter-spacing: 0.7px;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.45);
+    color: rgba(var(--white-rgb), 0.45);
     transition: all 0.25s ease;
     white-space: nowrap;
     overflow: hidden;
@@ -175,8 +175,8 @@ h1 {
 
 @media (hover: hover) {
     .player-card:hover {
-        background: rgba(255, 255, 255, 0.05);
-        border-color: rgba(255, 255, 255, 0.25);
+        background: rgba(var(--white-rgb), 0.05);
+        border-color: rgba(var(--white-rgb), 0.25);
         transform: translateY(-1px);
     }
 }
@@ -185,11 +185,11 @@ h1 {
     background: color-mix(
         in srgb,
         var(--player-color) 24%,
-        rgba(255, 255, 255, 0.02)
+        rgba(var(--white-rgb), 0.02)
     );
     border: 2px solid var(--player-color);
     box-shadow:
-        0 0 15px rgba(0, 0, 0, 0.4),
+        0 0 15px rgba(var(--black-rgb), 0.4),
         0 0 22px var(--player-color),
         inset 0 0 10px var(--player-color);
     transform: scale(1.02);
@@ -227,7 +227,7 @@ h1 {
     display: flex;
     align-items: center;
     background: var(--card-bg);
-    border: 1.5px solid rgba(255, 255, 255, 0.08);
+    border: 1.5px solid rgba(var(--white-rgb), 0.08);
     border-radius: 14px;
     padding: 12px 16px;
     gap: 16px;
@@ -241,7 +241,7 @@ h1 {
 @media (hover: hover) {
     .player-row:hover {
         transform: translateY(-2px);
-        border-color: rgba(255, 255, 255, 0.15);
+        border-color: rgba(var(--white-rgb), 0.15);
     }
 }
 
@@ -303,7 +303,7 @@ h1 {
 }
 
 .hero-name-divider {
-    color: rgba(255, 255, 255, 0.25);
+    color: rgba(var(--white-rgb), 0.25);
     font-weight: bold;
 }
 
@@ -350,7 +350,7 @@ h1 {
 }
 
 .stats-divider {
-    color: rgba(255, 255, 255, 0.15);
+    color: rgba(var(--white-rgb), 0.15);
     font-weight: 300;
 }
 
@@ -369,9 +369,9 @@ h1 {
     width: 38px;
     height: 38px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: rgba(255, 255, 255, 0.85);
+    background: rgba(var(--white-rgb), 0.06);
+    border: 1px solid rgba(var(--white-rgb), 0.12);
+    color: rgba(var(--white-rgb), 0.85);
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     backdrop-filter: blur(8px);
@@ -381,7 +381,7 @@ h1 {
 
 @media (hover: hover) {
     .edit-icon-btn:hover {
-        background: rgba(255, 255, 255, 0.12);
+        background: rgba(var(--white-rgb), 0.12);
         border-color: var(--accent);
         color: var(--accent);
         transform: translateY(-2px);
@@ -391,13 +391,13 @@ h1 {
 
 .edit-icon-btn:active {
     transform: translateY(0);
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(var(--white-rgb), 0.08);
 }
 
 /* Segmented Control wrapper for modal */
 .segmented-control {
     display: flex;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(var(--white-rgb), 0.05);
     border: 1px solid var(--secondary);
     border-radius: 8px;
     padding: 3px;
@@ -421,8 +421,8 @@ h1 {
 
 .hero-select-card {
     position: relative;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(var(--white-rgb), 0.03);
+    border: 1px solid rgba(var(--white-rgb), 0.08);
     border-radius: 8px;
     padding: 8px;
     text-align: center;
@@ -437,8 +437,8 @@ h1 {
 
 @media (hover: hover) {
     .hero-select-card:hover {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(255, 255, 255, 0.2);
+        background: rgba(var(--white-rgb), 0.08);
+        border-color: rgba(var(--white-rgb), 0.2);
         transform: translateY(-2px);
     }
 }
@@ -461,9 +461,9 @@ h1 {
     height: 64px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(var(--white-rgb), 0.1);
     transition: border-color 0.2s;
-    background: #2a2a2a;
+    background: var(--bg-panel-light);
 }
 
 .hero-select-card.selected .hero-select-card-img {
@@ -519,14 +519,14 @@ h1 {
 /* Scramble & Staggered Reveal Animations */
 .player-row.randomizing {
     animation: pulsateBorder 1.2s infinite ease-in-out;
-    background: rgba(255, 255, 255, 0.01);
+    background: rgba(var(--white-rgb), 0.01);
 }
 
 @keyframes pulsateBorder {
     0%,
     100% {
-        border-color: rgba(255, 255, 255, 0.08);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        border-color: rgba(var(--white-rgb), 0.08);
+        box-shadow: 0 4px 15px rgba(var(--black-rgb), 0.2);
     }
     50% {
         border-color: var(--player-color);
@@ -596,7 +596,7 @@ h1 {
 
 .char-select {
     flex: 1;
-    background: #1a1a2e;
+    background: var(--bg-panel);
     color: var(--text);
     border: 1px solid var(--secondary);
     padding: 10px;
@@ -639,7 +639,7 @@ h1 {
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     box-shadow:
         0 4px 15px var(--shadow-base),
-        0 0 0 1px rgba(255, 255, 255, 0.05);
+        0 0 0 1px rgba(var(--white-rgb), 0.05);
     animation: breathingGlow 3s infinite ease-in-out;
 }
 
@@ -647,7 +647,7 @@ h1 {
     background: var(--success);
     display: block;
     padding: 15px;
-    border: 3px solid rgba(255, 255, 255, 0.05);
+    border: 3px solid rgba(var(--white-rgb), 0.05);
     border-radius: 8px;
     color: white;
     font-weight: bold;
@@ -723,19 +723,19 @@ main > section:not(.hidden) {
     0% {
         box-shadow:
             0 4px 15px var(--shadow-base),
-            0 0 0 1px rgba(255, 255, 255, 0.05),
+            0 0 0 1px rgba(var(--white-rgb), 0.05),
             0 0 0 0 var(--accent-glow);
     }
     50% {
         box-shadow:
             0 4px 20px var(--shadow-base),
-            0 0 0 1px rgba(255, 255, 255, 0.05),
+            0 0 0 1px rgba(var(--white-rgb), 0.05),
             0 0 14px 4px var(--accent-glow);
     }
     100% {
         box-shadow:
             0 4px 15px var(--shadow-base),
-            0 0 0 1px rgba(255, 255, 255, 0.05),
+            0 0 0 1px rgba(var(--white-rgb), 0.05),
             0 0 0 0 var(--accent-glow);
     }
 }
@@ -757,7 +757,7 @@ main > section:not(.hidden) {
 .btn-confirm:active,
 .btn-save:active {
     transform: translateY(1px) scale(0.95);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 2px 8px rgba(var(--black-rgb), 0.5);
     filter: brightness(0.95);
     transition: all 0.05s ease;
 }
@@ -773,9 +773,9 @@ main > section:not(.hidden) {
     height: 100%;
     background: linear-gradient(
         90deg,
-        rgba(255, 255, 255, 0) 0%,
-        rgba(255, 255, 255, 0.15) 50%,
-        rgba(255, 255, 255, 0) 100%
+        rgba(var(--white-rgb), 0) 0%,
+        rgba(var(--white-rgb), 0.15) 50%,
+        rgba(var(--white-rgb), 0) 100%
     );
     transform: skewX(-20deg);
     animation: shine 3s infinite ease-in-out;
@@ -814,8 +814,8 @@ main > section:not(.hidden) {
 }
 
 #dbSection .search-wrapper {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(var(--white-rgb), 0.03);
+    border: 1px solid rgba(var(--white-rgb), 0.06);
     border-radius: 8px;
     box-sizing: border-box;
     transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
@@ -823,7 +823,7 @@ main > section:not(.hidden) {
 
 #dbSection .search-wrapper:hover,
 #dbSection .search-wrapper:focus-within {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(var(--white-rgb), 0.05);
     border-color: var(--accent);
 }
 
@@ -832,7 +832,7 @@ main > section:not(.hidden) {
     background: transparent;
     border: none;
     padding: 10px 90px 10px 14px; /* Space for both the close icon and search button on the right */
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(var(--white-rgb), 0.9);
     font-size: 16px;
     font-weight: 400; /* Regular weight, not bold */
     outline: none;
@@ -841,7 +841,7 @@ main > section:not(.hidden) {
 }
 
 #hero-search::placeholder {
-    color: rgba(255, 255, 255, 0.4);
+    color: rgba(var(--white-rgb), 0.4);
     font-weight: 400;
 }
 
@@ -881,13 +881,13 @@ main > section:not(.hidden) {
     bottom: 0;
     background: transparent;
     border: none;
-    border-left: 1px solid rgba(255, 255, 255, 0.06);
+    border-left: 1px solid rgba(var(--white-rgb), 0.06);
     padding: 0 16px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(var(--white-rgb), 0.8);
     transition: color 0.2s, background-color 0.2s;
     border-top-right-radius: 7px;
     border-bottom-right-radius: 7px;
@@ -895,7 +895,7 @@ main > section:not(.hidden) {
 
 #dbSection .search-btn:hover {
     color: var(--accent);
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: rgba(var(--white-rgb), 0.05);
 }
 
 /* Active Filters Breadcrumbs Styling */
@@ -912,9 +912,9 @@ main > section:not(.hidden) {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    color: rgba(255, 255, 255, 0.9);
+    background: rgba(var(--white-rgb), 0.03);
+    border: 1px solid rgba(var(--white-rgb), 0.06);
+    color: rgba(var(--white-rgb), 0.9);
     font-size: 0.72rem; /* Clearly smaller than 0.82rem of button */
     font-weight: 500; /* Regular/medium weight, not bold */
     padding: 4px 8px; /* Clearly smaller padding */
@@ -937,7 +937,7 @@ main > section:not(.hidden) {
 
 .filter-chip-remove:hover {
     transform: scale(1.25);
-    color: #ff4d6d;
+    color: var(--accent-hover);
 }
 
 .hidden {

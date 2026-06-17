@@ -96,8 +96,8 @@
     --p6: #a2a2a2;
 
     /* --- Glassmorphic Overlays & Blurs --- */
-    --glass-border: rgba(255, 255, 255, 0.14);
-    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+    --glass-border: rgba(var(--white-rgb), 0.14);
+    --glass-shadow: 0 8px 32px 0 rgba(var(--black-rgb), 0.5);
     --glass-blur: 16px;
 
     /* --- Consolidated Design System Colors --- */
@@ -112,7 +112,40 @@
     --warning: #ffd700;
     --danger-hover: #ff4d4d;
     --accent-hover: #ff4d6d;
-    --shadow-base: rgba(0, 0, 0, 0.35);
+    --shadow-base: rgba(var(--black-rgb), 0.35);
+
+    /* --- RGB Component Variables (for theme-flexible opacities) --- */
+    --white-rgb: 255, 255, 255;
+    --black-rgb: 0, 0, 0;
+
+    /* --- Consistently Reused Colors --- */
+    --bg-panel: #1a1a2e;
+    --bg-panel-light: #2a2a2a;
+    --bg-solid-dark: #0f1013;
+    --gold: #ffbc00;
+    --gold-metallic: #d4af37;
+    --success-bright: #7ed321;
+    --active-green: #4caf50;
+
+    /* --- Component Gradient Presets (Collection Group Cards) --- */
+    --gradient-green-start: #0d3b25;
+    --gradient-green-end: #2ec4b6;
+    --gradient-orange-start: #4a150b;
+    --gradient-orange-end: #ff9f1c;
+    --gradient-pink-start: #0f1c3f;
+    --gradient-pink-end: #e94560;
+    --gradient-yellow-start: #111b2d;
+    --gradient-yellow-end: #f1c40f;
+    --gradient-purple-start: #1a0b2e;
+    --gradient-purple-end: #9b59b6;
+    --gradient-grey-start: #1e272e;
+    --gradient-grey-end: #485460;
+    --gradient-deeppurple-start: #1c0c3a;
+    --gradient-deeppurple-end: #5e35b1;
+    --gradient-redgreen-start: #0f3d1e;
+    --gradient-redgreen-end: #a31d1d;
+    --gradient-blue-start: #0d1e3d;
+    --gradient-blue-end: #00b4d8;
 }
 
 html {

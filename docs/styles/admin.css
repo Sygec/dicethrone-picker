@@ -37,7 +37,7 @@
     border: 1px solid var(--glass-border);
     border-radius: 12px;
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(var(--white-rgb), 0.04);
     box-shadow: var(--glass-shadow);
 }
 
@@ -48,7 +48,7 @@
     padding: 12px 15px;
     cursor: pointer;
     gap: 10px;
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(var(--white-rgb), 0.06);
     user-select: none;
 }
 
@@ -79,7 +79,7 @@
 
 .panel-content {
     padding: 15px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid rgba(var(--white-rgb), 0.08);
 }
 
 .form-grid {
@@ -96,16 +96,16 @@
 .group-edit-panel {
     padding: 12px 10px 10px;
     margin-top: 5px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.05);
+    border-top: 1px solid rgba(var(--white-rgb), 0.08);
+    background: rgba(var(--white-rgb), 0.05);
     border-radius: 0 0 10px 10px;
 }
 
 .player-edit-panel {
     padding: 12px 10px 10px;
     margin-top: 5px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.05);
+    border-top: 1px solid rgba(var(--white-rgb), 0.08);
+    background: rgba(var(--white-rgb), 0.05);
     border-radius: 0 0 10px 10px;
 }
 
@@ -134,7 +134,7 @@
     background: var(--gray-500);
     color: white;
     border-radius: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(var(--white-rgb), 0.12);
     cursor: pointer;
     font-size: 0.9rem;
     position: relative;
@@ -170,7 +170,7 @@
 
 .hero-admin-row {
     margin: 5px 0;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(var(--white-rgb), 0.05);
 }
 
 .hero-admin-row.editing {
@@ -179,7 +179,7 @@
 }
 
 .group-row.editing .btn-save {
-    border: 2px solid #7ed321;
+    border: 2px solid var(--success-bright);
     box-shadow: 0 0 0 1px rgba(126, 211, 33, 0.22);
 }
 #heroesListContainer.group-edit-active .hero-admin-row:not(.editing) {
@@ -193,7 +193,7 @@
 
 .player-admin-row {
     margin: 5px 0;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(var(--white-rgb), 0.05);
 }
 
 .player-admin-row.editing {
@@ -202,7 +202,7 @@
 }
 
 .player-admin-row.editing .btn-save {
-    border: 2px solid #7ed321;
+    border: 2px solid var(--success-bright);
     box-shadow: 0 0 0 1px rgba(126, 211, 33, 0.22);
 }
 
@@ -213,12 +213,12 @@
 
 .user-admin-row {
     margin: 5px 0;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(var(--white-rgb), 0.05);
 }
 
 .group-row.editing {
-    background: rgba(255, 255, 255, 0.12);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+    background: rgba(var(--white-rgb), 0.12);
+    box-shadow: inset 0 0 0 1px rgba(var(--white-rgb), 0.18);
 }
 
 .group-row .form-grid {
@@ -240,7 +240,7 @@ input[type="url"],
 input[type="number"],
 select,
 textarea {
-    background: #1a1a2e;
+    background: var(--bg-panel);
     color: var(--text);
     border: 1px solid var(--secondary);
     padding: 10px;
@@ -263,7 +263,7 @@ textarea {
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     box-shadow:
         0 4px 15px var(--shadow-base),
-        0 0 0 1px rgba(255, 255, 255, 0.05);
+        0 0 0 1px rgba(var(--white-rgb), 0.05);
 }
 
 .btn-cancel {
@@ -291,8 +291,8 @@ textarea {
 
 .hero-item {
     position: relative;
-    background: #0f1013; /* Solid dark background to display the artwork clearly */
-    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: var(--bg-solid-dark); /* Solid dark background to display the artwork clearly */
+    border: 1px solid rgba(var(--white-rgb), 0.25);
     border-radius: 14px;
     margin-bottom: 12px;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -321,7 +321,7 @@ textarea {
 
 @media (hover: hover) {
     .hero-item:hover {
-        border-color: rgba(255, 255, 255, 0.45);
+        border-color: rgba(var(--white-rgb), 0.45);
     }
 }
 
@@ -331,7 +331,7 @@ textarea {
     align-items: center;
     padding: 14px 20px;
     cursor: pointer;
-    /* background: rgba(0, 0, 0, 0.25); Subtle dark overlay for contrast */
+    /* background: rgba(var(--black-rgb), 0.25); Subtle dark overlay for contrast */
     margin: 0;
     transition: background-color 0.2s ease;
     user-select: none;
@@ -341,7 +341,7 @@ textarea {
 
 @media (hover: hover) {
     .hero-header:hover {
-        background: rgba(0, 0, 0, 0.4);
+        background: rgba(var(--black-rgb), 0.4);
     }
 }
 
@@ -359,8 +359,8 @@ textarea {
     display: flex;
     flex-direction: column;
     padding: 8px 20px 12px;
-    background: rgba(0, 0, 0, 0.15);
-    border-top: 1px solid rgba(255, 255, 255, 0.03);
+    background: rgba(var(--black-rgb), 0.15);
+    border-top: 1px solid rgba(var(--white-rgb), 0.03);
 }
 
 /* Header Visibility Toggles */
@@ -402,7 +402,7 @@ textarea {
     opacity: 1;
     filter: none;
     transform: scale(1.2);
-    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.5));
+    filter: drop-shadow(0 0 6px rgba(var(--white-rgb), 0.5));
 }
 
 /* Expanded Title styling */
@@ -414,7 +414,7 @@ textarea {
 }
 .expanded-group {
     font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(var(--white-rgb), 0.6);
 }
 
 /* Collapsed Players List */
@@ -430,7 +430,7 @@ textarea {
     font-weight: bold;
     align-items: center;
     padding: 4px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid rgba(var(--white-rgb), 0.04);
 }
 
 .collapsed-player-row-simple:last-child {
@@ -480,7 +480,7 @@ textarea {
     display: flex;
     flex-direction: column;
     padding: 8px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid rgba(var(--white-rgb), 0.04);
 }
 
 .expanded-player-row:last-child {
@@ -523,7 +523,7 @@ textarea {
 
 .expanded-player-date {
     font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba(var(--white-rgb), 0.85);
     margin-top: 4px;
     padding-left: 2px;
     display: flex;
@@ -539,8 +539,8 @@ textarea {
 }
 
 .hero-body {
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid rgba(var(--white-rgb), 0.08);
+    background: rgba(var(--black-rgb), 0.2);
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -576,10 +576,10 @@ textarea {
     width: 90px;
     height: 90px;
     border-radius: 14px;
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(var(--white-rgb), 0.1);
+    box-shadow: 0 4px 10px rgba(var(--black-rgb), 0.3);
     overflow: visible;
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(var(--black-rgb), 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -608,9 +608,9 @@ textarea {
     object-fit: contain;
     background: var(--gray-800);
     border-radius: 6px;
-    border: 1.5px solid rgba(255, 255, 255, 0.15);
+    border: 1.5px solid rgba(var(--white-rgb), 0.15);
     padding: 2px;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 3px 6px rgba(var(--black-rgb), 0.4);
     z-index: 3;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -664,7 +664,7 @@ textarea {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     text-align: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    border-bottom: 1px solid rgba(var(--white-rgb), 0.12);
     padding-bottom: 4px;
     margin-bottom: 6px;
 }
@@ -692,7 +692,7 @@ textarea {
 .prob-gauge-track {
     width: 100%;
     height: 6px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(var(--white-rgb), 0.1);
     border-radius: 3px;
     overflow: hidden;
 }
@@ -717,7 +717,7 @@ textarea {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    border: 1px solid rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(var(--white-rgb), 0.03);
 }
 
 .mini-stat-label {
@@ -735,7 +735,7 @@ textarea {
 }
 
 .stat-card-footer {
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid rgba(var(--white-rgb), 0.05);
     padding-top: 8px;
     margin-top: 2px;
     display: flex;
@@ -753,18 +753,18 @@ textarea {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(var(--white-rgb), 0.1);
     width: 30px;
     height: 30px;
     border-radius: 50%;
     border: none;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(var(--black-rgb), 0.1);
 }
 
 
 /* Build Info Box in Admin Section */
 #admin-build-info {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(var(--white-rgb), 0.05);
     padding: 12px;
     border-radius: 8px;
     font-size: 0.85rem;

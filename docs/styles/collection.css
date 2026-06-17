@@ -30,7 +30,7 @@
     justify-content: space-between;
     gap: 12px;
     margin-bottom: 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(var(--white-rgb), 0.1);
     padding-bottom: 10px;
     cursor: pointer;
     user-select: none;
@@ -46,8 +46,8 @@
 
 .collection-hero-card {
     position: relative;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(var(--white-rgb), 0.03);
+    border: 1px solid rgba(var(--white-rgb), 0.08);
     border-radius: 8px;
     padding: 8px 4px;
     text-align: center;
@@ -63,8 +63,8 @@
 
 @media (hover: hover) {
     .collection-hero-card:hover:not(.disabled) {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(255, 255, 255, 0.2);
+        background: rgba(var(--white-rgb), 0.08);
+        border-color: rgba(var(--white-rgb), 0.2);
         transform: translateY(-2px);
     }
 }
@@ -75,7 +75,7 @@
 }
 
 .collection-hero-card.selected {
-    background: color-mix(in srgb, var(--accent) 8%, rgba(255, 255, 255, 0.03));
+    background: color-mix(in srgb, var(--accent) 8%, rgba(var(--white-rgb), 0.03));
     border-color: var(--accent);
     box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 15%, transparent);
 }
@@ -85,7 +85,7 @@
         background: color-mix(
             in srgb,
             var(--accent) 12%,
-            rgba(255, 255, 255, 0.03)
+            rgba(var(--white-rgb), 0.03)
         );
         border-color: var(--accent);
     }
@@ -96,9 +96,9 @@
     height: 64px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(var(--white-rgb), 0.1);
     transition: border-color 0.2s;
-    background: #2a2a2a;
+    background: var(--bg-panel-light);
 }
 
 .collection-hero-card.selected .collection-hero-card-img {
@@ -126,7 +126,7 @@
 }
 
 .stat-weight {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(var(--white-rgb), 0.1);
     padding-bottom: 5px;
     margin-bottom: 2px;
 }
@@ -134,7 +134,7 @@
 .group-label {
     font-size: 0.9rem;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(var(--white-rgb), 0.6);
     margin-left: 10px;
     display: inline-block;
 }
@@ -234,13 +234,13 @@
     column-gap: 1px;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(var(--white-rgb), 0.03);
+    border: 1px solid rgba(var(--white-rgb), 0.08);
     border-radius: 8px;
     padding: 6px 10px;
     width: fit-content;
     margin: 5px auto 0 auto;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 1px 3px rgba(var(--black-rgb), 0.3);
 }
 
 /* Complexity Specific Styling inside the track */
@@ -280,8 +280,8 @@
     justify-content: center;
     width: 48px;
     height: 48px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(var(--white-rgb), 0.03);
+    border: 1px solid rgba(var(--white-rgb), 0.1);
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -293,8 +293,8 @@
 
 @media (hover: hover) {
     .group-badge-card:hover:not(.disabled) {
-        border-color: rgba(255, 255, 255, 0.3);
-        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(var(--white-rgb), 0.3);
+        background: rgba(var(--white-rgb), 0.06);
         transform: translateY(-2px);
     }
 }
@@ -307,7 +307,7 @@
 .group-badge-initials {
     font-size: 0.85rem;
     font-weight: 800;
-    color: rgba(255, 255, 255, 0.75);
+    color: rgba(var(--white-rgb), 0.75);
     letter-spacing: 0.5px;
     line-height: 1;
     margin-bottom: 2px;
@@ -326,14 +326,14 @@
 .group-badge-count {
     font-size: 0.6rem;
     font-weight: bold;
-    color: rgba(255, 255, 255, 0.45);
+    color: rgba(var(--white-rgb), 0.45);
     line-height: 1;
 }
 
 /* Active State Styles - Tactile, glowing backgrounds with brand gradients */
 .group-badge-card.active-die {
-    border-color: rgba(255, 255, 255, 0.8);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    border-color: rgba(var(--white-rgb), 0.8);
+    box-shadow: 0 4px 12px rgba(var(--black-rgb), 0.4);
 }
 
 .group-badge-card.active-die .group-badge-initials {
@@ -341,114 +341,114 @@
 }
 
 .group-badge-card.active-die .group-badge-count {
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba(var(--white-rgb), 0.85);
 }
 
 /* Season 1: Emerald Green Gradient */
 .group-badge-card.group-s1.active-die {
-    background: linear-gradient(135deg, #0d3b25, #2ec4b6);
+    background: linear-gradient(135deg, var(--gradient-green-start), var(--gradient-green-end));
     box-shadow: 0 0 12px rgba(46, 196, 182, 0.4);
 }
 .group-badge-card.group-s1.active-die .group-badge-initials,
 .group-badge-card.group-s1.active-die .group-badge-count {
     color: var(--text);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    text-shadow: 0 1px 2px rgba(var(--black-rgb), 0.4);
 }
 
 /* Season 2: Crimson & Gold Gradient */
 .group-badge-card.group-s2.active-die {
-    background: linear-gradient(135deg, #4a150b, #ff9f1c);
+    background: linear-gradient(135deg, var(--gradient-orange-start), var(--gradient-orange-end));
     box-shadow: 0 0 12px rgba(255, 159, 28, 0.4);
 }
 .group-badge-card.group-s2.active-die .group-badge-initials,
 .group-badge-card.group-s2.active-die .group-badge-count {
     color: var(--text);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    text-shadow: 0 1px 2px rgba(var(--black-rgb), 0.4);
 }
 
 /* Marvel: Navy & Ruby Red Gradient */
 .group-badge-card.group-marvel.active-die {
-    background: linear-gradient(135deg, #0f1c3f, #e94560);
+    background: linear-gradient(135deg, var(--gradient-pink-start), var(--accent));
     box-shadow: 0 0 12px rgba(233, 69, 96, 0.4);
 }
 .group-badge-card.group-marvel.active-die .group-badge-initials,
 .group-badge-card.group-marvel.active-die .group-badge-count {
     color: var(--text);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    text-shadow: 0 1px 2px rgba(var(--black-rgb), 0.4);
 }
 
 /* X-Men: Deep Steel & Electric Yellow Gradient */
 .group-badge-card.group-xmen.active-die {
-    background: linear-gradient(135deg, #111b2d, #f1c40f);
+    background: linear-gradient(135deg, var(--gradient-yellow-start), var(--gradient-yellow-end));
     box-shadow: 0 0 12px rgba(241, 196, 15, 0.4);
 }
 .group-badge-card.group-xmen.active-die .group-badge-initials {
     color: var(--text);
 }
 .group-badge-card.group-xmen.active-die .group-badge-count {
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(var(--white-rgb), 0.9);
 }
 
 /* Adventures: Twilight Purple Gradient */
 .group-badge-card.group-adventures.active-die {
-    background: linear-gradient(135deg, #1a0b2e, #9b59b6);
+    background: linear-gradient(135deg, var(--gradient-purple-start), var(--gradient-purple-end));
     box-shadow: 0 0 12px rgba(155, 89, 182, 0.4);
 }
 .group-badge-card.group-adventures.active-die .group-badge-initials,
 .group-badge-card.group-adventures.active-die .group-badge-count {
     color: var(--text);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    text-shadow: 0 1px 2px rgba(var(--black-rgb), 0.4);
 }
 
 /* Solo: Deep Steel Slate Gradient */
 .group-badge-card.group-solo.active-die {
-    background: linear-gradient(135deg, #1e272e, #485460);
+    background: linear-gradient(135deg, var(--gradient-grey-start), var(--gradient-grey-end));
     box-shadow: 0 0 12px rgba(72, 84, 96, 0.4);
 }
 .group-badge-card.group-solo.active-die .group-badge-initials,
 .group-badge-card.group-solo.active-die .group-badge-count {
     color: var(--text);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    text-shadow: 0 1px 2px rgba(var(--black-rgb), 0.4);
 }
 
 /* Outcast: Deep Indigo / Orchid Purple Gradient */
 .group-badge-card.group-outcast.active-die {
-    background: linear-gradient(135deg, #1c0c3a, #5e35b1);
+    background: linear-gradient(135deg, var(--gradient-deeppurple-start), var(--gradient-deeppurple-end));
     box-shadow: 0 0 12px rgba(94, 53, 177, 0.4);
 }
 .group-badge-card.group-outcast.active-die .group-badge-initials,
 .group-badge-card.group-outcast.active-die .group-badge-count {
     color: var(--text);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    text-shadow: 0 1px 2px rgba(var(--black-rgb), 0.4);
 }
 
 /* Santa vs Krampus: Festive Forest Green & Crimson Red Gradient */
 .group-badge-card.group-svk.active-die {
-    background: linear-gradient(135deg, #0f3d1e, #a31d1d);
+    background: linear-gradient(135deg, var(--gradient-redgreen-start), var(--gradient-redgreen-end));
     box-shadow: 0 0 12px rgba(163, 29, 29, 0.4);
 }
 .group-badge-card.group-svk.active-die .group-badge-initials,
 .group-badge-card.group-svk.active-die .group-badge-count {
     color: var(--text);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    text-shadow: 0 1px 2px rgba(var(--black-rgb), 0.4);
 }
 
 /* Vanguard: Deep Navy & Sapphire Cyan Gradient */
 .group-badge-card.group-vanguard.active-die {
-    background: linear-gradient(135deg, #0d1e3d, #00b4d8);
+    background: linear-gradient(135deg, var(--gradient-blue-start), var(--gradient-blue-end));
     box-shadow: 0 0 12px rgba(0, 180, 216, 0.4);
 }
 .group-badge-card.group-vanguard.active-die .group-badge-initials,
 .group-badge-card.group-vanguard.active-die .group-badge-count {
     color: var(--text);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    text-shadow: 0 1px 2px rgba(var(--black-rgb), 0.4);
 }
 
 /* All / Default */
 .group-badge-card.group-all.active-die {
     background: linear-gradient(
         135deg,
-        rgba(255, 255, 255, 0.05),
+        rgba(var(--white-rgb), 0.05),
         var(--accent)
     );
     box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 40%, transparent);
@@ -457,7 +457,7 @@
     color: var(--text);
 }
 .group-badge-card.group-all.active-die .group-badge-count {
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba(var(--white-rgb), 0.85);
 }
 
 /* Complexity Card Badge Overrides to make dice grow/shrink & greyscale on one line */
@@ -479,7 +479,7 @@
     margin-bottom: 0px;
     opacity: 0.35;
     filter: grayscale(100%) brightness(0.85);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(var(--white-rgb), 0.2);
     border-radius: 4px;
     box-sizing: border-box;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -490,7 +490,7 @@
         .complexity-dice-img {
         opacity: 0.65;
         filter: grayscale(50%) brightness(0.95);
-        border-color: rgba(255, 255, 255, 0.4);
+        border-color: rgba(var(--white-rgb), 0.4);
     }
 }
 
@@ -498,8 +498,8 @@
     opacity: 1;
     filter: grayscale(0%) brightness(1.1);
     transform: scale(1.35);
-    border-color: rgba(255, 255, 255, 0.5);
-    box-shadow: 0 0 8px rgba(255, 255, 255, 0.25);
+    border-color: rgba(var(--white-rgb), 0.5);
+    box-shadow: 0 0 8px rgba(var(--white-rgb), 0.25);
 }
 
 /* Hide background changes for complexity dice active states */
@@ -510,7 +510,7 @@
 
 .group-badge-card.group-complexity .group-badge-count {
     font-size: 0.65rem;
-    color: rgba(255, 255, 255, 0.45);
+    color: rgba(var(--white-rgb), 0.45);
     margin-top: 10px;
     transition: color 0.25s;
 }
@@ -561,7 +561,7 @@
     filter: none;
     transform: none;
     border: 2px solid transparent;
-    color: #1a1a2e;
+    color: var(--bg-panel);
     text-transform: uppercase;
     min-width: 65px;
     text-align: center;
@@ -581,7 +581,7 @@
     color: var(--accent);
     font-weight: bold;
     font-size: 0.8rem;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(var(--white-rgb), 0.05);
     padding: 5px 10px;
     border-radius: 6px;
 }
@@ -599,7 +599,7 @@
     top: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.75); /* Black w/ opacity */
+    background-color: rgba(var(--black-rgb), 0.75); /* Black w/ opacity */
     color: var(--text);
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
@@ -644,7 +644,7 @@
 
 .modal-content label {
     color: var(--text) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-bottom: 1px solid rgba(var(--white-rgb), 0.08) !important;
 }
 
 /* The Close Button (X) */
@@ -692,7 +692,7 @@
 .stat-column {
     flex: 1;
     min-width: 0;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(var(--white-rgb), 0.05);
     padding: 8px 4px;
     margin-bottom: 10px;
     border-radius: 6px;
@@ -717,7 +717,7 @@
     font-size: 0.6rem;
     margin-top: 4px;
     opacity: 0.4;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid rgba(var(--white-rgb), 0.1);
     padding-top: 2px;
 }
 
@@ -761,8 +761,8 @@
     display: flex;
     flex-direction: column;
     gap: 15px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(var(--white-rgb), 0.03);
+    border: 1px solid rgba(var(--white-rgb), 0.08);
     border-radius: 12px;
     padding: 15px;
     margin-bottom: 20px;
@@ -792,8 +792,8 @@
 }
 
 .pill-toggle {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(var(--white-rgb), 0.05);
+    border: 1px solid rgba(var(--white-rgb), 0.1);
     color: var(--text);
     padding: 4px 8px;
     border-radius: 4px;
@@ -807,8 +807,8 @@
 
 @media (hover: hover) {
     .pill-toggle:hover {
-        background: rgba(255, 255, 255, 0.1);
-        border-color: rgba(255, 255, 255, 0.2);
+        background: rgba(var(--white-rgb), 0.1);
+        border-color: rgba(var(--white-rgb), 0.2);
     }
 }
 
@@ -821,22 +821,22 @@
 /* Player color specific pills when active */
 .pill-toggle.p1-color.active {
     background-color: var(--p1);
-    color: #1a1a2e;
+    color: var(--bg-panel);
     border-color: var(--p1);
 }
 .pill-toggle.p2-color.active {
     background-color: var(--p2);
-    color: #1a1a2e;
+    color: var(--bg-panel);
     border-color: var(--p2);
 }
 .pill-toggle.p3-color.active {
     background-color: var(--p3);
-    color: #1a1a2e;
+    color: var(--bg-panel);
     border-color: var(--p3);
 }
 .pill-toggle.p4-color.active {
     background-color: var(--p4);
-    color: #1a1a2e;
+    color: var(--bg-panel);
     border-color: var(--p4);
 }
 
@@ -850,7 +850,7 @@
 .sort-select-new {
     flex: 1;
     min-width: 150px;
-    background: #1a1a2e;
+    background: var(--bg-panel);
     color: var(--text);
     border: 1px solid var(--secondary);
     padding: 8px 12px;
@@ -859,8 +859,8 @@
 }
 
 .btn-direction-new {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(var(--white-rgb), 0.05);
+    border: 1px solid rgba(var(--white-rgb), 0.1);
     color: var(--text);
     padding: 8px 12px;
     border-radius: 8px;
@@ -875,7 +875,7 @@
 
 @media (hover: hover) {
     .btn-direction-new:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(var(--white-rgb), 0.1);
     }
 }
 
@@ -910,7 +910,7 @@
     border: 1px solid var(--glass-border);
     border-radius: 12px;
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(var(--white-rgb), 0.03);
     box-shadow: var(--glass-shadow);
 }
 
@@ -920,7 +920,7 @@
     align-items: center;
     padding: 12px 15px;
     cursor: pointer;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(var(--white-rgb), 0.05);
     user-select: none;
     font-weight: bold;
     font-size: 0.9rem;
@@ -930,13 +930,13 @@
 
 @media (hover: hover) {
     .db-accordion-header:hover {
-        background: rgba(255, 255, 255, 0.08);
+        background: rgba(var(--white-rgb), 0.08);
     }
 }
 
 .db-accordion-content {
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-    background: rgba(0, 0, 0, 0.1);
+    border-top: 1px solid rgba(var(--white-rgb), 0.06);
+    background: rgba(var(--black-rgb), 0.1);
     margin-bottom: 0 !important;
     border-radius: 0 !important;
 }
@@ -944,7 +944,7 @@
 /* Ownership Segmented Control (Tabs) */
 .ownership-segmented-control {
     display: flex;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(var(--white-rgb), 0.05);
     border: 1px solid var(--accent);
     border-radius: 8px;
     padding: 3px;
@@ -998,7 +998,7 @@
 
 @media (hover: hover) {
     .collection-group-header:hover {
-        background: rgba(255, 255, 255, 0.03);
+        background: rgba(var(--white-rgb), 0.03);
     }
 }
 
@@ -1016,7 +1016,7 @@
     .sort-container-new,
     .db-accordion,
     .modal-content {
-        background-color: rgba(255, 255, 255, 0.06) !important;
+        background-color: rgba(var(--white-rgb), 0.06) !important;
         backdrop-filter: blur(var(--glass-blur)) !important;
         -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
     }
