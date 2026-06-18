@@ -2,7 +2,7 @@
  * @fileoverview Logic for hero picker rolls, randomizer animations, manual hero overrides, drafts, bans, and result logging.
  * @module randomizer
  */
-import { isHeroOwned, getSoftWeight, isUser, DEFAULT_HERO_WEIGHT, PICKED_HERO_WEIGHT, WEIGHT_INCREMENT, getHeroProbabilityText, getImgUrl } from './utils.js';
+import { isHeroOwned, getSoftWeight, isUser, DEFAULT_HERO_WEIGHT, PICKED_HERO_WEIGHT, WEIGHT_INCREMENT, getHeroProbabilityText, getImgUrl, showConfirm } from './utils.js';
 import { showSection } from './admin.js';
 import { init } from './main.js';
 import { renderDrawerBody } from './filters.js';
@@ -314,7 +314,8 @@ export async function applyResults() {
 
     if (unownedSelectedHeroes.length > 0) {
         const unownedHeroNames = unownedSelectedHeroes.join(", ");
-        const confirmation = confirm(
+        const confirmation = await showConfirm(
+            "Unowned Heroes Selected",
             `You have selected unowned heroes: ${unownedHeroNames}. Do you want to proceed?`,
         );
         if (!confirmation) {

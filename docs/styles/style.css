@@ -7,6 +7,7 @@
 @import url('history.css');
 @import url('filters.css');
 @import url('admin.css');
+@import url('notifications.css');
 
 /**
  * @fileoverview Main entry point stylesheet for the Dice Throne Companion.

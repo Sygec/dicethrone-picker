@@ -1,4 +1,4 @@
-import { isHeroOwned, escapeHtml } from './utils.js';
+import { isHeroOwned, escapeHtml, showConfirm } from './utils.js';
 import { renderList, updateSegmentedHighlights } from './filters.js';
 import { updateDropdownSort } from './randomizer.js';
 import { init } from './main.js';
@@ -255,7 +255,7 @@ export async function saveHeroInline(heroId, idx) {
     await init();
 }
 export async function deleteHero(heroId) {
-    if (!confirm("Delete this hero? This action cannot be undone.")) return;
+    if (!(await showConfirm("Delete Hero", "Delete this hero? This action cannot be undone."))) return;
 
     const { error } = await apiService.deleteHero(heroId);
     if (error) return alert("Error deleting hero: " + error.message);
@@ -481,7 +481,7 @@ export async function toggleUserHeroOwned(userId, heroId, isOwned) {
     }
 }
 export async function deleteGroup(groupId) {
-    if (!confirm("Delete this group?")) return;
+    if (!(await showConfirm("Delete Group", "Delete this group?"))) return;
 
     const { error } = await apiService.deleteGroup(groupId);
 
@@ -555,9 +555,10 @@ export async function submitWinner(gameId) {
 }
 export async function deleteGame(gameId) {
     if (
-        !confirm(
+        !(await showConfirm(
+            "Delete Game Record",
             "Are you sure you want to delete this game record? This cannot be undone.",
-        )
+        ))
     )
         return;
 

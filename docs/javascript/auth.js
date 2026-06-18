@@ -5,6 +5,7 @@
 let loginModalKeyHandler = null;
 import { renderList } from './filters.js';
 import { renderGamesList, renderHeroesList } from './admin.js';
+import { showConfirm } from './utils.js';
 
 
 import * as apiService from './services/apiService.js';
@@ -142,7 +143,7 @@ export async function handleUpdatePassword() {
  * @returns {Promise<void>}
  */
 export async function handleLogout() {
-    if (confirm("Log out now?")) {
+    if (await showConfirm("Log Out", "Log out now?")) {
         await apiService.signOut();
     }
 }

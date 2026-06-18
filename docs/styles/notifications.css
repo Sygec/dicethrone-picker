@@ -1,0 +1,181 @@
+/**
+ * @fileoverview Stylesheet module for toast notifications and confirmation modal.
+ * @module notifications
+ */
+
+/* --- Toast Container & Individual Toasts --- */
+#toast-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 90%;
+    max-width: 400px;
+    pointer-events: none;
+}
+
+.toast {
+    pointer-events: auto;
+    background: rgba(22, 33, 62, 0.95); /* matching var(--card-bg) */
+    color: var(--text);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-family: "Outfit", sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast-message {
+    flex-grow: 1;
+    line-height: 1.4;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    color: var(--text);
+    opacity: 0.6;
+    cursor: pointer;
+    font-size: 1.2rem;
+    line-height: 1;
+    padding: 0;
+}
+
+.toast-close:hover {
+    opacity: 1;
+}
+
+/* Toast Color Variations */
+.toast-success {
+    border-left: 4px solid var(--success);
+}
+
+.toast-error {
+    border-left: 4px solid var(--accent); /* Cherry Red / Danger */
+}
+
+.toast-warning {
+    border-left: 4px solid var(--edit); /* Amber */
+}
+
+.toast-info {
+    border-left: 4px solid var(--p2); /* Blue tint */
+}
+
+
+/* --- Custom Confirm Modal --- */
+#confirm-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(var(--black-rgb), 0.8);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+#confirm-modal-overlay.show {
+    opacity: 1;
+}
+
+.confirm-modal-content {
+    background: rgba(22, 33, 62, 0.98); /* var(--card-bg) */
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-radius: 12px;
+    padding: 25px;
+    width: 90%;
+    max-width: 420px;
+    text-align: center;
+    transform: scale(0.9);
+    transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+#confirm-modal-overlay.show .confirm-modal-content {
+    transform: scale(1);
+}
+
+.confirm-modal-title {
+    font-family: "Outfit", sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
+.confirm-modal-message {
+    font-family: "Inter", sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--text);
+    opacity: 0.9;
+    margin-bottom: 24px;
+}
+
+.confirm-modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.confirm-btn {
+    font-family: "Outfit", sans-serif;
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: filter 0.2s, transform 0.1s;
+}
+
+.confirm-btn:active {
+    transform: scale(0.97);
+}
+
+.confirm-btn-cancel {
+    background: rgba(var(--white-rgb), 0.1);
+    color: var(--text);
+    border: 1px solid var(--glass-border);
+}
+
+.confirm-btn-cancel:hover {
+    background: rgba(var(--white-rgb), 0.15);
+}
+
+.confirm-btn-confirm {
+    background: var(--accent);
+    color: var(--text);
+}
+
+.confirm-btn-confirm:hover {
+    filter: brightness(1.1);
+}

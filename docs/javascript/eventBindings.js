@@ -8,7 +8,7 @@ import * as filters from './filters.js';
 import * as admin from './admin.js';
 import * as auth from './auth.js';
 import * as stateStore from './stateStore.js';
-import { handlePlayerColorChange } from './utils.js';
+import { handlePlayerColorChange, showConfirm } from './utils.js';
 
 export function setupAllEventBindings() {
     // Helper to bind clicks on static elements
@@ -121,8 +121,8 @@ export function setupAllEventBindings() {
     bindClick("saveGroupBtn", admin.saveGroup);
     const cancelGroupBtn = document.getElementById("cancelGroupBtn");
     if (cancelGroupBtn) {
-        cancelGroupBtn.addEventListener("click", () => {
-            if (document.getElementById('groupName').value && !confirm('Discard unsaved changes?')) return;
+        cancelGroupBtn.addEventListener("click", async () => {
+            if (document.getElementById('groupName').value && !(await showConfirm('Discard Changes', 'Discard unsaved changes?'))) return;
             admin.resetGroupForm();
         });
     }
@@ -130,8 +130,8 @@ export function setupAllEventBindings() {
     bindClick("saveBtn", admin.saveCharacter);
     const cancelHeroBtn = document.getElementById("cancelHeroBtn");
     if (cancelHeroBtn) {
-        cancelHeroBtn.addEventListener("click", () => {
-            if (document.getElementById('charName').value && !confirm('Discard unsaved changes?')) return;
+        cancelHeroBtn.addEventListener("click", async () => {
+            if (document.getElementById('charName').value && !(await showConfirm('Discard Changes', 'Discard unsaved changes?'))) return;
             admin.resetForm();
         });
     }

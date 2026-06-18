@@ -3,6 +3,19 @@
  * @module utils
  */
 import * as stateStore from './stateStore.js';
+import { showToast, showConfirm } from './views/notificationView.js';
+
+// Global override for native alert
+window.alert = function(message) {
+    const isError = message && (
+        message.toLowerCase().includes("error") || 
+        message.toLowerCase().includes("failed")
+    );
+    showToast(message, isError ? "error" : "warning");
+};
+
+export { showConfirm };
+
 export const DEFAULT_HERO_WEIGHT = 250;
 export const PICKED_HERO_WEIGHT = 20;
 export const WEIGHT_INCREMENT = 10;
@@ -149,7 +162,8 @@ export async function handlePlayerColorChange(playerId, input) {
     const newColor = normalizeColorValue(input.value);
     if (newColor.toLowerCase() === currentColor.toLowerCase()) return;
 
-    const confirmed = confirm(
+    const confirmed = await showConfirm(
+        "Change Player Color",
         `Change ${player.name}'s color from ${currentColor} to ${newColor}?`,
     );
     if (!confirmed) {
