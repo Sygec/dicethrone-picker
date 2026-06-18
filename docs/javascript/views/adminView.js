@@ -18,34 +18,39 @@ import {
 import { isProd } from '../config.js';
 import { updateSegmentedHighlights } from './filterView.js';
 
-// DOM Element references cache helper
-const getElements = () => ({
-    buildInfoDiv: document.getElementById("admin-build-info"),
-    changelogModal: document.getElementById("changelog-modal"),
-    changelogContainer: document.getElementById("changelog-container"),
-    whatsNewModal: document.getElementById("whats-new-modal"),
-    whatsNewContainer: document.getElementById("whats-new-container"),
-    collectionContainer: document.getElementById("collectionContainer"),
-    collectionCountLabel: document.getElementById("collection-count-stats"),
-    heroForm: document.getElementById("heroForm"),
-    addHeroBtn: document.getElementById("addHeroBtn"),
-    groupSelect: document.getElementById("charGroup"),
-    formTitle: document.getElementById("formTitle"),
-    charNameInput: document.getElementById("charName"),
-    charSlugInput: document.getElementById("charSlug"),
-    charComplexitySelect: document.getElementById("charComplexity"),
-    groupsListContainer: document.getElementById("groupsListContainer"),
-    heroesListContainer: document.getElementById("heroesListContainer"),
-    playersListContainer: document.getElementById("playersListContainer"),
-    usersListContainer: document.getElementById("usersListContainer"),
-    collectionsListContainer: document.getElementById("collectionsListContainer"),
-    gamesListContainer: document.getElementById("gamesContainer"),
-    winnerModal: document.getElementById("winner-modal"),
-    winnerContainer: document.getElementById("winner-selection-container"),
-    confirmWinnerBtn: document.getElementById("confirm-winner-btn"),
-    groupForm: document.getElementById("groupForm"),
-    addGroupBtn: document.getElementById("addGroupBtn")
-});
+let elementsCache = null;
+const getElements = () => {
+    if (!elementsCache) {
+        elementsCache = {
+            buildInfoDiv: document.getElementById("admin-build-info"),
+            changelogModal: document.getElementById("changelog-modal"),
+            changelogContainer: document.getElementById("changelog-container"),
+            whatsNewModal: document.getElementById("whats-new-modal"),
+            whatsNewContainer: document.getElementById("whats-new-container"),
+            collectionContainer: document.getElementById("collectionContainer"),
+            collectionCountLabel: document.getElementById("collection-count-stats"),
+            heroForm: document.getElementById("heroForm"),
+            addHeroBtn: document.getElementById("addHeroBtn"),
+            groupSelect: document.getElementById("charGroup"),
+            formTitle: document.getElementById("formTitle"),
+            charNameInput: document.getElementById("charName"),
+            charSlugInput: document.getElementById("charSlug"),
+            charComplexitySelect: document.getElementById("charComplexity"),
+            groupsListContainer: document.getElementById("groupsListContainer"),
+            heroesListContainer: document.getElementById("heroesListContainer"),
+            playersListContainer: document.getElementById("playersListContainer"),
+            usersListContainer: document.getElementById("usersListContainer"),
+            collectionsListContainer: document.getElementById("collectionsListContainer"),
+            gamesListContainer: document.getElementById("gamesContainer"),
+            winnerModal: document.getElementById("winner-modal"),
+            winnerContainer: document.getElementById("winner-selection-container"),
+            confirmWinnerBtn: document.getElementById("confirm-winner-btn"),
+            groupForm: document.getElementById("groupForm"),
+            addGroupBtn: document.getElementById("addGroupBtn")
+        };
+    }
+    return elementsCache;
+};
 
 /**
  * Renders environmental build metadata in the admin interface.

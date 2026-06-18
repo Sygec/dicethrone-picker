@@ -21,35 +21,40 @@ import { getFilterDrawerMatchingCount } from '../filters.js';
 import { updateHeroStatsFromHistory } from '../admin.js';
 import { renderDrawerBanList } from './rollView.js';
 
-// DOM Element references cache helper
-const getElements = () => ({
-    sortSection: document.getElementById("sort-section"),
-    sortToggleBtn: document.getElementById("sort-panel-toggle"),
-    filterSection: document.getElementById("filter-section"),
-    filterToggleBtn: document.getElementById("filter-panel-toggle"),
-    sortFilterDrawer: document.getElementById("sort-filter-drawer"),
-    drawerTitle: document.getElementById("drawer-title-text"),
-    drawerFooter: document.getElementById("drawer-footer-content"),
-    drawerBody: document.getElementById("drawer-body-content"),
-    leftFilterDrawer: document.getElementById("filter-drawer-left"),
-    leftPlayersContainer: document.getElementById("filter-options-players"),
-    leftGroupsContainer: document.getElementById("filter-options-groups"),
-    leftHeroCountLabel: document.getElementById("filter-drawer-hero-count"),
-    leftTitleDataHistory: document.getElementById("title-data-history"),
-    leftTitlePlayers: document.getElementById("title-players"),
-    leftTitleComplexity: document.getElementById("title-complexity"),
-    leftTitleGroups: document.getElementById("title-groups"),
-    filterActiveBadge: document.getElementById("filter-active-badge"),
-    gamesFilterActiveBadge: document.getElementById("games-filter-active-badge"),
-    sortTriggerBtn: document.getElementById("btn-trigger-sort"),
-    sortDropdownMenu: document.getElementById("sort-dropdown-menu"),
-    activeFiltersContainer: document.getElementById("active-filters-container"),
-    heroContainer: document.getElementById("heroContainer"),
-    countStatsLabel: document.getElementById("count-stats"),
-    heroSearchInput: document.getElementById("hero-search"),
-    dbShowOwnedCheckbox: document.getElementById("db-show-owned"),
-    dbShowNotOwnedCheckbox: document.getElementById("db-show-not-owned")
-});
+let elementsCache = null;
+const getElements = () => {
+    if (!elementsCache) {
+        elementsCache = {
+            sortSection: document.getElementById("sort-section"),
+            sortToggleBtn: document.getElementById("sort-panel-toggle"),
+            filterSection: document.getElementById("filter-section"),
+            filterToggleBtn: document.getElementById("filter-panel-toggle"),
+            sortFilterDrawer: document.getElementById("sort-filter-drawer"),
+            drawerTitle: document.getElementById("drawer-title-text"),
+            drawerFooter: document.getElementById("drawer-footer-content"),
+            drawerBody: document.getElementById("drawer-body-content"),
+            leftFilterDrawer: document.getElementById("filter-drawer-left"),
+            leftPlayersContainer: document.getElementById("filter-options-players"),
+            leftGroupsContainer: document.getElementById("filter-options-groups"),
+            leftHeroCountLabel: document.getElementById("filter-drawer-hero-count"),
+            leftTitleDataHistory: document.getElementById("title-data-history"),
+            leftTitlePlayers: document.getElementById("title-players"),
+            leftTitleComplexity: document.getElementById("title-complexity"),
+            leftTitleGroups: document.getElementById("title-groups"),
+            filterActiveBadge: document.getElementById("filter-active-badge"),
+            gamesFilterActiveBadge: document.getElementById("games-filter-active-badge"),
+            sortTriggerBtn: document.getElementById("btn-trigger-sort"),
+            sortDropdownMenu: document.getElementById("sort-dropdown-menu"),
+            activeFiltersContainer: document.getElementById("active-filters-container"),
+            heroContainer: document.getElementById("heroContainer"),
+            countStatsLabel: document.getElementById("count-stats"),
+            heroSearchInput: document.getElementById("hero-search"),
+            dbShowOwnedCheckbox: document.getElementById("db-show-owned"),
+            dbShowNotOwnedCheckbox: document.getElementById("db-show-not-owned")
+        };
+    }
+    return elementsCache;
+};
 
 /**
  * Toggles the visibility state of the sorting options section in the UI.

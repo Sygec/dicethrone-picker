@@ -6,21 +6,26 @@
 import * as stateStore from '../stateStore.js';
 import { isAdmin } from '../utils.js';
 
-// DOM Element references cache
-const getElements = () => ({
-    adminNav: document.querySelector(".bottom-nav .admin-only"),
-    authBtn: document.getElementById("auth-btn"),
-    actionButtons: document.getElementById("action-buttons"),
-    rollBtnContainer: document.getElementById("rollBtnContainer"),
-    rollBtn: document.getElementById("rollBtn"),
-    loginModal: document.getElementById("login-modal"),
-    loginError: document.getElementById("login-error"),
-    updatePasswordModal: document.getElementById("update-password-modal"),
-    updatePasswordError: document.getElementById("update-password-error"),
-    updatePasswordUsername: document.getElementById("update-password-username"),
-    newPasswordInput: document.getElementById("new-password"),
-    playerTogglesContainer: document.getElementById("player-toggle-zone-top")
-});
+let elementsCache = null;
+const getElements = () => {
+    if (!elementsCache) {
+        elementsCache = {
+            adminNav: document.querySelector(".bottom-nav .admin-only"),
+            authBtn: document.getElementById("auth-btn"),
+            actionButtons: document.getElementById("action-buttons"),
+            rollBtnContainer: document.getElementById("rollBtnContainer"),
+            rollBtn: document.getElementById("rollBtn"),
+            loginModal: document.getElementById("login-modal"),
+            loginError: document.getElementById("login-error"),
+            updatePasswordModal: document.getElementById("update-password-modal"),
+            updatePasswordError: document.getElementById("update-password-error"),
+            updatePasswordUsername: document.getElementById("update-password-username"),
+            newPasswordInput: document.getElementById("new-password"),
+            playerTogglesContainer: document.getElementById("player-toggle-zone-top")
+        };
+    }
+    return elementsCache;
+};
 
 /**
  * Updates the authentication buttons and bottom admin navigation based on session status.
