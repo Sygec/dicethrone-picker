@@ -6,7 +6,7 @@
 import './config.js';
 import * as apiService from './services/apiService.js';
 import * as stateStore from './stateStore.js';
-import { DEFAULT_HERO_WEIGHT, normalizeColorValue, setPlayerColorVariable, isAdmin } from './utils.js';
+import { DEFAULT_HERO_WEIGHT, normalizeColorValue, setPlayerColorVariable, isAdmin, MAX_WEIGHTED_PLAYERS } from './utils.js';
 import { updateAuthUI, renderPlayerToggles, openUpdatePasswordModal, closeLoginModal } from './auth.js';
 import { 
     populateGroupDropdown, 
@@ -111,15 +111,15 @@ export async function init() {
             group_id: hero.group_id,
             is_owned: isOwned,
             group: hero.groups?.name || "Unknown",
-            weights: Array(4).fill(DEFAULT_HERO_WEIGHT),
-            playCount: [0, 0, 0, 0],
-            lastPlayed: ["Never", "Never", "Never", "Never"],
-            winCount: [0, 0, 0, 0],
+            weights: Array(MAX_WEIGHTED_PLAYERS).fill(DEFAULT_HERO_WEIGHT),
+            playCount: Array(MAX_WEIGHTED_PLAYERS).fill(0),
+            lastPlayed: Array(MAX_WEIGHTED_PLAYERS).fill("Never"),
+            winCount: Array(MAX_WEIGHTED_PLAYERS).fill(0),
         };
 
         hero.player_hero_stats?.forEach((stat) => {
             const pIdx = parseInt(stat.player_id.substring(1)) - 1;
-            if (pIdx >= 0 && pIdx < 4) {
+            if (pIdx >= 0 && pIdx < MAX_WEIGHTED_PLAYERS) {
                 char.weights[pIdx] = stat.weight;
             }
         });

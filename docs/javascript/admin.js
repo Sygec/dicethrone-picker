@@ -1,4 +1,4 @@
-import { isHeroOwned, escapeHtml, showConfirm } from './utils.js';
+import { isHeroOwned, escapeHtml, showConfirm, MAX_WEIGHTED_PLAYERS } from './utils.js';
 import { renderList, updateSegmentedHighlights } from './filters.js';
 import { updateDropdownSort } from './randomizer.js';
 import { init } from './main.js';
@@ -604,7 +604,7 @@ export function updateHeroStatsFromHistory() {
 
         game.game_players.forEach((gp) => {
             const pIdx = parseInt(gp.player_id?.substring(1) || "0", 10) - 1;
-            if (pIdx >= 0 && pIdx < 4) {
+            if (pIdx >= 0 && pIdx < MAX_WEIGHTED_PLAYERS) {
                 const char = characters.find((c) => c.id === gp.hero_id);
                 if (!char) return;
 

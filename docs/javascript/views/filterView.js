@@ -13,6 +13,7 @@ import {
     isAdmin,
     isUser,
     parseDateString,
+    MAX_WEIGHTED_PLAYERS,
     getDaysAgoClean,
     getRecencyDot
 } from '../utils.js';
@@ -464,10 +465,10 @@ export function renderHistoryFilterDrawerBody(body) {
 
             game.game_players.forEach((gp) => {
                 const pIdx = parseInt(gp.player_id.substring(1)) - 1;
-                if (pIdx >= 0 && pIdx < 4) {
+                if (pIdx >= 0 && pIdx < MAX_WEIGHTED_PLAYERS) {
                     playerStats[pIdx].played++;
                     if (gp.is_winner) playerStats[pIdx].won++;
-                } else if (pIdx === 4 || pIdx === 5) {
+                } else if (pIdx === MAX_WEIGHTED_PLAYERS || pIdx === MAX_WEIGHTED_PLAYERS + 1) {
                     inviteePlayed++;
                     if (gp.is_winner) inviteeWon++;
                 }
@@ -476,7 +477,7 @@ export function renderHistoryFilterDrawerBody(body) {
     }
 
     let playersHtml = "";
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < MAX_WEIGHTED_PLAYERS; i++) {
         const p = players[i];
         if (!p) continue;
         const isActive = stagedSelectedGamePlayerIndex === i;
@@ -495,12 +496,12 @@ export function renderHistoryFilterDrawerBody(body) {
         `;
     }
 
-    const isInviteeActive = stagedSelectedGamePlayerIndex === 4;
+    const isInviteeActive = stagedSelectedGamePlayerIndex === MAX_WEIGHTED_PLAYERS;
     playersHtml += `
         <div style="display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 1;">
             <button type="button" class="player-filter-btn ${isInviteeActive ? "active" : ""}" 
                     style="background-color: var(--p5); width: 100%; min-width: 60px; padding: 8px 4px; font-size: 0.8rem; font-weight: bold; border-radius: 6px;" 
-                    data-action="toggle-staged-player-game-filter" data-player-idx="4">
+                    data-action="toggle-staged-player-game-filter" data-player-idx="${MAX_WEIGHTED_PLAYERS}">
                 Invitee
             </button>
             <div style="font-size: 0.75rem; opacity: 0.8; text-align: center; line-height: 1.2;">
@@ -634,7 +635,7 @@ export function renderDrawerBody() {
         renderDrawerComplexityFilters();
         renderDrawerGroupFilters();
     } else if (currentDrawerMode === "columns") {
-        const mainPlayerNames = NAMES.slice(0, 4);
+        const mainPlayerNames = NAMES.slice(0, MAX_WEIGHTED_PLAYERS);
         const visibilityPillsHtml = mainPlayerNames
             .map((name, i) => {
                 const isActive = stagedPlayerIndices.includes(i);
@@ -763,7 +764,7 @@ export function updateDrawerPlayerSortPillsUI() {
     subSection.style.display = showPlayers ? "block" : "none";
 
     if (showPlayers) {
-        const mainPlayerNames = NAMES.slice(0, 4);
+        const mainPlayerNames = NAMES.slice(0, MAX_WEIGHTED_PLAYERS);
         pillsContainer.innerHTML = mainPlayerNames
             .map((name, i) => {
                 const isActive = stagedSortPlayerIndex === i;
@@ -1126,9 +1127,9 @@ export function renderList() {
         });
     }
 
-    const totals = [0, 0, 0, 0];
+    const totals = Array(MAX_WEIGHTED_PLAYERS).fill(0);
     characters.filter(isHeroOwned).forEach((c) => {
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < MAX_WEIGHTED_PLAYERS; i++) {
             totals[i] += getSoftWeight(c, i);
         }
     });
@@ -1231,7 +1232,7 @@ export function renderList() {
             if (activeFilterPlayers.size > 0) {
                 playersToRender = Array.from(activeFilterPlayers)
                     .map(pId => parseInt(pId.substring(1)) - 1)
-                    .filter(idx => idx >= 0 && idx < 4);
+                    .filter(idx => idx >= 0 && idx < MAX_WEIGHTED_PLAYERS);
             } else if (matchingPlayerIdxs.length > 0) {
                 playersToRender = activePlayerIndices.filter(p => matchingPlayerIdxs.includes(p));
             }

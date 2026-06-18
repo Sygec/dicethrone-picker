@@ -12,7 +12,8 @@ import {
     normalizeColorValue,
     getHeroProbabilityText,
     isAdmin,
-    isUser
+    isUser,
+    MAX_WEIGHTED_PLAYERS
 } from '../utils.js';
 import { isProd } from '../config.js';
 import { updateSegmentedHighlights } from './filterView.js';
@@ -725,7 +726,7 @@ export function openWinnerModal(gameId) {
         const selectedClass = isSelected ? "selected" : "";
 
         let playerLabelName = names[pIdx] || "Invitee";
-        if (pIdx >= 4) {
+        if (pIdx >= MAX_WEIGHTED_PLAYERS) {
             playerLabelName = `Invitee (${gp.player_id === "p5" ? "1" : "2"})`;
         }
 
@@ -829,10 +830,10 @@ export function renderGamesList() {
             playerMatches = game.game_players.some((gp) => {
                 const pIdx = parseInt(gp.player_id.substring(1)) - 1;
                 let match = false;
-                if (selectedGamePlayerIndex >= 0 && selectedGamePlayerIndex <= 3) {
+                if (selectedGamePlayerIndex >= 0 && selectedGamePlayerIndex < MAX_WEIGHTED_PLAYERS) {
                     match = pIdx === selectedGamePlayerIndex;
-                } else if (selectedGamePlayerIndex === 4) {
-                    match = pIdx === 4 || pIdx === 5;
+                } else if (selectedGamePlayerIndex === MAX_WEIGHTED_PLAYERS) {
+                    match = pIdx === MAX_WEIGHTED_PLAYERS || pIdx === MAX_WEIGHTED_PLAYERS + 1;
                 }
                 if (match && gamesWinnerOnly) return gp.is_winner === true;
                 return match;
@@ -967,10 +968,10 @@ export function renderGamesList() {
 
                     let isPlayerFilterMatch = false;
                     if (selectedGamePlayerIndex !== null) {
-                        if (selectedGamePlayerIndex >= 0 && selectedGamePlayerIndex <= 3) {
+                        if (selectedGamePlayerIndex >= 0 && selectedGamePlayerIndex < MAX_WEIGHTED_PLAYERS) {
                             isPlayerFilterMatch = pIdx === selectedGamePlayerIndex;
-                        } else if (selectedGamePlayerIndex === 4) {
-                            isPlayerFilterMatch = pIdx === 4 || pIdx === 5;
+                        } else if (selectedGamePlayerIndex === MAX_WEIGHTED_PLAYERS) {
+                            isPlayerFilterMatch = pIdx === MAX_WEIGHTED_PLAYERS || pIdx === MAX_WEIGHTED_PLAYERS + 1;
                         }
                     }
 
@@ -1075,7 +1076,7 @@ export function renderGamesList() {
                         .map((gp) => {
                             const pIdx = parseInt(gp.player_id.substring(1)) - 1;
                             let playerLabel = names[pIdx] || "Invitee";
-                            if (pIdx >= 4) {
+                            if (pIdx >= MAX_WEIGHTED_PLAYERS) {
                                 playerLabel = `Invitee (${gp.player_id === "p5" ? "1" : "2"})`;
                             }
                             return `<span style="color: var(--p${pIdx + 1}); font-weight: bold;">${playerLabel}</span>`;
@@ -1088,7 +1089,7 @@ export function renderGamesList() {
                     let colorVar = `--p${pIdx + 1}`;
                     let playerLabel = names[pIdx] || "Invitee";
                     
-                    if (pIdx >= 4) {
+                    if (pIdx >= MAX_WEIGHTED_PLAYERS) {
                         colorVar = "--p5";
                         playerLabel = `Invitee (${gp.player_id === "p5" ? "1" : "2"})`;
                     }

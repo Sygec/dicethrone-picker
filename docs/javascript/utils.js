@@ -19,6 +19,7 @@ export { showConfirm };
 export const DEFAULT_HERO_WEIGHT = 250;
 export const PICKED_HERO_WEIGHT = 20;
 export const WEIGHT_INCREMENT = 10;
+export const MAX_WEIGHTED_PLAYERS = 4;
 export function isAdmin() { return stateStore.get("currentUser")?.app_metadata?.role === "admin"; }
 export function isUser() { return !!stateStore.get("currentUser"); }
 
@@ -130,7 +131,7 @@ export function getHeroProbabilityText(charData, pIdx) {
     const ownedCount = stateStore.get("characters").filter(isHeroOwned).length;
     if (ownedCount === 0) return "0.00%";
 
-    if (pIdx >= 4) {
+    if (pIdx >= MAX_WEIGHTED_PLAYERS) {
         return `${(100 / ownedCount).toFixed(2)}%`;
     }
 

@@ -13,6 +13,7 @@ import {
     escapeHtml,
     parseDateString,
     getDaysAgoClean,
+    MAX_WEIGHTED_PLAYERS,
     getRecencyDot
 } from '../utils.js';
 import { updateSegmentedHighlights } from './filterView.js';
@@ -221,7 +222,7 @@ export function updatePlayerCardUI(pIdx, finalHero) {
 
     if (statsDiv) {
         const probText = `Prob: <b>${getHeroProbabilityText(finalHero, pIdx)}</b>`;
-        if (pIdx < 4) {
+        if (pIdx < MAX_WEIGHTED_PLAYERS) {
             const plays = finalHero.playCount[pIdx] || 0;
             const last = finalHero.lastPlayed[pIdx] || "Never";
             statsDiv.innerHTML = `
@@ -300,7 +301,7 @@ export function collapsePlayerRowToResolved(pIdx, finalHero) {
     const statsRow = document.getElementById(`stats-row-${pIdx}`);
     if (statsRow) {
         const probText = `Prob: <b>${getHeroProbabilityText(finalHero, pIdx)}</b>`;
-        if (pIdx < 4) {
+        if (pIdx < MAX_WEIGHTED_PLAYERS) {
             const plays = finalHero.playCount[pIdx] || 0;
             const last = finalHero.lastPlayed[pIdx] || "Never";
             statsRow.innerHTML = `

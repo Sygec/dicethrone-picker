@@ -2,7 +2,7 @@
  * @fileoverview Logic for hero picker rolls, randomizer animations, manual hero overrides, drafts, bans, and result logging.
  * @module randomizer
  */
-import { isHeroOwned, getSoftWeight, isUser, DEFAULT_HERO_WEIGHT, PICKED_HERO_WEIGHT, WEIGHT_INCREMENT, getHeroProbabilityText, getImgUrl, showConfirm } from './utils.js';
+import { isHeroOwned, getSoftWeight, isUser, DEFAULT_HERO_WEIGHT, PICKED_HERO_WEIGHT, WEIGHT_INCREMENT, getHeroProbabilityText, getImgUrl, showConfirm, MAX_WEIGHTED_PLAYERS } from './utils.js';
 import { showSection } from './admin.js';
 import { init } from './main.js';
 import { renderDrawerBody } from './filters.js';
@@ -74,7 +74,7 @@ export function pickCharacters() {
     selectionOrder.forEach((pIdx) => {
         let selectedHero = null;
 
-        if (pIdx >= 4) {
+        if (pIdx >= MAX_WEIGHTED_PLAYERS) {
             const r = Math.floor(Math.random() * pool.length);
             selectedHero = pool[r];
             pool.splice(r, 1);
@@ -361,7 +361,7 @@ export async function applyResults() {
                 });
             }
 
-            if (pIdx < 4 && playerChoice !== undefined) {
+            if (pIdx < MAX_WEIGHTED_PLAYERS && playerChoice !== undefined) {
                 const wasPicked = playerChoice === char.name;
                 const newWeight = wasPicked
                     ? PICKED_HERO_WEIGHT
@@ -564,7 +564,7 @@ export function generateDraftCandidates(pIdx, pool) {
 
     for (let i = 0; i < count; i++) {
         let selectedHero = null;
-        if (pIdx >= 4) {
+        if (pIdx >= MAX_WEIGHTED_PLAYERS) {
             const r = Math.floor(Math.random() * tempPool.length);
             selectedHero = tempPool[r];
             tempPool.splice(r, 1);
@@ -687,7 +687,7 @@ export function stopDraftWheelScramble(pIdx, candidates) {
         const radius = 150;
 
         const statsHtml =
-            pIdx < 4
+            pIdx < MAX_WEIGHTED_PLAYERS
                 ? `
             <span>Plays: <b>${hero.playCount[pIdx] || 0}</b></span>
             <span class="stats-divider">|</span>
