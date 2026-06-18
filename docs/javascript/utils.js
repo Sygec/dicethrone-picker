@@ -171,9 +171,7 @@ export async function handlePlayerColorChange(playerId, input) {
     }
 
     setPlayerColorVariable(playerId, newColor);
-    if (true) {
-        ((async () => { const m = await import("./admin.js"); m.renderPlayersList(); })());
-    }
+    ((async () => { const m = await import("./admin.js"); m.renderPlayersList(); })());
 }
 
 /**

@@ -19,9 +19,9 @@ export function updateAuthUI() {
     authView.updateAuthUI();
 
     // Refresh lists to show/hide edit buttons
-    if (true) renderList();
-    if (true) renderGamesList();
-    if (true) renderHeroesList();
+    renderList();
+    renderGamesList();
+    renderHeroesList();
 }
 /**
  * Renders the toggle buttons/checkboxes for player slots at the top of the interface.

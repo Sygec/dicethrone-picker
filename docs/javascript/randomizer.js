@@ -62,7 +62,7 @@ export function pickCharacters() {
             rollView.renderPlayerRowWaiting(pIdx, NAMES[selectionOrder[0]]);
         });
 
-        if (true) showSection("roll");
+        showSection("roll");
         if (resultsDiv) resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
 
         startDraftStep();
@@ -132,7 +132,7 @@ export function pickCharacters() {
         rollView.renderPlayerRowSkeleton(pIdx);
     });
 
-    if (true) showSection("roll");
+    showSection("roll");
     if (resultsDiv) resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
 
     const ownedHeroes = characters.filter(
@@ -396,7 +396,7 @@ export async function applyResults() {
         return alert("Error saving results: " + error.message);
     }
 
-    if (true) await init();
+    await init();
 
     const actionButtons = document.getElementById("action-buttons");
     if (actionButtons) actionButtons.style.display = "none";

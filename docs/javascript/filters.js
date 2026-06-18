@@ -326,7 +326,7 @@ export function applyAndCloseDrawer() {
         stateStore.set("gamesUseHistorical", stateStore.get("stagedGamesUseHistorical"));
         updateGamesActiveFilterBadge();
         closeDrawer(null, true);
-        if (true) renderGamesList();
+        renderGamesList();
     } else if (currentDrawerMode === "roll-settings") {
         stateStore.set("draftModeEnabled", stateStore.get("stagedDraftModeEnabled"));
         stateStore.set("draftCount", stateStore.get("stagedDraftCount"));
@@ -339,9 +339,7 @@ export function applyAndCloseDrawer() {
             JSON.stringify(Array.from(stateStore.get("bannedHeroIds"))),
         );
 
-        if (true) {
-            updateRollSettingsBadge();
-        }
+        updateRollSettingsBadge();
         closeDrawer(null, true);
     }
 }

@@ -72,12 +72,8 @@ export function setOwnershipFilter(filterState) {
         }
     });
 
-    if (true) {
-        updateSegmentedHighlights();
-    }
-    if (true) {
-        renderList();
-    }
+    updateSegmentedHighlights();
+    renderList();
 }
 export function renderCollectionView() {
     adminView.renderCollectionView();
@@ -93,8 +89,8 @@ export async function toggleHeroOwned(heroId, isOwned) {
     if (hero) hero.is_owned = isOwned;
     
     renderCollectionView();
-    if (true) renderList();
-    if (true) updateDropdownSort();
+    renderList();
+    updateDropdownSort();
 
     const adminCheckbox = document.getElementById(
         `admin-owned-${stateStore.get("currentUser").id}-${heroId}`,
@@ -113,8 +109,8 @@ export async function toggleHeroOwned(heroId, isOwned) {
         alert("Error updating ownership: " + error.message);
         if (hero) hero.is_owned = !isOwned;
         renderCollectionView();
-        if (true) updateDropdownSort();
-        if (true) renderList();
+        updateDropdownSort();
+        renderList();
 
         if (adminCheckbox) {
             adminCheckbox.checked = !isOwned;
@@ -140,8 +136,8 @@ export async function toggleGroupOwned(groupId, isOwned) {
         }
     });
     renderCollectionView();
-    if (true) renderList();
-    if (true) updateDropdownSort();
+    renderList();
+    updateDropdownSort();
 
     const groupHeroIds = characters
         .filter((h) => h.group_id === groupId)
@@ -159,8 +155,8 @@ export async function toggleGroupOwned(groupId, isOwned) {
             if (h.group_id === groupId) h.is_owned = !isOwned;
         });
         renderCollectionView();
-        if (true) updateDropdownSort();
-        if (true) renderList();
+        updateDropdownSort();
+        renderList();
     }
 }
 export async function saveCharacter() {
@@ -184,7 +180,7 @@ export async function saveCharacter() {
 
     if (error) return alert("Error saving: " + error.message);
 
-    if (true) await init();
+    await init();
     resetForm();
 }
 export function editChar(idx) {
@@ -256,7 +252,7 @@ export async function saveHeroInline(heroId, idx) {
     if (error) return alert("Error saving: " + error.message);
 
     stateStore.set("editIndex", -1);
-    if (true) await init();
+    await init();
 }
 export async function deleteHero(heroId) {
     if (!confirm("Delete this hero? This action cannot be undone.")) return;
@@ -264,7 +260,7 @@ export async function deleteHero(heroId) {
     const { error } = await apiService.deleteHero(heroId);
     if (error) return alert("Error deleting hero: " + error.message);
 
-    if (true) await init();
+    await init();
 }
 export async function saveGroup() {
     const name = document.getElementById("groupName").value.trim();
@@ -285,7 +281,7 @@ export async function saveGroup() {
     if (error) return alert("Error saving group: " + error.message);
 
     resetGroupForm();
-    if (true) init();
+    init();
 }
 export function editGroup(groupId) {
     const groups = stateStore.get("groups");
@@ -333,7 +329,7 @@ export async function saveGroupInline(groupId) {
 
     if (error) return alert("Error saving group: " + error.message);
 
-    if (true) init();
+    init();
 }
 export function resetGroupForm() {
     adminView.resetGroupForm();
@@ -461,8 +457,8 @@ export async function toggleUserHeroOwned(userId, heroId, isOwned) {
         const hero = characters.find((h) => h.id === heroId);
         if (hero) hero.is_owned = isOwned;
         renderCollectionView();
-        if (true) renderList();
-        if (true) updateDropdownSort();
+        renderList();
+        updateDropdownSort();
     }
 
     const { error } = await apiService.upsertUserHero(
@@ -478,8 +474,8 @@ export async function toggleUserHeroOwned(userId, heroId, isOwned) {
             const hero = characters.find((h) => h.id === heroId);
             if (hero) hero.is_owned = !isOwned;
             renderCollectionView();
-            if (true) renderList();
-            if (true) updateDropdownSort();
+            renderList();
+            updateDropdownSort();
         }
         renderCollectionsList();
     }
@@ -492,7 +488,7 @@ export async function deleteGroup(groupId) {
     if (error) return alert("Error deleting group: " + error.message);
 
     resetGroupForm();
-    if (true) init();
+    init();
 }
 export function renderGamesList() {
     adminView.renderGamesList();
@@ -549,7 +545,7 @@ export async function submitWinner(gameId) {
         if (error) throw error;
 
         closeWinnerModal();
-        if (true) await init();
+        await init();
     } catch (err) {
         alert("Error updating winner: " + err.message);
     } finally {
@@ -572,7 +568,7 @@ export async function deleteGame(gameId) {
         return alert("Failed to delete game: " + error.message);
     }
 
-    if (true) await init();
+    await init();
 }
 export function updateHeroStatsFromHistory() {
     let showNormal = true;
