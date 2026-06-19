@@ -4,6 +4,7 @@
  */
 import * as stateStore from './stateStore.js';
 import { showToast, showConfirm } from './views/notificationView.js';
+import * as admin from './admin.js';
 
 // Global override for native alert
 window.alert = function(message) {
@@ -186,7 +187,7 @@ export async function handlePlayerColorChange(playerId, input) {
     }
 
     setPlayerColorVariable(playerId, newColor);
-    ((async () => { const m = await import("./admin.js"); m.renderPlayersList(); })());
+    admin.renderPlayersList();
 }
 
 /**

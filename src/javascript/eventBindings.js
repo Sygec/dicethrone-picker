@@ -590,7 +590,7 @@ export function setupAllEventBindings() {
             const openWinner = target.closest('[data-action="open-winner-modal"]');
             if (openWinner) {
                 const gameId = openWinner.getAttribute("data-game-id");
-                admin.openWinnerModal(gameId);
+                admin.selectWinner(gameId);
                 return;
             }
         });
