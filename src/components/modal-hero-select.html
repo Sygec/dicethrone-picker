@@ -1,0 +1,42 @@
+<!-- Hero Selection Modal -->
+<div id="hero-select-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" id="hero-select-close"
+            >&times;</span
+        >
+        <h2 id="hero-select-modal-title" style="margin-top: 0">
+            Select Hero
+        </h2>
+
+        <!-- Search Input inside Modal -->
+        <input
+            type="text"
+            id="hero-select-search"
+            class="search-bar"
+            style="margin-bottom: 10px; font-size: 16px"
+            placeholder="Search hero or season..." />
+
+        <!-- Segmented Control for Sorting inside Modal -->
+        <div class="segmented-control">
+            <button
+                type="button"
+                class="segmented-pill active"
+                id="modal-sort-name"
+                data-sort="name">
+                By Name
+            </button>
+            <button
+                type="button"
+                class="segmented-pill"
+                id="modal-sort-weight"
+                data-sort="weight">
+                By Probability
+            </button>
+        </div>
+
+        <!-- Option Grid/List -->
+        <div
+            id="hero-select-options-container"
+            class="hero-select-grid"></div>
+    </div>
+</div>

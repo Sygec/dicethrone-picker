@@ -1,0 +1,280 @@
+<!-- ========================================== -->
+<!-- SECTION: Admin Panel & DB Control          -->
+<!-- ========================================== -->
+<section id="adminSection" class="hidden">
+    <div id="admin-build-info"></div>
+
+    <div class="admin-panel">
+        <div
+            class="panel-header"
+            id="admin-groups-header"
+            data-panel="groupsPanel">
+            <h3>Manage Groups</h3>
+            <button
+                type="button"
+                class="panel-toggle"
+                aria-expanded="false">
+                <svg
+                    class="panel-chevron"
+                    viewBox="0 0 24 24"
+                    width="14"
+                    height="14"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </button>
+        </div>
+        <div id="groupsPanel" class="panel-content hidden">
+            <div style="margin-bottom: 15px">
+                <button
+                    type="button"
+                    class="btn-save"
+                    id="addGroupBtn">
+                    Add Group
+                </button>
+            </div>
+            <div
+                id="groupForm"
+                class="manage-form hidden"
+                style="
+                    border-bottom: 1px solid #ffffff22;
+                    padding-bottom: 20px;
+                    margin-bottom: 20px;
+                ">
+                <h3
+                    style="
+                        margin-top: 0;
+                        font-size: 1rem;
+                        color: var(--accent);
+                    ">
+                    Groups
+                </h3>
+                <div class="form-grid">
+                    <input
+                        type="text"
+                        id="groupName"
+                        style="font-size: 16px"
+                        placeholder="Group Name" />
+                    <input
+                        type="number"
+                        id="groupOrder"
+                        style="font-size: 16px"
+                        placeholder="Order Index" />
+                    <input
+                        type="number"
+                        id="groupYear"
+                        style="font-size: 16px"
+                        placeholder="Year (optional)" />
+                </div>
+                <div style="display: flex; gap: 10px">
+                    <button
+                        type="button"
+                        class="btn-save"
+                        id="saveGroupBtn">
+                        Save Group
+                    </button>
+                    <button
+                        type="button"
+                        class="btn-cancel"
+                        id="cancelGroupBtn">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+            <div
+                id="groupsListContainer"
+                style="margin-top: 15px"></div>
+        </div>
+    </div>
+
+    <div class="admin-panel">
+        <div
+            class="panel-header"
+            id="admin-heroes-header"
+            data-panel="heroesPanel">
+            <h3>Manage Heroes</h3>
+            <button
+                type="button"
+                class="panel-toggle"
+                aria-expanded="false">
+                <svg
+                    class="panel-chevron"
+                    viewBox="0 0 24 24"
+                    width="14"
+                    height="14"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </button>
+        </div>
+        <div id="heroesPanel" class="panel-content hidden">
+            <div style="margin-bottom: 15px">
+                <button
+                    type="button"
+                    class="btn-save"
+                    id="addHeroBtn">
+                    Add Hero
+                </button>
+            </div>
+            <div id="heroForm" class="manage-form hidden">
+                <h3
+                    id="formTitle"
+                    style="
+                        margin-top: 0;
+                        font-size: 1rem;
+                        color: var(--accent);
+                    ">
+                    Add New Hero
+                </h3>
+                <div class="form-grid hero-form-grid">
+                    <input
+                        type="text"
+                        id="charName"
+                        style="font-size: 16px"
+                        placeholder="Hero Name" />
+                    <select
+                        id="charGroup"
+                        style="font-size: 16px"
+                        aria-label="Select group">
+                        <option value="">-- Select Group --</option>
+                    </select>
+                    <input
+                        type="text"
+                        id="charSlug"
+                        style="font-size: 16px"
+                        placeholder="Slug (for image)" />
+                    <select
+                        id="charComplexity"
+                        style="font-size: 16px"
+                        aria-label="Select complexity">
+                        <option value="">-- Complexity --</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 10px">
+                    <button
+                        type="button"
+                        class="btn-save"
+                        id="saveBtn">
+                        Save Hero
+                    </button>
+                    <button
+                        type="button"
+                        class="btn-cancel"
+                        id="cancelHeroBtn">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+            <div
+                id="heroesListContainer"
+                style="margin-top: 15px"></div>
+        </div>
+    </div>
+
+    <div class="admin-panel">
+        <div
+            class="panel-header"
+            id="admin-players-header"
+            data-panel="playersPanel">
+            <h3>Manage Players</h3>
+            <button
+                type="button"
+                class="panel-toggle"
+                aria-expanded="false">
+                <svg
+                    class="panel-chevron"
+                    viewBox="0 0 24 24"
+                    width="14"
+                    height="14"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </button>
+        </div>
+        <div id="playersPanel" class="panel-content hidden">
+            <div
+                id="playersListContainer"
+                style="margin-top: 15px"></div>
+        </div>
+    </div>
+
+    <div class="admin-panel">
+        <div
+            class="panel-header"
+            id="admin-users-header"
+            data-panel="usersPanel">
+            <h3>Manage Users</h3>
+            <button
+                type="button"
+                class="panel-toggle"
+                aria-expanded="false">
+                <svg
+                    class="panel-chevron"
+                    viewBox="0 0 24 24"
+                    width="14"
+                    height="14"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </button>
+        </div>
+        <div id="usersPanel" class="panel-content hidden">
+            <div
+                id="usersListContainer"
+                style="margin-top: 15px"></div>
+        </div>
+    </div>
+
+    <div class="admin-panel">
+        <div
+            class="panel-header"
+            id="admin-collections-header"
+            data-panel="collectionsPanel">
+            <h3>User Collections</h3>
+            <button
+                type="button"
+                class="panel-toggle"
+                aria-expanded="false">
+                <svg
+                    class="panel-chevron"
+                    viewBox="0 0 24 24"
+                    width="14"
+                    height="14"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </button>
+        </div>
+        <div id="collectionsPanel" class="panel-content hidden">
+            <div
+                id="collectionsListContainer"
+                style="margin-top: 15px"></div>
+        </div>
+    </div>
+</section>

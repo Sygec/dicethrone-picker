@@ -1,0 +1,71 @@
+<!-- Component: Left Side Drawer for Dynamic Filtering -->
+<div id="filter-drawer-left" class="filter-drawer-overlay">
+    <div class="filter-drawer-sheet">
+        <div class="filter-drawer-header">
+            <span class="filter-drawer-count" id="filter-drawer-hero-count">Showing 0 of 0 heroes</span>
+            <button type="button" class="filter-drawer-close-btn" id="filter-drawer-close-btn">
+                Close &times;
+            </button>
+        </div>
+        
+        <div class="filter-drawer-reset-container">
+            <button type="button" class="btn-filter-reset" id="filter-drawer-reset">RESET</button>
+        </div>
+        
+        <div class="filter-drawer-body">
+            <!-- By Data History -->
+            <div class="filter-section">
+                <span class="filter-section-title" id="title-data-history">By Data History</span>
+                <div class="filter-options">
+                    <label class="filter-checkbox-label">
+                        <input type="checkbox" value="Normal only" data-type="data-history" />
+                        Normal only
+                    </label>
+                    <label class="filter-checkbox-label">
+                        <input type="checkbox" value="Historical only" data-type="data-history" />
+                        Historical only
+                    </label>
+                </div>
+            </div>
+            
+            <hr class="filter-divider" />
+            
+            <!-- By Player -->
+            <div class="filter-section">
+                <span class="filter-section-title" id="title-players">By Player</span>
+                <div class="filter-options" id="filter-options-players">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+            
+            <hr class="filter-divider" />
+            
+            <!-- By Complexity -->
+            <div class="filter-section">
+                <span class="filter-section-title" id="title-complexity">By Complexity</span>
+                <div class="filter-options">
+                    <label class="filter-checkbox-label"><input type="checkbox" value="1" data-type="complexity" /> 1</label>
+                    <label class="filter-checkbox-label"><input type="checkbox" value="2" data-type="complexity" /> 2</label>
+                    <label class="filter-checkbox-label"><input type="checkbox" value="3" data-type="complexity" /> 3</label>
+                    <label class="filter-checkbox-label"><input type="checkbox" value="4" data-type="complexity" /> 4</label>
+                    <label class="filter-checkbox-label"><input type="checkbox" value="5" data-type="complexity" /> 5</label>
+                    <label class="filter-checkbox-label"><input type="checkbox" value="6" data-type="complexity" /> 6</label>
+                </div>
+            </div>
+            
+            <hr class="filter-divider" />
+            
+            <!-- By Group -->
+            <div class="filter-section">
+                <span class="filter-section-title" id="title-groups">By Group</span>
+                <div class="filter-options" id="filter-options-groups">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="filter-drawer-footer">
+            <button type="button" class="btn-filter-apply" id="filter-drawer-apply">APPLY FILTERS</button>
+        </div>
+    </div>
+</div>
