@@ -7,7 +7,9 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "repository": {
     "type": "git",
@@ -22,6 +24,7 @@
   },
   "homepage": "https://github.com/Sygec/dicethrone-picker#readme",
   "devDependencies": {
-    "vite": "^8.0.16"
+    "vite": "^8.0.16",
+    "vite-plugin-html-inject": "^1.1.2"
   }
 }
