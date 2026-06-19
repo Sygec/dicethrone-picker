@@ -488,7 +488,8 @@
     width: 100%;
 }
 
-#rollBtn {
+#rollBtn,
+#rollDraftBtn {
     flex: 1;
 }
 

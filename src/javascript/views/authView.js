@@ -15,6 +15,7 @@ const getElements = () => {
             actionButtons: document.getElementById("action-buttons"),
             rollBtnContainer: document.getElementById("rollBtnContainer"),
             rollBtn: document.getElementById("rollBtn"),
+            rollDraftBtn: document.getElementById("rollDraftBtn"),
             loginModal: document.getElementById("login-modal"),
             loginError: document.getElementById("login-error"),
             updatePasswordModal: document.getElementById("update-password-modal"),
@@ -54,6 +55,7 @@ export function updateAuthUI() {
         if (el.actionButtons) el.actionButtons.style.display = "none";
         if (el.rollBtnContainer) el.rollBtnContainer.style.display = "flex";
         if (el.rollBtn) el.rollBtn.style.display = "block";
+        if (el.rollDraftBtn) el.rollDraftBtn.style.display = "block";
     }
 }
 

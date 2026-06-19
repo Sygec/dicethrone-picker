@@ -27,6 +27,9 @@ export function pickCharacters() {
         (i) => document.getElementById(`use${i}`)?.checked,
     );
 
+    console.log("[randomizer] pickCharacters active players:", active);
+    console.log("[randomizer] draftModeEnabled:", stateStore.get("draftModeEnabled"));
+
     if (active.length === 0) return alert("Select players!");
 
     const selectionOrder = [...active].sort(() => Math.random() - 0.5);
@@ -36,6 +39,8 @@ export function pickCharacters() {
     let pool = characters
         .filter((c) => isHeroOwned(c) && !bannedHeroIds.has(c.id))
         .map((c) => structuredClone(c));
+
+    console.log("[randomizer] Owned/non-banned heroes pool count:", pool.length);
 
     if (pool.length < active.length) {
         return alert(
@@ -122,6 +127,13 @@ export function pickCharacters() {
         rollBtn.style.cursor = "not-allowed";
     }
 
+    const rollDraftBtn = document.getElementById("rollDraftBtn");
+    if (rollDraftBtn) {
+        rollDraftBtn.disabled = true;
+        rollDraftBtn.style.opacity = "0.6";
+        rollDraftBtn.style.cursor = "not-allowed";
+    }
+
     const actionButtons = document.getElementById("action-buttons");
     if (actionButtons) actionButtons.style.display = "none";
 
@@ -160,6 +172,11 @@ export function pickCharacters() {
                     rollBtn.style.opacity = "1";
                     rollBtn.style.cursor = "pointer";
                 }
+                if (rollDraftBtn) {
+                    rollDraftBtn.disabled = false;
+                    rollDraftBtn.style.opacity = "1";
+                    rollDraftBtn.style.cursor = "pointer";
+                }
             }
             stateStore.set("isRollActive", true);
             return;
@@ -178,6 +195,20 @@ export function pickCharacters() {
 
     revealNext();
 }
+
+export function pickCharactersNormal() {
+    console.log("[randomizer] pickCharactersNormal called. Setting draftModeEnabled to false.");
+    stateStore.set("draftModeEnabled", false);
+    pickCharacters();
+}
+
+export function pickCharactersDraft() {
+    console.log("[randomizer] pickCharactersDraft called. Setting draftModeEnabled to true, draftCount to 3.");
+    stateStore.set("draftModeEnabled", true);
+    stateStore.set("draftCount", 3);
+    pickCharacters();
+}
+
 export function updateDropdownSort() {
     validateSelection();
 }
@@ -412,6 +443,13 @@ export async function applyResults() {
         rollBtnEl.style.opacity = "1";
         rollBtnEl.style.cursor = "pointer";
     }
+    const rollDraftBtnEl = document.getElementById("rollDraftBtn");
+    if (rollDraftBtnEl) {
+        rollDraftBtnEl.style.display = "block";
+        rollDraftBtnEl.disabled = false;
+        rollDraftBtnEl.style.opacity = "1";
+        rollDraftBtnEl.style.cursor = "pointer";
+    }
     const resultsDiv = document.getElementById("results");
     if (resultsDiv) {
         resultsDiv.innerHTML = `
@@ -449,6 +487,13 @@ export function cancelRoll() {
         rollBtnEl.disabled = false;
         rollBtnEl.style.opacity = "1";
         rollBtnEl.style.cursor = "pointer";
+    }
+    const rollDraftBtnEl = document.getElementById("rollDraftBtn");
+    if (rollDraftBtnEl) {
+        rollDraftBtnEl.style.display = "block";
+        rollDraftBtnEl.disabled = false;
+        rollDraftBtnEl.style.opacity = "1";
+        rollDraftBtnEl.style.cursor = "pointer";
     }
     stateStore.set("isRollActive", false);
 }

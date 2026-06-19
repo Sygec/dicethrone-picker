@@ -624,7 +624,8 @@ h1 {
     border: 1px solid var(--danger);
 }
 
-#rollBtn {
+#rollBtn,
+#rollDraftBtn {
     background: var(--accent);
     width: 100%;
     padding: 15px;
@@ -754,6 +755,7 @@ main > section:not(.hidden) {
 
 /* 6. Touch-active pressed states (Tactile feedback) */
 #rollBtn:active,
+#rollDraftBtn:active,
 .btn-confirm:active,
 .btn-save:active {
     transform: translateY(1px) scale(0.95);
@@ -763,6 +765,7 @@ main > section:not(.hidden) {
 }
 
 #rollBtn::after,
+#rollDraftBtn::after,
 .btn-confirm::after,
 .btn-save::after {
     content: "";
