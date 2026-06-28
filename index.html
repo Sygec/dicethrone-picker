@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <link rel="manifest" href="manifest.json" />
+        <link rel="icon" type="image/png" href="images/ico/icon-192.png" />
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+        <title>Dice Throne</title>
+
+        <script>
+            window.isProd =
+                window.location.hostname === "sygec.github.io" ||
+                window.location.hostname === "dicethrone-prod.sygec.workers.dev";
+        </script>
+        <link rel="stylesheet" type="text/css" href="src/styles/style.css" />
+    </head>
+
+    <body>
+        <!-- Preloader component -->
+        <load src="./src/components/preloader.html" />
+
+        <main class="content">
+            <img src="images/banner.png" alt="Dice Throne Logo" class="banner-image" />
+            <div class="small-text">
+                v<button id="version-number" aria-label="View changelog" class="btn-link">...</button>
+                |
+                <button id="auth-btn" class="btn-link">Login</button>
+            </div>
+
+            <!-- Page Sections -->
+            <load src="./src/components/section-roll.html" />
+            <load src="./src/components/section-db.html" />
+            <load src="./src/components/section-games.html" />
+            <load src="./src/components/section-collection.html" />
+            <load src="./src/components/section-admin.html" />
+        </main>
+
+        <!-- Bottom Tab Navigation -->
+        <load src="./src/components/bottom-nav.html" />
+
+        <!-- Modals & Drawers -->
+        <load src="./src/components/modal-changelog.html" />
+        <load src="./src/components/modal-whats-new.html" />
+        <load src="./src/components/modal-winner.html" />
+        <load src="./src/components/modal-login.html" />
+        <load src="./src/components/modal-update-password.html" />
+        <load src="./src/components/modal-hero-select.html" />
+        <load src="./src/components/drawer-sort-filter.html" />
+        <load src="./src/components/drawer-filter-left.html" />
+
+        <!-- SDKs and Scripts -->
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <script type="module" src="./src/javascript/main.js"></script>
+    </body>
+</html>

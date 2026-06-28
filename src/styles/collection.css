@@ -1,0 +1,1025 @@
+/**
+ * @fileoverview Stylesheet module for the owned character list, collection status indicators, owned character toggle drawers, and checklist grids.
+ * @module collection
+ * @requires style
+ */
+
+/* Collection View Styles */
+.collection-group {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: var(--glass-shadow);
+}
+
+.collection-group.collapsed .collection-heroes-list {
+    display: none;
+}
+
+.collection-group.collapsed .collection-group-header {
+    margin-bottom: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.collection-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid rgba(var(--white-rgb), 0.1);
+    padding-bottom: 10px;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s ease;
+}
+
+.collection-heroes-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 8px;
+    padding-left: 5px;
+}
+
+.collection-hero-card {
+    position: relative;
+    background: rgba(var(--white-rgb), 0.03);
+    border: 1px solid rgba(var(--white-rgb), 0.08);
+    border-radius: 8px;
+    padding: 8px 4px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    overflow: hidden;
+    user-select: none;
+}
+
+@media (hover: hover) {
+    .collection-hero-card:hover:not(.disabled) {
+        background: rgba(var(--white-rgb), 0.08);
+        border-color: rgba(var(--white-rgb), 0.2);
+        transform: translateY(-2px);
+    }
+}
+
+.collection-hero-card.disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.collection-hero-card.selected {
+    background: color-mix(in srgb, var(--accent) 8%, rgba(var(--white-rgb), 0.03));
+    border-color: var(--accent);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+@media (hover: hover) {
+    .collection-hero-card.selected:hover:not(.disabled) {
+        background: color-mix(
+            in srgb,
+            var(--accent) 12%,
+            rgba(var(--white-rgb), 0.03)
+        );
+        border-color: var(--accent);
+    }
+}
+
+.collection-hero-card-img {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(var(--white-rgb), 0.1);
+    transition: border-color 0.2s;
+    background: var(--bg-panel-light);
+}
+
+.collection-hero-card.selected .collection-hero-card-img {
+    border-color: var(--accent);
+}
+
+.collection-hero-card-name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text);
+    word-break: break-word;
+    line-height: 1.2;
+}
+
+.collection-group-header input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--accent);
+}
+
+.collection-group-header label {
+    cursor: pointer;
+    user-select: none;
+}
+
+.stat-weight {
+    border-bottom: 1px solid rgba(var(--white-rgb), 0.1);
+    padding-bottom: 5px;
+    margin-bottom: 2px;
+}
+
+.group-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: rgba(var(--white-rgb), 0.6);
+    margin-left: 10px;
+    display: inline-block;
+}
+
+.sort-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 15px;
+    justify-content: center;
+}
+
+.btn-sort {
+    color: black;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Container for the horizontal row */
+.sort-row {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    justify-content: center;
+}
+
+.sort-row::-webkit-scrollbar {
+    display: none;
+}
+
+/* The Compact Player Card */
+.player-card-mini {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+    border-radius: 4px;
+    padding: 5px 3px;
+    min-width: 40px;
+    justify-content: center;
+}
+
+.mini-name {
+    font-size: 0.6rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-align: center;
+    opacity: 0.7;
+}
+
+.mini-actions {
+    display: grid;
+    gap: 8px;
+}
+
+.btn-mini-sort {
+    flex: 1;
+    background: var(--secondary);
+    border: 1px solid transparent;
+    color: white;
+    padding: 4px 0;
+    font-size: 0.65rem;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+/* Active State: The button turns the player's color */
+.btn-mini-sort.active {
+    color: white;
+    background: var(--accent);
+    border-color: white;
+    font-weight: bold;
+}
+
+/*************** Dice Filter Bar *****************/
+.dice-filter-section {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.dice-bar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Unified bar track container for complexity and groups */
+.filter-bar-track {
+    display: flex;
+    gap: 6px;
+    column-gap: 1px;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--white-rgb), 0.03);
+    border: 1px solid rgba(var(--white-rgb), 0.08);
+    border-radius: 8px;
+    padding: 6px 10px;
+    width: fit-content;
+    margin: 5px auto 0 auto;
+    box-shadow: inset 0 1px 3px rgba(var(--black-rgb), 0.3);
+}
+
+/* Complexity Specific Styling inside the track */
+.filter-bar-track .dice-icon {
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    opacity: 0.2;
+    filter: grayscale(100%) brightness(0.8);
+    transition: all 0.2s ease;
+    padding: 2px;
+    border-radius: 4px;
+    transform: none; /* Keep flat flow */
+}
+
+@media (hover: hover) {
+    .filter-bar-track .dice-icon:hover {
+        opacity: 0.5;
+        filter: grayscale(100%) brightness(1);
+    }
+}
+
+/* Active State: Highlight with theme accent tint and glow */
+.filter-bar-track .dice-icon.active-die {
+    opacity: 1;
+    filter: grayscale(0%) brightness(1);
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 40%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+/* Group Filter Badge Cards */
+.group-badge-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: rgba(var(--white-rgb), 0.03);
+    border: 1px solid rgba(var(--white-rgb), 0.1);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    user-select: none;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+@media (hover: hover) {
+    .group-badge-card:hover:not(.disabled) {
+        border-color: rgba(var(--white-rgb), 0.3);
+        background: rgba(var(--white-rgb), 0.06);
+        transform: translateY(-2px);
+    }
+}
+
+.group-badge-card.disabled {
+    opacity: 0.15;
+    pointer-events: none;
+}
+
+.group-badge-initials {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: rgba(var(--white-rgb), 0.75);
+    letter-spacing: 0.5px;
+    line-height: 1;
+    margin-bottom: 2px;
+}
+
+/* Condense initials for 4-letter groups to maintain the uniform 52px card width */
+.group-badge-card.group-marvel .group-badge-initials,
+.group-badge-card.group-xmen .group-badge-initials,
+.group-badge-card.group-solo .group-badge-initials,
+.group-badge-card.group-outcast .group-badge-initials,
+.group-badge-card.group-vanguard .group-badge-initials {
+    font-size: 0.72rem;
+    letter-spacing: -0.5px;
+}
+
+.group-badge-count {
+    font-size: 0.6rem;
+    font-weight: bold;
+    color: rgba(var(--white-rgb), 0.45);
+    line-height: 1;
+}
+
+/* Active State Styles - Tactile, glowing backgrounds with brand gradients */
+.group-badge-card.active-die {
+    border-color: rgba(var(--white-rgb), 0.8);
+    box-shadow: 0 4px 12px rgba(var(--black-rgb), 0.4);
+}
+
+.group-badge-card.active-die .group-badge-initials {
+    color: var(--text);
+}
+
+.group-badge-card.active-die .group-badge-count {
+    color: rgba(var(--white-rgb), 0.85);
+}
+
+/* Season 1: Emerald Green Gradient */
+.group-badge-card.group-s1.active-die {
+    background: linear-gradient(135deg, var(--gradient-green-start), var(--gradient-green-end));
+    box-shadow: 0 0 12px rgba(46, 196, 182, 0.4);
+}
+.group-badge-card.group-s1.active-die .group-badge-initials,
+.group-badge-card.group-s1.active-die .group-badge-count {
+    color: var(--text);
+    text-shadow: 0 1px 2px rgba(var(--black-rgb), 0.4);
+}
+
+/* Season 2: Crimson & Gold Gradient */
+.group-badge-card.group-s2.active-die {
+    background: linear-gradient(135deg, var(--gradient-orange-start), var(--gradient-orange-end));
+    box-shadow: 0 0 12px rgba(255, 159, 28, 0.4);
+}
+.group-badge-card.group-s2.active-die .group-badge-initials,
+.group-badge-card.group-s2.active-die .group-badge-count {
+    color: var(--text);
+    text-shadow: 0 1px 2px rgba(var(--black-rgb), 0.4);
+}
+
+/* Marvel: Navy & Ruby Red Gradient */
+.group-badge-card.group-marvel.active-die {
+    background: linear-gradient(135deg, var(--gradient-pink-start), var(--accent));
+    box-shadow: 0 0 12px rgba(233, 69, 96, 0.4);
+}
+.group-badge-card.group-marvel.active-die .group-badge-initials,
+.group-badge-card.group-marvel.active-die .group-badge-count {
+    color: var(--text);
+    text-shadow: 0 1px 2px rgba(var(--black-rgb), 0.4);
+}
+
+/* X-Men: Deep Steel & Electric Yellow Gradient */
+.group-badge-card.group-xmen.active-die {
+    background: linear-gradient(135deg, var(--gradient-yellow-start), var(--gradient-yellow-end));
+    box-shadow: 0 0 12px rgba(241, 196, 15, 0.4);
+}
+.group-badge-card.group-xmen.active-die .group-badge-initials {
+    color: var(--text);
+}
+.group-badge-card.group-xmen.active-die .group-badge-count {
+    color: rgba(var(--white-rgb), 0.9);
+}
+
+/* Adventures: Twilight Purple Gradient */
+.group-badge-card.group-adventures.active-die {
+    background: linear-gradient(135deg, var(--gradient-purple-start), var(--gradient-purple-end));
+    box-shadow: 0 0 12px rgba(155, 89, 182, 0.4);
+}
+.group-badge-card.group-adventures.active-die .group-badge-initials,
+.group-badge-card.group-adventures.active-die .group-badge-count {
+    color: var(--text);
+    text-shadow: 0 1px 2px rgba(var(--black-rgb), 0.4);
+}
+
+/* Solo: Deep Steel Slate Gradient */
+.group-badge-card.group-solo.active-die {
+    background: linear-gradient(135deg, var(--gradient-grey-start), var(--gradient-grey-end));
+    box-shadow: 0 0 12px rgba(72, 84, 96, 0.4);
+}
+.group-badge-card.group-solo.active-die .group-badge-initials,
+.group-badge-card.group-solo.active-die .group-badge-count {
+    color: var(--text);
+    text-shadow: 0 1px 2px rgba(var(--black-rgb), 0.4);
+}
+
+/* Outcast: Deep Indigo / Orchid Purple Gradient */
+.group-badge-card.group-outcast.active-die {
+    background: linear-gradient(135deg, var(--gradient-deeppurple-start), var(--gradient-deeppurple-end));
+    box-shadow: 0 0 12px rgba(94, 53, 177, 0.4);
+}
+.group-badge-card.group-outcast.active-die .group-badge-initials,
+.group-badge-card.group-outcast.active-die .group-badge-count {
+    color: var(--text);
+    text-shadow: 0 1px 2px rgba(var(--black-rgb), 0.4);
+}
+
+/* Santa vs Krampus: Festive Forest Green & Crimson Red Gradient */
+.group-badge-card.group-svk.active-die {
+    background: linear-gradient(135deg, var(--gradient-redgreen-start), var(--gradient-redgreen-end));
+    box-shadow: 0 0 12px rgba(163, 29, 29, 0.4);
+}
+.group-badge-card.group-svk.active-die .group-badge-initials,
+.group-badge-card.group-svk.active-die .group-badge-count {
+    color: var(--text);
+    text-shadow: 0 1px 2px rgba(var(--black-rgb), 0.4);
+}
+
+/* Vanguard: Deep Navy & Sapphire Cyan Gradient */
+.group-badge-card.group-vanguard.active-die {
+    background: linear-gradient(135deg, var(--gradient-blue-start), var(--gradient-blue-end));
+    box-shadow: 0 0 12px rgba(0, 180, 216, 0.4);
+}
+.group-badge-card.group-vanguard.active-die .group-badge-initials,
+.group-badge-card.group-vanguard.active-die .group-badge-count {
+    color: var(--text);
+    text-shadow: 0 1px 2px rgba(var(--black-rgb), 0.4);
+}
+
+/* All / Default */
+.group-badge-card.group-all.active-die {
+    background: linear-gradient(
+        135deg,
+        rgba(var(--white-rgb), 0.05),
+        var(--accent)
+    );
+    box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+.group-badge-card.group-all.active-die .group-badge-initials {
+    color: var(--text);
+}
+.group-badge-card.group-all.active-die .group-badge-count {
+    color: rgba(var(--white-rgb), 0.85);
+}
+
+/* Complexity Card Badge Overrides to make dice grow/shrink & greyscale on one line */
+.group-badge-card.group-complexity {
+    width: 36px;
+    height: 48px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0 2px;
+    overflow: visible; /* Prevent scale cutoff */
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.complexity-dice-img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain; /* Do not crop the asset */
+    margin-bottom: 0px;
+    opacity: 0.35;
+    filter: grayscale(100%) brightness(0.85);
+    border: 1px solid rgba(var(--white-rgb), 0.2);
+    border-radius: 4px;
+    box-sizing: border-box;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (hover: hover) {
+    .group-badge-card.group-complexity:hover:not(.disabled)
+        .complexity-dice-img {
+        opacity: 0.65;
+        filter: grayscale(50%) brightness(0.95);
+        border-color: rgba(var(--white-rgb), 0.4);
+    }
+}
+
+.group-badge-card.group-complexity.active-die .complexity-dice-img {
+    opacity: 1;
+    filter: grayscale(0%) brightness(1.1);
+    transform: scale(1.35);
+    border-color: rgba(var(--white-rgb), 0.5);
+    box-shadow: 0 0 8px rgba(var(--white-rgb), 0.25);
+}
+
+/* Hide background changes for complexity dice active states */
+.group-badge-card.group-complexity.active-die {
+    background: transparent;
+    box-shadow: none;
+}
+
+.group-badge-card.group-complexity .group-badge-count {
+    font-size: 0.65rem;
+    color: rgba(var(--white-rgb), 0.45);
+    margin-top: 10px;
+    transition: color 0.25s;
+}
+
+.group-badge-card.group-complexity.active-die .group-badge-count {
+    color: var(--text);
+    font-weight: 800;
+}
+
+.dice-icon {
+    width: 32px;
+    /* Base size */
+    height: auto;
+    cursor: pointer;
+    transition:
+        transform 0.2s ease,
+        filter 0.2s ease,
+        opacity 0.2s ease;
+    /* Dimmed when inactive */
+    opacity: 0.3;
+    filter: grayscale(100%);
+}
+
+@media (hover: hover) {
+    .dice-icon:hover {
+        opacity: 0.6;
+    }
+}
+
+/* Multi-select Active State */
+.dice-icon.active-die {
+    transform: scale(1.3);
+    /* Increases size by 30% */
+    opacity: 1;
+    filter: grayscale(0%);
+}
+
+.player-filter-btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition:
+        border-color 0.2s ease,
+        transform 0.1s ease;
+    opacity: 1;
+    filter: none;
+    transform: none;
+    border: 2px solid transparent;
+    color: var(--bg-panel);
+    text-transform: uppercase;
+    min-width: 65px;
+    text-align: center;
+    filter: grayscale(25%);
+}
+
+.player-filter-btn.active {
+    border-color: var(--accent);
+    transform: scale(1.15);
+    filter: grayscale(0%);
+}
+
+#winner-filter-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--accent);
+    font-weight: bold;
+    font-size: 0.8rem;
+    background: rgba(var(--white-rgb), 0.05);
+    padding: 5px 10px;
+    border-radius: 6px;
+}
+
+#winner-filter-wrapper.hidden {
+    display: none;
+}
+
+/* The Modal (background) */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(var(--black-rgb), 0.75); /* Black w/ opacity */
+    color: var(--text);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    align-items: center;
+    justify-content: center;
+
+    /* Device Safe-Area Notch Protection */
+    padding-top: calc(15px + env(safe-area-inset-top));
+    padding-bottom: calc(15px + env(safe-area-inset-bottom));
+    padding-left: calc(15px + env(safe-area-inset-left));
+    padding-right: calc(15px + env(safe-area-inset-right));
+    box-sizing: border-box;
+}
+
+/* Modal Content Box */
+.modal-content {
+    background-color: var(--card-bg);
+    color: var(--text);
+    margin: 0;
+    padding: 25px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    max-height: 70vh; /* Limits height to 70% of the screen height */
+    overflow: hidden; /* Let inner grid scroll instead */
+    display: flex;
+    flex-direction: column;
+}
+#changelog-container,
+#whats-new-container {
+    overflow-y: auto;
+    flex: 1;
+}
+
+.modal-content h2 {
+    color: var(--accent) !important;
+    margin-top: 0;
+}
+
+.modal-content label {
+    color: var(--text) !important;
+    border-bottom: 1px solid rgba(var(--white-rgb), 0.08) !important;
+}
+
+/* The Close Button (X) */
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    color: var(--gray-200);
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+@media (hover: hover) {
+    .close-button:hover {
+        color: var(--text);
+    }
+}
+
+/* Mobile Optimization */
+@media screen and (max-width: 600px) {
+    .modal-content {
+        width: 92%; /* Narrower side margins on mobile */
+        padding: 15px; /* Slightly less padding to save space */
+        max-height: 70vh; /* Limits height to 70% of the screen height */
+    }
+
+    .close-button {
+        top: 5px;
+        right: 15px;
+        font-size: 32px; /* Makes the X easier to tap with a thumb */
+    }
+}
+
+/* NEW SECTION PROVIDED BY GEMINI FOR DYNAMIC STATS DISPLAY */
+/* The container for the player stats */
+.dynamic-stats {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    justify-content: space-between;
+}
+
+/* The individual columns inside the container */
+.stat-column {
+    flex: 1;
+    min-width: 0;
+    background: rgba(var(--white-rgb), 0.05);
+    padding: 8px 4px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centers the tag horizontally */
+}
+
+.stat-main {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: var(--text);
+}
+
+.stat-sub {
+    font-size: 0.7rem;
+    opacity: 0.6;
+}
+
+.stat-date-small {
+    font-size: 0.6rem;
+    margin-top: 4px;
+    opacity: 0.4;
+    border-top: 1px solid rgba(var(--white-rgb), 0.1);
+    padding-top: 2px;
+}
+
+/* Dropdown Sort Radio Options */
+.dropdown-sort-options {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    font-size: 0.75rem;
+}
+
+.dropdown-sort-options label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+}
+
+.dropdown-sort-options input[type="radio"],
+.dropdown-sort-options input[type="checkbox"] {
+    accent-color: var(--accent);
+    width: 14px;
+    height: 14px;
+}
+
+/* Style for players that are filtered OUT */
+.player-card-mini.inactive-filter {
+    filter: grayscale(100%); /* Turns it grey */
+    opacity: 0.6; /* Makes it slightly see-through */
+    transform: scale(0.9); /* Makes it 10% smaller */
+    transition: all 0.2s ease; /* Smooth transition when clicking */
+}
+
+
+/* ==========================================
+   New Segmented Sorting and Visibility Panel
+   ========================================== */
+.sort-container-new {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background: rgba(var(--white-rgb), 0.03);
+    border: 1px solid rgba(var(--white-rgb), 0.08);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: var(--glass-shadow);
+}
+
+.panel-row-new {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.panel-row-title {
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: var(--accent);
+    opacity: 0.8;
+    letter-spacing: 0.5px;
+}
+
+.pill-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.pill-toggle {
+    background: rgba(var(--white-rgb), 0.05);
+    border: 1px solid rgba(var(--white-rgb), 0.1);
+    color: var(--text);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    text-transform: uppercase;
+}
+
+@media (hover: hover) {
+    .pill-toggle:hover {
+        background: rgba(var(--white-rgb), 0.1);
+        border-color: rgba(var(--white-rgb), 0.2);
+    }
+}
+
+.pill-toggle.inactive {
+    opacity: 0.4;
+    filter: grayscale(80%);
+    text-decoration: line-through;
+}
+
+/* Player color specific pills when active */
+.pill-toggle.p1-color.active {
+    background-color: var(--p1);
+    color: var(--bg-panel);
+    border-color: var(--p1);
+}
+.pill-toggle.p2-color.active {
+    background-color: var(--p2);
+    color: var(--bg-panel);
+    border-color: var(--p2);
+}
+.pill-toggle.p3-color.active {
+    background-color: var(--p3);
+    color: var(--bg-panel);
+    border-color: var(--p3);
+}
+.pill-toggle.p4-color.active {
+    background-color: var(--p4);
+    color: var(--bg-panel);
+    border-color: var(--p4);
+}
+
+.sort-controls-new {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.sort-select-new {
+    flex: 1;
+    min-width: 150px;
+    background: var(--bg-panel);
+    color: var(--text);
+    border: 1px solid var(--secondary);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+}
+
+.btn-direction-new {
+    background: rgba(var(--white-rgb), 0.05);
+    border: 1px solid rgba(var(--white-rgb), 0.1);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+@media (hover: hover) {
+    .btn-direction-new:hover {
+        background: rgba(var(--white-rgb), 0.1);
+    }
+}
+
+.btn-direction-new.active {
+    background: var(--accent);
+    color: var(--gray-800);
+    border-color: var(--accent);
+}
+
+#player-sort-sub-section {
+    animation: slideDown 0.25s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==========================================
+   Accordion & Segmented Pill Styles
+   ========================================== */
+
+/* DB Accordions */
+.db-accordion {
+    margin-bottom: 12px;
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(var(--white-rgb), 0.03);
+    box-shadow: var(--glass-shadow);
+}
+
+.db-accordion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    cursor: pointer;
+    background: rgba(var(--white-rgb), 0.05);
+    user-select: none;
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: var(--text);
+    transition: background-color 0.2s ease;
+}
+
+@media (hover: hover) {
+    .db-accordion-header:hover {
+        background: rgba(var(--white-rgb), 0.08);
+    }
+}
+
+.db-accordion-content {
+    border-top: 1px solid rgba(var(--white-rgb), 0.06);
+    background: rgba(var(--black-rgb), 0.1);
+    margin-bottom: 0 !important;
+    border-radius: 0 !important;
+}
+
+/* Ownership Segmented Control (Tabs) */
+.ownership-segmented-control {
+    display: flex;
+    background: rgba(var(--white-rgb), 0.05);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 3px;
+    margin-top: 10px;
+    margin-bottom: 0;
+    position: relative;
+}
+
+.segmented-pill {
+    flex: 1;
+    background: transparent !important;
+    border: none;
+    color: var(--text);
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: center;
+    text-transform: uppercase;
+    position: relative;
+    z-index: 2;
+}
+
+@media (hover: hover) {
+    .segmented-pill:hover:not(.active) {
+        color: var(--text);
+    }
+}
+
+.segmented-pill.active {
+    color: var(--gray-800) !important;
+}
+
+.segmented-highlight {
+    position: absolute;
+    top: 3px;
+    left: 0;
+    bottom: 3px;
+    background: var(--accent);
+    border-radius: 6px;
+    z-index: 1;
+    transition:
+        transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+        width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+
+
+
+@media (hover: hover) {
+    .collection-group-header:hover {
+        background: rgba(var(--white-rgb), 0.03);
+    }
+}
+
+.collection-group-header .panel-toggle {
+    margin-left: auto;
+}
+
+/* Glassmorphism activation for modern Android & iOS browsers */
+@supports (backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px)) {
+    .player-toggle-zone-top,
+    .results,
+    .manage-form,
+    .admin-panel,
+    .collection-group,
+    .sort-container-new,
+    .db-accordion,
+    .modal-content {
+        background-color: rgba(var(--white-rgb), 0.06) !important;
+        backdrop-filter: blur(var(--glass-blur)) !important;
+        -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
+    }
+}
+
+/* -------------------------------------------------- */

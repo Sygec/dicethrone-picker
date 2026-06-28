@@ -1,0 +1,969 @@
+/**
+ * @fileoverview Stylesheet module for the match picker outputs, player cards (Hearthstone plates), win rates, draft wheel, and player status indicators.
+ * @module randomizer
+ * @requires style
+ */
+
+/* Hearthstone Card Player Plate */
+.player-plate {
+    position: relative;
+    aspect-ratio: 2 / 3;
+    flex: 1 1 0;
+    min-width: 65px;
+    max-width: 130px;
+    background: var(--bg-solid-dark);
+    border: 1.5px solid rgba(var(--white-rgb), 0.15);
+    border-radius: 10px;
+    overflow: visible;
+    box-shadow: 0 4px 12px rgba(var(--black-rgb), 0.4);
+    transition:
+        transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1),
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    box-sizing: border-box;
+    text-decoration: none;
+}
+
+@media (hover: hover) {
+    .player-plate:hover {
+        transform: translateY(-4px) scale(1.03);
+        border-color: rgba(var(--white-rgb), 0.45);
+        z-index: 5;
+    }
+}
+
+/* Background hero artwork */
+.player-plate-bg-art {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 20%;
+    opacity: 0.65;
+    z-index: 1;
+    border-radius: inherit;
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease;
+    mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+}
+
+@media (hover: hover) {
+    .player-plate:hover .player-plate-bg-art {
+        transform: scale(1.08);
+        opacity: 0.8;
+    }
+}
+
+/* Gradient overlay to ensure text readability */
+.player-plate-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        to top,
+        rgba(var(--black-rgb), 0.95) 0%,
+        rgba(var(--black-rgb), 0.4) 60%,
+        rgba(var(--black-rgb), 0) 100%
+    );
+    z-index: 2;
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+/* Player Name Tag (absolute positioned at top) */
+.player-plate-tag {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    font-size: 0.65rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px;
+    border-radius: 3px;
+    color: var(--bg-panel);
+    text-align: center;
+    z-index: 3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-shadow: 0 1px 3px rgba(var(--black-rgb), 0.5);
+}
+
+/* Bottom info panel */
+.player-plate-info {
+    position: relative;
+    z-index: 3;
+    padding: 6px;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.player-plate-hero-name {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--text);
+    text-shadow: 0 1px 3px rgba(var(--black-rgb), 0.8);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+/* Winner Card Styles (Glowing Golden Border) */
+.player-plate.winner {
+    border: 2.2px solid var(--gold);
+    box-shadow: 0 0 15px rgba(255, 188, 0, 0.45);
+}
+
+@media (hover: hover) {
+    .player-plate.winner:hover {
+        border-color: var(--gold);
+        box-shadow: 0 0 20px rgba(255, 188, 0, 0.65);
+    }
+}
+
+.player-plate.winner .player-plate-bg-art {
+    opacity: 0.95;
+}
+
+@media (hover: hover) {
+    .player-plate.winner:hover .player-plate-bg-art {
+        opacity: 1;
+    }
+}
+
+/* Premium holographic shimmer sweep across winner character card */
+.player-plate.winner .player-plate-overlay {
+    animation: winner-shimmer 6s infinite ease-in-out;
+    background-image:
+        linear-gradient(
+            to top,
+            rgba(var(--black-rgb), 0.95) 0%,
+            rgba(var(--black-rgb), 0.4) 60%,
+            rgba(var(--black-rgb), 0) 100%
+        ),
+        linear-gradient(
+            135deg,
+            rgba(var(--white-rgb), 0) 30%,
+            rgba(var(--white-rgb), 0.12) 50%,
+            rgba(var(--white-rgb), 0) 70%
+        );
+    background-size:
+        100% 100%,
+        250% 250%;
+    background-position:
+        center,
+        -150% -150%;
+    background-repeat: no-repeat;
+}
+
+@keyframes winner-shimmer {
+    0% {
+        background-position:
+            center,
+            -150% -150%;
+    }
+    30%,
+    100% {
+        background-position:
+            center,
+            150% 150%;
+    }
+}
+
+/* Sparkle particles floating around the gold border */
+.player-plate.winner::before {
+    content: "";
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    z-index: 4;
+    pointer-events: none;
+    border-radius: 12px;
+    background-image:
+        radial-gradient(circle, var(--text) 1px, transparent 2px),
+        radial-gradient(circle, var(--gold) 1.5px, transparent 3.5px),
+        radial-gradient(circle, var(--text) 1px, transparent 2px),
+        radial-gradient(circle, var(--gold) 1.5px, transparent 3px);
+    background-size:
+        12px 12px,
+        16px 16px,
+        10px 10px,
+        14px 14px;
+    background-position:
+        5% 15%,
+        95% 20%,
+        25% 85%,
+        75% 80%;
+    background-repeat: no-repeat;
+    opacity: 0;
+    animation: sparkle-blink 5s infinite linear;
+}
+
+@keyframes sparkle-blink {
+    0%,
+    100% {
+        opacity: 0;
+        transform: scale(0.97);
+        background-position:
+            5% 15%,
+            95% 20%,
+            25% 85%,
+            75% 80%;
+    }
+    20% {
+        opacity: 0.85;
+        transform: scale(1.01);
+    }
+    40% {
+        opacity: 0.25;
+        background-position:
+            12% 22%,
+            88% 28%,
+            20% 78%,
+            80% 88%;
+    }
+    60% {
+        opacity: 0.95;
+        transform: scale(1.03);
+    }
+    80% {
+        opacity: 0.35;
+        background-position:
+            2% 10%,
+            98% 12%,
+            30% 90%,
+            70% 70%;
+    }
+}
+
+.player-plate-trophy {
+    position: absolute;
+    top: -16px;
+    right: -16px;
+    font-size: 2.5rem;
+    z-index: 5;
+    filter: drop-shadow(0 2px 4px rgba(var(--black-rgb), 0.6));
+    animation: floatTrophy 3s infinite ease-in-out;
+}
+
+@keyframes floatTrophy {
+    0%,
+    100% {
+        transform: translateY(0) rotate(10deg);
+    }
+    50% {
+        transform: translateY(-2px) rotate(10deg);
+    }
+}
+
+/* Loser Card Styles (Desaturated Greyscale) */
+.player-plate.loser {
+    border-color: rgba(var(--white-rgb), 0.08);
+}
+
+.player-plate.loser .player-plate-bg-art {
+    opacity: 0.35;
+    filter: grayscale(85%);
+}
+
+@media (hover: hover) {
+    .player-plate.loser:hover .player-plate-bg-art {
+        opacity: 0.5;
+        filter: grayscale(50%);
+    }
+}
+
+/* Draw Card Styles */
+.player-plate.draw {
+    border-color: rgba(var(--white-rgb), 0.08);
+}
+
+.player-plate.draw .player-plate-bg-art {
+    opacity: 0.35;
+    filter: grayscale(85%);
+}
+
+@media (hover: hover) {
+    .player-plate.draw:hover .player-plate-bg-art {
+        opacity: 0.5;
+        filter: grayscale(50%);
+    }
+}
+
+/* In Progress Card Styles */
+.player-plate.in-progress {
+    border-color: rgba(var(--white-rgb), 0.15);
+}
+
+.player-plate.in-progress .player-plate-bg-art {
+    opacity: 0.7;
+}
+
+@media (hover: hover) {
+    .player-plate.in-progress:hover .player-plate-bg-art {
+        opacity: 0.85;
+    }
+}
+
+/* Draw visual overlay badge */
+.player-plate-draw-badge {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-12deg);
+    color: var(--accent);
+    border: 2px solid var(--accent);
+    background: rgba(10, 10, 12, 0.95);
+    font-family: Impact, sans-serif;
+    font-size: 0.8rem;
+    padding: 2px 6px;
+    letter-spacing: 0.7px;
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 4;
+    box-shadow:
+        0 2px 8px rgba(var(--black-rgb), 0.7),
+        0 0 5px rgba(233, 69, 96, 0.2);
+    font-weight: 900;
+}
+
+/* Card Action Controls Overlay */
+.game-card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    justify-content: flex-end;
+    border-top: 1px solid rgba(var(--white-rgb), 0.05);
+    padding-top: 10px;
+    width: 100%;
+}
+
+.btn-game-action {
+    background: rgba(var(--white-rgb), 0.08);
+    border: 1px solid rgba(var(--white-rgb), 0.12);
+    color: var(--text);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+@media (hover: hover) {
+    .btn-game-action:hover {
+        background: rgba(var(--white-rgb), 0.15);
+        transform: scale(1.08);
+    }
+}
+
+@media (hover: hover) {
+    .btn-game-action.delete:hover {
+        background: var(--danger);
+        border-color: var(--danger);
+    }
+}
+
+.player-plate-winner-stats {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--gold);
+    text-shadow: 0 1px 3px rgba(var(--black-rgb), 0.9);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0.95;
+}
+
+.player-plate-winner-pct {
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: rgba(var(--white-rgb), 0.85);
+    text-shadow: 0 1px 3px rgba(var(--black-rgb), 0.9);
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+}
+
+/* Responsive adjustments for fitting all players on a single row in mobile viewports */
+@media (max-width: 480px) {
+    .game-card-body {
+        padding: 8px;
+    }
+
+    .player-responsive-grid {
+        gap: 4px;
+    }
+
+    .player-plate {
+        min-width: 50px; /* Allow cards to shrink down on very narrow screens */
+        border-width: 1px; /* Thinner border to conserve space */
+        border-radius: 6px; /* Slightly smaller radius for smaller cards */
+    }
+
+    .player-plate.winner {
+        border-width: 1.5px;
+    }
+
+    .player-plate.winner::before {
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        border-radius: 8px;
+        background-size:
+            8px 8px,
+            12px 12px,
+            7px 7px,
+            10px 10px;
+    }
+
+    .player-plate-tag {
+        top: 4px;
+        left: 4px;
+        right: 4px;
+        font-size: 0.55rem;
+        padding: 1px;
+        border-radius: 2px;
+    }
+
+    .player-plate-info {
+        padding: 3px 2px;
+    }
+
+    .player-plate-hero-name {
+        font-size: 0.62rem;
+    }
+
+    .player-plate-winner-stats {
+        font-size: 0.6rem;
+    }
+
+    .player-plate-winner-pct {
+        font-size: 0.55rem;
+    }
+
+    .player-plate-trophy {
+        top: -12px;
+        right: -12px;
+        font-size: 1.9rem;
+    }
+
+    .player-plate-draw-badge {
+        font-size: 0.6rem;
+        padding: 0px 2px;
+        border-width: 1px;
+    }
+}
+
+
+/* ==========================================================================
+   RANDOMIZER DRAFT WHEEL & BAN LIST STYLES
+   ========================================================================== */
+
+.roll-btn-container {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+}
+
+#rollBtn,
+#rollDraftBtn {
+    flex: 1;
+}
+
+.roll-settings-btn {
+    position: relative;
+    background: var(--btn-secondary-bg, rgba(var(--white-rgb), 0.08));
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    color: var(--text, var(--text));
+    width: 44px;
+    height: 100%;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.roll-settings-btn:hover {
+    background: rgba(var(--white-rgb), 0.15);
+    border-color: rgba(var(--white-rgb), 0.25);
+    transform: translateY(-1px);
+}
+
+.roll-settings-btn.has-settings {
+    border-color: var(--warning);
+    color: var(--warning);
+    box-shadow: 0 0 12px rgba(255, 215, 0, 0.25);
+}
+
+.settings-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--warning);
+    color: #000;
+    font-size: 0.65rem;
+    font-weight: 800;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(var(--black-rgb), 0.5);
+    border: 1px solid #000;
+}
+
+/* Toggle Switch Styles */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(var(--white-rgb), 0.15);
+    transition: 0.3s;
+    border-radius: 24px;
+    border: 1px solid rgba(var(--white-rgb), 0.08);
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+    background-color: var(--accent, var(--warning));
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(22px);
+}
+
+/* Waiting / Active Draft Player Row Styles */
+.player-row.waiting-draft {
+    opacity: 0.45;
+    background: rgba(var(--black-rgb), 0.25);
+    border-color: rgba(var(--white-rgb), 0.03);
+    box-shadow: none;
+    pointer-events: none;
+    transition: all 0.5s ease;
+}
+
+.draft-waiting-status {
+    font-size: 0.85em;
+    opacity: 0.6;
+    font-style: italic;
+}
+
+.player-row.active-draft {
+    display: block;
+    /* min-height: 280px; */
+    background: rgba(var(--white-rgb), 0.02);
+    border-color: var(--player-color);
+    box-shadow: 0 0 15px rgba(var(--white-rgb), 0.05);
+    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+    overflow: visible !important;
+}
+
+.player-row.active-draft .draft-flow-content {
+    flex-direction: column;
+    align-items: center;
+    /* gap: 12px; */
+    width: 100%;
+}
+
+/* 3D Wheel Layout */
+.draft-wheel-container {
+    perspective: 600px;
+    height: 150px;
+    width: 100%;
+    position: relative;
+    cursor: grab;
+}
+
+.draft-wheel-container:active {
+    cursor: grabbing;
+}
+
+.draft-wheel {
+    width: 200px;
+    height: 90px;
+    position: absolute;
+    left: calc(50% - 100px);
+    top: 35px;
+    transform: rotateY(0deg);
+    transform-style: preserve-3d;
+    transform-origin: 50% 50% 0;
+    transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.draft-card-wrapper {
+    position: absolute;
+    width: 100%;
+    height: 90px;
+    left: 0;
+    top: 0;
+    transform-style: preserve-3d;
+    transform-origin: 50% 50% 0;
+    backface-visibility: visible;
+    cursor: pointer;
+    transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.draft-card-wrapper:not(.selected) .draft-card {
+    opacity: 1;
+    transform: scale(0.85);
+    border-color: rgba(var(--white-rgb), 0.04);
+    box-shadow: none;
+}
+
+.draft-card-wrapper.selected .draft-card {
+    opacity: 1;
+    transform: scale(1.05);
+    border-color: var(--warning);
+    box-shadow:
+        0 0 20px rgba(255, 215, 0, 0.6),
+        inset 0 0 8px rgba(255, 215, 0, 0.3);
+}
+
+.draft-card {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background: var(--card-bg, rgba(var(--white-rgb), 0.05));
+    backdrop-filter: blur(var(--glass-blur, 16px));
+    -webkit-backdrop-filter: blur(var(--glass-blur, 16px));
+    border: 1.5px solid rgba(var(--white-rgb), 0.08);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--glass-shadow);
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    transition:
+        transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+        opacity 0.4s ease,
+        border-color 0.3s ease,
+        box-shadow 0.3s ease;
+    backface-visibility: visible;
+}
+
+.draft-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+    z-index: 2;
+    text-align: left;
+}
+
+.draft-card-header {
+    display: flex;
+    align-items: center;
+    font-size: 0.9em;
+}
+
+.draft-hero-name {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: var(--accent);
+    text-shadow: 0 1px 3px rgba(var(--black-rgb), 0.8);
+    /* margin-left: 4px; */
+}
+
+.draft-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.draft-card-group {
+    font-size: 0.7em;
+    opacity: 0.85;
+    color: var(--text);
+}
+
+.draft-card .hero-stats-row {
+    font-size: 0.6rem;
+    gap: 6px;
+}
+
+.draft-actions {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    /* margin-top: 8px; */
+}
+
+.btn-confirm-draft {
+    background: linear-gradient(135deg, var(--warning) 0%, var(--gold-metallic) 100%);
+    border: none;
+    border-radius: 8px;
+    color: #111;
+    font-weight: 700;
+    padding: 10px 24px;
+    font-size: 0.85em;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+    transition: all 0.2s ease;
+}
+
+.btn-confirm-draft:disabled {
+    background: var(--gray-500);
+    color: var(--gray-300);
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.btn-confirm-draft:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(255, 215, 0, 0.5);
+}
+
+/* Ban List Grouping Layout */
+.ban-group-section {
+    margin-top: 15px;
+    background: rgba(var(--white-rgb), 0.02);
+    border: 1px solid rgba(var(--white-rgb), 0.05);
+    border-radius: 10px;
+    padding: 12px;
+}
+
+.ban-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(var(--white-rgb), 0.05);
+}
+
+.ban-group-title {
+    font-size: 0.85em;
+    font-weight: 700;
+    color: var(--accent, var(--warning));
+}
+
+.btn-ban-group-select {
+    background: transparent;
+    border: 1px solid rgba(var(--white-rgb), 0.15);
+    border-radius: 4px;
+    color: var(--text);
+    font-size: 0.7em;
+    padding: 2px 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-ban-group-select:hover {
+    background: rgba(var(--white-rgb), 0.1);
+    border-color: rgba(var(--white-rgb), 0.3);
+}
+
+.ban-hero-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 8px;
+}
+
+.ban-hero-item {
+    background: rgba(var(--white-rgb), 0.03);
+    border: 1px solid rgba(var(--white-rgb), 0.08);
+    border-radius: 8px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.ban-hero-item:hover {
+    background: rgba(var(--white-rgb), 0.07);
+    border-color: rgba(var(--white-rgb), 0.18);
+}
+
+.ban-hero-item.banned {
+    border-color: var(--danger-hover);
+    background: rgba(255, 77, 77, 0.12);
+    box-shadow: 0 0 8px rgba(255, 77, 77, 0.15);
+}
+
+.ban-hero-item.banned:hover {
+    background: rgba(255, 77, 77, 0.18);
+}
+
+.ban-hero-img {
+    width: 100%;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+    background: rgba(var(--black-rgb), 0.2);
+}
+
+.ban-hero-name {
+    font-size: 0.7em;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    color: #ddd;
+}
+
+/* Active Choice Red Highlight */
+.pill-toggle.active-red.active {
+    background: var(--danger-hover) !important;
+    border-color: var(--danger-hover) !important;
+    color: var(--text) !important;
+    box-shadow: 0 0 12px rgba(255, 77, 77, 0.45) !important;
+}
+
+/* Clickable Navigation Arrows */
+.draft-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(var(--black-rgb), 0.45);
+    border: 1px solid rgba(var(--white-rgb), 0.15);
+    border-radius: 50%;
+    color: var(--text);
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.2s ease;
+}
+
+.draft-arrow:hover {
+    background: rgba(var(--white-rgb), 0.18);
+    border-color: rgba(var(--white-rgb), 0.35);
+    color: var(--warning);
+    box-shadow: 0 0 8px rgba(var(--white-rgb), 0.15);
+}
+
+.left-arrow {
+    left: 10px;
+}
+
+.right-arrow {
+    right: 10px;
+}
+
+/* Roll Settings Drawer Tabs Styling */
+.drawer-tabs-container {
+    margin: -10px -20px 10px -20px;
+    border-bottom: 1px solid rgba(var(--white-rgb), 0.08);
+    background: rgba(var(--black-rgb), 0.15);
+}
+
+.drawer-tabs {
+    display: flex;
+    position: relative;
+    width: 100%;
+}
+
+.drawer-tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 14px 16px;
+    color: rgba(var(--white-rgb), 0.6);
+    font-family: "Outfit", sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    transition: color 0.3s ease;
+    outline: none;
+    position: relative;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    z-index: 2;
+}
+
+.drawer-tab-btn:hover {
+    color: var(--text);
+}
+
+.drawer-tab-btn.active {
+    color: var(--accent);
+}
+
+.drawer-tab-underline {
+    position: absolute;
+    bottom: 0;
+    height: 3px;
+    width: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+    transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 3;
+}
+
+/* --- Phase 4 Extracted Inline Styles --- */
+
+.roll-controls-wrapper {
+    margin-bottom: 15px;
+}
+
+.picker-hint {
+    text-align: center;
+    opacity: 0.6;
+}

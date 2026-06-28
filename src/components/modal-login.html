@@ -1,0 +1,72 @@
+<!-- Login Modal -->
+<div id="login-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" id="login-close"
+            >&times;</span
+        >
+        <h2>Login</h2>
+        <form
+            id="login-form"
+            autocomplete="on"
+            style="
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                margin-top: 10px;
+            ">
+            <input
+                name="email"
+                type="email"
+                id="login-email"
+                autocomplete="username"
+                placeholder="Email"
+                style="
+                    font-size: 16px;
+                    padding: 10px;
+                    border-radius: 4px;
+                    border: 1px solid #ccc;
+                    color: var(--text);
+                " />
+            <input
+                name="password"
+                type="password"
+                id="login-password"
+                autocomplete="current-password"
+                placeholder="Password"
+                style="
+                    font-size: 16px;
+                    padding: 10px;
+                    border-radius: 4px;
+                    border: 1px solid #ccc;
+                    color: var(--text);
+                " />
+            <button type="submit" class="btn-save">Sign In</button>
+            <div
+                id="login-error"
+                style="
+                    color: var(--danger);
+                    font-size: 0.8rem;
+                    text-align: center;
+                    display: none;
+                    margin-top: 5px;
+                "></div>
+            <button
+                type="button"
+                id="forgot-password-btn"
+                style="
+                    background: none;
+                    border: none;
+                    color: inherit;
+                    font: inherit;
+                    cursor: pointer;
+                    text-decoration: underline;
+                    font-size: 0.8rem;
+                    text-align: right;
+                    width: 100%;
+                    margin-top: -5px;
+                ">
+                Forgot Password?
+            </button>
+        </form>
+    </div>
+</div>

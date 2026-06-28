@@ -1,0 +1,188 @@
+/* CSS Modular Imports */
+@import url('preloader.css');
+@import url('components.css');
+@import url('navigation.css');
+@import url('randomizer.css');
+@import url('collection.css');
+@import url('history.css');
+@import url('filters.css');
+@import url('admin.css');
+@import url('notifications.css');
+
+/**
+ * @fileoverview Main entry point stylesheet for the Dice Throne Companion.
+ * Defines the design system custom properties (color palette, overlays) and loads modular component files.
+ * @module style
+ */
+
+:root {
+    /* --- Core Theme Colors --- */
+
+    /**
+     * @variable --bg
+     * @type {Color}
+     * @description Main body background color.
+     */
+    --bg: #0d0f13;
+
+    /**
+     * @variable --bg-dark
+     * @type {Color}
+     * @description Darkest backing color, used for viewport margins and loaders.
+     */
+    --bg-dark: #060709;
+
+    /**
+     * @variable --bg-highlight
+     * @type {Color}
+     * @description Core radial gradient center tone (maroon hue).
+     */
+    --bg-highlight: #4a1525;
+
+    /**
+     * @variable --card-bg
+     * @type {Color}
+     * @description Base color for interactive cards and accordion panels.
+     */
+    --card-bg: #16213e;
+
+    /**
+     * @variable --accent
+     * @type {Color}
+     * @description Primary brand action color (cherry red).
+     */
+    --accent: #e94560;
+
+    /**
+     * @variable --accent-glow
+     * @type {Color}
+     * @description Alpha transparency variant of --accent used for box shadows and glows.
+     */
+    --accent-glow: rgba(233, 69, 96, 0.35);
+
+    /**
+     * @variable --text
+     * @type {Color}
+     * @description Primary body and header text color.
+     */
+    --text: #ffffff;
+
+    /**
+     * @variable --secondary
+     * @type {Color}
+     * @description Muted secondary brand tone (deep blue).
+     */
+    --secondary: #0f3460;
+
+    /**
+     * @variable --danger
+     * @type {Color}
+     * @description Standard crimson tone for destructive/banning indicators.
+     */
+    --danger: #941b2d;
+
+    /**
+     * @variable --edit
+     * @type {Color}
+     * @description Amber warning tone for warning buttons and active edit icons.
+     */
+    --edit: #f39c12;
+
+    /* --- Player Specific Brand Colors --- */
+    --p1: #4ecca3;
+    --p2: #45b7d1;
+    --p3: #9b59b6;
+    --p4: #f1c40f;
+    --p5: #a2a2a2;
+    --p6: #a2a2a2;
+
+    /* --- Glassmorphic Overlays & Blurs --- */
+    --glass-border: rgba(var(--white-rgb), 0.14);
+    --glass-shadow: 0 8px 32px 0 rgba(var(--black-rgb), 0.5);
+    --glass-blur: 16px;
+
+    /* --- Consolidated Design System Colors --- */
+    --gray-100: #dddddd;
+    --gray-200: #aaaaaa;
+    --gray-300: #888888;
+    --gray-400: #444444;
+    --gray-500: #333333;
+    --gray-700: #1a1a1a;
+    --gray-800: #121212;
+    --success: #28a745;
+    --warning: #ffd700;
+    --danger-hover: #ff4d4d;
+    --accent-hover: #ff4d6d;
+    --shadow-base: rgba(var(--black-rgb), 0.35);
+
+    /* --- RGB Component Variables (for theme-flexible opacities) --- */
+    --white-rgb: 255, 255, 255;
+    --black-rgb: 0, 0, 0;
+
+    /* --- Consistently Reused Colors --- */
+    --bg-panel: #1a1a2e;
+    --bg-panel-light: #2a2a2a;
+    --bg-solid-dark: #0f1013;
+    --gold: #ffbc00;
+    --gold-metallic: #d4af37;
+    --success-bright: #7ed321;
+    --active-green: #4caf50;
+
+    /* --- Component Gradient Presets (Collection Group Cards) --- */
+    --gradient-green-start: #0d3b25;
+    --gradient-green-end: #2ec4b6;
+    --gradient-orange-start: #4a150b;
+    --gradient-orange-end: #ff9f1c;
+    --gradient-pink-start: #0f1c3f;
+    --gradient-pink-end: #e94560;
+    --gradient-yellow-start: #111b2d;
+    --gradient-yellow-end: #f1c40f;
+    --gradient-purple-start: #1a0b2e;
+    --gradient-purple-end: #9b59b6;
+    --gradient-grey-start: #1e272e;
+    --gradient-grey-end: #485460;
+    --gradient-deeppurple-start: #1c0c3a;
+    --gradient-deeppurple-end: #5e35b1;
+    --gradient-redgreen-start: #0f3d1e;
+    --gradient-redgreen-end: #a31d1d;
+    --gradient-blue-start: #0d1e3d;
+    --gradient-blue-end: #00b4d8;
+}
+
+html {
+    background-color: var(--bg-dark);
+}
+
+body {
+    margin: 0;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: transparent;
+    color: var(--text);
+    padding: 5px;
+    padding-top: calc(5px + env(safe-area-inset-top));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: radial-gradient(circle at 50% 25%, var(--bg-highlight) 0%, var(--bg-dark) 100%);
+    opacity: 0.6;
+}
+
+/* Inherit typography across form controls to ensure identical display on Android and iOS */
+input,
+select,
+textarea,
+button {
+    font-family: inherit;
+}
+

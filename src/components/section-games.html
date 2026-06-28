@@ -1,0 +1,39 @@
+<!-- ========================================== -->
+<!-- SECTION: Games History Log                 -->
+<!-- ========================================== -->
+<section id="gamesSection" class="hidden">
+    <div class="search-container">
+        <div class="search-wrapper">
+            <input
+                class="search-bar"
+                type="text"
+                id="games-search"
+                style="padding-right: 35px;"
+                placeholder="Search games by hero..."
+                aria-label="Search games" />
+            <div class="search-actions">
+                <img
+                    src="images/buttons/close.png"
+                    id="clear-games-search"
+                    class="search-icon hidden"
+                    alt="Clear"
+                    title="Clear Search" />
+            </div>
+        </div>
+        <button
+            type="button"
+            class="btn-action-trigger"
+            id="btn-trigger-games-filter">
+            <span class="action-icon">⚙️</span> Filter
+            <span class="active-badge" id="games-filter-active-badge" style="display: none;">0</span>
+        </button>
+    </div>
+    <div
+        class="small-text"
+        id="game-count-stats"
+        style="margin-top: 5px">
+        Showing 0 of 0 games
+    </div>
+
+    <div id="gamesContainer"></div>
+</section>
