@@ -1,4 +1,4 @@
-name: Keep Supabase Alive
+name: Keep Supabase Dev Alive
 
 on:
   schedule:
