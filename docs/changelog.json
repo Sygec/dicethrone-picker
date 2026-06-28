@@ -1,5 +1,11 @@
 [
     {
+        "version": "2.2.0.20260627",
+        "changes": [
+            "Maintenance update: Mostly bug fixes and minor tweaks to improve performance and stability"
+        ]
+    },
+    {
         "version": "2.1.0.20260615",
         "changes": [
             "Hero Database: New search, filter and sort mechanisms",
