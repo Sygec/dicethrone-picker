@@ -446,11 +446,20 @@ export function removeFilterChip(type, val) {
         stateStore.updateSet("activeFilterComplexities", "delete", val);
     } else if (type === 'group') {
         stateStore.updateSet("activeFilterGroups", "delete", val);
+    } else if (type === 'ownership') {
+        stateStore.set("activeOwnershipFilter", "all");
+        stateStore.set("stagedOwnershipFilter", "all");
+        const ownedCb = document.getElementById("db-show-owned");
+        const unownedCb = document.getElementById("db-show-not-owned");
+        if (ownedCb) ownedCb.checked = true;
+        if (unownedCb) unownedCb.checked = true;
     }
-    
-    // Uncheck in Left Drawer
-    const cb = document.querySelector(`#filter-drawer-left input[value="${val}"][data-type="${type}"]`);
-    if (cb) cb.checked = false;
+
+    // Uncheck in Left Drawer (only applies to checkbox-based filters)
+    if (type !== 'ownership') {
+        const cb = document.querySelector(`#filter-drawer-left input[value="${val}"][data-type="${type}"]`);
+        if (cb) cb.checked = false;
+    }
 
     renderList();
     updateActiveFilterChips();

@@ -1019,6 +1019,7 @@ export function updateActiveFilterChips() {
     const searchInput = el.heroSearchInput;
     const searchTerm = searchInput ? searchInput.value.trim() : "";
 
+    const activeOwnershipFilter = stateStore.get("activeOwnershipFilter");
     const activeFilterDataHistories = stateStore.get("activeFilterDataHistories");
     const activeFilterPlayers = stateStore.get("activeFilterPlayers");
     const activeFilterComplexities = stateStore.get("activeFilterComplexities");
@@ -1032,6 +1033,16 @@ export function updateActiveFilterChips() {
             <div class="filter-chip" title="Active Search Filter">
                 <span class="filter-chip-remove" data-action="clear-search-filter" title="Remove search filter">✖</span>
                 <span class="filter-chip-label">Search: "${searchTerm}"</span>
+            </div>
+        `;
+    }
+
+    if (activeOwnershipFilter && activeOwnershipFilter !== "all") {
+        const label = activeOwnershipFilter === "owned" ? "Owned" : "Unowned";
+        html += `
+            <div class="filter-chip" title="Active Ownership Filter">
+                <span class="filter-chip-remove" data-action="remove-filter-chip" data-type="ownership" data-value="${activeOwnershipFilter}" title="Remove filter">✖</span>
+                <span class="filter-chip-label">${label}</span>
             </div>
         `;
     }
@@ -1104,6 +1115,7 @@ export function updateActiveFilterChips() {
     }
 
     el.activeFiltersContainer.innerHTML = html;
+    el.activeFiltersContainer.classList.toggle("has-chips", !!html.trim());
 }
 
 /**
