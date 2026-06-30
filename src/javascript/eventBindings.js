@@ -97,6 +97,12 @@ export function setupAllEventBindings() {
     const filterDrawerLeft = document.getElementById("filter-drawer-left");
     if (filterDrawerLeft) {
         filterDrawerLeft.addEventListener("click", (e) => {
+            const pill = e.target.closest(".segmented-pill[data-filter]");
+            if (pill) {
+                const filter = pill.getAttribute("data-filter");
+                if (filter) filters.handleFilterDrawerOwnershipPillClick(filter);
+                return;
+            }
             filters.closeFilterDrawer(e);
         });
     }
@@ -108,14 +114,6 @@ export function setupAllEventBindings() {
     bindClick("filter-drawer-close-btn", filters.applyFilterPanelSelections);
     bindClick("filter-drawer-reset", filters.resetFilterPanelSelections);
     bindClick("filter-drawer-apply", filters.applyFilterPanelSelections);
-
-    // Database ownership segment pills
-    document.querySelectorAll(".ownership-segmented-control .segmented-pill").forEach(el => {
-        el.addEventListener("click", () => {
-            const filter = el.getAttribute("data-filter");
-            if (filter) admin.setOwnershipFilter(filter);
-        });
-    });
 
     // Admin Group CRUD toggles
     bindClick("addGroupBtn", admin.toggleGroupForm);

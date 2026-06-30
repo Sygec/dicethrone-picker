@@ -41,6 +41,8 @@ const state = {
     stagedFilterPlayers: new Set(),
     stagedFilterComplexities: new Set(),
     stagedFilterGroups: new Set(),
+    activeOwnershipFilter: "owned",
+    stagedOwnershipFilter: "owned",
 
     // Games History Filters State
     gamesWinnerOnly: false,

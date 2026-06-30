@@ -128,10 +128,23 @@ export function openHistoryFilterDrawer() {
 }
 
 /**
+ * Updates the active pill in the ownership segmented control inside the filter drawer.
+ */
+export function updateOwnershipPillsUI() {
+    const staged = stateStore.get("stagedOwnershipFilter");
+    const map = { owned: "pill-show-owned", unowned: "pill-show-not-owned", all: "pill-show-all" };
+    Object.entries(map).forEach(([key, id]) => {
+        document.getElementById(id)?.classList.toggle("active", key === staged);
+    });
+    updateSegmentedHighlights();
+}
+
+/**
  * Opens the Left Filters drawer.
  */
 export function openFilterDrawer() {
     renderFilterDrawerDynamicSections();
+    updateOwnershipPillsUI();
     updateFilterDrawerHeroCountUI();
     updateFilterDrawerSectionTitlesUI();
 
@@ -235,11 +248,14 @@ export function updateActiveFilterBadge() {
     const activeFilterComplexities = stateStore.get("activeFilterComplexities");
     const activeFilterGroups = stateStore.get("activeFilterGroups");
 
+    const activeOwnership = stateStore.get("activeOwnershipFilter");
+
     let activeCount = 0;
     if (activeFilterDataHistories) activeCount += activeFilterDataHistories.size;
     if (activeFilterPlayers) activeCount += activeFilterPlayers.size;
     if (activeFilterComplexities) activeCount += activeFilterComplexities.size;
     if (activeFilterGroups) activeCount += activeFilterGroups.size;
+    if (activeOwnership && activeOwnership !== "all") activeCount++;
 
     if (activeCount > 0) {
         el.filterActiveBadge.innerText = activeCount;
