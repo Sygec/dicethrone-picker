@@ -22,7 +22,7 @@ import {
     openChangelog,
     closeChangelog
 } from './admin.js';
-import { updateActiveFilterBadge, setSort } from './filters.js';
+import { updateActiveFilterBadge, updateActiveFilterChips, setSort } from './filters.js';
 import { updateRollSettingsBadge } from './randomizer.js';
 import { setupAllEventBindings } from './eventBindings.js';
 
@@ -64,6 +64,7 @@ export async function init() {
             }
         }
         updateActiveFilterBadge();
+        updateActiveFilterChips();
     }
 
     const { data: playersData, error: playersError } = await apiService.getPlayers();
