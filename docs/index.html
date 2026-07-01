@@ -15,8 +15,8 @@
                 window.location.hostname === "sygec.github.io" ||
                 window.location.hostname === "dicethrone-prod.sygec.workers.dev";
         </script>
-      <script type="module" crossorigin src="/assets/index-DqWHwBMw.js"></script>
-      <link rel="stylesheet" crossorigin href="/assets/index-D7vOqzRi.css">
+      <script type="module" crossorigin src="/assets/index-CMpsNKb4.js"></script>
+      <link rel="stylesheet" crossorigin href="/assets/index-BtGnbLEr.css">
     </head>
 
     <body>
@@ -148,32 +148,7 @@
             Showing 0 of 0 heroes
         </div>
 
-        <!-- Segmented Pill Control for Ownership -->
-        <div class="ownership-segmented-control">
-            <button
-                type="button"
-                class="segmented-pill active"
-                id="pill-show-owned"
-                data-filter="owned">
-                Owned
-            </button>
-            <button
-                type="button"
-                class="segmented-pill"
-                id="pill-show-not-owned"
-                data-filter="unowned">
-                Unowned
-            </button>
-            <button
-                type="button"
-                class="segmented-pill"
-                id="pill-show-all"
-                data-filter="all">
-                All
-            </button>
-        </div>
-
-        <!-- Hidden inputs for backward compatibility with JS queries -->
+        <!-- Hidden inputs used by renderList for ownership filtering -->
         <input
             type="checkbox"
             id="db-show-owned"
@@ -834,11 +809,19 @@
             </button>
         </div>
         
-        <div class="filter-drawer-reset-container">
-            <button type="button" class="btn-filter-reset" id="filter-drawer-reset">RESET</button>
-        </div>
-        
         <div class="filter-drawer-body">
+            <!-- Ownership -->
+            <div class="filter-section">
+                <span class="filter-section-title">Ownership</span>
+                <div class="ownership-segmented-control">
+                    <button type="button" class="segmented-pill active" id="pill-show-owned" data-filter="owned">Owned</button>
+                    <button type="button" class="segmented-pill" id="pill-show-not-owned" data-filter="unowned">Unowned</button>
+                    <button type="button" class="segmented-pill" id="pill-show-all" data-filter="all">All</button>
+                </div>
+            </div>
+
+            <hr class="filter-divider" />
+
             <!-- By Data History -->
             <div class="filter-section">
                 <span class="filter-section-title" id="title-data-history">By Data History</span>
@@ -891,6 +874,7 @@
         </div>
         
         <div class="filter-drawer-footer">
+            <button type="button" class="btn-filter-reset" id="filter-drawer-reset">RESET</button>
             <button type="button" class="btn-filter-apply" id="filter-drawer-apply">APPLY FILTERS</button>
         </div>
     </div>

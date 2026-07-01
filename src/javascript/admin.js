@@ -1,5 +1,5 @@
 import { isHeroOwned, escapeHtml, showConfirm, MAX_WEIGHTED_PLAYERS } from './utils.js';
-import { renderList, updateSegmentedHighlights } from './filters.js';
+import { renderList } from './filters.js';
 import { updateDropdownSort } from './randomizer.js';
 import { init } from './main.js';
 import * as apiService from './services/apiService.js';
@@ -59,20 +59,6 @@ export function setOwnershipFilter(filterState) {
         }
     }
 
-    const pills = {
-        owned: document.getElementById("pill-show-owned"),
-        unowned: document.getElementById("pill-show-not-owned"),
-        all: document.getElementById("pill-show-all"),
-    };
-
-    Object.keys(pills).forEach((key) => {
-        const pill = pills[key];
-        if (pill) {
-            pill.classList.toggle("active", key === filterState);
-        }
-    });
-
-    updateSegmentedHighlights();
     renderList();
 }
 export function renderCollectionView() {

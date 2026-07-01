@@ -3,7 +3,7 @@
  * @module filters
  */
 import { isHeroOwned, parseDateString, getDaysAgoClean, getRecencyDot } from './utils.js';
-import { renderGamesList } from './admin.js';
+import { renderGamesList, setOwnershipFilter as adminSetOwnershipFilter } from './admin.js';
 import { updateRollSettingsBadge } from './randomizer.js';
 export function toggleStagedGamesWinnerOnly(checked) { stateStore.set("stagedGamesWinnerOnly", checked); renderDrawerBody(); }
 
@@ -53,8 +53,14 @@ export function openFilterDrawer() {
     stateStore.set("stagedFilterPlayers", new Set(stateStore.get("activeFilterPlayers")));
     stateStore.set("stagedFilterComplexities", new Set(stateStore.get("activeFilterComplexities")));
     stateStore.set("stagedFilterGroups", new Set(stateStore.get("activeFilterGroups")));
+    stateStore.set("stagedOwnershipFilter", stateStore.get("activeOwnershipFilter"));
 
     filterView.openFilterDrawer();
+}
+export function handleFilterDrawerOwnershipPillClick(filter) {
+    stateStore.set("stagedOwnershipFilter", filter);
+    filterView.updateOwnershipPillsUI();
+    filterView.updateFilterDrawerHeroCountUI();
 }
 export function closeFilterDrawer(event = null, force = false) {
     filterView.closeFilterDrawer(event, force);
@@ -86,12 +92,14 @@ export function resetFilterPanelSelections() {
     stateStore.get("stagedFilterPlayers").clear();
     stateStore.get("stagedFilterComplexities").clear();
     stateStore.get("stagedFilterGroups").clear();
+    stateStore.set("stagedOwnershipFilter", "all");
 
     const checkboxes = document.querySelectorAll('#filter-drawer-left input[type="checkbox"]');
     checkboxes.forEach(cb => {
         cb.checked = false;
     });
 
+    filterView.updateOwnershipPillsUI();
     filterView.updateFilterDrawerHeroCountUI();
     filterView.updateFilterDrawerSectionTitlesUI();
 }
@@ -103,8 +111,12 @@ export function applyFilterPanelSelections() {
 
     stateStore.set("dbUseHistorical", !stateStore.get("activeFilterDataHistories").has("Normal only") || stateStore.get("activeFilterDataHistories").has("Historical only"));
 
+    const stagedOwnership = stateStore.get("stagedOwnershipFilter");
+    stateStore.set("activeOwnershipFilter", stagedOwnership);
+    adminSetOwnershipFilter(stagedOwnership);
+
     closeFilterDrawer(null, true);
-    
+
     renderList();
 
     updateActiveFilterBadge();
@@ -112,8 +124,9 @@ export function applyFilterPanelSelections() {
 }
 export function getFilterDrawerMatchingCount() {
     const searchTerm = document.getElementById("hero-search")?.value.toLowerCase() || "";
-    const showOwned = document.getElementById("db-show-owned")?.checked ?? true;
-    const showNotOwned = document.getElementById("db-show-not-owned")?.checked ?? false;
+    const stagedOwnership = stateStore.get("stagedOwnershipFilter");
+    const showOwned = stagedOwnership === "owned" || stagedOwnership === "all";
+    const showNotOwned = stagedOwnership === "unowned" || stagedOwnership === "all";
     const characters = stateStore.get("characters");
     const games = stateStore.get("games");
     const stagedFilterComplexities = stateStore.get("stagedFilterComplexities");
@@ -433,11 +446,20 @@ export function removeFilterChip(type, val) {
         stateStore.updateSet("activeFilterComplexities", "delete", val);
     } else if (type === 'group') {
         stateStore.updateSet("activeFilterGroups", "delete", val);
+    } else if (type === 'ownership') {
+        stateStore.set("activeOwnershipFilter", "all");
+        stateStore.set("stagedOwnershipFilter", "all");
+        const ownedCb = document.getElementById("db-show-owned");
+        const unownedCb = document.getElementById("db-show-not-owned");
+        if (ownedCb) ownedCb.checked = true;
+        if (unownedCb) unownedCb.checked = true;
     }
-    
-    // Uncheck in Left Drawer
-    const cb = document.querySelector(`#filter-drawer-left input[value="${val}"][data-type="${type}"]`);
-    if (cb) cb.checked = false;
+
+    // Uncheck in Left Drawer (only applies to checkbox-based filters)
+    if (type !== 'ownership') {
+        const cb = document.querySelector(`#filter-drawer-left input[value="${val}"][data-type="${type}"]`);
+        if (cb) cb.checked = false;
+    }
 
     renderList();
     updateActiveFilterChips();

@@ -901,26 +901,39 @@ main > section:not(.hidden) {
     background-color: rgba(var(--white-rgb), 0.05);
 }
 
-/* Active Filters Breadcrumbs Styling */
+/* Active Filters Chip Row */
 .active-filters-container {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow-x: auto;
     gap: 8px;
+    width: 100%;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    /* margins only when chips are present */
+}
+
+.active-filters-container::-webkit-scrollbar {
+    display: none;
+}
+
+.active-filters-container.has-chips {
     margin-top: 5px;
     margin-bottom: 12px;
-    width: 100%;
+    padding-bottom: 2px;
 }
 
 .filter-chip {
     display: inline-flex;
     align-items: center;
+    flex-shrink: 0;
     gap: 6px;
     background: rgba(var(--white-rgb), 0.03);
     border: 1px solid rgba(var(--white-rgb), 0.06);
     color: rgba(var(--white-rgb), 0.9);
-    font-size: 0.72rem; /* Clearly smaller than 0.82rem of button */
-    font-weight: 500; /* Regular/medium weight, not bold */
-    padding: 4px 8px; /* Clearly smaller padding */
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 4px 8px;
     border-radius: 6px;
     cursor: default;
     transition: all 0.2s;
