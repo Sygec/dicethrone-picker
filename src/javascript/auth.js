@@ -84,10 +84,11 @@ export async function handlePasswordReset() {
     const email = document.getElementById("login-email").value;
 
     if (!email) {
-        authView.showLoginError("Please enter your email address first to reset password.");
+        authView.showLoginEmailRequiredError("Please enter your email address first.");
         return;
     }
 
+    authView.clearLoginEmailHighlight();
     const { error } = await apiService.resetPasswordForEmail(email);
 
     if (error) {

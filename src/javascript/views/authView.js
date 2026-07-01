@@ -18,6 +18,7 @@ const getElements = () => {
             rollDraftBtn: document.getElementById("rollDraftBtn"),
             loginModal: document.getElementById("login-modal"),
             loginError: document.getElementById("login-error"),
+            loginEmailInput: document.getElementById("login-email"),
             updatePasswordModal: document.getElementById("update-password-modal"),
             updatePasswordError: document.getElementById("update-password-error"),
             updatePasswordUsername: document.getElementById("update-password-username"),
@@ -87,6 +88,7 @@ export function openLoginModal() {
     const el = getElements();
     if (el.loginModal) el.loginModal.style.display = "flex";
     if (el.loginError) el.loginError.style.display = "none";
+    clearLoginEmailHighlight();
     document.body.style.overflow = "hidden";
 }
 
@@ -96,6 +98,7 @@ export function openLoginModal() {
 export function closeLoginModal() {
     const el = getElements();
     if (el.loginModal) el.loginModal.style.display = "none";
+    clearLoginEmailHighlight();
     document.body.style.overflow = "auto";
 }
 
@@ -108,7 +111,34 @@ export function showLoginError(message) {
     if (el.loginError) {
         el.loginError.innerText = message;
         el.loginError.style.color = "var(--danger)";
+        el.loginError.style.fontSize = "0.95rem";
+        el.loginError.style.fontWeight = "600";
         el.loginError.style.display = "block";
+    }
+}
+
+/**
+ * Shows a prominent validation error and highlights the email input in red.
+ * Used when the email field is required but empty (e.g. forgot password).
+ * @param {string} message - Error message text.
+ */
+export function showLoginEmailRequiredError(message) {
+    showLoginError(message);
+    const el = getElements();
+    if (el.loginEmailInput) {
+        el.loginEmailInput.style.borderColor = "var(--danger)";
+        el.loginEmailInput.style.boxShadow = "0 0 0 2px color-mix(in srgb, var(--danger) 25%, transparent)";
+    }
+}
+
+/**
+ * Resets the email input border highlight set by showLoginEmailRequiredError.
+ */
+export function clearLoginEmailHighlight() {
+    const el = getElements();
+    if (el.loginEmailInput) {
+        el.loginEmailInput.style.borderColor = "";
+        el.loginEmailInput.style.boxShadow = "";
     }
 }
 
@@ -157,6 +187,8 @@ export function showUpdatePasswordSuccessFeedback() {
     if (el.loginError) {
         el.loginError.innerText = "Password reset email sent. Please check your inbox.";
         el.loginError.style.color = "#4CAF50";
+        el.loginError.style.fontSize = "0.95rem";
+        el.loginError.style.fontWeight = "600";
         el.loginError.style.display = "block";
         setTimeout(() => {
             if (el.loginError) {
