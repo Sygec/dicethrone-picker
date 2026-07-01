@@ -153,12 +153,11 @@ export function showUpdatePasswordError(message) {
  */
 export function showUpdatePasswordSuccessFeedback() {
     const el = getElements();
-    if (el.updatePasswordError) {
-        el.updatePasswordError.innerText = "Password reset email sent. Please check your inbox.";
-        el.updatePasswordError.style.color = "#4CAF50";
-        el.updatePasswordError.style.display = "block";
+    if (el.loginError) {
+        el.loginError.innerText = "Password reset email sent. Please check your inbox.";
+        el.loginError.style.color = "#4CAF50";
         setTimeout(() => {
-            if (el.updatePasswordError) el.updatePasswordError.style.color = "var(--danger)";
+            if (el.loginError) el.loginError.style.color = "var(--danger)";
         }, 5000);
     }
 }

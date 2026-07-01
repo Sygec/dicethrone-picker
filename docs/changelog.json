@@ -1,13 +1,5 @@
 [
     {
-        "version": "2.2.1.20260630",
-        "changes": [
-            "Hero Database: Ownership filter now in filter drawer",
-            "Hero Database: Filter chips now only show on a single line and scroll horizontally if needed",
-            "Password Reset: Fixed bug where password reset email was not being sent in Prod"
-        ]
-    },
-    {
         "version": "2.2.0.20260627",
         "changes": [
             "Maintenance update: Mostly bug fixes and minor tweaks to improve performance and stability"
