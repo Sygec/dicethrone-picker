@@ -137,7 +137,7 @@ export function showLoginEmailRequiredError(message) {
 export function clearLoginEmailHighlight() {
     const el = getElements();
     if (el.loginEmailInput) {
-        el.loginEmailInput.style.borderColor = "";
+        el.loginEmailInput.style.borderColor = "#ccc";
         el.loginEmailInput.style.boxShadow = "";
     }
 }
