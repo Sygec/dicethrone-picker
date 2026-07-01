@@ -231,19 +231,19 @@ function hidePreloader() {
 window.addEventListener("DOMContentLoaded", () => {
     setupAllEventBindings();
     initializeApp();
-});
 
-apiService.onAuthStateChange((event, session) => {
-    stateStore.set("currentUser", session?.user || null);
-    if (event === "SIGNED_IN" || event === "SIGNED_OUT") init();
+    apiService.onAuthStateChange((event, session) => {
+        stateStore.set("currentUser", session?.user || null);
+        if (event === "SIGNED_IN" || event === "SIGNED_OUT") init();
 
-    if (event === "PASSWORD_RECOVERY") {
-        openUpdatePasswordModal();
-    }
+        if (event === "PASSWORD_RECOVERY") {
+            openUpdatePasswordModal();
+        }
 
-    updateAuthUI();
-    if (event === "SIGNED_IN") {
-        closeLoginModal();
-    }
+        updateAuthUI();
+        if (event === "SIGNED_IN") {
+            closeLoginModal();
+        }
+    });
 });
 

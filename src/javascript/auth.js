@@ -118,9 +118,15 @@ export function closeUpdatePasswordModal() {
  */
 export async function handleUpdatePassword() {
     const newPassword = document.getElementById("new-password").value;
+    const confirmPassword = document.getElementById("confirm-password").value;
 
     if (!newPassword) {
         authView.showUpdatePasswordError("Please enter a new password.");
+        return;
+    }
+
+    if (newPassword !== confirmPassword) {
+        authView.showUpdatePasswordError("Passwords do not match.");
         return;
     }
 

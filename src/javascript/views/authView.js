@@ -22,6 +22,7 @@ const getElements = () => {
             updatePasswordError: document.getElementById("update-password-error"),
             updatePasswordUsername: document.getElementById("update-password-username"),
             newPasswordInput: document.getElementById("new-password"),
+            confirmPasswordInput: document.getElementById("confirm-password"),
             playerTogglesContainer: document.getElementById("player-toggle-zone-top")
         };
     }
@@ -156,8 +157,13 @@ export function showUpdatePasswordSuccessFeedback() {
     if (el.loginError) {
         el.loginError.innerText = "Password reset email sent. Please check your inbox.";
         el.loginError.style.color = "#4CAF50";
+        el.loginError.style.display = "block";
         setTimeout(() => {
-            if (el.loginError) el.loginError.style.color = "var(--danger)";
+            if (el.loginError) {
+                el.loginError.style.display = "none";
+                el.loginError.innerText = "";
+                el.loginError.style.color = "var(--danger)";
+            }
         }, 5000);
     }
 }
@@ -168,4 +174,5 @@ export function showUpdatePasswordSuccessFeedback() {
 export function resetPasswordUpdateForm() {
     const el = getElements();
     if (el.newPasswordInput) el.newPasswordInput.value = "";
+    if (el.confirmPasswordInput) el.confirmPasswordInput.value = "";
 }
