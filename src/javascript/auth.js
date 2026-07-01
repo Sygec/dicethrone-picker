@@ -84,10 +84,11 @@ export async function handlePasswordReset() {
     const email = document.getElementById("login-email").value;
 
     if (!email) {
-        authView.showLoginError("Please enter your email address first to reset password.");
+        authView.showLoginEmailRequiredError("Please enter your email address first.");
         return;
     }
 
+    authView.clearLoginEmailHighlight();
     const { error } = await apiService.resetPasswordForEmail(email);
 
     if (error) {
@@ -118,9 +119,15 @@ export function closeUpdatePasswordModal() {
  */
 export async function handleUpdatePassword() {
     const newPassword = document.getElementById("new-password").value;
+    const confirmPassword = document.getElementById("confirm-password").value;
 
     if (!newPassword) {
         authView.showUpdatePasswordError("Please enter a new password.");
+        return;
+    }
+
+    if (newPassword !== confirmPassword) {
+        authView.showUpdatePasswordError("Passwords do not match.");
         return;
     }
 
