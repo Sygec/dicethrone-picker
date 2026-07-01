@@ -34,32 +34,7 @@
             Showing 0 of 0 heroes
         </div>
 
-        <!-- Segmented Pill Control for Ownership -->
-        <div class="ownership-segmented-control">
-            <button
-                type="button"
-                class="segmented-pill active"
-                id="pill-show-owned"
-                data-filter="owned">
-                Owned
-            </button>
-            <button
-                type="button"
-                class="segmented-pill"
-                id="pill-show-not-owned"
-                data-filter="unowned">
-                Unowned
-            </button>
-            <button
-                type="button"
-                class="segmented-pill"
-                id="pill-show-all"
-                data-filter="all">
-                All
-            </button>
-        </div>
-
-        <!-- Hidden inputs for backward compatibility with JS queries -->
+        <!-- Hidden inputs used by renderList for ownership filtering -->
         <input
             type="checkbox"
             id="db-show-owned"

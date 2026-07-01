@@ -431,19 +431,9 @@
     color: var(--text);
 }
 
-/* Reset Button Container */
-.filter-drawer-reset-container {
-    padding: 12px 20px;
-    display: flex;
-}
-
 .btn-filter-reset,
 .btn-filter-apply {
-    width: 100%;
-    background: var(--accent);
-    border: none;
-    color: var(--gray-800);
-    padding: 14px;
+    flex: 1;
     border-radius: 8px;
     font-weight: 800;
     font-size: 1rem;
@@ -451,6 +441,25 @@
     cursor: pointer;
     transition: all 0.2s;
     text-transform: uppercase;
+    padding: 14px;
+}
+
+.btn-filter-reset {
+    background: transparent;
+    border: 1px solid rgba(var(--white-rgb), 0.25);
+    color: rgba(var(--white-rgb), 0.7);
+    flex: 0 0 38%;
+}
+
+.btn-filter-reset:hover {
+    border-color: rgba(var(--white-rgb), 0.5);
+    color: var(--text);
+}
+
+.btn-filter-apply {
+    background: var(--accent);
+    border: none;
+    color: var(--gray-800);
 }
 
 /* Scrollable Body */
@@ -518,9 +527,9 @@
 .filter-drawer-footer {
     padding: 16px 20px;
     border-top: 1px solid rgba(var(--white-rgb), 0.08);
+    display: flex;
+    gap: 10px;
 }
-
-/* btn-filter-apply styles consolidated above */
 
 /* -------------------------------------------------- */
 /* SORT DROPDOWN SYSTEM                               */
