@@ -128,10 +128,23 @@ export function openHistoryFilterDrawer() {
 }
 
 /**
+ * Updates the active pill in the ownership segmented control inside the filter drawer.
+ */
+export function updateOwnershipPillsUI() {
+    const staged = stateStore.get("stagedOwnershipFilter");
+    const map = { owned: "pill-show-owned", unowned: "pill-show-not-owned", all: "pill-show-all" };
+    Object.entries(map).forEach(([key, id]) => {
+        document.getElementById(id)?.classList.toggle("active", key === staged);
+    });
+    updateSegmentedHighlights();
+}
+
+/**
  * Opens the Left Filters drawer.
  */
 export function openFilterDrawer() {
     renderFilterDrawerDynamicSections();
+    updateOwnershipPillsUI();
     updateFilterDrawerHeroCountUI();
     updateFilterDrawerSectionTitlesUI();
 
@@ -235,11 +248,14 @@ export function updateActiveFilterBadge() {
     const activeFilterComplexities = stateStore.get("activeFilterComplexities");
     const activeFilterGroups = stateStore.get("activeFilterGroups");
 
+    const activeOwnership = stateStore.get("activeOwnershipFilter");
+
     let activeCount = 0;
     if (activeFilterDataHistories) activeCount += activeFilterDataHistories.size;
     if (activeFilterPlayers) activeCount += activeFilterPlayers.size;
     if (activeFilterComplexities) activeCount += activeFilterComplexities.size;
     if (activeFilterGroups) activeCount += activeFilterGroups.size;
+    if (activeOwnership && activeOwnership !== "all") activeCount++;
 
     if (activeCount > 0) {
         el.filterActiveBadge.innerText = activeCount;
@@ -1003,6 +1019,7 @@ export function updateActiveFilterChips() {
     const searchInput = el.heroSearchInput;
     const searchTerm = searchInput ? searchInput.value.trim() : "";
 
+    const activeOwnershipFilter = stateStore.get("activeOwnershipFilter");
     const activeFilterDataHistories = stateStore.get("activeFilterDataHistories");
     const activeFilterPlayers = stateStore.get("activeFilterPlayers");
     const activeFilterComplexities = stateStore.get("activeFilterComplexities");
@@ -1016,6 +1033,16 @@ export function updateActiveFilterChips() {
             <div class="filter-chip" title="Active Search Filter">
                 <span class="filter-chip-remove" data-action="clear-search-filter" title="Remove search filter">✖</span>
                 <span class="filter-chip-label">Search: "${searchTerm}"</span>
+            </div>
+        `;
+    }
+
+    if (activeOwnershipFilter && activeOwnershipFilter !== "all") {
+        const label = activeOwnershipFilter === "owned" ? "Owned" : "Unowned";
+        html += `
+            <div class="filter-chip" title="Active Ownership Filter">
+                <span class="filter-chip-remove" data-action="remove-filter-chip" data-type="ownership" data-value="${activeOwnershipFilter}" title="Remove filter">✖</span>
+                <span class="filter-chip-label">${label}</span>
             </div>
         `;
     }
@@ -1088,6 +1115,7 @@ export function updateActiveFilterChips() {
     }
 
     el.activeFiltersContainer.innerHTML = html;
+    el.activeFiltersContainer.classList.toggle("has-chips", !!html.trim());
 }
 
 /**
