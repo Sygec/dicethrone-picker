@@ -28,7 +28,9 @@ export async function signInWithPassword({ email, password }) {
  * @returns {Promise<Object>} Supabase auth response containing error.
  */
 export async function resetPasswordForEmail(email) {
-    return db.auth.resetPasswordForEmail(email);
+    return db.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin,
+    });
 }
 
 /**
