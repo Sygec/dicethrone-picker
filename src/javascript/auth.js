@@ -92,7 +92,7 @@ export async function handlePasswordReset() {
     const { error } = await apiService.resetPasswordForEmail(email);
 
     if (error) {
-        authView.showLoginError(error.message);
+        authView.showLoginError(error.message || "Failed to send reset email. Please try again.");
     } else {
         authView.showUpdatePasswordSuccessFeedback();
     }
