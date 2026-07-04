@@ -17,10 +17,32 @@
         var(--bg-dark) 100%
     );
     display: flex;
-    justify-content: center;
-    align-items: center;
+    flex-direction: column;
     z-index: 9999;
     opacity: 1;
+}
+
+/* Top half: banner image, same rendered size as the in-page banner */
+.preloader-banner {
+    flex: 0 0 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+.preloader-banner .banner-image {
+    max-width: 550px;
+}
+
+/* Bottom half: rolling dice */
+.preloader-dice-section {
+    flex: 0 0 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
 }
 
 .fade-out {
