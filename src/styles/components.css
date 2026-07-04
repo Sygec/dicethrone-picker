@@ -114,15 +114,10 @@ h1 {
 }
 
 .player-toggle-zone-top {
-    background: var(--card-bg);
-    padding: 15px;
-    border-radius: 12px;
     margin-bottom: 15px;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow);
 }
 
 .player-toggle-zone {

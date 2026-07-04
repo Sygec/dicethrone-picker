@@ -9,6 +9,8 @@ const state = {
     characters: [],
     games: [],
     players: [],
+    invitees: [], // [{ id, name }] — max 2, session-only, no weighting/history
+    selectedGameType: null, // 'duel' | '2v2' | '3v3' | 'ffa' | 'koth'
     groups: [],
     authUsers: [],
     cachedChangelog: null,

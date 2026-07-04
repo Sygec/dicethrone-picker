@@ -70,11 +70,11 @@ export function renderPlayerToggles() {
     if (!el.playerTogglesContainer || !players || players.length === 0) return;
 
     el.playerTogglesContainer.innerHTML = players
+        .slice(0, 4)
         .map((p, i) => {
-            const isChecked = i < 4 ? "checked" : "";
             return `
             <label class="player-card" style="--player-color: var(--${p.id})">
-                <input type="checkbox" id="use${i}" ${isChecked} data-action="toggle-player-slot" data-player-idx="${i}">
+                <input type="checkbox" id="use${i}" data-action="toggle-player-slot" data-player-idx="${i}">
                 <span class="player-card-name">${p.name}</span>
             </label>`;
         })

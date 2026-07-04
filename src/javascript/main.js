@@ -24,6 +24,7 @@ import {
 } from './admin.js';
 import { updateActiveFilterBadge, updateActiveFilterChips, setSort } from './filters.js';
 import { updateRollSettingsBadge } from './randomizer.js';
+import { renderRandomizerSetup } from './views/randomizerSetupView.js';
 import { setupAllEventBindings } from './eventBindings.js';
 
 
@@ -92,6 +93,7 @@ export async function init() {
         stateStore.set("loggedInPlayerIndex", loggedInIdx);
         updateAuthUI();
         renderPlayerToggles();
+        renderRandomizerSetup();
     }
 
     const { data, error } = await apiService.getHeroes();

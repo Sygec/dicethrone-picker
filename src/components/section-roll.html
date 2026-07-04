@@ -2,10 +2,48 @@
 <!-- SECTION: Roll Randomizer                   -->
 <!-- ========================================== -->
 <section id="rollSection">
-    <!-- Player Selection Toggles -->
-    <div
-        class="player-toggle-zone-top"
-        id="player-toggle-zone-top"></div>
+    <!-- Randomizer Setup: Step 1 (Players & Invitees), Step 2 (Game Type) -->
+    <div class="randomizer-setup" id="randomizer-setup">
+        <div class="setup-step" id="setup-step-players">
+            <div class="step-header">
+                <span class="step-badge">1</span>
+                <span class="step-title">Who's Playing</span>
+            </div>
+            <div class="step-subtitle">Tracked Players</div>
+            <div
+                class="player-toggle-zone-top"
+                id="player-toggle-zone-top"></div>
+            <div class="step-subtitle">Invitees</div>
+            <div
+                class="invitee-zone"
+                id="invitee-zone"></div>
+            <p class="setup-hint">
+                <svg class="setup-hint-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span>Invitees get a random hero — no weighting, no history saved.</span>
+            </p>
+        </div>
+
+        <div
+            class="setup-step"
+            id="setup-step-gametype"
+            style="display: none">
+            <div class="step-header">
+                <span class="step-badge">2</span>
+                <span class="step-title">Which Game Type</span>
+            </div>
+            <div
+                class="game-type-grid"
+                id="game-type-grid"></div>
+            <p
+                class="setup-hint"
+                id="game-type-hint"
+                style="display: none"></p>
+        </div>
+    </div>
 
     <!-- Action Controls Wrapper -->
     <div class="roll-controls-wrapper">

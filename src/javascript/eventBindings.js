@@ -4,6 +4,7 @@
  */
 
 import * as randomizer from './randomizer.js';
+import * as randomizerSetup from './randomizerSetup.js';
 import * as filters from './filters.js';
 import * as admin from './admin.js';
 import * as auth from './auth.js';
@@ -29,6 +30,27 @@ export function setupAllEventBindings() {
     bindClick("btn-trigger-filter", filters.openFilterDrawer);
     bindClick("clear-games-search", admin.clearGamesSearch);
     bindClick("btn-trigger-games-filter", filters.openHistoryFilterDrawer);
+
+    // Randomizer setup: player/invitee toggles & game type selection
+    const setupZone = document.getElementById("randomizer-setup");
+    if (setupZone) {
+        setupZone.addEventListener("change", (e) => {
+            const inviteeCheckbox = e.target.closest("#invitee-zone input[data-invitee-id]");
+            if (inviteeCheckbox && !inviteeCheckbox.checked) {
+                return randomizerSetup.removeInvitee(inviteeCheckbox.dataset.inviteeId);
+            }
+            if (e.target.closest("#player-toggle-zone-top, #invitee-zone")) {
+                randomizerSetup.onSetupChange();
+            }
+        });
+        setupZone.addEventListener("click", (e) => {
+            const addBtn = e.target.closest('[data-action="add-invitee"]');
+            if (addBtn) return randomizerSetup.addInvitee(parseInt(addBtn.dataset.slot, 10));
+
+            const typeBtn = e.target.closest('[data-action="select-game-type"]');
+            if (typeBtn && !typeBtn.disabled) randomizerSetup.selectGameType(typeBtn.dataset.type);
+        });
+    }
 
     // Bottom tab navigation
     document.querySelectorAll(".bottom-nav .nav-item").forEach(el => {

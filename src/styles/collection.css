@@ -1008,7 +1008,6 @@
 
 /* Glassmorphism activation for modern Android & iOS browsers */
 @supports (backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px)) {
-    .player-toggle-zone-top,
     .results,
     .manage-form,
     .admin-panel,
