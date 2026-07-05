@@ -51,6 +51,10 @@ const getElements = () => {
             randomizeTeamsBtn: document.getElementById('randomize-teams-btn'),
             teamSwapQuestion: document.getElementById('team-swap-question'),
             teamSwapScrim: document.getElementById('team-swap-scrim'),
+            rollModeStep: document.getElementById('setup-step-rollmode'),
+            rollModeGrid: document.getElementById('roll-mode-grid'),
+            draftCountSection: document.getElementById('draft-count-section'),
+            draftCountGrid: document.getElementById('draft-count-grid'),
         };
     }
     return elementsCache;
@@ -198,8 +202,9 @@ function renderTeamPanel(teamLetter, ids, byId, swapSource) {
 }
 
 /**
- * Renders Step 3 (Teams): shown only when a Teams game type ('2v2' | '3v3') is selected.
- * Reflects the current team assignments and any in-progress swap (dimmed scrim + question).
+ * Renders the Teams sub-section (a continuation of Step 2, not its own numbered step):
+ * shown only when a Teams game type ('2v2' | '3v3') is selected. Reflects the current team
+ * assignments and any in-progress swap (dimmed scrim + question).
  */
 export function renderTeams() {
     const el = getElements();
@@ -233,12 +238,54 @@ export function renderTeams() {
     el.teamSwapScrim.style.display = swapSource ? 'block' : 'none';
 }
 
+const DRAFT_COUNT_OPTIONS = [2, 3, 4, 5];
+
 /**
- * Renders the full Randomizer setup UI (invitees + game type step + teams step).
+ * Shows or hides Step 3 (Roll Mode): visible once any game type is selected.
+ */
+export function updateRollModeVisibility() {
+    const el = getElements();
+    if (!el.rollModeStep) return;
+    el.rollModeStep.style.display = stateStore.get('selectedGameType') ? 'block' : 'none';
+}
+
+/**
+ * Renders Step 3 (Roll Mode): Quick Roll / Draft Roll pills, plus the "Options per player"
+ * candidate-count picker (2-5) shown only while Draft Roll is selected. Reflects and updates
+ * the real draftModeEnabled/draftCount used by the existing SINGLE ROLL/DRAFT ROLL buttons.
+ */
+export function renderRollMode() {
+    const el = getElements();
+    if (!el.rollModeGrid) return;
+
+    const draftModeEnabled = stateStore.get('draftModeEnabled');
+    const draftCount = stateStore.get('draftCount');
+
+    el.rollModeGrid.innerHTML = `
+        <button type="button" class="roll-mode-btn${!draftModeEnabled ? ' active' : ''}" data-action="select-roll-mode" data-mode="quick">
+            <span class="roll-mode-title">Quick Roll</span>
+            <span class="roll-mode-subtitle">1 hero per player</span>
+        </button>
+        <button type="button" class="roll-mode-btn${draftModeEnabled ? ' active' : ''}" data-action="select-roll-mode" data-mode="draft">
+            <span class="roll-mode-title">Draft Roll</span>
+            <span class="roll-mode-subtitle">Pick 1 of N options</span>
+        </button>`;
+
+    el.draftCountSection.style.display = draftModeEnabled ? 'block' : 'none';
+    el.draftCountGrid.innerHTML = DRAFT_COUNT_OPTIONS.map(
+        (n) => `
+        <button type="button" class="draft-count-btn${draftCount === n ? ' active' : ''}" data-action="select-draft-count" data-count="${n}">${n}</button>`,
+    ).join('');
+}
+
+/**
+ * Renders the full Randomizer setup UI (invitees + game type step + teams step + roll mode).
  */
 export function renderRandomizerSetup() {
     renderInvitees();
     updateStepVisibility();
     renderGameTypeOptions();
     renderTeams();
+    updateRollModeVisibility();
+    renderRollMode();
 }

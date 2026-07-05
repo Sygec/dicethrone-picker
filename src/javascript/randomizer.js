@@ -203,9 +203,8 @@ export function pickCharactersNormal() {
 }
 
 export function pickCharactersDraft() {
-    console.log("[randomizer] pickCharactersDraft called. Setting draftModeEnabled to true, draftCount to 3.");
+    console.log("[randomizer] pickCharactersDraft called. Setting draftModeEnabled to true.");
     stateStore.set("draftModeEnabled", true);
-    stateStore.set("draftCount", 3);
     pickCharacters();
 }
 
@@ -501,11 +500,8 @@ export function openRollSettingsDrawer() {
     stateStore.set("currentDrawerMode", "roll-settings");
 
     // Stage current configuration
-    stateStore.set("stagedDraftModeEnabled", stateStore.get("draftModeEnabled"));
-    stateStore.set("stagedDraftCount", stateStore.get("draftCount"));
     stateStore.set("stagedBannedHeroIds", new Set(stateStore.get("bannedHeroIds")));
     stateStore.set("stagedBanSearchQuery", "");
-    stateStore.set("stagedRollSettingsTab", "draft");
 
     const drawer = document.getElementById("sort-filter-drawer");
     const title = document.getElementById("drawer-title-text");
@@ -519,21 +515,6 @@ export function openRollSettingsDrawer() {
         drawer.classList.add("open");
         document.body.style.overflow = "hidden"; // Prevent background scroll
     }
-}
-export function switchRollSettingsTab(tabName) {
-    stateStore.set("stagedRollSettingsTab", tabName);
-    renderDrawerBody();
-}
-export function toggleStagedDraftMode(enabled) {
-    stateStore.set("stagedDraftModeEnabled", enabled);
-    const section = document.getElementById("drawer-draft-count-section");
-    if (section) {
-        section.style.display = enabled ? "block" : "none";
-    }
-}
-export function setStagedDraftCount(count) {
-    stateStore.set("stagedDraftCount", count);
-    renderDrawerBody();
 }
 export function toggleStagedBan(heroId) {
     stateStore.updateSet("stagedBannedHeroIds", "toggle", heroId);

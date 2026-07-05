@@ -906,57 +906,6 @@ input:checked + .toggle-slider:before {
     right: 10px;
 }
 
-/* Roll Settings Drawer Tabs Styling */
-.drawer-tabs-container {
-    margin: -10px -20px 10px -20px;
-    border-bottom: 1px solid rgba(var(--white-rgb), 0.08);
-    background: rgba(var(--black-rgb), 0.15);
-}
-
-.drawer-tabs {
-    display: flex;
-    position: relative;
-    width: 100%;
-}
-
-.drawer-tab-btn {
-    flex: 1;
-    background: none;
-    border: none;
-    padding: 14px 16px;
-    color: rgba(var(--white-rgb), 0.6);
-    font-family: "Outfit", sans-serif;
-    font-size: 0.95rem;
-    font-weight: 700;
-    cursor: pointer;
-    text-align: center;
-    transition: color 0.3s ease;
-    outline: none;
-    position: relative;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    z-index: 2;
-}
-
-.drawer-tab-btn:hover {
-    color: var(--text);
-}
-
-.drawer-tab-btn.active {
-    color: var(--accent);
-}
-
-.drawer-tab-underline {
-    position: absolute;
-    bottom: 0;
-    height: 3px;
-    width: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 10px var(--accent);
-    transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    z-index: 3;
-}
-
 /* --- Phase 4 Extracted Inline Styles --- */
 
 .roll-controls-wrapper {
@@ -1120,7 +1069,15 @@ input:checked + .toggle-slider:before {
     transform: scale(1.02);
 }
 
-/* --- Randomizer Setup: Step 3 (Teams) --- */
+/* --- Randomizer Setup: Teams (continuation of Step 2, Teams game types only) --- */
+
+.teams-subsection {
+    margin-top: -8px;
+}
+
+.teams-label {
+    color: var(--warning);
+}
 
 .teams-grid {
     display: grid;
@@ -1279,4 +1236,122 @@ input:checked + .toggle-slider:before {
     z-index: 1001;
     border-color: var(--warning);
     box-shadow: 0 0 20px rgba(255, 215, 0, 0.25);
+}
+
+/* --- Randomizer Setup: Step 3 (Roll Mode) --- */
+
+.roll-mode-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.roll-mode-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 14px 10px;
+    background: rgba(var(--white-rgb), 0.02);
+    border: 1.5px solid rgba(var(--white-rgb), 0.08);
+    border-radius: 10px;
+    color: rgba(var(--white-rgb), 0.5);
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+@media (hover: hover) {
+    .roll-mode-btn:hover {
+        background: rgba(var(--white-rgb), 0.05);
+        border-color: rgba(var(--white-rgb), 0.25);
+        color: var(--text);
+    }
+}
+
+.roll-mode-title {
+    font-family: "Outfit", sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.roll-mode-subtitle {
+    font-family: "Outfit", sans-serif;
+    font-size: 0.65rem;
+    color: rgba(var(--white-rgb), 0.4);
+}
+
+.roll-mode-btn.active {
+    background: color-mix(in srgb, var(--warning) 20%, rgba(var(--white-rgb), 0.02));
+    border: 2px solid var(--warning);
+    color: var(--text);
+    box-shadow:
+        0 0 15px rgba(var(--black-rgb), 0.4),
+        0 0 18px rgba(255, 215, 0, 0.4),
+        inset 0 0 10px rgba(255, 215, 0, 0.25);
+}
+
+.roll-mode-btn.active .roll-mode-subtitle {
+    color: rgba(var(--white-rgb), 0.6);
+}
+
+.draft-count-section {
+    margin-top: 14px;
+}
+
+.draft-count-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.draft-count-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--warning);
+}
+
+.draft-count-subtitle {
+    font-size: 0.65rem;
+    font-style: italic;
+    color: var(--gray-300);
+}
+
+.draft-count-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.draft-count-btn {
+    padding: 10px 6px;
+    background: rgba(var(--white-rgb), 0.02);
+    border: 1.5px solid rgba(var(--white-rgb), 0.08);
+    border-radius: 10px;
+    color: rgba(var(--white-rgb), 0.5);
+    font-family: "Outfit", sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+@media (hover: hover) {
+    .draft-count-btn:hover {
+        background: rgba(var(--white-rgb), 0.05);
+        border-color: rgba(var(--white-rgb), 0.25);
+        color: var(--text);
+    }
+}
+
+.draft-count-btn.active {
+    background: color-mix(in srgb, var(--warning) 20%, rgba(var(--white-rgb), 0.02));
+    border: 2px solid var(--warning);
+    color: var(--text);
+    box-shadow:
+        0 0 15px rgba(var(--black-rgb), 0.4),
+        0 0 18px rgba(255, 215, 0, 0.4),
+        inset 0 0 10px rgba(255, 215, 0, 0.25);
 }

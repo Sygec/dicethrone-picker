@@ -39,7 +39,7 @@ import { setupAllEventBindings } from './eventBindings.js';
 export async function init() {
     stateStore.set("draftModeEnabled", localStorage.getItem("draftModeEnabled") === "true");
     let dCount = parseInt(localStorage.getItem("draftCount") || "3", 10);
-    if (dCount !== 2 && dCount !== 3) {
+    if (![2, 3, 4, 5].includes(dCount)) {
         dCount = 3;
     }
     stateStore.set("draftCount", dCount);

@@ -595,9 +595,6 @@ export function renderDrawerBody() {
     const stagedUseHistorical = stateStore.get("stagedUseHistorical");
     const NAMES = stateStore.get("NAMES");
     const activePlayerIndices = stateStore.get("activePlayerIndices");
-    const stagedDraftModeEnabled = stateStore.get("stagedDraftModeEnabled");
-    const stagedDraftCount = stateStore.get("stagedDraftCount");
-    const stagedRollSettingsTab = stateStore.get("stagedRollSettingsTab");
     const stagedBanSearchQuery = stateStore.get("stagedBanSearchQuery");
 
     el.drawerBody.style.overflowY = "auto";
@@ -700,49 +697,8 @@ export function renderDrawerBody() {
     } else if (currentDrawerMode === "roll-settings") {
         el.drawerBody.style.overflowY = "hidden";
 
-        const draftModeChecked = stagedDraftModeEnabled ? "checked" : "";
-        const draftCountOptions = [2, 3];
-        const countPills = draftCountOptions
-            .map((c) => {
-                const isActive = stagedDraftCount === c;
-                const activeClass = isActive ? "active" : "";
-                return `
-                    <button type="button" class="pill-toggle active-red ${activeClass}" data-action="set-staged-draft-count" data-count="${c}">
-                        ${c} Candidates
-                    </button>
-                `;
-            })
-            .join("");
-
         el.drawerBody.innerHTML = `
-            <div class="drawer-tabs-container" style="flex-shrink: 0;">
-                <div class="drawer-tabs">
-                    <button type="button" class="drawer-tab-btn ${stagedRollSettingsTab === "draft" ? "active" : ""}" data-action="switch-roll-settings-tab" data-tab="draft">Draft Mode</button>
-                    <button type="button" class="drawer-tab-btn ${stagedRollSettingsTab === "ban" ? "active" : ""}" data-action="switch-roll-settings-tab" data-tab="ban">Ban List</button>
-                    <div class="drawer-tab-underline" style="left: ${stagedRollSettingsTab === "draft" ? "0%" : "50%"};"></div>
-                </div>
-            </div>
-
-            <div id="roll-settings-draft-tab" style="display: ${stagedRollSettingsTab === "draft" ? "block" : "none"};">
-                <div class="panel-row-new">
-                    <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="drawer-draft-mode-checkbox" data-action="toggle-staged-draft-mode" ${draftModeChecked}>
-                            <span class="toggle-slider"></span>
-                        </label>
-                        <span style="font-size: 0.9em; opacity: 0.8;">Enable Turn-Based Drafting</span>
-                    </div>
-                </div>
-
-                <div id="drawer-draft-count-section" class="panel-row-new" style="display: ${stagedDraftModeEnabled ? "block" : "none"};">
-                    <span class="panel-row-title" style="font-weight: 700;">Draft Candidates Count:</span>
-                    <div class="pill-group" style="margin-top: 10px;">
-                        ${countPills}
-                    </div>
-                </div>
-            </div>
-
-            <div id="roll-settings-ban-tab" style="display: ${stagedRollSettingsTab === "ban" ? "flex" : "none"}; flex-direction: column; flex: 1; min-height: 0; font-size: 1rem;">
+            <div id="roll-settings-ban-tab" style="display: flex; flex-direction: column; flex: 1; min-height: 0; font-size: 1rem;">
                 <div class="panel-row-new" style="display: flex; flex-direction: column; flex: 1; min-height: 0; margin-top: 8px;">
                     <input type="text" id="ban-search-input" class="ban-search-input" placeholder="Search heroes to ban..." data-action="ban-search-input" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.2); color: #fff; margin-bottom: 15px; flex-shrink: 0;" value="${stagedBanSearchQuery || ""}">
                     <div id="drawer-ban-list-container" class="ban-list-container" style="flex: 1; min-height: 0; overflow-y: auto; padding-right: 4px; max-height: 350px;">

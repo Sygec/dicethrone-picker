@@ -60,6 +60,12 @@ export function setupAllEventBindings() {
 
             const completeSwapBtn = e.target.closest('[data-action="complete-team-swap"]');
             if (completeSwapBtn) return randomizerSetup.completeTeamSwap(completeSwapBtn.dataset.participantId);
+
+            const rollModeBtn = e.target.closest('[data-action="select-roll-mode"]');
+            if (rollModeBtn) return randomizerSetup.selectRollMode(rollModeBtn.dataset.mode);
+
+            const draftCountBtn = e.target.closest('[data-action="select-draft-count"]');
+            if (draftCountBtn) return randomizerSetup.selectDraftCount(parseInt(draftCountBtn.dataset.count, 10));
         });
     }
 
@@ -268,22 +274,6 @@ export function setupAllEventBindings() {
                 return;
             }
 
-            // Staged draft count candidate pills
-            const draftCount = target.closest('[data-action="set-staged-draft-count"]');
-            if (draftCount) {
-                const count = parseInt(draftCount.getAttribute("data-count"), 10);
-                randomizer.setStagedDraftCount(count);
-                return;
-            }
-
-            // Switch settings tabs
-            const settingsTab = target.closest('[data-action="switch-roll-settings-tab"]');
-            if (settingsTab) {
-                const tab = settingsTab.getAttribute("data-tab");
-                randomizer.switchRollSettingsTab(tab);
-                return;
-            }
-
             // Sort player change
             const sortPlayer = target.closest('[data-action="drawer-sort-player-change"]');
             if (sortPlayer) {
@@ -319,13 +309,6 @@ export function setupAllEventBindings() {
             const histCheckbox = target.closest('[data-action="toggle-use-historical"]');
             if (histCheckbox) {
                 filters.toggleStagedGamesHistorical(histCheckbox.checked);
-                return;
-            }
-
-            // Staged draft mode switch checkbox
-            const draftSwitch = target.closest('[data-action="toggle-staged-draft-mode"]');
-            if (draftSwitch) {
-                randomizer.toggleStagedDraftMode(draftSwitch.checked);
                 return;
             }
 

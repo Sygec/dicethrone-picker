@@ -124,6 +124,7 @@ export function selectGameType(type) {
 
     randomizerSetupView.renderGameTypeOptions();
     randomizerSetupView.renderTeams();
+    randomizerSetupView.updateRollModeVisibility();
 }
 
 /**
@@ -155,6 +156,30 @@ export function onSetupChange() {
     randomizerSetupView.updateStepVisibility(count);
     randomizerSetupView.renderGameTypeOptions();
     randomizerSetupView.renderTeams();
+    randomizerSetupView.updateRollModeVisibility();
+}
+
+/**
+ * Selects Quick Roll (1 hero per player) or Draft Roll (pick 1 of N), reflected directly in
+ * the real draftModeEnabled flag used by the existing roll buttons, and persists it.
+ * @param {'quick'|'draft'} mode
+ */
+export function selectRollMode(mode) {
+    const draftModeEnabled = mode === 'draft';
+    stateStore.set('draftModeEnabled', draftModeEnabled);
+    localStorage.setItem('draftModeEnabled', draftModeEnabled);
+    randomizerSetupView.renderRollMode();
+}
+
+/**
+ * Selects how many hero candidates are offered per player in Draft Roll, reflected directly
+ * in the real draftCount used by the existing draft logic, and persists it.
+ * @param {number} count - One of 2, 3, 4, 5.
+ */
+export function selectDraftCount(count) {
+    stateStore.set('draftCount', count);
+    localStorage.setItem('draftCount', count);
+    randomizerSetupView.renderRollMode();
 }
 
 /**

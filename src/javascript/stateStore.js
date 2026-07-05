@@ -67,11 +67,8 @@ const state = {
     draftCount: 3,
     bannedHeroIds: new Set(),
 
-    stagedDraftModeEnabled: false,
-    stagedDraftCount: 3,
     stagedBannedHeroIds: new Set(),
     stagedBanSearchQuery: "",
-    stagedRollSettingsTab: "draft",
 
     activeDraftOrder: [],
     activeDraftStep: 0,
