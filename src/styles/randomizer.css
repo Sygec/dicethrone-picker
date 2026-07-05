@@ -1119,3 +1119,164 @@ input:checked + .toggle-slider:before {
         inset 0 0 10px rgba(255, 215, 0, 0.25);
     transform: scale(1.02);
 }
+
+/* --- Randomizer Setup: Step 3 (Teams) --- */
+
+.teams-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.team-panel {
+    background: rgba(var(--white-rgb), 0.02);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 10px;
+}
+
+.team-panel-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--gray-200);
+    margin-bottom: 8px;
+}
+
+.team-panel[data-team="A"] .team-panel-title {
+    color: var(--p2);
+}
+
+.team-panel[data-team="B"] .team-panel-title {
+    color: var(--accent);
+}
+
+.team-player-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    background: rgba(var(--white-rgb), 0.03);
+    border: 1px solid rgba(var(--white-rgb), 0.08);
+    border-radius: 8px;
+    margin-bottom: 6px;
+    text-align: left;
+    font-family: "Outfit", sans-serif;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+@media (hover: hover) {
+    .team-player-row:not(.swap-candidate):hover {
+        border-color: rgba(var(--white-rgb), 0.25);
+        background: rgba(var(--white-rgb), 0.06);
+    }
+}
+
+.team-player-row:last-child {
+    margin-bottom: 0;
+}
+
+.team-player-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--player-color);
+    flex-shrink: 0;
+}
+
+.team-player-name {
+    flex: 1;
+    font-size: 0.8rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.team-player-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: rgba(var(--white-rgb), 0.4);
+    transition: color 0.2s ease;
+}
+
+@media (hover: hover) {
+    .team-player-row:hover .team-player-arrow {
+        color: var(--warning);
+    }
+}
+
+.team-player-row.reversed .team-player-arrow svg {
+    transform: scaleX(-1);
+}
+
+.team-player-row.swap-source {
+    border-color: var(--warning);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.25);
+}
+
+.team-player-row.swap-candidate {
+    cursor: pointer;
+}
+
+@media (hover: hover) {
+    .team-player-row.swap-candidate:hover {
+        border-color: var(--warning);
+        background: rgba(255, 215, 0, 0.08);
+    }
+}
+
+.randomize-teams-btn {
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    border: 1px solid rgba(var(--white-rgb), 0.15);
+    border-radius: 8px;
+    color: rgba(var(--white-rgb), 0.7);
+    font-family: "Outfit", sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+@media (hover: hover) {
+    .randomize-teams-btn:hover {
+        background: rgba(var(--white-rgb), 0.06);
+        border-color: rgba(var(--white-rgb), 0.3);
+    }
+}
+
+.team-swap-question {
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--warning);
+    margin-top: 10px;
+}
+
+.team-swap-question.swap-active {
+    position: relative;
+    z-index: 1001;
+}
+
+.team-swap-scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 1000;
+}
+
+.team-panel.swap-target {
+    position: relative;
+    z-index: 1001;
+    border-color: var(--warning);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.25);
+}

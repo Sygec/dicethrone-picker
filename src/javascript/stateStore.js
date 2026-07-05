@@ -11,6 +11,8 @@ const state = {
     players: [],
     invitees: [], // [{ id, name }] — max 2, session-only, no weighting/history
     selectedGameType: null, // 'duel' | '2v2' | '3v3' | 'ffa' | 'koth'
+    teamAssignments: null, // { teamA: [participantId], teamB: [participantId] } | null
+    teamSwapSource: null, // { id: participantId, team: 'A' | 'B' } | null
     groups: [],
     authUsers: [],
     cachedChangelog: null,

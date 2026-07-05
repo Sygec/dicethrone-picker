@@ -43,7 +43,39 @@
                 id="game-type-hint"
                 style="display: none"></p>
         </div>
+
+        <div
+            class="setup-step"
+            id="setup-step-teams"
+            style="display: none">
+            <div class="step-header">
+                <span class="step-badge">3</span>
+                <span class="step-title">Teams</span>
+            </div>
+            <div class="step-subtitle">Tap a player's arrow to swap teams</div>
+            <div
+                class="teams-grid"
+                id="teams-grid"></div>
+            <button
+                type="button"
+                class="randomize-teams-btn"
+                id="randomize-teams-btn"
+                data-action="randomize-teams">
+                Randomize Teams
+            </button>
+            <p
+                class="team-swap-question"
+                id="team-swap-question"
+                style="display: none">
+                Swap with which player?
+            </p>
+        </div>
     </div>
+
+    <div
+        class="team-swap-scrim"
+        id="team-swap-scrim"
+        style="display: none"></div>
 
     <!-- Action Controls Wrapper -->
     <div class="roll-controls-wrapper">

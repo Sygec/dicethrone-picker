@@ -45,11 +45,28 @@ export function setupAllEventBindings() {
         });
         setupZone.addEventListener("click", (e) => {
             const addBtn = e.target.closest('[data-action="add-invitee"]');
-            if (addBtn) return randomizerSetup.addInvitee(parseInt(addBtn.dataset.slot, 10));
+            if (addBtn) return randomizerSetup.addInvitee();
 
             const typeBtn = e.target.closest('[data-action="select-game-type"]');
-            if (typeBtn && !typeBtn.disabled) randomizerSetup.selectGameType(typeBtn.dataset.type);
+            if (typeBtn && !typeBtn.disabled) return randomizerSetup.selectGameType(typeBtn.dataset.type);
+
+            const randomizeBtn = e.target.closest('[data-action="randomize-teams"]');
+            if (randomizeBtn) return randomizerSetup.randomizeTeams();
+
+            const initiateSwapBtn = e.target.closest('[data-action="initiate-team-swap"]');
+            if (initiateSwapBtn) {
+                return randomizerSetup.startTeamSwap(initiateSwapBtn.dataset.participantId, initiateSwapBtn.dataset.team);
+            }
+
+            const completeSwapBtn = e.target.closest('[data-action="complete-team-swap"]');
+            if (completeSwapBtn) return randomizerSetup.completeTeamSwap(completeSwapBtn.dataset.participantId);
         });
+    }
+
+    // Team swap scrim: clicking outside the opposing team panel cancels the in-progress swap
+    const teamSwapScrim = document.getElementById("team-swap-scrim");
+    if (teamSwapScrim) {
+        teamSwapScrim.addEventListener("click", () => randomizerSetup.cancelTeamSwap());
     }
 
     // Bottom tab navigation

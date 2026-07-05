@@ -1,12 +1,16 @@
 /**
- * @fileoverview Logic for the Randomizer setup flow: player/invitee selection (Step 1)
- * and game type selection (Step 2).
+ * @fileoverview Logic for the Randomizer setup flow: player/invitee selection (Step 1),
+ * game type selection (Step 2), and team assignment (Step 3, Teams game types only).
  * @module randomizerSetup
  */
 import * as stateStore from './stateStore.js';
 import * as randomizerSetupView from './views/randomizerSetupView.js';
 
-const MAX_INVITEES = 2;
+const MAX_PARTICIPANTS = 6; // no game type supports more than 6 total; also caps invitee additions
+
+export function isTeamsType(type) {
+    return type === '2v2' || type === '3v3';
+}
 
 /**
  * Counts checked tracked players and checked invitees currently in the DOM.
@@ -16,6 +20,41 @@ export function getParticipantCount() {
     return document.querySelectorAll(
         '#player-toggle-zone-top input:checked, #invitee-zone input:checked',
     ).length;
+}
+
+/**
+ * Whether another invitee can still be added (total participants below the 6-player ceiling
+ * shared by every game type). Computed from checked tracked players (DOM) + the invitees
+ * array length (state) rather than the invitee-zone DOM, since this is called while that
+ * zone is mid-render and wouldn't yet reflect an invitee just added to state.
+ * @returns {boolean}
+ */
+export function canAddMoreInvitees() {
+    const trackedCheckedCount = document.querySelectorAll('#player-toggle-zone-top input:checked').length;
+    return trackedCheckedCount + stateStore.get('invitees').length < MAX_PARTICIPANTS;
+}
+
+/**
+ * Builds the list of currently checked participants (tracked players + invitees),
+ * each with an id, display name, and CSS player-color variable name.
+ * @returns {{id: string, name: string, colorVar: string}[]}
+ */
+export function getCheckedParticipants() {
+    const players = stateStore.get('players').slice(0, 4);
+    const invitees = stateStore.get('invitees');
+    const participants = [];
+
+    players.forEach((p, i) => {
+        const checkbox = document.getElementById(`use${i}`);
+        if (checkbox?.checked) participants.push({ id: p.id, name: p.name, colorVar: p.id });
+    });
+
+    invitees.forEach((inv) => {
+        const checkbox = document.querySelector(`#invitee-zone input[data-invitee-id="${inv.id}"]`);
+        if (checkbox?.checked) participants.push({ id: inv.id, name: inv.name, colorVar: 'p5' });
+    });
+
+    return participants;
 }
 
 /**
@@ -35,27 +74,26 @@ export function getGameTypeAvailability(count) {
 }
 
 /**
- * Fills the given invitee slot (0-based, up to MAX_INVITEES) and re-renders.
- * @param {number} slot - Index of the empty invitee slot that was clicked.
+ * Appends a new invitee (up to MAX_PARTICIPANTS total participants) and re-renders.
  */
-export function addInvitee(slot) {
-    const invitees = stateStore.get('invitees');
-    if (slot < 0 || slot >= MAX_INVITEES || invitees[slot]) return;
+export function addInvitee() {
+    if (!canAddMoreInvitees()) return;
 
-    const next = [...invitees];
-    next[slot] = { id: `invitee-${Date.now()}`, name: `Invitee ${slot + 1}` };
+    const invitees = stateStore.get('invitees');
+    const next = [...invitees, { id: `invitee-${Date.now()}`, name: `Invitee ${invitees.length + 1}` }];
     stateStore.set('invitees', next);
     randomizerSetupView.renderInvitees();
     onSetupChange();
 }
 
 /**
- * Removes an invitee (reverting its slot back to an empty "+" placeholder) and re-renders.
+ * Removes an invitee and shifts/renumbers the remaining ones so names stay contiguous
+ * (e.g. removing "Invitee 2" out of 3 turns "Invitee 3" into "Invitee 2").
  * @param {string} id - The invitee's id.
  */
 export function removeInvitee(id) {
     const invitees = stateStore.get('invitees');
-    const next = invitees.map((inv) => (inv && inv.id === id ? undefined : inv));
+    const next = invitees.filter((inv) => inv.id !== id).map((inv, i) => ({ ...inv, name: `Invitee ${i + 1}` }));
     stateStore.set('invitees', next);
     randomizerSetupView.renderInvitees();
     onSetupChange();
@@ -77,7 +115,15 @@ export function selectGameType(type) {
     if (!isAvailable) return;
 
     stateStore.set('selectedGameType', type);
+    stateStore.set('teamSwapSource', null);
+    if (isTeamsType(type)) {
+        randomizeTeams();
+    } else {
+        stateStore.set('teamAssignments', null);
+    }
+
     randomizerSetupView.renderGameTypeOptions();
+    randomizerSetupView.renderTeams();
 }
 
 /**
@@ -98,6 +144,74 @@ export function onSetupChange() {
         stateStore.set('selectedGameType', null);
     }
 
+    const currentType = stateStore.get('selectedGameType');
+    stateStore.set('teamSwapSource', null);
+    if (isTeamsType(currentType)) {
+        randomizeTeams();
+    } else {
+        stateStore.set('teamAssignments', null);
+    }
+
     randomizerSetupView.updateStepVisibility(count);
     randomizerSetupView.renderGameTypeOptions();
+    randomizerSetupView.renderTeams();
+}
+
+/**
+ * Randomly splits the currently checked participants into Team A / Team B and re-renders.
+ */
+export function randomizeTeams() {
+    const participants = getCheckedParticipants();
+    const shuffled = [...participants].sort(() => Math.random() - 0.5);
+    const half = shuffled.length / 2;
+
+    stateStore.set('teamAssignments', {
+        teamA: shuffled.slice(0, half).map((p) => p.id),
+        teamB: shuffled.slice(half).map((p) => p.id),
+    });
+    stateStore.set('teamSwapSource', null);
+    randomizerSetupView.renderTeams();
+}
+
+/**
+ * Begins a team-swap: the given participant is the one whose team the user wants to change.
+ * @param {string} participantId - The participant who was clicked.
+ * @param {string} team - The team ('A' | 'B') that participant is currently on.
+ */
+export function startTeamSwap(participantId, team) {
+    stateStore.set('teamSwapSource', { id: participantId, team });
+    randomizerSetupView.renderTeams();
+}
+
+/**
+ * Cancels an in-progress team swap without changing any assignments.
+ */
+export function cancelTeamSwap() {
+    stateStore.set('teamSwapSource', null);
+    randomizerSetupView.renderTeams();
+}
+
+/**
+ * Completes a team swap: exchanges the in-progress swap source with the given opposing participant.
+ * @param {string} targetParticipantId - The opposing-team participant clicked to swap with.
+ */
+export function completeTeamSwap(targetParticipantId) {
+    const swapSource = stateStore.get('teamSwapSource');
+    const teamAssignments = stateStore.get('teamAssignments');
+    if (!swapSource || !teamAssignments) return;
+
+    const { teamA, teamB } = teamAssignments;
+    const sourceTeam = swapSource.team === 'A' ? teamA : teamB;
+    const targetTeam = swapSource.team === 'A' ? teamB : teamA;
+
+    const sourceIdx = sourceTeam.indexOf(swapSource.id);
+    const targetIdx = targetTeam.indexOf(targetParticipantId);
+    if (sourceIdx === -1 || targetIdx === -1) return;
+
+    sourceTeam[sourceIdx] = targetParticipantId;
+    targetTeam[targetIdx] = swapSource.id;
+
+    stateStore.set('teamAssignments', { teamA, teamB });
+    stateStore.set('teamSwapSource', null);
+    randomizerSetupView.renderTeams();
 }

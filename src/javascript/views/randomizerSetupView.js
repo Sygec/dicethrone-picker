@@ -4,9 +4,13 @@
  * @module randomizerSetupView
  */
 import * as stateStore from '../stateStore.js';
-import { getParticipantCount, getGameTypeAvailability } from '../randomizerSetup.js';
-
-const MAX_INVITEES = 2;
+import {
+    getParticipantCount,
+    getGameTypeAvailability,
+    getCheckedParticipants,
+    canAddMoreInvitees,
+    isTeamsType,
+} from '../randomizerSetup.js';
 
 // L-shaped pistol silhouette (muzzle pointing +x, grip hanging below the rear/pivot at the origin)
 const PISTOL_PARTS = `<rect x="0" y="-1.5" width="9" height="3"></rect><rect x="8" y="-2.3" width="1" height="0.8"></rect><path d="M0 1.5 L-1.2 7 L3.5 7 L2.5 1.5 Z"></path><path d="M2.5 2 q2 2 0 4"></path>`;
@@ -24,6 +28,8 @@ const ICONS = {
 
 const INFO_ICON = `<svg class="setup-hint-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
 
+const ARROW_ICON = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="13 6 19 12 13 18"></polyline></svg>`;
+
 const GAME_TYPE_INFO = {
     duel: 'Standard health pools (50 HP), each player has their CP.',
     '2v2': 'Teams share a single health pool (50 HP for 2v2), each player has their CP.',
@@ -40,36 +46,43 @@ const getElements = () => {
             gameTypeGrid: document.getElementById('game-type-grid'),
             gameTypeHint: document.getElementById('game-type-hint'),
             inviteeZone: document.getElementById('invitee-zone'),
+            teamsStep: document.getElementById('setup-step-teams'),
+            teamsGrid: document.getElementById('teams-grid'),
+            randomizeTeamsBtn: document.getElementById('randomize-teams-btn'),
+            teamSwapQuestion: document.getElementById('team-swap-question'),
+            teamSwapScrim: document.getElementById('team-swap-scrim'),
         };
     }
     return elementsCache;
 };
 
 /**
- * Renders the two invitee slots: a filled toggle pill for each added invitee, or a
- * dashed placeholder with a "+" button for each empty slot.
+ * Renders a filled toggle pill for each existing invitee, followed by a single dashed
+ * "+" placeholder to add the next one — hidden once the 6-participant ceiling is reached.
  */
 export function renderInvitees() {
     const el = getElements();
     if (!el.inviteeZone) return;
     const invitees = stateStore.get('invitees');
 
-    let html = '';
-    for (let slot = 0; slot < MAX_INVITEES; slot++) {
-        const inv = invitees[slot];
-        html += inv
-            ? `
-            <label class="player-card invitee-card" style="--player-color: var(--p${slot + 5})">
+    const pills = invitees
+        .map(
+            (inv) => `
+            <label class="player-card invitee-card" style="--player-color: var(--p5)">
                 <input type="checkbox" checked data-invitee-id="${inv.id}">
                 <span class="player-card-name">${inv.name}</span>
-            </label>`
-            : `
-            <button type="button" class="player-card invitee-add-btn" data-action="add-invitee" data-slot="${slot}">
-                <span class="invitee-add-icon" aria-hidden="true">+</span>
-            </button>`;
-    }
+            </label>`,
+        )
+        .join('');
 
-    el.inviteeZone.innerHTML = html;
+    const addButton = canAddMoreInvitees()
+        ? `
+            <button type="button" class="player-card invitee-add-btn" data-action="add-invitee">
+                <span class="invitee-add-icon" aria-hidden="true">+</span>
+            </button>`
+        : '';
+
+    el.inviteeZone.innerHTML = pills + addButton;
 }
 
 /**
@@ -142,10 +155,90 @@ export function renderGameTypeHint(selectedGameType = stateStore.get('selectedGa
 }
 
 /**
- * Renders the full Randomizer setup UI (invitees + game type step).
+ * Renders one team panel: player rows (with a swap arrow), or clickable swap-candidate
+ * rows when this panel is the opposite team of an in-progress swap.
+ * @param {string} teamLetter - 'A' or 'B'.
+ * @param {string[]} ids - Participant ids assigned to this team.
+ * @param {Map<string, {id: string, name: string, colorVar: string}>} byId - Lookup for participant details.
+ * @param {{id: string, team: string}|null} swapSource - The in-progress swap source, if any.
+ * @returns {string} HTML for the team panel.
+ */
+function renderTeamPanel(teamLetter, ids, byId, swapSource) {
+    const isSwapTarget = !!swapSource && swapSource.team !== teamLetter;
+
+    const rows = ids
+        .map((id) => {
+            const p = byId.get(id);
+            if (!p) return '';
+
+            if (isSwapTarget) {
+                return `
+                <button type="button" class="team-player-row swap-candidate" data-action="complete-team-swap" data-participant-id="${p.id}" style="--player-color: var(--${p.colorVar})">
+                    <span class="team-player-dot"></span>
+                    <span class="team-player-name">${p.name}</span>
+                </button>`;
+            }
+
+            const isSource = !!swapSource && swapSource.id === p.id;
+            const isReversed = teamLetter === 'B';
+            const arrowSpan = `<span class="team-player-arrow" aria-hidden="true">${ARROW_ICON}</span>`;
+            const dotAndName = `<span class="team-player-dot"></span><span class="team-player-name">${p.name}</span>`;
+            return `
+                <button type="button" class="team-player-row${isSource ? ' swap-source' : ''}${isReversed ? ' reversed' : ''}" data-action="initiate-team-swap" data-participant-id="${p.id}" data-team="${teamLetter}" aria-label="Swap ${p.name}" style="--player-color: var(--${p.colorVar})">
+                    ${isReversed ? arrowSpan + dotAndName : dotAndName + arrowSpan}
+                </button>`;
+        })
+        .join('');
+
+    return `
+        <div class="team-panel${isSwapTarget ? ' swap-target' : ''}" data-team="${teamLetter}">
+            <div class="team-panel-title">Team ${teamLetter}</div>
+            <div class="team-panel-players">${rows}</div>
+        </div>`;
+}
+
+/**
+ * Renders Step 3 (Teams): shown only when a Teams game type ('2v2' | '3v3') is selected.
+ * Reflects the current team assignments and any in-progress swap (dimmed scrim + question).
+ */
+export function renderTeams() {
+    const el = getElements();
+    if (!el.teamsStep) return;
+
+    const selectedGameType = stateStore.get('selectedGameType');
+    if (!isTeamsType(selectedGameType)) {
+        el.teamsStep.style.display = 'none';
+        el.teamSwapScrim.style.display = 'none';
+        return;
+    }
+
+    el.teamsStep.style.display = 'block';
+
+    const teamAssignments = stateStore.get('teamAssignments');
+    if (!teamAssignments) {
+        el.teamsGrid.innerHTML = '';
+        return;
+    }
+
+    const swapSource = stateStore.get('teamSwapSource');
+    const byId = new Map(getCheckedParticipants().map((p) => [p.id, p]));
+
+    el.teamsGrid.innerHTML =
+        renderTeamPanel('A', teamAssignments.teamA, byId, swapSource) +
+        renderTeamPanel('B', teamAssignments.teamB, byId, swapSource);
+
+    el.randomizeTeamsBtn.style.display = swapSource ? 'none' : 'block';
+    el.teamSwapQuestion.style.display = swapSource ? 'block' : 'none';
+    el.teamSwapQuestion.classList.toggle('swap-active', !!swapSource);
+    el.teamSwapScrim.style.display = swapSource ? 'block' : 'none';
+}
+
+/**
+ * Renders the full Randomizer setup UI (invitees + game type step + teams step).
  */
 export function renderRandomizerSetup() {
     renderInvitees();
     updateStepVisibility();
     renderGameTypeOptions();
+    renderTeams();
 }
