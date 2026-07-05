@@ -482,62 +482,8 @@
    RANDOMIZER DRAFT WHEEL & BAN LIST STYLES
    ========================================================================== */
 
-.roll-btn-container {
-    display: flex;
-    gap: 12px;
-    width: 100%;
-}
-
-#rollBtn,
-#rollDraftBtn {
-    flex: 1;
-}
-
-.roll-settings-btn {
-    position: relative;
-    background: var(--btn-secondary-bg, rgba(var(--white-rgb), 0.08));
-    border: 1px solid var(--glass-border);
-    border-radius: 12px;
-    color: var(--text, var(--text));
-    width: 44px;
-    height: 100%;
-    min-height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
+.roll-final-btn svg {
     flex-shrink: 0;
-}
-
-.roll-settings-btn:hover {
-    background: rgba(var(--white-rgb), 0.15);
-    border-color: rgba(var(--white-rgb), 0.25);
-    transform: translateY(-1px);
-}
-
-.roll-settings-btn.has-settings {
-    border-color: var(--warning);
-    color: var(--warning);
-    box-shadow: 0 0 12px rgba(255, 215, 0, 0.25);
-}
-
-.settings-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: var(--warning);
-    color: #000;
-    font-size: 0.65rem;
-    font-weight: 800;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 6px rgba(var(--black-rgb), 0.5);
-    border: 1px solid #000;
 }
 
 /* Toggle Switch Styles */
@@ -912,11 +858,6 @@ input:checked + .toggle-slider:before {
     margin-bottom: 15px;
 }
 
-.picker-hint {
-    text-align: center;
-    opacity: 0.6;
-}
-
 /* --- Randomizer Setup: Step 1 (Players & Invitees), Step 2 (Game Type) --- */
 
 .randomizer-setup {
@@ -941,8 +882,8 @@ input:checked + .toggle-slider:before {
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    border: 1.5px solid var(--warning);
-    color: var(--warning);
+    border: 1.5px solid var(--accent);
+    color: var(--accent);
     font-size: 0.75rem;
     font-weight: 700;
     flex-shrink: 0;
@@ -1059,13 +1000,13 @@ input:checked + .toggle-slider:before {
 }
 
 .game-type-btn.active {
-    background: color-mix(in srgb, var(--warning) 20%, rgba(var(--white-rgb), 0.02));
-    border: 2px solid var(--warning);
+    background: color-mix(in srgb, var(--accent) 20%, rgba(var(--white-rgb), 0.02));
+    border: 2px solid var(--accent);
     color: var(--text);
     box-shadow:
         0 0 15px rgba(var(--black-rgb), 0.4),
-        0 0 18px rgba(255, 215, 0, 0.4),
-        inset 0 0 10px rgba(255, 215, 0, 0.25);
+        0 0 18px rgba(233, 69, 96, 0.4),
+        inset 0 0 10px rgba(233, 69, 96, 0.25);
     transform: scale(1.02);
 }
 
@@ -1076,7 +1017,7 @@ input:checked + .toggle-slider:before {
 }
 
 .teams-label {
-    color: var(--warning);
+    color: var(--accent);
 }
 
 .teams-grid {
@@ -1166,7 +1107,7 @@ input:checked + .toggle-slider:before {
 
 @media (hover: hover) {
     .team-player-row:hover .team-player-arrow {
-        color: var(--warning);
+        color: var(--accent);
     }
 }
 
@@ -1175,8 +1116,8 @@ input:checked + .toggle-slider:before {
 }
 
 .team-player-row.swap-source {
-    border-color: var(--warning);
-    box-shadow: 0 0 10px rgba(255, 215, 0, 0.25);
+    border-color: var(--accent);
+    box-shadow: 0 0 10px rgba(233, 69, 96, 0.25);
 }
 
 .team-player-row.swap-candidate {
@@ -1185,8 +1126,8 @@ input:checked + .toggle-slider:before {
 
 @media (hover: hover) {
     .team-player-row.swap-candidate:hover {
-        border-color: var(--warning);
-        background: rgba(255, 215, 0, 0.08);
+        border-color: var(--accent);
+        background: rgba(233, 69, 96, 0.08);
     }
 }
 
@@ -1215,7 +1156,7 @@ input:checked + .toggle-slider:before {
     text-align: center;
     font-size: 0.8rem;
     font-weight: 600;
-    color: var(--warning);
+    color: var(--accent);
     margin-top: 10px;
 }
 
@@ -1234,8 +1175,8 @@ input:checked + .toggle-slider:before {
 .team-panel.swap-target {
     position: relative;
     z-index: 1001;
-    border-color: var(--warning);
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.25);
+    border-color: var(--accent);
+    box-shadow: 0 0 20px rgba(233, 69, 96, 0.25);
 }
 
 /* --- Randomizer Setup: Step 3 (Roll Mode) --- */
@@ -1282,13 +1223,13 @@ input:checked + .toggle-slider:before {
 }
 
 .roll-mode-btn.active {
-    background: color-mix(in srgb, var(--warning) 20%, rgba(var(--white-rgb), 0.02));
-    border: 2px solid var(--warning);
+    background: color-mix(in srgb, var(--accent) 20%, rgba(var(--white-rgb), 0.02));
+    border: 2px solid var(--accent);
     color: var(--text);
     box-shadow:
         0 0 15px rgba(var(--black-rgb), 0.4),
-        0 0 18px rgba(255, 215, 0, 0.4),
-        inset 0 0 10px rgba(255, 215, 0, 0.25);
+        0 0 18px rgba(233, 69, 96, 0.4),
+        inset 0 0 10px rgba(233, 69, 96, 0.25);
 }
 
 .roll-mode-btn.active .roll-mode-subtitle {
@@ -1310,7 +1251,7 @@ input:checked + .toggle-slider:before {
 .draft-count-title {
     font-size: 0.75rem;
     font-weight: 700;
-    color: var(--warning);
+    color: var(--accent);
 }
 
 .draft-count-subtitle {
@@ -1347,11 +1288,11 @@ input:checked + .toggle-slider:before {
 }
 
 .draft-count-btn.active {
-    background: color-mix(in srgb, var(--warning) 20%, rgba(var(--white-rgb), 0.02));
-    border: 2px solid var(--warning);
+    background: color-mix(in srgb, var(--accent) 20%, rgba(var(--white-rgb), 0.02));
+    border: 2px solid var(--accent);
     color: var(--text);
     box-shadow:
         0 0 15px rgba(var(--black-rgb), 0.4),
-        0 0 18px rgba(255, 215, 0, 0.4),
-        inset 0 0 10px rgba(255, 215, 0, 0.25);
+        0 0 18px rgba(233, 69, 96, 0.4),
+        inset 0 0 10px rgba(233, 69, 96, 0.25);
 }

@@ -30,6 +30,14 @@ const INFO_ICON = `<svg class="setup-hint-icon" viewBox="0 0 24 24" fill="none" 
 
 const ARROW_ICON = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="13 6 19 12 13 18"></polyline></svg>`;
 
+const GAME_TYPE_SHORT_LABEL = {
+    duel: '1v1',
+    '2v2': '2v2',
+    '3v3': '3v3',
+    ffa: 'FFA',
+    koth: 'KotH',
+};
+
 const GAME_TYPE_INFO = {
     duel: 'Standard health pools (50 HP), each player has their CP.',
     '2v2': 'Teams share a single health pool (50 HP for 2v2), each player has their CP.',
@@ -55,6 +63,8 @@ const getElements = () => {
             rollModeGrid: document.getElementById('roll-mode-grid'),
             draftCountSection: document.getElementById('draft-count-section'),
             draftCountGrid: document.getElementById('draft-count-grid'),
+            rollStep: document.getElementById('setup-step-roll'),
+            rollFinalBtn: document.getElementById('roll-final-btn'),
         };
     }
     return elementsCache;
@@ -258,20 +268,21 @@ export function renderRollMode() {
     const el = getElements();
     if (!el.rollModeGrid) return;
 
+    const rollModeChosen = stateStore.get('rollModeChosen');
     const draftModeEnabled = stateStore.get('draftModeEnabled');
     const draftCount = stateStore.get('draftCount');
 
     el.rollModeGrid.innerHTML = `
-        <button type="button" class="roll-mode-btn${!draftModeEnabled ? ' active' : ''}" data-action="select-roll-mode" data-mode="quick">
+        <button type="button" class="roll-mode-btn${rollModeChosen && !draftModeEnabled ? ' active' : ''}" data-action="select-roll-mode" data-mode="quick">
             <span class="roll-mode-title">Quick Roll</span>
             <span class="roll-mode-subtitle">1 hero per player</span>
         </button>
-        <button type="button" class="roll-mode-btn${draftModeEnabled ? ' active' : ''}" data-action="select-roll-mode" data-mode="draft">
+        <button type="button" class="roll-mode-btn${rollModeChosen && draftModeEnabled ? ' active' : ''}" data-action="select-roll-mode" data-mode="draft">
             <span class="roll-mode-title">Draft Roll</span>
             <span class="roll-mode-subtitle">Pick 1 of N options</span>
         </button>`;
 
-    el.draftCountSection.style.display = draftModeEnabled ? 'block' : 'none';
+    el.draftCountSection.style.display = rollModeChosen && draftModeEnabled ? 'block' : 'none';
     el.draftCountGrid.innerHTML = DRAFT_COUNT_OPTIONS.map(
         (n) => `
         <button type="button" class="draft-count-btn${draftCount === n ? ' active' : ''}" data-action="select-draft-count" data-count="${n}">${n}</button>`,
@@ -279,7 +290,39 @@ export function renderRollMode() {
 }
 
 /**
- * Renders the full Randomizer setup UI (invitees + game type step + teams step + roll mode).
+ * Renders Step 4 (Roll): a single button showing the selected game type's icon, short name,
+ * and current participant count — the sole trigger for actually starting a roll. Hidden until
+ * a game type is selected; disabled (with a placeholder label) until a roll mode has also
+ * been explicitly chosen.
+ */
+export function renderRollButton() {
+    const el = getElements();
+    if (!el.rollStep || !el.rollFinalBtn) return;
+
+    const selectedGameType = stateStore.get('selectedGameType');
+    if (!selectedGameType) {
+        el.rollStep.style.display = 'none';
+        return;
+    }
+
+    el.rollStep.style.display = 'block';
+
+    if (!stateStore.get('rollModeChosen')) {
+        el.rollFinalBtn.disabled = true;
+        el.rollFinalBtn.innerHTML = `<span>ROLL &middot; Finish selecting your options above</span>`;
+        return;
+    }
+
+    el.rollFinalBtn.disabled = false;
+    const icon = isTeamsType(selectedGameType) ? ICONS.teams : ICONS[selectedGameType];
+    const shortLabel = GAME_TYPE_SHORT_LABEL[selectedGameType];
+    const count = getParticipantCount();
+
+    el.rollFinalBtn.innerHTML = `${icon}<span>ROLL &middot; ${shortLabel} &middot; ${count} PLAYER${count === 1 ? '' : 'S'}</span>`;
+}
+
+/**
+ * Renders the full Randomizer setup UI (invitees + game type step + teams step + roll mode + roll button).
  */
 export function renderRandomizerSetup() {
     renderInvitees();
@@ -288,4 +331,5 @@ export function renderRandomizerSetup() {
     renderTeams();
     updateRollModeVisibility();
     renderRollMode();
+    renderRollButton();
 }

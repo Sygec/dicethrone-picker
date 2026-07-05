@@ -196,18 +196,6 @@ export function pickCharacters() {
     revealNext();
 }
 
-export function pickCharactersNormal() {
-    console.log("[randomizer] pickCharactersNormal called. Setting draftModeEnabled to false.");
-    stateStore.set("draftModeEnabled", false);
-    pickCharacters();
-}
-
-export function pickCharactersDraft() {
-    console.log("[randomizer] pickCharactersDraft called. Setting draftModeEnabled to true.");
-    stateStore.set("draftModeEnabled", true);
-    pickCharacters();
-}
-
 export function updateDropdownSort() {
     validateSelection();
 }
@@ -461,7 +449,7 @@ export async function applyResults() {
 export function cancelRoll() {
     const resultsDiv = document.getElementById("results");
     if (resultsDiv) {
-        resultsDiv.innerHTML = '<p style="text-align: center; opacity: 0.6;">Select players and roll.</p>';
+        resultsDiv.innerHTML = "";
     }
     const actionButtons = document.getElementById("action-buttons");
     if (actionButtons) actionButtons.style.display = "none";

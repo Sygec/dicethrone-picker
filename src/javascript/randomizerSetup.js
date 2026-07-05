@@ -125,6 +125,7 @@ export function selectGameType(type) {
     randomizerSetupView.renderGameTypeOptions();
     randomizerSetupView.renderTeams();
     randomizerSetupView.updateRollModeVisibility();
+    randomizerSetupView.renderRollButton();
 }
 
 /**
@@ -157,6 +158,7 @@ export function onSetupChange() {
     randomizerSetupView.renderGameTypeOptions();
     randomizerSetupView.renderTeams();
     randomizerSetupView.updateRollModeVisibility();
+    randomizerSetupView.renderRollButton();
 }
 
 /**
@@ -166,9 +168,11 @@ export function onSetupChange() {
  */
 export function selectRollMode(mode) {
     const draftModeEnabled = mode === 'draft';
+    stateStore.set('rollModeChosen', true);
     stateStore.set('draftModeEnabled', draftModeEnabled);
     localStorage.setItem('draftModeEnabled', draftModeEnabled);
     randomizerSetupView.renderRollMode();
+    randomizerSetupView.renderRollButton();
 }
 
 /**

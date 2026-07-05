@@ -19,9 +19,7 @@ export function setupAllEventBindings() {
     };
 
     // 1. Static Button Clicks
-    bindClick("rollBtn", randomizer.pickCharactersNormal);
-    bindClick("rollDraftBtn", randomizer.pickCharactersDraft);
-    bindClick("rollSettingsBtn", randomizer.openRollSettingsDrawer);
+    bindClick("roll-final-btn", randomizer.pickCharacters);
     bindClick("cancelBtn", randomizer.cancelRoll);
     bindClick("confirmBtn", randomizer.applyResults);
     bindClick("clear-search", filters.clearSearch);
