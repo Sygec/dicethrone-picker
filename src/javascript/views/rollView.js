@@ -37,6 +37,18 @@ const getElements = () => ({
 });
 
 /**
+ * Builds a single complexity die icon (same "d1.png"-"d6.png" assets as the Heroes Database
+ * bar, but showing only the die matching the hero's level) to save horizontal space next to
+ * the player/hero name.
+ * @param {number} complexity
+ * @returns {string}
+ */
+function renderComplexityDiceHtml(complexity) {
+    const complexityVal = Number(complexity) || 1;
+    return `<img src="images/dice/d${complexityVal}.png" class="complexity-die-solo" alt="Complexity ${complexityVal}">`;
+}
+
+/**
  * Appends a player row placeholder with animatable text inside the results container.
  */
 export function renderPlayerRowSkeleton(pIdx) {
@@ -70,21 +82,24 @@ export function renderPlayerRowSkeleton(pIdx) {
                             <span class="hero-name-divider">:</span>
                             <a href="#" target="_blank" class="hero-name hero-name-link scramble-text" id="hero-name-title-${pIdx}">ROLLING...</a>
                         </div>
+                        <div class="complexity-dice-bar player-row-dice-bar scramble-hidden opacity-0" id="complexity-dice-${pIdx}"></div>
                     </div>
 
                     <span class="expanded-group scramble-hidden opacity-0" id="hero-group-${pIdx}">Group</span>
 
-                    ${statsRowHtml}
+                    <div class="hero-footer-row">
+                        ${statsRowHtml}
+                        <button class="edit-icon-btn scramble-hidden opacity-0" id="edit-btn-${pIdx}" type="button" data-action="open-hero-select" data-player-idx="${pIdx}" aria-label="Select hero">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="hero-select-container scramble-hidden opacity-0" id="select-container-${pIdx}">
+                <div class="hero-select-container" id="select-container-${pIdx}">
                     <input type="hidden" class="char-select" data-player="${pIdx}" id="select-${pIdx}">
-                    <button class="edit-icon-btn" type="button" data-action="open-hero-select" data-player-idx="${pIdx}" aria-label="Select hero">
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                            <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                        </svg>
-                    </button>
                 </div>
             </div>
         </div>
@@ -208,6 +223,7 @@ export function updatePlayerCardUI(pIdx, finalHero) {
     const nameTitle = document.getElementById(`hero-name-title-${pIdx}`);
     const groupEl = document.getElementById(`hero-group-${pIdx}`);
     const statsDiv = document.getElementById(`stats-row-${pIdx}`);
+    const diceEl = document.getElementById(`complexity-dice-${pIdx}`);
 
     if (selectEl) selectEl.value = finalHero.name;
     if (bgImgEl) {
@@ -222,6 +238,9 @@ export function updatePlayerCardUI(pIdx, finalHero) {
     }
     if (groupEl) {
         groupEl.innerText = finalHero.group || "Unknown";
+    }
+    if (diceEl) {
+        diceEl.innerHTML = renderComplexityDiceHtml(finalHero.complexity);
     }
 
     if (statsDiv) {
@@ -252,10 +271,14 @@ export function updatePlayerCardUI(pIdx, finalHero) {
             statsDiv.classList.remove("scramble-hidden", "opacity-0");
             statsDiv.classList.add("fade-in-resolve");
         }
-        const selectContainer = document.getElementById(`select-container-${pIdx}`);
-        if (selectContainer) {
-            selectContainer.classList.remove("scramble-hidden", "opacity-0");
-            selectContainer.classList.add("fade-in-resolve");
+        if (diceEl) {
+            diceEl.classList.remove("scramble-hidden", "opacity-0");
+            diceEl.classList.add("fade-in-resolve");
+        }
+        const editBtn = document.getElementById(`edit-btn-${pIdx}`);
+        if (editBtn) {
+            editBtn.classList.remove("scramble-hidden", "opacity-0");
+            editBtn.classList.add("fade-in-resolve");
         }
     }
 }
@@ -292,19 +315,21 @@ export function collapsePlayerRowToResolved(pIdx, finalHero) {
                         <span class="hero-name-divider">:</span>
                         <a href="${getHeroLink(finalHero.slug)}" target="_blank" class="hero-name hero-name-link resolved" id="hero-name-title-${pIdx}">${finalHero.name}</a>
                     </div>
+                    <div class="complexity-dice-bar player-row-dice-bar" id="complexity-dice-${pIdx}">${renderComplexityDiceHtml(finalHero.complexity)}</div>
                 </div>
                 <span class="expanded-group" id="hero-group-${pIdx}">${finalHero.group || "Unknown"}</span>
-                <div class="hero-stats-row" id="stats-row-${pIdx}">
+                <div class="hero-footer-row">
+                    <div class="hero-stats-row" id="stats-row-${pIdx}"></div>
+                    <button class="edit-icon-btn" id="edit-btn-${pIdx}" type="button" data-action="open-hero-select" data-player-idx="${pIdx}" aria-label="Select hero">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                    </button>
                 </div>
             </div>
             <div class="hero-select-container" id="select-container-${pIdx}">
                 <input type="hidden" class="char-select" data-player="${pIdx}" id="select-${pIdx}" value="${finalHero.name}">
-                <button class="edit-icon-btn" type="button" data-action="open-hero-select" data-player-idx="${pIdx}" aria-label="Select hero">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                        <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
-                </button>
             </div>
         </div>
     `;
@@ -415,7 +440,7 @@ export function renderDraftCandidateCards(pIdx, candidates) {
                     <span class="stats-divider">|</span>
                     <span>Prob: <b>${getHeroProbabilityText(hero, pIdx)}</b></span>
                 </div>`
-                    : "";
+                    : "<span></span>";
 
             return `
             <div class="draft-card" id="draft-card-${pIdx}-${i}" data-action="select-draft-candidate" data-player-idx="${pIdx}" data-hero-id="${hero.id}">
@@ -423,10 +448,13 @@ export function renderDraftCandidateCards(pIdx, candidates) {
                 <div class="draft-card-content">
                     <div class="draft-card-header">
                         <span class="draft-hero-name">${hero.name}</span>
-                        <span class="draft-selected-badge">SELECTED</span>
+                        <div class="complexity-dice-bar player-row-dice-bar">${renderComplexityDiceHtml(hero.complexity)}</div>
                     </div>
                     <span class="draft-card-group">${hero.group || "Unknown"}</span>
-                    ${statsHtml}
+                    <div class="hero-footer-row">
+                        ${statsHtml}
+                        <span class="draft-selected-badge">SELECTED</span>
+                    </div>
                 </div>
             </div>`;
         })

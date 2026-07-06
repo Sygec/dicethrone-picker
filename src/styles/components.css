@@ -355,11 +355,34 @@ h1 {
     font-weight: 300;
 }
 
-.hero-select-container {
+.hero-footer-row {
     display: flex;
-    justify-content: flex-end;
     align-items: center;
-    width: 45px;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+}
+
+.hero-footer-row .edit-icon-btn {
+    flex-shrink: 0;
+}
+
+.hero-select-container {
+    /* Now just holds the hidden char-select input; the visible button lives in .hero-footer-row. */
+    display: none;
+}
+
+.player-row-dice-bar {
+    margin-left: auto;
+    margin-right: 0;
+    flex-shrink: 0;
+}
+
+.complexity-die-solo {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    opacity: 1;
 }
 
 /* Edit Icon Button styles */
@@ -507,13 +530,6 @@ h1 {
     .hero-info-container {
         flex: 1;
         min-width: 0;
-    }
-
-    .hero-select-container {
-        width: 40px;
-        flex-shrink: 0;
-        display: flex;
-        justify-content: flex-end;
     }
 }
 
