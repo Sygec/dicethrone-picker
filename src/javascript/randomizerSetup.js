@@ -5,6 +5,7 @@
  */
 import * as stateStore from './stateStore.js';
 import * as randomizerSetupView from './views/randomizerSetupView.js';
+import { MAX_WEIGHTED_PLAYERS } from './utils.js';
 
 const MAX_PARTICIPANTS = 6; // no game type supports more than 6 total; also caps invitee additions
 
@@ -58,6 +59,42 @@ export function getCheckedParticipants() {
 }
 
 /**
+ * Builds the roll-ready participant list: tracked players keep their real index (0 to
+ * MAX_WEIGHTED_PLAYERS-1, used for weighted hero selection and stats), while invitees get
+ * virtual indices starting at MAX_WEIGHTED_PLAYERS so they naturally fall into the existing
+ * "unweighted random pick, no stats" code path.
+ * @returns {{pIdx: number, name: string, colorVar: string, isInvitee: boolean}[]}
+ */
+export function getRollParticipants() {
+    const players = stateStore.get('players').slice(0, MAX_WEIGHTED_PLAYERS);
+    const invitees = stateStore.get('invitees');
+    const participants = [];
+
+    players.forEach((p, i) => {
+        const checkbox = document.getElementById(`use${i}`);
+        if (checkbox?.checked) {
+            participants.push({ pIdx: i, name: p.name, colorVar: p.id, isInvitee: false });
+        }
+    });
+
+    let inviteeOffset = 0;
+    invitees.forEach((inv) => {
+        const checkbox = document.querySelector(`#invitee-zone input[data-invitee-id="${inv.id}"]`);
+        if (checkbox?.checked) {
+            participants.push({
+                pIdx: MAX_WEIGHTED_PLAYERS + inviteeOffset,
+                name: inv.name,
+                colorVar: 'p5',
+                isInvitee: true,
+            });
+            inviteeOffset++;
+        }
+    });
+
+    return participants;
+}
+
+/**
  * Computes which game types are available for a given participant count.
  * @param {number} count - Total selected participants.
  * @returns {{duel: boolean, teams: boolean, ffa: boolean, koth: boolean, teamsValue: string}}
@@ -95,6 +132,17 @@ export function removeInvitee(id) {
     const invitees = stateStore.get('invitees');
     const next = invitees.filter((inv) => inv.id !== id).map((inv, i) => ({ ...inv, name: `Invitee ${i + 1}` }));
     stateStore.set('invitees', next);
+    randomizerSetupView.renderInvitees();
+    onSetupChange();
+}
+
+/**
+ * Clears all invitees back to empty "+" placeholders. Invitees are ad-hoc/session-only
+ * (no weighting, no history), so unlike tracked players they don't carry over once a roll
+ * is cancelled or a session is locked in.
+ */
+export function resetInvitees() {
+    stateStore.set('invitees', []);
     randomizerSetupView.renderInvitees();
     onSetupChange();
 }

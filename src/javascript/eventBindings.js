@@ -364,7 +364,7 @@ export function setupAllEventBindings() {
         });
     }
 
-    // Randomizer results slots (edit icons, cancel, rotation, draft pick confirmation)
+    // Randomizer results slots (edit icons, cancel, draft candidate selection/confirmation)
     const results = document.getElementById("results");
     if (results) {
         results.addEventListener("click", (e) => {
@@ -378,16 +378,12 @@ export function setupAllEventBindings() {
                 return;
             }
 
-            // Select draft hero from card click
-            const draftCard = target.closest('[data-action="select-draft-hero"]');
+            // Tap a draft candidate card to (un)mark it as the tentative pick
+            const draftCard = target.closest('[data-action="select-draft-candidate"]');
             if (draftCard) {
                 const pIdx = parseInt(draftCard.getAttribute("data-player-idx"), 10);
-                const heroName = draftCard.getAttribute("data-hero-name");
-                const heroSlug = draftCard.getAttribute("data-hero-slug");
                 const heroId = draftCard.getAttribute("data-hero-id");
-                const cardAngle = parseFloat(draftCard.getAttribute("data-angle"));
-                const cardIdx = parseInt(draftCard.getAttribute("data-card-idx"), 10);
-                randomizer.selectDraftHero(pIdx, heroName, heroSlug, heroId, cardAngle, cardIdx);
+                randomizer.selectDraftCandidate(pIdx, heroId);
                 return;
             }
 
@@ -395,16 +391,6 @@ export function setupAllEventBindings() {
             const cancelRoll = target.closest('[data-action="cancel-roll"]');
             if (cancelRoll) {
                 randomizer.cancelRoll();
-                return;
-            }
-
-            // Rotate draft candidate wheel
-            const rotateBtn = target.closest('[data-action="rotate-draft"]');
-            if (rotateBtn) {
-                const pIdx = parseInt(rotateBtn.getAttribute("data-player-idx"), 10);
-                const dir = parseInt(rotateBtn.getAttribute("data-direction"), 10);
-                const count = parseInt(rotateBtn.getAttribute("data-draft-count"), 10);
-                randomizer.rotateDraftWheelDirection(pIdx, dir, count);
                 return;
             }
 

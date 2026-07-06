@@ -322,6 +322,24 @@ export function renderRollButton() {
 }
 
 /**
+ * Hides the Steps 1-4 setup panels (and the team swap scrim) when entering the roll phase.
+ */
+export function hideSetupPanels() {
+    const setupZone = document.getElementById('randomizer-setup');
+    if (setupZone) setupZone.style.display = 'none';
+    const scrim = document.getElementById('team-swap-scrim');
+    if (scrim) scrim.style.display = 'none';
+}
+
+/**
+ * Shows the Steps 1-4 setup panels again (on cancel, or after a session is locked in).
+ */
+export function showSetupPanels() {
+    const setupZone = document.getElementById('randomizer-setup');
+    if (setupZone) setupZone.style.display = 'block';
+}
+
+/**
  * Renders the full Randomizer setup UI (invitees + game type step + teams step + roll mode + roll button).
  */
 export function renderRandomizerSetup() {

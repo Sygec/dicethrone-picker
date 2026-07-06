@@ -24,6 +24,15 @@ export const MAX_WEIGHTED_PLAYERS = 4;
 export function isAdmin() { return stateStore.get("currentUser")?.app_metadata?.role === "admin"; }
 export function isUser() { return !!stateStore.get("currentUser"); }
 
+/**
+ * Looks up a participant snapshotted for the current roll (tracked player or invitee) by index.
+ * @param {number} pIdx - Virtual player index (0..MAX_WEIGHTED_PLAYERS-1 for tracked players, higher for invitees).
+ * @returns {{pIdx: number, name: string, colorVar: string, isInvitee: boolean}|undefined}
+ */
+export function getRollParticipant(pIdx) {
+    return stateStore.get("activeRollParticipants").find((p) => p.pIdx === pIdx);
+}
+
 
 import * as apiService from './services/apiService.js';
 

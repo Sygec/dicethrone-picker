@@ -75,8 +75,7 @@ const state = {
     activeDraftStep: 0,
     selectedDraftHeroes: {}, // pIdx -> hero object
     activeDraftCandidates: {}, // pIdx -> array of candidate heroes
-    draftWheelAngles: {}, // pIdx -> cumulative rotation angle
-    draftWheelFrontCardIndices: {}, // pIdx -> index of the card physically in front
+    activeRollParticipants: [], // [{ pIdx, name, colorVar, isInvitee }] snapshotted at roll start
     gamesHistoryStyle: "gorgeous",
 };
 

@@ -282,12 +282,13 @@ export async function deleteGroup(groupId) {
  * Creates a new game log entry.
  * @async
  * @param {string} userId - ID of the creating user.
+ * @param {string} [gameType] - One of 'duel' | '2v2' | '3v3' | 'ffa' | 'koth'.
  * @returns {Promise<Object>} Supabase response.
  */
-export async function insertGame(userId) {
+export async function insertGame(userId, gameType) {
     return db
         .from("games")
-        .insert({ last_updated_by: userId })
+        .insert({ last_updated_by: userId, game_type: gameType })
         .select()
         .single();
 }
