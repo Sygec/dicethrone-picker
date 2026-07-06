@@ -1,5 +1,16 @@
 [
     {
+        "version": "2.3.0.20260706",
+        "changes": [
+            "New account panel: login/logout and version/changelog access moved into a dedicated account menu",
+            "Roll Randomizer: new Roll Mode selection and Draft Count options",
+            "Roll Randomizer: new team assignment and swapping functionality",
+            "Roll Randomizer: refactored roll button and roll flow for a smoother experience",
+            "Password reset: improved email validation, error messages and field highlighting",
+            "New preloader banner image and styling"
+        ]
+    },
+    {
         "version": "2.2.0.20260627",
         "changes": [
             "Maintenance update: Mostly bug fixes and minor tweaks to improve performance and stability"
