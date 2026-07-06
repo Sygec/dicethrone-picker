@@ -257,6 +257,7 @@ export function renderCollectionView() {
     });
 
     const isDisabled = currentUser ? "" : "disabled";
+    const partialGroupIds = [];
 
     el.collectionContainer.innerHTML = sortedGroups
         .map((group) => {
@@ -284,6 +285,10 @@ export function renderCollectionView() {
             const totalGroup = groupHeroes.length;
             const ownedGroup = groupHeroes.filter(c => c.is_owned).length;
 
+            if (ownedGroup > 0 && ownedGroup < totalGroup) {
+                partialGroupIds.push(group.id);
+            }
+
             return `
             <div class="collection-group${isExpanded ? "" : " collapsed"}">
                 <div class="collection-group-header" data-action="toggle-collection-group" data-group-id="${group.id}" style="cursor: pointer;">
@@ -303,6 +308,12 @@ export function renderCollectionView() {
         `;
         })
         .join("");
+
+    // `indeterminate` has no HTML attribute equivalent; it must be set as a DOM property post-render.
+    partialGroupIds.forEach((groupId) => {
+        const checkbox = document.getElementById(`owned-group-${groupId}`);
+        if (checkbox) checkbox.indeterminate = true;
+    });
 }
 
 /**
