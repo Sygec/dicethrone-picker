@@ -57,6 +57,20 @@ export function closeLoginModal() {
     }
 }
 /**
+ * Opens the Account modal (login/logout + version/changelog), reached via the header avatar.
+ * @function openAccountModal
+ */
+export function openAccountModal() {
+    authView.openAccountModal();
+}
+/**
+ * Closes the Account modal.
+ * @function closeAccountModal
+ */
+export function closeAccountModal() {
+    authView.closeAccountModal();
+}
+/**
  * Authenticates the user with Supabase using email and password credentials from login inputs.
  * Displays error messages if login fails.
  * @function handleLogin

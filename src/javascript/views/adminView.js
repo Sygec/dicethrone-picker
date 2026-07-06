@@ -139,6 +139,29 @@ export function closeWhatsNew() {
     document.body.style.overflow = "auto";
 }
 
+// Icon + title shown in the fixed app header per section
+const SECTION_HEADER_META = {
+    roll: { icon: "🎲", title: "Randomizer" },
+    database: { icon: "🛡️", title: "Heroes" },
+    history: { icon: "📜", title: "History" },
+    collection: { icon: "📦", title: "Collection" },
+    admin: { icon: "⚙️", title: "Admin" },
+};
+
+/**
+ * Updates the fixed app header's icon and title to match the currently shown section.
+ * @param {string} sectionName - Section identifier.
+ */
+function updateHeaderSection(sectionName) {
+    const meta = SECTION_HEADER_META[sectionName];
+    if (!meta) return;
+
+    const iconEl = document.getElementById("header-section-icon");
+    const titleEl = document.getElementById("header-section-title");
+    if (iconEl) iconEl.innerText = meta.icon;
+    if (titleEl) titleEl.innerText = meta.title;
+}
+
 /**
  * Handles navigation switching by showing the target section and hiding others.
  * @param {string} sectionName - Section identifier ('roll', 'database', 'history', 'collection', 'admin').
@@ -167,6 +190,8 @@ export function showSection(sectionName) {
             }
         }
     });
+
+    updateHeaderSection(sectionName);
 
     if (sectionName === "database") {
         setTimeout(updateSegmentedHighlights, 50);

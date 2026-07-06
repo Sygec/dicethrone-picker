@@ -6,6 +6,77 @@
 
 /* Navigation bar styles */
 
+/* 1. Fixed App Header (section icon/title + account avatar) */
+.app-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: calc(52px + env(safe-area-inset-top));
+    padding-top: env(safe-area-inset-top);
+    padding-left: 16px;
+    padding-right: 16px;
+    box-sizing: border-box;
+    background-color: var(--gray-700);
+    border-bottom: 1px solid var(--gray-500);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 1000;
+}
+
+.app-header-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.app-header-icon {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+
+.app-header-title {
+    font-family: "Outfit", sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 0.3px;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.app-header-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: rgba(var(--white-rgb), 0.05);
+    border: 1.5px solid rgba(var(--white-rgb), 0.15);
+    color: rgba(var(--white-rgb), 0.4);
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.2s ease;
+}
+
+@media (hover: hover) {
+    .app-header-avatar:hover {
+        background: rgba(var(--white-rgb), 0.1);
+        border-color: rgba(var(--white-rgb), 0.3);
+    }
+}
+
+.app-header-avatar.logged-in {
+    color: var(--avatar-color, var(--accent));
+    border-color: var(--avatar-color, var(--accent));
+    box-shadow: 0 0 10px color-mix(in srgb, var(--avatar-color, var(--accent)) 40%, transparent);
+}
+
 /* 2. The Navigation Bar Container */
 .bottom-nav {
     position: fixed;
@@ -80,5 +151,9 @@ body.loaded .bottom-nav {
     .content {
         padding-bottom: 0;
         margin-left: 80px; /* Push content right to make room for sidebar */
+    }
+
+    .app-header {
+        left: 80px; /* Don't overlap the sidebar nav */
     }
 }

@@ -84,7 +84,10 @@ export function setupAllEventBindings() {
 
     // Version label and changelog
     const versionNum = document.getElementById("version-number");
-    if (versionNum) versionNum.addEventListener("click", admin.openChangelog);
+    if (versionNum) versionNum.addEventListener("click", () => {
+        auth.closeAccountModal();
+        admin.openChangelog();
+    });
 
     const closeBtn = document.querySelector(".close-button");
     if (closeBtn) closeBtn.addEventListener("click", admin.closeChangelog);
@@ -98,6 +101,8 @@ export function setupAllEventBindings() {
     bindClick("forgot-password-btn", auth.handlePasswordReset);
     bindClick("update-password-close", auth.closeUpdatePasswordModal);
     bindClick("hero-select-close", randomizer.closeHeroSelectModal);
+    bindClick("header-avatar-btn", auth.openAccountModal);
+    bindClick("account-close", auth.closeAccountModal);
 
     // Inputs & Keyboard event handlers
     const heroSearch = document.getElementById("hero-search");
@@ -626,12 +631,14 @@ export function setupAllEventBindings() {
         const modalWhatsNew = document.getElementById("whats-new-modal");
         const modalUpdatePassword = document.getElementById("update-password-modal");
         const modalHeroSelect = document.getElementById("hero-select-modal");
+        const modalAccount = document.getElementById("account-modal");
 
         if (event.target === modalChangelog) admin.closeChangelog();
         if (event.target === modalLogin) auth.closeLoginModal();
         if (event.target === modalWhatsNew) admin.closeWhatsNew();
         if (event.target === modalUpdatePassword) auth.closeUpdatePasswordModal();
         if (event.target === modalHeroSelect) randomizer.closeHeroSelectModal();
+        if (event.target === modalAccount) auth.closeAccountModal();
 
         const sortDropdown = document.getElementById("sort-dropdown-menu");
         const sortContainer = document.getElementById("sort-dropdown-container");

@@ -647,6 +647,16 @@
     border-bottom: 1px solid rgba(var(--white-rgb), 0.08) !important;
 }
 
+.account-modal-body {
+    display: flex;
+    margin-top: 10px;
+}
+
+.account-version-row {
+    margin-top: 15px;
+    margin-bottom: 0;
+}
+
 /* The Close Button (X) */
 .close-button {
     position: absolute;

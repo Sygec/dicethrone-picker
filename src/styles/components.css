@@ -16,6 +16,8 @@
         filter 1.2s cubic-bezier(0.16, 1, 0.3, 1);
     /* Prevent content from being hidden behind the bottom nav bar */
     padding-bottom: calc(66px + env(safe-area-inset-bottom));
+    /* Prevent content from being hidden behind the fixed app header */
+    padding-top: calc(52px + env(safe-area-inset-top) + 16px);
 }
 
 body.loaded .content {
