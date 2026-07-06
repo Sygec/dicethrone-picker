@@ -15,8 +15,8 @@
                 window.location.hostname === "sygec.github.io" ||
                 window.location.hostname === "dicethrone-prod.sygec.workers.dev";
         </script>
-      <script type="module" crossorigin src="/assets/index-9VX4Ln3C.js"></script>
-      <link rel="stylesheet" crossorigin href="/assets/index-WVsKmCDm.css">
+      <script type="module" crossorigin src="/assets/index-CyXwR7oX.js"></script>
+      <link rel="stylesheet" crossorigin href="/assets/index-CRbaUHCo.css">
     </head>
 
     <body>
@@ -75,6 +75,8 @@
 <section id="rollSection">
     <!-- Randomizer Setup: Step 1 (Players & Invitees), Step 2 (Game Type) -->
     <div class="randomizer-setup" id="randomizer-setup">
+        <h2 class="roll-screen-title">ROLL &middot; OPTIONS</h2>
+
         <div class="setup-step" id="setup-step-players">
             <div class="step-header">
                 <span class="step-badge">1</span>
@@ -100,8 +102,7 @@
 
         <div
             class="setup-step"
-            id="setup-step-gametype"
-            style="display: none">
+            id="setup-step-gametype">
             <div class="step-header">
                 <span class="step-badge">2</span>
                 <span class="step-title">Choose a Game Type</span>
@@ -141,8 +142,7 @@
 
         <div
             class="setup-step"
-            id="setup-step-rollmode"
-            style="display: none">
+            id="setup-step-rollmode">
             <div class="step-header">
                 <span class="step-badge">3</span>
                 <span class="step-title">Choose a Roll Mode</span>
@@ -166,8 +166,7 @@
 
         <div
             class="setup-step"
-            id="setup-step-roll"
-            style="display: none">
+            id="setup-step-roll">
             <div class="step-header">
                 <span class="step-badge">4</span>
                 <span class="step-title">Roll</span>
@@ -184,6 +183,14 @@
         class="team-swap-scrim"
         id="team-swap-scrim"
         style="display: none"></div>
+
+    <h2
+        class="roll-screen-title"
+        id="results-title"
+        style="display: none"></h2>
+
+    <!-- Randomizer Results Area -->
+    <section id="results" class="results" aria-live="polite"></section>
 
     <!-- Action Controls Wrapper -->
     <div class="roll-controls-wrapper">
@@ -204,9 +211,6 @@
             </button>
         </div>
     </div>
-
-    <!-- Randomizer Results Area -->
-    <section id="results" class="results" aria-live="polite"></section>
 
     <!-- Validation Error Message -->
     <div id="error-msg" role="alert">

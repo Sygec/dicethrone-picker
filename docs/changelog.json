@@ -1,10 +1,19 @@
 [
     {
-        "version": "2.3.0.20260706",
+        "version": "2.4.0.20260706",
+        "changes": [
+            "Roll Randomizer: further UI and functionality improvements to Game Type and Roll Mode selection",
+            "Roll section: complexity die now shown per player row",
+            "Collection: groups with only some heroes owned now show a partial (indeterminate) checkbox instead of appearing unchecked",
+        ]
+    },
+    {
+        "version": "2.3.0.20260705",
         "changes": [
             "New account panel: login/logout and version/changelog access moved into a dedicated account menu",
-            "Roll Randomizer: new Roll Mode selection and Draft Count options",
-            "Roll Randomizer: new team assignment and swapping functionality",
+            "Roll Randomizer: new Game Type selection",
+            "Roll Randomizer: new team assignment for Team 2v2/3v3 games",
+            "Roll Randomizer: new Roll Mode selection",
             "Roll Randomizer: refactored roll button and roll flow for a smoother experience",
             "Password reset: improved email validation, error messages and field highlighting",
             "New preloader banner image and styling"
