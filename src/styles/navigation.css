@@ -17,41 +17,39 @@
     padding-left: 16px;
     padding-right: 16px;
     box-sizing: border-box;
-    background-color: var(--gray-700);
-    border-bottom: 1px solid var(--gray-500);
+    background-image: linear-gradient(90deg, var(--bg-highlight) 0%, var(--gray-700) 45%, var(--gray-700) 100%);
+    border-bottom: 1px solid var(--gold-metallic);
+    box-shadow: 0 2px 8px rgba(var(--black-rgb), 0.4);
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
     z-index: 1000;
 }
 
 .app-header-brand {
-    font-family: "Cinzel", serif;
-    font-weight: 700;
-    font-size: 0.95rem;
-    letter-spacing: 1px;
-    color: var(--gold-metallic);
-    justify-self: start;
-    white-space: nowrap;
-}
-
-.app-header-title-group {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 5px;
+    justify-self: start;
     min-width: 0;
-    justify-self: center;
+    overflow: hidden;
+    color: var(--gold-metallic);
 }
 
-.app-header-icon {
-    display: flex;
-    color: var(--accent);
+.app-header-crest {
+    width: 18px;
+    height: 18px;
     flex-shrink: 0;
 }
 
-.app-header-icon svg {
-    width: 18px;
-    height: 18px;
+.app-header-brand-text {
+    font-family: "Cinzel", serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .app-header-title {
@@ -61,6 +59,7 @@
     letter-spacing: 0.3px;
     color: var(--accent);
     text-transform: uppercase;
+    justify-self: center;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
