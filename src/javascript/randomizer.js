@@ -5,6 +5,7 @@
 import { isHeroOwned, getSoftWeight, isUser, DEFAULT_HERO_WEIGHT, PICKED_HERO_WEIGHT, WEIGHT_INCREMENT, getHeroProbabilityText, getImgUrl, showConfirm, MAX_WEIGHTED_PLAYERS } from './utils.js';
 import { showSection } from './admin.js';
 import { init } from './main.js';
+import { renderPlayerToggles } from './auth.js';
 import { renderDrawerBody } from './filters.js';
 import * as randomizerSetup from './randomizerSetup.js';
 import * as randomizerSetupView from './views/randomizerSetupView.js';
@@ -63,6 +64,7 @@ export function pickCharacters() {
         stateStore.set("activeDraftCandidates", {});
 
         showSection("roll");
+        randomizerSetupView.showResultsTitle("draft");
         if (resultsDiv) resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
 
         startDraftStep();
@@ -121,6 +123,7 @@ export function pickCharacters() {
     });
 
     showSection("roll");
+    randomizerSetupView.showResultsTitle("confirmation");
     if (resultsDiv) resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
 
     const ownedHeroes = characters.filter(
@@ -420,7 +423,8 @@ export function cancelRoll() {
     stateStore.set("activeDraftCandidates", {});
 
     randomizerSetupView.showSetupPanels();
-    randomizerSetup.resetInvitees();
+    renderPlayerToggles();
+    randomizerSetup.resetSetup();
     stateStore.set("isRollActive", false);
 }
 export function openRollSettingsDrawer() {
@@ -485,6 +489,7 @@ export function startDraftStep() {
 
     if (activeDraftStep >= activeDraftOrder.length) {
         renderDraftFinalResults();
+        randomizerSetupView.showResultsTitle("confirmation");
         validateSelection();
 
         const actionButtons = document.getElementById("action-buttons");

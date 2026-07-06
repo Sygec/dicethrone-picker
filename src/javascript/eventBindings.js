@@ -60,7 +60,7 @@ export function setupAllEventBindings() {
             if (completeSwapBtn) return randomizerSetup.completeTeamSwap(completeSwapBtn.dataset.participantId);
 
             const rollModeBtn = e.target.closest('[data-action="select-roll-mode"]');
-            if (rollModeBtn) return randomizerSetup.selectRollMode(rollModeBtn.dataset.mode);
+            if (rollModeBtn && !rollModeBtn.disabled) return randomizerSetup.selectRollMode(rollModeBtn.dataset.mode);
 
             const draftCountBtn = e.target.closest('[data-action="select-draft-count"]');
             if (draftCountBtn) return randomizerSetup.selectDraftCount(parseInt(draftCountBtn.dataset.count, 10));

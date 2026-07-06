@@ -100,13 +100,14 @@ export function renderInvitees() {
 }
 
 /**
- * Shows or hides the Game Type step based on the current participant count.
+ * Locks or unlocks the Game Type step based on the current participant count. The step
+ * stays visible at all times; it's just dimmed and inert until enough participants are picked.
  * @param {number} [count] - Optional precomputed participant count.
  */
 export function updateStepVisibility(count = getParticipantCount()) {
     const el = getElements();
     if (!el.gameTypeStep) return;
-    el.gameTypeStep.style.display = count >= 2 ? 'block' : 'none';
+    el.gameTypeStep.classList.toggle('step-locked', count < 2);
 }
 
 /**
@@ -251,12 +252,13 @@ export function renderTeams() {
 const DRAFT_COUNT_OPTIONS = [2, 3, 4, 5];
 
 /**
- * Shows or hides Step 3 (Roll Mode): visible once any game type is selected.
+ * Locks or unlocks Step 3 (Roll Mode): stays visible at all times; dimmed and inert until
+ * a game type has been selected.
  */
 export function updateRollModeVisibility() {
     const el = getElements();
     if (!el.rollModeStep) return;
-    el.rollModeStep.style.display = stateStore.get('selectedGameType') ? 'block' : 'none';
+    el.rollModeStep.classList.toggle('step-locked', !stateStore.get('selectedGameType'));
 }
 
 /**
@@ -271,13 +273,14 @@ export function renderRollMode() {
     const rollModeChosen = stateStore.get('rollModeChosen');
     const draftModeEnabled = stateStore.get('draftModeEnabled');
     const draftCount = stateStore.get('draftCount');
+    const locked = !stateStore.get('selectedGameType');
 
     el.rollModeGrid.innerHTML = `
-        <button type="button" class="roll-mode-btn${rollModeChosen && !draftModeEnabled ? ' active' : ''}" data-action="select-roll-mode" data-mode="quick">
+        <button type="button" class="roll-mode-btn${rollModeChosen && !draftModeEnabled ? ' active' : ''}" data-action="select-roll-mode" data-mode="quick" ${locked ? 'disabled' : ''}>
             <span class="roll-mode-title">Quick Roll</span>
             <span class="roll-mode-subtitle">1 hero per player</span>
         </button>
-        <button type="button" class="roll-mode-btn${rollModeChosen && draftModeEnabled ? ' active' : ''}" data-action="select-roll-mode" data-mode="draft">
+        <button type="button" class="roll-mode-btn${rollModeChosen && draftModeEnabled ? ' active' : ''}" data-action="select-roll-mode" data-mode="draft" ${locked ? 'disabled' : ''}>
             <span class="roll-mode-title">Draft Roll</span>
             <span class="roll-mode-subtitle">Pick 1 of N options</span>
         </button>`;
@@ -291,23 +294,24 @@ export function renderRollMode() {
 
 /**
  * Renders Step 4 (Roll): a single button showing the selected game type's icon, short name,
- * and current participant count — the sole trigger for actually starting a roll. Hidden until
- * a game type is selected; disabled (with a placeholder label) until a roll mode has also
- * been explicitly chosen.
+ * and current participant count — the sole trigger for actually starting a roll. Stays visible
+ * at all times; dimmed and disabled until both a game type and a roll mode have been chosen.
  */
 export function renderRollButton() {
     const el = getElements();
     if (!el.rollStep || !el.rollFinalBtn) return;
 
     const selectedGameType = stateStore.get('selectedGameType');
+    const rollModeChosen = stateStore.get('rollModeChosen');
+    el.rollStep.classList.toggle('step-locked', !selectedGameType || !rollModeChosen);
+
     if (!selectedGameType) {
-        el.rollStep.style.display = 'none';
+        el.rollFinalBtn.disabled = true;
+        el.rollFinalBtn.innerHTML = `<span>ROLL &middot; Complete the steps above</span>`;
         return;
     }
 
-    el.rollStep.style.display = 'block';
-
-    if (!stateStore.get('rollModeChosen')) {
+    if (!rollModeChosen) {
         el.rollFinalBtn.disabled = true;
         el.rollFinalBtn.innerHTML = `<span>ROLL &middot; Finish selecting your options above</span>`;
         return;
@@ -332,11 +336,31 @@ export function hideSetupPanels() {
 }
 
 /**
- * Shows the Steps 1-4 setup panels again (on cancel, or after a session is locked in).
+ * Shows the Steps 1-4 setup panels again (on cancel, or after a session is locked in),
+ * hiding the results-screen title along with the results it belongs to.
  */
 export function showSetupPanels() {
     const setupZone = document.getElementById('randomizer-setup');
     if (setupZone) setupZone.style.display = 'block';
+    const resultsTitle = document.getElementById('results-title');
+    if (resultsTitle) resultsTitle.style.display = 'none';
+}
+
+const RESULTS_TITLES = {
+    draft: 'ROLL &middot; DRAFT',
+    confirmation: 'ROLL &middot; CONFIRMATION',
+};
+
+/**
+ * Shows the results-screen title: "ROLL · DRAFT" while a player is picking a draft candidate,
+ * "ROLL · CONFIRMATION" once heroes are revealed (Quick Roll) or all draft picks are finalized.
+ * @param {'draft'|'confirmation'} mode
+ */
+export function showResultsTitle(mode) {
+    const el = document.getElementById('results-title');
+    if (!el) return;
+    el.innerHTML = RESULTS_TITLES[mode] || '';
+    el.style.display = 'block';
 }
 
 /**

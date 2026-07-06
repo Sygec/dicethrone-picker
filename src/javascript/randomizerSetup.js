@@ -148,6 +148,23 @@ export function resetInvitees() {
 }
 
 /**
+ * Fully resets the setup flow (invitees, game type, team assignments, roll mode) back to its
+ * pristine first-load state and re-renders every step. Used when a roll is cancelled from the
+ * confirmation screen, since cancelling means starting over, not resuming where setup left off.
+ * Tracked player checkboxes are reset separately by the caller (owned by the auth/header view).
+ */
+export function resetSetup() {
+    stateStore.set('invitees', []);
+    stateStore.set('selectedGameType', null);
+    stateStore.set('teamAssignments', null);
+    stateStore.set('teamSwapSource', null);
+    stateStore.set('rollModeChosen', false);
+
+    randomizerSetupView.renderInvitees();
+    onSetupChange();
+}
+
+/**
  * Selects a game type if currently available; no-op otherwise.
  * @param {string} type - One of 'duel' | '2v2' | '3v3' | 'ffa' | 'koth'.
  */
@@ -173,6 +190,7 @@ export function selectGameType(type) {
     randomizerSetupView.renderGameTypeOptions();
     randomizerSetupView.renderTeams();
     randomizerSetupView.updateRollModeVisibility();
+    randomizerSetupView.renderRollMode();
     randomizerSetupView.renderRollButton();
 }
 
@@ -206,6 +224,7 @@ export function onSetupChange() {
     randomizerSetupView.renderGameTypeOptions();
     randomizerSetupView.renderTeams();
     randomizerSetupView.updateRollModeVisibility();
+    randomizerSetupView.renderRollMode();
     randomizerSetupView.renderRollButton();
 }
 
