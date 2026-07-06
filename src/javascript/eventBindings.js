@@ -214,6 +214,7 @@ export function setupAllEventBindings() {
             if (stateStore.get("currentUser")) {
                 auth.handleLogout();
             } else {
+                auth.closeAccountModal();
                 auth.openLoginModal();
             }
         });
