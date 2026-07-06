@@ -1176,7 +1176,7 @@ input:checked + .toggle-slider:before {
 .roll-mode-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 0;
 }
 
 .roll-mode-btn {
@@ -1188,10 +1188,24 @@ input:checked + .toggle-slider:before {
     padding: 14px 10px;
     background: rgba(var(--white-rgb), 0.02);
     border: 1.5px solid rgba(var(--white-rgb), 0.08);
-    border-radius: 10px;
+    border-radius: 0;
     color: rgba(var(--white-rgb), 0.5);
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.roll-mode-btn:not(:last-child) {
+    border-right: none;
+}
+
+.roll-mode-btn:first-child {
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+
+.roll-mode-btn:last-child {
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
 }
 
 @media (hover: hover) {
@@ -1255,20 +1269,34 @@ input:checked + .toggle-slider:before {
 .draft-count-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
+    gap: 0;
 }
 
 .draft-count-btn {
     padding: 10px 6px;
     background: rgba(var(--white-rgb), 0.02);
     border: 1.5px solid rgba(var(--white-rgb), 0.08);
-    border-radius: 10px;
+    border-radius: 0;
     color: rgba(var(--white-rgb), 0.5);
     font-family: "Outfit", sans-serif;
     font-size: 0.85rem;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.draft-count-btn:not(:last-child) {
+    border-right: none;
+}
+
+.draft-count-btn:first-child {
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+
+.draft-count-btn:last-child {
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
 }
 
 @media (hover: hover) {
