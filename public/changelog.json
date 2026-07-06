@@ -3,7 +3,7 @@
         "version": "2.4.0.20260706",
         "changes": [
             "Roll Randomizer: further UI and functionality improvements to Game Type and Roll Mode selection",
-            "Roll section: complexity die now shown per player row",
+            "Roll section: complexity die now shown each player row",
             "Collection: groups with only some heroes owned now show a partial (indeterminate) checkbox instead of appearing unchecked",
         ]
     },
