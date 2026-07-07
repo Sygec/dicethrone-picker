@@ -272,6 +272,7 @@ export function renderRollMode() {
 
     const rollModeChosen = stateStore.get('rollModeChosen');
     const draftModeEnabled = stateStore.get('draftModeEnabled');
+    const draftCountChosen = stateStore.get('draftCountChosen');
     const draftCount = stateStore.get('draftCount');
     const locked = !stateStore.get('selectedGameType');
 
@@ -288,7 +289,7 @@ export function renderRollMode() {
     el.draftCountSection.style.display = rollModeChosen && draftModeEnabled ? 'block' : 'none';
     el.draftCountGrid.innerHTML = DRAFT_COUNT_OPTIONS.map(
         (n) => `
-        <button type="button" class="draft-count-btn${draftCount === n ? ' active' : ''}" data-action="select-draft-count" data-count="${n}">${n}</button>`,
+        <button type="button" class="draft-count-btn${draftCountChosen && draftCount === n ? ' active' : ''}" data-action="select-draft-count" data-count="${n}">${n}</button>`,
     ).join('');
 }
 
@@ -303,7 +304,10 @@ export function renderRollButton() {
 
     const selectedGameType = stateStore.get('selectedGameType');
     const rollModeChosen = stateStore.get('rollModeChosen');
-    el.rollStep.classList.toggle('step-locked', !selectedGameType || !rollModeChosen);
+    const draftModeEnabled = stateStore.get('draftModeEnabled');
+    const draftCountChosen = stateStore.get('draftCountChosen');
+    const draftReady = !draftModeEnabled || draftCountChosen;
+    el.rollStep.classList.toggle('step-locked', !selectedGameType || !rollModeChosen || !draftReady);
 
     if (!selectedGameType) {
         el.rollFinalBtn.disabled = true;
@@ -311,7 +315,7 @@ export function renderRollButton() {
         return;
     }
 
-    if (!rollModeChosen) {
+    if (!rollModeChosen || !draftReady) {
         el.rollFinalBtn.disabled = true;
         el.rollFinalBtn.innerHTML = `<span>ROLL &middot; Finish selecting your options above</span>`;
         return;

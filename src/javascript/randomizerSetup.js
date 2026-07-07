@@ -159,6 +159,7 @@ export function resetSetup() {
     stateStore.set('teamAssignments', null);
     stateStore.set('teamSwapSource', null);
     stateStore.set('rollModeChosen', false);
+    stateStore.set('draftCountChosen', false);
 
     randomizerSetupView.renderInvitees();
     onSetupChange();
@@ -249,8 +250,10 @@ export function selectRollMode(mode) {
  */
 export function selectDraftCount(count) {
     stateStore.set('draftCount', count);
+    stateStore.set('draftCountChosen', true);
     localStorage.setItem('draftCount', count);
     randomizerSetupView.renderRollMode();
+    randomizerSetupView.renderRollButton();
 }
 
 /**
