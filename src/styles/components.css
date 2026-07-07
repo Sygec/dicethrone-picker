@@ -366,14 +366,10 @@ h1 {
 
 .hero-footer-row {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 8px;
     width: 100%;
-}
-
-.hero-footer-row .edit-icon-btn {
-    flex-shrink: 0;
 }
 
 .hero-select-container {
@@ -394,31 +390,29 @@ h1 {
     opacity: 1;
 }
 
-/* Edit Icon Button styles */
+/* Edit ("Change hero") badge button styles */
 .edit-icon-btn {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    background: rgba(var(--white-rgb), 0.06);
-    border: 1px solid rgba(var(--white-rgb), 0.12);
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
     color: rgba(var(--white-rgb), 0.85);
+    background: transparent;
+    border: 1px solid rgba(var(--white-rgb), 0.85);
+    border-radius: 4px;
+    padding: 2px 6px;
     cursor: pointer;
+    flex-shrink: 0;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    padding: 0;
 }
 
 @media (hover: hover) {
     .edit-icon-btn:hover {
         background: rgba(var(--white-rgb), 0.12);
-        border-color: var(--accent);
-        color: var(--accent);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(255, 204, 0, 0.2);
+        color: var(--text);
+        transform: translateY(-1px);
     }
 }
 
