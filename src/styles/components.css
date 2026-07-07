@@ -35,6 +35,10 @@ h3,
     font-weight: 700;
 }
 
+.hero-name {
+    font-size: 1.1rem;
+}
+
 .hero-name-link {
     text-decoration: none;
     cursor: pointer;
@@ -224,19 +228,24 @@ h1 {
     display: none;
 }
 
-.player-row {
+/* Shared shell for hero cards (roll results, draft candidates) */
+.hero-card {
+    box-sizing: border-box;
+    position: relative;
     display: flex;
     align-items: center;
     background: var(--card-bg);
     border: 1.5px solid rgba(var(--white-rgb), 0.08);
     border-radius: 14px;
     padding: 12px 16px;
+    overflow: hidden;
+    box-shadow: var(--glass-shadow);
+}
+
+.player-row {
     gap: 16px;
     margin-bottom: 12px;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    position: relative;
-    overflow: hidden;
-    box-shadow: var(--glass-shadow);
 }
 
 @media (hover: hover) {

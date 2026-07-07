@@ -71,7 +71,7 @@ export function renderPlayerRowSkeleton(pIdx) {
             : `<div class="hero-stats-row" id="stats-row-${pIdx}"></div>`;
 
     el.resultsDiv.innerHTML += `
-        <div class="player-row randomizing" id="player-row-${pIdx}" style="--player-color: var(--${colorVar}); border-color: var(--${colorVar});">
+        <div class="hero-card player-row randomizing" id="player-row-${pIdx}" style="--player-color: var(--${colorVar}); border-color: var(--${colorVar});">
             <img src="" class="char-bg-img scramble-img" id="bg-img-${pIdx}" alt="Randomizing">
 
             <div class="player-row-content">
@@ -235,6 +235,7 @@ export function updatePlayerCardUI(pIdx, finalHero) {
         nameTitle.innerText = finalHero.name;
         nameTitle.href = getHeroLink(finalHero.slug);
         nameTitle.classList.remove("scramble-text");
+        nameTitle.classList.add("resolved");
     }
     if (groupEl) {
         groupEl.innerText = finalHero.group || "Unknown";
@@ -302,7 +303,7 @@ export function collapsePlayerRowToResolved(pIdx, finalHero) {
     const playerName = participant?.name || `Player ${pIdx + 1}`;
     const colorVar = participant?.colorVar || `p${pIdx + 1}`;
 
-    rowEl.className = "player-row revealed";
+    rowEl.className = "hero-card player-row revealed";
     rowEl.style.cssText = `--player-color: var(--${colorVar}); border-color: var(--${colorVar});`;
 
     rowEl.innerHTML = `
@@ -408,7 +409,7 @@ export function renderDraftCardListScramble(pIdx, draftCount) {
     let html = "";
     for (let i = 0; i < draftCount; i++) {
         html += `
-            <div class="draft-card" id="draft-card-${pIdx}-${i}">
+            <div class="hero-card draft-card" id="draft-card-${pIdx}-${i}">
                 <img src="" class="char-bg-img scramble-img" id="draft-card-img-${pIdx}-${i}" style="opacity: 0.15;">
                 <div class="draft-card-content">
                     <div class="draft-card-header">
@@ -443,11 +444,11 @@ export function renderDraftCandidateCards(pIdx, candidates) {
                     : "<span></span>";
 
             return `
-            <div class="draft-card" id="draft-card-${pIdx}-${i}" data-action="select-draft-candidate" data-player-idx="${pIdx}" data-hero-id="${hero.id}">
+            <div class="hero-card draft-card" id="draft-card-${pIdx}-${i}" data-action="select-draft-candidate" data-player-idx="${pIdx}" data-hero-id="${hero.id}">
                 <img src="${getImgUrl(hero.slug)}" alt="${hero.name}" class="char-bg-img" style="opacity: 0.2;">
                 <div class="draft-card-content">
                     <div class="draft-card-header">
-                        <span class="draft-hero-name">${hero.name}</span>
+                        <span class="hero-name draft-hero-name">${hero.name}</span>
                         <div class="complexity-dice-bar player-row-dice-bar">${renderComplexityDiceHtml(hero.complexity)}</div>
                     </div>
                     <span class="draft-card-group">${hero.group || "Unknown"}</span>

@@ -630,17 +630,7 @@ input:checked + .toggle-slider:before {
 }
 
 .draft-card {
-    box-sizing: border-box;
     width: 100%;
-    position: relative;
-    background: var(--card-bg, rgba(var(--white-rgb), 0.05));
-    border: 1.5px solid rgba(var(--white-rgb), 0.08);
-    border-radius: 14px;
-    overflow: hidden;
-    box-shadow: var(--glass-shadow);
-    display: flex;
-    align-items: center;
-    padding: 12px 16px;
     cursor: pointer;
     transition:
         border-color 0.3s ease,
@@ -666,7 +656,7 @@ input:checked + .toggle-slider:before {
 .draft-card-content {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
     width: 100%;
     z-index: 2;
     text-align: left;
@@ -681,10 +671,7 @@ input:checked + .toggle-slider:before {
 }
 
 .draft-hero-name {
-    font-size: 0.85rem;
-    font-weight: bold;
     color: var(--accent);
-    text-shadow: 0 1px 3px rgba(var(--black-rgb), 0.8);
 }
 
 .draft-selected-badge {
@@ -710,7 +697,6 @@ input:checked + .toggle-slider:before {
 }
 
 .draft-card .hero-stats-row {
-    font-size: 0.6rem;
     gap: 6px;
     margin-top: 2px;
 }
