@@ -111,21 +111,26 @@ export function closeChangelog() {
 }
 
 /**
- * Displays the "What's New" modal with release updates for a specific version entry.
- * @param {Object} entry - Version changelog entry.
+ * Displays the "What's New" modal with release updates for one or more version entries,
+ * newest first.
+ * @param {Object[]} entries - Version changelog entries.
  */
-export function showWhatsNew(entry) {
+export function showWhatsNew(entries) {
     const el = getElements();
     if (!el.whatsNewContainer || !el.whatsNewModal) return;
 
-    el.whatsNewContainer.innerHTML = `
+    el.whatsNewContainer.innerHTML = entries
+        .map(
+            (entry) => `
         <div>
             <h3>v${entry.version}</h3>
             <ul style="text-align: left;">
                 ${entry.changes.map((change) => `<li>${change}</li>`).join("")}
             </ul>
         </div>
-    `;
+    `,
+        )
+        .join("");
     el.whatsNewModal.style.display = "flex";
     document.body.style.overflow = "hidden";
 }
@@ -729,13 +734,97 @@ export function renderCollectionsListUI(userProfiles, userHeroes) {
 }
 
 /**
+ * Renders one winner-select card per player/hero (non-Teams games).
+ * @param {Object} game - Game record with its `game_players`.
+ * @param {string[]} names - Tracked-player display names, indexed by pIdx.
+ * @returns {string} Card markup (no wrapping grid element).
+ */
+function renderPlayerWinnerCards(game, names) {
+    return game.game_players
+        .map((gp) => {
+            const pIdx = parseInt(gp.player_id.substring(1)) - 1;
+            const displayName = gp.heroes?.name || "Unknown";
+            const heroSlug = gp.heroes?.slug || "";
+            const isSelected = gp.is_winner === true;
+            const isChecked = isSelected ? "checked" : "";
+            const selectedClass = isSelected ? "selected" : "";
+
+            let playerLabelName = names[pIdx] || "Invitee";
+            if (pIdx >= MAX_WEIGHTED_PLAYERS) {
+                playerLabelName = `Invitee (${gp.player_id === "p5" ? "1" : "2"})`;
+            }
+
+            return `
+            <div class="winner-card ${selectedClass}" data-action="winner-card-click" data-value="${gp.player_id}">
+                <input type="radio" name="winner-selection" value="${gp.player_id}" ${isChecked} style="display: none;">
+                <img src="${getImgUrl(heroSlug)}" class="winner-card-img" alt="${displayName}">
+                <div class="winner-card-player-name">${playerLabelName}</div>
+                <div class="winner-card-hero-name">${displayName}</div>
+            </div>
+        `;
+        })
+        .join("");
+}
+
+/**
+ * Renders one winner-select card per team (Teams-type games): Team A / Team B, each
+ * listing its member players/heroes. Selecting a team marks every member as the winner.
+ * @param {Object} game - Game record with its `game_players` (each carrying `teams.team_label`).
+ * @param {string[]} names - Tracked-player display names, indexed by pIdx.
+ * @returns {string} Card markup (no wrapping grid element).
+ */
+function renderTeamWinnerCards(game, names) {
+    const teamGroups = { A: [], B: [] };
+    game.game_players.forEach((gp) => {
+        const label = gp.teams?.team_label;
+        if (label && teamGroups[label]) teamGroups[label].push(gp);
+    });
+
+    return ["A", "B"]
+        .filter((label) => teamGroups[label].length > 0)
+        .map((label) => {
+            const members = teamGroups[label];
+            const isSelected = members.some((gp) => gp.is_winner === true);
+            const isChecked = isSelected ? "checked" : "";
+            const selectedClass = isSelected ? "selected" : "";
+
+            const membersHtml = members
+                .map((gp) => {
+                    const pIdx = parseInt(gp.player_id.substring(1)) - 1;
+                    const displayName = gp.heroes?.name || "Unknown";
+                    const heroSlug = gp.heroes?.slug || "";
+                    const playerLabelName = names[pIdx] || "Invitee";
+
+                    return `
+                    <div class="winner-team-member">
+                        <img src="${getImgUrl(heroSlug)}" class="winner-team-member-img" alt="${displayName}">
+                        <div class="winner-team-member-text">
+                            <span class="winner-card-player-name">${playerLabelName}</span>
+                            <span class="winner-card-hero-name">${displayName}</span>
+                        </div>
+                    </div>
+                `;
+                })
+                .join("");
+
+            return `
+            <div class="winner-card team-card ${selectedClass}" data-action="winner-card-click" data-value="${label}">
+                <input type="radio" name="winner-selection" value="${label}" ${isChecked} style="display: none;">
+                <div class="winner-card-player-name">Team ${label}</div>
+                <div class="winner-team-members">${membersHtml}</div>
+            </div>
+        `;
+        })
+        .join("");
+}
+
+/**
  * Displays the modal for picking a winner for a game session.
  * @param {string} gameId - Match UUID.
  */
 export function openWinnerModal(gameId) {
     const el = getElements();
     const games = stateStore.get("games");
-    const players = stateStore.get("players");
     const names = stateStore.get("NAMES");
 
     if (!el.winnerModal || !el.winnerContainer || !el.confirmWinnerBtn) return;
@@ -746,43 +835,30 @@ export function openWinnerModal(gameId) {
     el.confirmWinnerBtn.setAttribute("data-game-id", gameId);
     el.confirmWinnerBtn.disabled = true;
 
+    const isTeamsGame = game.game_type === "2v2" || game.game_type === "3v3";
+
     // Check if game was a draw in its previous state
     const winners = game.game_players.filter((p) => p.is_winner === true);
     const explicitLosers = game.game_players.filter((p) => p.is_winner === false);
     const isDraw = winners.length === 0 && explicitLosers.length > 0 && explicitLosers.length === game.game_players.length;
 
-    const isTwoRows = game.game_players.length > 3;
-    const gridClass = isTwoRows ? "winner-select-grid two-rows" : "winner-select-grid";
-
-    let playersHtml = `<div class="${gridClass}">`;
-
-    game.game_players.forEach((gp) => {
-        const pIdx = parseInt(gp.player_id.substring(1)) - 1;
-        const displayName = gp.heroes?.name || "Unknown";
-        const heroSlug = gp.heroes?.slug || "";
-        const isSelected = gp.is_winner === true;
-        const isChecked = isSelected ? "checked" : "";
-        const selectedClass = isSelected ? "selected" : "";
-
-        let playerLabelName = names[pIdx] || "Invitee";
-        if (pIdx >= MAX_WEIGHTED_PLAYERS) {
-            playerLabelName = `Invitee (${gp.player_id === "p5" ? "1" : "2"})`;
-        }
-
-        playersHtml += `
-            <div class="winner-card ${selectedClass}" data-action="winner-card-click" data-value="${gp.player_id}">
-                <input type="radio" name="winner-selection" value="${gp.player_id}" ${isChecked} style="display: none;">
-                <img src="${getImgUrl(heroSlug)}" class="winner-card-img" alt="${displayName}">
-                <div class="winner-card-player-name">${playerLabelName}</div>
-                <div class="winner-card-hero-name">${displayName}</div>
-            </div>
-        `;
-    });
+    let gridClass;
+    let cardsHtml;
+    if (isTeamsGame) {
+        gridClass = "winner-select-grid team-mode";
+        cardsHtml = renderTeamWinnerCards(game, names);
+    } else {
+        const isTwoRows = game.game_players.length > 3;
+        gridClass = isTwoRows ? "winner-select-grid two-rows" : "winner-select-grid";
+        cardsHtml = renderPlayerWinnerCards(game, names);
+    }
 
     const isDrawChecked = isDraw ? "checked" : "";
     const drawSelectedClass = isDraw ? "selected" : "";
 
-    playersHtml += `
+    el.winnerContainer.innerHTML = `
+        <div class="${gridClass}">
+            ${cardsHtml}
             <div class="winner-draw-card ${drawSelectedClass}" data-action="winner-card-click" data-value="draw">
                 <input type="radio" name="winner-selection" value="draw" ${isDrawChecked} style="display: none;">
                 <span style="font-size: 1.5rem; line-height: 1;">🤝</span>
@@ -793,8 +869,6 @@ export function openWinnerModal(gameId) {
             </div>
         </div>
     `;
-
-    el.winnerContainer.innerHTML = playersHtml;
     el.winnerModal.style.display = "flex";
     document.body.style.overflow = "hidden";
 }

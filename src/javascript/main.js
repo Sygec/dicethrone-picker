@@ -191,8 +191,11 @@ export async function initializeApp() {
                 versionLabel.innerText = latestEntry.version;
             }
 
-            if (localStorage.getItem("lastSeenVersion") !== latestEntry.version) {
-                showWhatsNew(latestEntry);
+            const lastSeenVersion = localStorage.getItem("lastSeenVersion");
+            if (lastSeenVersion !== latestEntry.version) {
+                const lastSeenIndex = changelog.findIndex((entry) => entry.version === lastSeenVersion);
+                const newEntries = lastSeenIndex !== -1 ? changelog.slice(0, lastSeenIndex) : [latestEntry];
+                showWhatsNew(newEntries);
             }
         }
 

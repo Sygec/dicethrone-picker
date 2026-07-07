@@ -334,6 +334,31 @@ export async function applyResults() {
         return alert("Error creating game: " + gameError.message);
     }
 
+    const teamIdByPlayerId = {};
+    const teamAssignments = stateStore.get("teamAssignments");
+    if (randomizerSetup.isTeamsType(gameType) && teamAssignments) {
+        const userId = stateStore.get("currentUser").id;
+        const { data: teams, error: teamsError } = await apiService.insertTeams([
+            { game_id: game.id, team_label: "A", last_updated_by: userId },
+            { game_id: game.id, team_label: "B", last_updated_by: userId },
+        ]);
+        if (teamsError) {
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = originalHtml;
+            }
+            return alert("Error creating teams: " + teamsError.message);
+        }
+
+        const teamIdByLabel = Object.fromEntries(teams.map((t) => [t.team_label, t.id]));
+        teamAssignments.teamA.forEach((participantId) => {
+            teamIdByPlayerId[participantId] = teamIdByLabel.A;
+        });
+        teamAssignments.teamB.forEach((participantId) => {
+            teamIdByPlayerId[participantId] = teamIdByLabel.B;
+        });
+    }
+
     characters.forEach((char) => {
         for (let pIdx = 0; pIdx < MAX_WEIGHTED_PLAYERS; pIdx++) {
             const playerChoice = activePicks.get(pIdx);
@@ -345,6 +370,7 @@ export async function applyResults() {
                     player_id: `p${pIdx + 1}`,
                     hero_id: char.id,
                     is_winner: null,
+                    team_id: teamIdByPlayerId[`p${pIdx + 1}`] || null,
                     last_updated_by: stateStore.get("currentUser").id,
                 });
             }
