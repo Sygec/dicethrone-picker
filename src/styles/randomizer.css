@@ -4,13 +4,21 @@
  * @requires style
  */
 
-/* Hearthstone Card Player Plate */
+/* Wraps a plate + its stats line so they move/wrap together as one unit */
+.player-plate-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 0 0 auto;
+}
+
+/* Hearthstone Card Player Plate. Fixed width so size never depends on player count
+   (see .player-responsive-grid, which wraps rather than shrinking plates to fit). */
 .player-plate {
     position: relative;
     aspect-ratio: 2 / 3;
-    flex: 1 1 0;
-    min-width: 65px;
-    max-width: 130px;
+    flex: 0 0 auto;
+    width: 108px;
     background: var(--bg-solid-dark);
     border: 1.5px solid rgba(var(--white-rgb), 0.15);
     border-radius: 10px;
@@ -50,8 +58,8 @@
     transition:
         opacity 0.3s ease,
         transform 0.3s ease;
-    mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 78%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent 100%);
 }
 
 @media (hover: hover) {
@@ -71,8 +79,8 @@
     background: linear-gradient(
         to top,
         rgba(var(--black-rgb), 0.95) 0%,
-        rgba(var(--black-rgb), 0.4) 60%,
-        rgba(var(--black-rgb), 0) 100%
+        rgba(var(--black-rgb), 0.35) 30%,
+        rgba(var(--black-rgb), 0) 55%
     );
     z-index: 2;
     border-radius: inherit;
@@ -151,8 +159,8 @@
         linear-gradient(
             to top,
             rgba(var(--black-rgb), 0.95) 0%,
-            rgba(var(--black-rgb), 0.4) 60%,
-            rgba(var(--black-rgb), 0) 100%
+            rgba(var(--black-rgb), 0.35) 30%,
+            rgba(var(--black-rgb), 0) 55%
         ),
         linear-gradient(
             135deg,
@@ -382,12 +390,19 @@
     }
 }
 
+/* Wins/plays record, shown below the plate rather than overlaid on the art */
+.player-plate-stats-below {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 4px;
+    max-width: 108px;
+}
+
 .player-plate-winner-stats {
     font-size: 0.72rem;
     font-weight: 700;
     color: var(--gold);
-    text-shadow: 0 1px 3px rgba(var(--black-rgb), 0.9);
-    margin-top: 2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -397,27 +412,30 @@
 .player-plate-winner-pct {
     font-size: 0.68rem;
     font-weight: 800;
-    color: rgba(var(--white-rgb), 0.85);
-    text-shadow: 0 1px 3px rgba(var(--black-rgb), 0.9);
-    margin-top: 1px;
+    color: rgba(var(--white-rgb), 0.7);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    text-align: center;
 }
 
-/* Responsive adjustments for fitting all players on a single row in mobile viewports */
+/* Smaller fixed plate size on narrow viewports. Still count-independent -- rows just
+   wrap onto multiple lines instead of shrinking plates to squeeze everyone in. */
 @media (max-width: 480px) {
     .game-card-body {
         padding: 8px;
     }
 
     .player-responsive-grid {
-        gap: 4px;
+        gap: 8px 4px;
+    }
+
+    .player-plate-wrapper,
+    .player-plate-stats-below {
+        max-width: 76px;
     }
 
     .player-plate {
-        min-width: 50px; /* Allow cards to shrink down on very narrow screens */
+        width: 76px; /* Fixed mobile size, matches .player-plate-wrapper max-width */
         border-width: 1px; /* Thinner border to conserve space */
         border-radius: 6px; /* Slightly smaller radius for smaller cards */
     }

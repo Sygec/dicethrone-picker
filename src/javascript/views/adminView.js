@@ -17,6 +17,31 @@ import {
 } from '../utils.js';
 import { isProd } from '../config.js';
 import { updateSegmentedHighlights } from './filterView.js';
+import { ICONS as GAME_TYPE_ICONS, GAME_TYPE_SHORT_LABEL } from './randomizerSetupView.js';
+
+const GAME_TYPE_FULL_LABEL = {
+    duel: "1v1 Duel",
+    "2v2": "Teams 2v2",
+    "3v3": "Teams 3v3",
+    ffa: "Free For All",
+    koth: "King of the Hill",
+};
+
+/**
+ * Returns the small game-type icon (crossed pistols/users/swords/crown) used in the
+ * collapsed history card header, or an empty string for games logged before `game_type`
+ * existed.
+ * @param {string|null} gameType - 'duel' | '2v2' | '3v3' | 'ffa' | 'koth' | null.
+ * @returns {string} Icon markup.
+ */
+function getGameTypeIconHtml(gameType) {
+    if (!gameType) return "";
+    const iconKey = gameType === "2v2" || gameType === "3v3" ? "teams" : gameType;
+    const svg = GAME_TYPE_ICONS[iconKey];
+    if (!svg) return "";
+    const label = GAME_TYPE_SHORT_LABEL[gameType] || gameType;
+    return `<span class="game-card-type-icon" title="${label}">${svg}</span>`;
+}
 
 let elementsCache = null;
 const getElements = () => {
@@ -979,10 +1004,14 @@ export function renderGamesList() {
                 if (rawDate && !rawDate.includes("Z") && !rawDate.includes("+"))
                     rawDate += "Z";
 
-                const dateStr = new Date(rawDate).toLocaleString(undefined, {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                });
+                const dateOnlyStr = new Date(rawDate).toLocaleDateString(undefined, { dateStyle: "medium" });
+                const timeOnlyStr = new Date(rawDate).toLocaleTimeString(undefined, { timeStyle: "short" });
+
+                const isTeamsGame = game.game_type === "2v2" || game.game_type === "3v3";
+                const gameTypeIconHtml = getGameTypeIconHtml(game.game_type);
+                const gameTypeBadgeHtml = game.game_type
+                    ? `<div class="game-card-type-badge">${GAME_TYPE_FULL_LABEL[game.game_type] || game.game_type}</div>`
+                    : "";
 
                 const winners = game.game_players.filter((p) => p.is_winner === true);
                 const explicitLosers = game.game_players.filter((p) => p.is_winner === false);
@@ -1051,7 +1080,13 @@ export function renderGamesList() {
                 const headerHtml = `
                 <div class="game-card-header" data-action="toggle-game-expansion" data-game-id="${game.id}">
                     <div class="game-card-title-group">
-                        <span class="game-card-date">${dateStr}</span>
+                        <div class="game-card-title-row">
+                            ${gameTypeIconHtml}
+                            <div class="game-card-date-time">
+                                <span class="game-card-date">${dateOnlyStr}</span>
+                                <span class="game-card-time">${timeOnlyStr}</span>
+                            </div>
+                        </div>
                         ${statusLabel}
                     </div>
                     <div class="game-card-collapsed-summary">
@@ -1073,7 +1108,7 @@ export function renderGamesList() {
                 `
                     : "";
 
-                const platesArray = game.game_players.map((gp) => {
+                const renderPlate = (gp) => {
                     const pIdx = parseInt(gp.player_id.substring(1)) - 1;
                     const heroName = gp.heroes?.name || "Unknown";
                     const heroSlug = gp.heroes?.slug || "";
@@ -1107,54 +1142,67 @@ export function renderGamesList() {
                     const trophyHtml = gp.is_winner ? '<div class="player-plate-trophy">🏆</div>' : "";
                     const drawBadgeHtml = isDraw ? '<div class="player-plate-draw-badge">DRAW</div>' : "";
 
-                    let statsHtml = "";
-                    if (gp.is_winner) {
-                        let heroPlayCount = 0;
-                        let heroWinCount = 0;
-                        const useHistorical = stateStore.get("gamesUseHistorical");
-                        games.forEach((g) => {
-                            if (!useHistorical && g.is_historical) return;
-                            g.game_players.forEach((otherGp) => {
-                                if (otherGp.player_id === gp.player_id && otherGp.hero_id === gp.hero_id) {
-                                    heroPlayCount++;
-                                    if (otherGp.is_winner) {
-                                        heroWinCount++;
-                                    }
+                    let heroPlayCount = 0;
+                    let heroWinCount = 0;
+                    const useHistorical = stateStore.get("gamesUseHistorical");
+                    games.forEach((g) => {
+                        if (!useHistorical && g.is_historical) return;
+                        g.game_players.forEach((otherGp) => {
+                            if (otherGp.player_id === gp.player_id && otherGp.hero_id === gp.hero_id) {
+                                heroPlayCount++;
+                                if (otherGp.is_winner) {
+                                    heroWinCount++;
                                 }
-                            });
+                            }
                         });
-                        const pct = heroPlayCount > 0 ? (heroWinCount / heroPlayCount).toFixed(3) : ".000";
-                        const pctStr = pct.startsWith("0") ? pct.substring(1) : pct;
-                        statsHtml = `
-                                <div class="player-plate-winner-stats">${heroWinCount}🏆 / ${heroPlayCount}🎲</div>
-                                <div class="player-plate-winner-pct">( ${pctStr})</div>
-                            `;
-                    }
+                    });
+                    const pct = heroPlayCount > 0 ? (heroWinCount / heroPlayCount).toFixed(3) : ".000";
+                    const pctStr = pct.startsWith("0") ? pct.substring(1) : pct;
 
                     return `
-                        <a href="${getHeroLink(heroSlug)}" target="_blank" class="player-plate ${plateClass}" style="${borderStyle}">
-                            <img src="${getImgUrl(heroSlug)}" class="player-plate-bg-art" alt="${heroName}">
-                            <div class="player-plate-overlay"></div>
-                            ${trophyHtml}
-                            ${drawBadgeHtml}
-                            <div class="player-plate-tag" style="background-color: var(--p${pIdx + 1});">${names[pIdx]}</div>
-                            <div class="player-plate-info">
-                                <div class="player-plate-hero-name">${heroName}</div>
-                                ${statsHtml}
+                        <div class="player-plate-wrapper">
+                            <a href="${getHeroLink(heroSlug)}" target="_blank" class="player-plate ${plateClass}" style="${borderStyle}">
+                                <img src="${getImgUrl(heroSlug)}" class="player-plate-bg-art" alt="${heroName}">
+                                <div class="player-plate-overlay"></div>
+                                ${trophyHtml}
+                                ${drawBadgeHtml}
+                                <div class="player-plate-tag" style="background-color: var(--p${pIdx + 1});">${names[pIdx]}</div>
+                                <div class="player-plate-info">
+                                    <div class="player-plate-hero-name">${heroName}</div>
+                                </div>
+                            </a>
+                            <div class="player-plate-stats-below">
+                                <span class="player-plate-winner-stats">${heroWinCount}🏆 / ${heroPlayCount}🎲</span>
+                                <span class="player-plate-winner-pct">( ${pctStr})</span>
                             </div>
-                        </a>`;
-                });
+                        </div>`;
+                };
 
-                const playerPlatesHtml = platesArray.join("");
+                let playerPlatesHtml;
+                if (isTeamsGame) {
+                    const teamA = game.game_players.filter((gp) => gp.teams?.team_label === "A");
+                    const teamB = game.game_players.filter((gp) => gp.teams?.team_label === "B");
+                    playerPlatesHtml = `
+                        <div class="team-block">
+                            <div class="team-block-label">Team A</div>
+                            <div class="player-responsive-grid">${teamA.map(renderPlate).join("")}</div>
+                        </div>
+                        <div class="team-block">
+                            <div class="team-block-label">Team B</div>
+                            <div class="player-responsive-grid">${teamB.map(renderPlate).join("")}</div>
+                        </div>
+                    `;
+                } else {
+                    playerPlatesHtml = `<div class="player-responsive-grid">${game.game_players.map(renderPlate).join("")}</div>`;
+                }
 
                 return `
                 <div class="game-history-card ${expandedClass}">
                     ${bgImgHtml}
                     ${headerHtml}
                     <div class="game-card-body">
-                        <div class="player-responsive-grid">
-                            ${playerPlatesHtml}
-                        </div>
+                        ${gameTypeBadgeHtml}
+                        ${playerPlatesHtml}
                         ${gameActions}
                     </div>
                 </div>`;

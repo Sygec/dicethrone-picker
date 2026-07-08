@@ -15,7 +15,7 @@ import {
 // L-shaped pistol silhouette (muzzle pointing +x, grip hanging below the rear/pivot at the origin)
 const PISTOL_PARTS = `<rect x="0" y="-1.5" width="9" height="3"></rect><rect x="8" y="-2.3" width="1" height="0.8"></rect><path d="M0 1.5 L-1.2 7 L3.5 7 L2.5 1.5 Z"></path><path d="M2.5 2 q2 2 0 4"></path>`;
 
-const ICONS = {
+export const ICONS = {
     // Crossed pistols
     duel: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(12,12) rotate(-45)">${PISTOL_PARTS}</g><g transform="translate(12,12) rotate(45) scale(-1,1)">${PISTOL_PARTS}</g></svg>`,
     // Two people (Feather "users" icon)
@@ -30,7 +30,7 @@ const INFO_ICON = `<svg class="setup-hint-icon" viewBox="0 0 24 24" fill="none" 
 
 const ARROW_ICON = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="13 6 19 12 13 18"></polyline></svg>`;
 
-const GAME_TYPE_SHORT_LABEL = {
+export const GAME_TYPE_SHORT_LABEL = {
     duel: '1v1',
     '2v2': '2v2',
     '3v3': '3v3',
