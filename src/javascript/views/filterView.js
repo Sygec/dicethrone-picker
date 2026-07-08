@@ -489,7 +489,7 @@ export function renderHistoryFilterDrawerBody(body) {
                 if (pIdx >= 0 && pIdx < MAX_WEIGHTED_PLAYERS) {
                     playerStats[pIdx].played++;
                     if (gp.is_winner) playerStats[pIdx].won++;
-                } else if (pIdx === MAX_WEIGHTED_PLAYERS || pIdx === MAX_WEIGHTED_PLAYERS + 1) {
+                } else if (pIdx >= MAX_WEIGHTED_PLAYERS) {
                     inviteePlayed++;
                     if (gp.is_winner) inviteeWon++;
                 }

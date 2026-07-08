@@ -316,12 +316,10 @@ export async function applyResults() {
     const statsUpdates = [];
     const gameParticipants = [];
 
-    // Invitees (pIdx >= MAX_WEIGHTED_PLAYERS) are session-only: no weighting, no history saved,
-    // and they have no corresponding row in the `players` table, so they're excluded here entirely.
+    // Invitees (pIdx >= MAX_WEIGHTED_PLAYERS) map to the placeholder `p5`/`p6` players rows:
+    // they're saved to game_players like anyone else, but never get weighted stats.
     const activePicks = new Map(
-        Array.from(dropdowns)
-            .map((sel) => [parseInt(sel.dataset.player), sel.value])
-            .filter(([pIdx]) => pIdx < MAX_WEIGHTED_PLAYERS),
+        Array.from(dropdowns).map((sel) => [parseInt(sel.dataset.player), sel.value]),
     );
 
     const gameType = stateStore.get("selectedGameType");
@@ -350,20 +348,18 @@ export async function applyResults() {
             return alert("Error creating teams: " + teamsError.message);
         }
 
+        const participantIdToPlayerId = randomizerSetup.getParticipantIdToPlayerIdMap();
         const teamIdByLabel = Object.fromEntries(teams.map((t) => [t.team_label, t.id]));
         teamAssignments.teamA.forEach((participantId) => {
-            teamIdByPlayerId[participantId] = teamIdByLabel.A;
+            teamIdByPlayerId[participantIdToPlayerId[participantId] || participantId] = teamIdByLabel.A;
         });
         teamAssignments.teamB.forEach((participantId) => {
-            teamIdByPlayerId[participantId] = teamIdByLabel.B;
+            teamIdByPlayerId[participantIdToPlayerId[participantId] || participantId] = teamIdByLabel.B;
         });
     }
 
     characters.forEach((char) => {
-        for (let pIdx = 0; pIdx < MAX_WEIGHTED_PLAYERS; pIdx++) {
-            const playerChoice = activePicks.get(pIdx);
-            if (playerChoice === undefined) continue;
-
+        activePicks.forEach((playerChoice, pIdx) => {
             if (playerChoice === char.name) {
                 gameParticipants.push({
                     game_id: game.id,
@@ -374,6 +370,9 @@ export async function applyResults() {
                     last_updated_by: stateStore.get("currentUser").id,
                 });
             }
+
+            // Invitees (pIdx >= MAX_WEIGHTED_PLAYERS) don't get weighted stats tracked.
+            if (pIdx >= MAX_WEIGHTED_PLAYERS) return;
 
             const wasPicked = playerChoice === char.name;
             const newWeight = wasPicked
@@ -386,7 +385,7 @@ export async function applyResults() {
                 weight: newWeight,
                 last_updated_by: stateStore.get("currentUser").id,
             });
-        }
+        });
     });
 
     const { error: gpError } = await apiService.insertGamePlayers(gameParticipants);

@@ -43,6 +43,16 @@ function getGameTypeIconHtml(gameType) {
     return `<span class="game-card-type-icon" title="${label}">${svg}</span>`;
 }
 
+/**
+ * Returns the invitee slot number (1 through 6, backed by the `p5`-`p10` placeholder rows
+ * in the `players` table) for a given virtual player index.
+ * @param {number} pIdx - Virtual player index (>= MAX_WEIGHTED_PLAYERS for invitees).
+ * @returns {number}
+ */
+function getInviteeNumber(pIdx) {
+    return pIdx - MAX_WEIGHTED_PLAYERS + 1;
+}
+
 let elementsCache = null;
 const getElements = () => {
     if (!elementsCache) {
@@ -776,7 +786,7 @@ function renderPlayerWinnerCards(game, names) {
 
             let playerLabelName = names[pIdx] || "Invitee";
             if (pIdx >= MAX_WEIGHTED_PLAYERS) {
-                playerLabelName = `Invitee (${gp.player_id === "p5" ? "1" : "2"})`;
+                playerLabelName = `Invitee (${getInviteeNumber(pIdx)})`;
             }
 
             return `
@@ -971,7 +981,7 @@ export function renderGamesList() {
                 if (selectedGamePlayerIndex >= 0 && selectedGamePlayerIndex < MAX_WEIGHTED_PLAYERS) {
                     match = pIdx === selectedGamePlayerIndex;
                 } else if (selectedGamePlayerIndex === MAX_WEIGHTED_PLAYERS) {
-                    match = pIdx === MAX_WEIGHTED_PLAYERS || pIdx === MAX_WEIGHTED_PLAYERS + 1;
+                    match = pIdx >= MAX_WEIGHTED_PLAYERS;
                 }
                 if (match && gamesWinnerOnly) return gp.is_winner === true;
                 return match;
@@ -1019,6 +1029,7 @@ export function renderGamesList() {
                 const isInProgress = winners.length === 0 && !isDraw;
                 const isExpanded = expandedGameIds.has(game.id);
                 const expandedClass = isExpanded ? "expanded" : "";
+                const inProgressClass = isInProgress ? "in-progress" : "";
 
                 let bgImgHtml = "";
                 if (winners.length > 0 && winners[0].heroes?.slug) {
@@ -1028,9 +1039,14 @@ export function renderGamesList() {
                 const playerNamesMap = {};
                 game.game_players.forEach((gp) => {
                     const pIdx = parseInt(gp.player_id.substring(1)) - 1;
-                    let rawName = names[pIdx] || "Unknown";
-                    if (rawName.toLowerCase().startsWith("player ") && rawName.length > 7) {
-                        rawName = "P" + rawName.substring(7);
+                    let rawName;
+                    if (pIdx >= MAX_WEIGHTED_PLAYERS) {
+                        rawName = `Invitee ${getInviteeNumber(pIdx)}`;
+                    } else {
+                        rawName = names[pIdx] || "Unknown";
+                        if (rawName.toLowerCase().startsWith("player ") && rawName.length > 7) {
+                            rawName = "P" + rawName.substring(7);
+                        }
                     }
                     playerNamesMap[gp.player_id] = rawName;
                 });
@@ -1110,6 +1126,9 @@ export function renderGamesList() {
 
                 const renderPlate = (gp) => {
                     const pIdx = parseInt(gp.player_id.substring(1)) - 1;
+                    const playerTagName = pIdx >= MAX_WEIGHTED_PLAYERS
+                        ? `Invitee ${getInviteeNumber(pIdx)}`
+                        : names[pIdx];
                     const heroName = gp.heroes?.name || "Unknown";
                     const heroSlug = gp.heroes?.slug || "";
                     const isSearchMatch = Boolean(searchTerm && heroName.toLowerCase().includes(searchTerm));
@@ -1119,7 +1138,7 @@ export function renderGamesList() {
                         if (selectedGamePlayerIndex >= 0 && selectedGamePlayerIndex < MAX_WEIGHTED_PLAYERS) {
                             isPlayerFilterMatch = pIdx === selectedGamePlayerIndex;
                         } else if (selectedGamePlayerIndex === MAX_WEIGHTED_PLAYERS) {
-                            isPlayerFilterMatch = pIdx === MAX_WEIGHTED_PLAYERS || pIdx === MAX_WEIGHTED_PLAYERS + 1;
+                            isPlayerFilterMatch = pIdx >= MAX_WEIGHTED_PLAYERS;
                         }
                     }
 
@@ -1166,7 +1185,7 @@ export function renderGamesList() {
                                 <div class="player-plate-overlay"></div>
                                 ${trophyHtml}
                                 ${drawBadgeHtml}
-                                <div class="player-plate-tag" style="background-color: var(--p${pIdx + 1});">${names[pIdx]}</div>
+                                <div class="player-plate-tag" style="background-color: var(--p${pIdx + 1});">${playerTagName}</div>
                                 <div class="player-plate-info">
                                     <div class="player-plate-hero-name">${heroName}</div>
                                 </div>
@@ -1197,7 +1216,7 @@ export function renderGamesList() {
                 }
 
                 return `
-                <div class="game-history-card ${expandedClass}">
+                <div class="game-history-card ${expandedClass} ${inProgressClass}">
                     ${bgImgHtml}
                     ${headerHtml}
                     <div class="game-card-body">
@@ -1238,7 +1257,7 @@ export function renderGamesList() {
                             const pIdx = parseInt(gp.player_id.substring(1)) - 1;
                             let playerLabel = names[pIdx] || "Invitee";
                             if (pIdx >= MAX_WEIGHTED_PLAYERS) {
-                                playerLabel = `Invitee (${gp.player_id === "p5" ? "1" : "2"})`;
+                                playerLabel = `Invitee (${getInviteeNumber(pIdx)})`;
                             }
                             return `<span style="color: var(--p${pIdx + 1}); font-weight: bold;">${playerLabel}</span>`;
                         })
@@ -1249,10 +1268,9 @@ export function renderGamesList() {
                     const pIdx = parseInt(gp.player_id.substring(1)) - 1;
                     let colorVar = `--p${pIdx + 1}`;
                     let playerLabel = names[pIdx] || "Invitee";
-                    
+
                     if (pIdx >= MAX_WEIGHTED_PLAYERS) {
-                        colorVar = "--p5";
-                        playerLabel = `Invitee (${gp.player_id === "p5" ? "1" : "2"})`;
+                        playerLabel = `Invitee (${getInviteeNumber(pIdx)})`;
                     }
 
                     let winStatus = "";

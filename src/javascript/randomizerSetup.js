@@ -95,6 +95,23 @@ export function getRollParticipants() {
 }
 
 /**
+ * Maps each checked participant's setup-time id (tracked players already use their real
+ * `players.id`, e.g. `p1`; invitees use an ad-hoc `invitee-<timestamp>` id) to the actual
+ * `game_players.player_id` they'll be saved under (`p1`-`p4` for tracked players, `p5`/`p6`
+ * for invitees). Used to resolve `teamAssignments` entries when saving a Teams game.
+ * @returns {Object<string, string>}
+ */
+export function getParticipantIdToPlayerIdMap() {
+    const checked = getCheckedParticipants();
+    const rollParticipants = getRollParticipants();
+    const map = {};
+    checked.forEach((p, i) => {
+        map[p.id] = `p${rollParticipants[i].pIdx + 1}`;
+    });
+    return map;
+}
+
+/**
  * Computes which game types are available for a given participant count.
  * @param {number} count - Total selected participants.
  * @returns {{duel: boolean, teams: boolean, ffa: boolean, koth: boolean, teamsValue: string}}

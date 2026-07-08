@@ -27,6 +27,11 @@
     }
 }
 
+.game-history-card.in-progress {
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(233, 69, 96, 0.35), var(--glass-shadow);
+}
+
 /* 22% opacity background artwork of the winning character (more visible) */
 .game-card-bg-img {
     position: absolute;
