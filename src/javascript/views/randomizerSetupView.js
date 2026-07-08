@@ -12,18 +12,11 @@ import {
     isTeamsType,
 } from '../randomizerSetup.js';
 
-// L-shaped pistol silhouette (muzzle pointing +x, grip hanging below the rear/pivot at the origin)
-const PISTOL_PARTS = `<rect x="0" y="-1.5" width="9" height="3"></rect><rect x="8" y="-2.3" width="1" height="0.8"></rect><path d="M0 1.5 L-1.2 7 L3.5 7 L2.5 1.5 Z"></path><path d="M2.5 2 q2 2 0 4"></path>`;
-
 export const ICONS = {
-    // Crossed pistols
-    duel: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(12,12) rotate(-45)">${PISTOL_PARTS}</g><g transform="translate(12,12) rotate(45) scale(-1,1)">${PISTOL_PARTS}</g></svg>`,
-    // Two people (Feather "users" icon)
-    teams: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`,
-    // Crossed swords
-    ffa: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="5" x2="19" y2="19"></line><path d="M5 5 L8 5 M5 5 L5 8"></path><line x1="19" y1="5" x2="5" y2="19"></line><path d="M19 5 L16 5 M19 5 L19 8"></path></svg>`,
-    // Crown
-    koth: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l4 4 5-7 5 7 4-4-2 10H5z"></path></svg>`,
+    duel: `<svg viewBox="0 -960 960 960" width="20" height="20" fill="currentColor"><path d="M769-88 645-212l-88 88-43-43q-17-17-17-42t17-42l199-199q17-17 42-17t42 17l43 43-88 88 123 124q9 9 9 21t-9 21l-64 65q-9 9-21 9t-21-9Zm111-636L427-271l19 20q17 17 17 42t-17 42l-43 43-88-88L191-88q-9 9-21 9t-21-9l-65-65q-9-9-9-21t9-21l124-124-88-88 43-43q17-17 42-17t42 17l20 19 453-453h160v160ZM278-526 80-724v-160h160l198 198-160 160Z"/></svg>`,
+    teams: `<svg viewBox="0 -960 960 960" width="20" height="20" fill="currentColor"><path d="M38-160v-94q0-35 18-63.5t50-42.5q73-32 131.5-46T358-420q62 0 120 14t131 46q32 14 50.5 42.5T678-254v94H38Zm700 0v-94q0-63-32-103.5T622-423q69 8 130 23.5t99 35.5q33 19 52 47t19 63v94H738ZM250-523q-42-42-42-108t42-108q42-42 108-42t108 42q42 42 42 108t-42 108q-42 42-108 42t-108-42Zm426 0q-42 42-108 42-11 0-24.5-1.5T519-488q24-25 36.5-61.5T568-631q0-45-12.5-79.5T519-774q11-3 24.5-5t24.5-2q66 0 108 42t42 108q0 66-42 108Z"/></svg>`,
+    ffa: `<svg viewBox="0 -960 960 960" width="20" height="20" fill="currentColor"><path d="M420-340h120l-60-120-60 120Zm-79.91-120q28.91 0 49.41-20.59 20.5-20.59 20.5-49.5t-20.59-49.41q-20.59-20.5-49.5-20.5t-49.41 20.59q-20.5 20.59-20.5 49.5t20.59 49.41q20.59 20.5 49.5 20.5Zm280 0q28.91 0 49.41-20.59 20.5-20.59 20.5-49.5t-20.59-49.41q-20.59-20.5-49.5-20.5t-49.41 20.59q-20.5 20.59-20.5 49.5t20.59 49.41q20.59 20.5 49.5 20.5ZM240-80v-170q-36-16-65.5-43T124-355.5Q103-391 91.5-433T80-520q0-158 112-259t288-101q176 0 288 101t112 259q0 45-11.5 87T836-355.5Q815-320 785.5-293T720-250v170H600v-120h-60v120H420v-120h-60v120H240Z"/></svg>`,
+    koth: `<svg viewBox="0 -960 960 960" width="20" height="20" fill="currentColor"><path d="M510-80v-329q0-23 5.5-44.5T537-492q44-46 103-72.5T767-591q63 0 108 45t45 108v205q0 63-45 108T767-80H510Zm-317 0q-63 0-108-45T40-233v-205q0-63 45-108t108-45q69 0 129.5 27.5T427-488q14 16 18.5 36.5T450-409v329H193Zm287-444q-29-28-58.5-49.5T359-612q17-22 40-37t51-21v-66H327v-60h123v-124h60v124h123v60H510v66q28 5 51 20t40 37q-33 17-62.5 39T480-524Z"/></svg>`,
 };
 
 const INFO_ICON = `<svg class="setup-hint-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
