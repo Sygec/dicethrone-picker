@@ -94,10 +94,13 @@ export async function getGroups() {
  * @returns {Promise<Object>} Supabase response with players data or error.
  */
 export async function getPlayers() {
-    return db
-        .from("players")
-        .select("*")
-        .order("id", { ascending: true });
+    // Sorted numerically in JS rather than via `.order("id")`: player ids are text (p1, p2,
+    // ..., p10), and a DB-level string sort would put "p10" before "p2".
+    const result = await db.from("players").select("*");
+    if (result.data) {
+        result.data.sort((a, b) => parseInt(a.id.slice(1), 10) - parseInt(b.id.slice(1), 10));
+    }
+    return result;
 }
 
 /**

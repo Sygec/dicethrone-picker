@@ -60,9 +60,11 @@
 /* Accordion Header */
 .game-card-header {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
-    padding: 14px 20px;
+    row-gap: 8px;
+    padding: 14px 16px;
     cursor: pointer;
     user-select: none;
     position: relative;
@@ -80,6 +82,7 @@
 .game-card-title-group {
     display: flex;
     flex-direction: column;
+    flex-shrink: 0;
     gap: 3px;
 }
 
@@ -115,6 +118,7 @@
     font-weight: 700;
     color: var(--text);
     letter-spacing: 0.5px;
+    white-space: nowrap;
 }
 
 .game-card-time {
@@ -122,6 +126,7 @@
     font-weight: 500;
     color: var(--text);
     opacity: 0.6;
+    white-space: nowrap;
 }
 
 .game-card-status-badge {
@@ -142,7 +147,6 @@
     align-items: center;
     gap: 12px;
     margin-left: auto;
-    margin-right: 15px;
 }
 
 .mini-portrait-strip {
