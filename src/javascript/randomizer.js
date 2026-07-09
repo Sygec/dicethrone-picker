@@ -2,7 +2,7 @@
  * @fileoverview Logic for hero picker rolls, randomizer animations, manual hero overrides, drafts, bans, and result logging.
  * @module randomizer
  */
-import { isHeroOwned, getSoftWeight, isUser, DEFAULT_HERO_WEIGHT, PICKED_HERO_WEIGHT, WEIGHT_INCREMENT, getHeroProbabilityText, getImgUrl, showConfirm, MAX_WEIGHTED_PLAYERS } from './utils.js';
+import { isHeroOwned, getSoftWeight, isUser, getHeroProbabilityText, getImgUrl, showConfirm, MAX_WEIGHTED_PLAYERS, buildGameResultsPayload } from './utils.js';
 import { showSection } from './admin.js';
 import { init } from './main.js';
 import { renderPlayerToggles } from './auth.js';
@@ -313,8 +313,6 @@ export async function applyResults() {
     }
 
     const dropdowns = document.querySelectorAll(".char-select");
-    const statsUpdates = [];
-    const gameParticipants = [];
 
     // Invitees (pIdx >= MAX_WEIGHTED_PLAYERS) map to the placeholder `p5`/`p6` players rows:
     // they're saved to game_players like anyone else, but never get weighted stats.
@@ -358,35 +356,13 @@ export async function applyResults() {
         });
     }
 
-    characters.forEach((char) => {
-        activePicks.forEach((playerChoice, pIdx) => {
-            if (playerChoice === char.name) {
-                gameParticipants.push({
-                    game_id: game.id,
-                    player_id: `p${pIdx + 1}`,
-                    hero_id: char.id,
-                    is_winner: null,
-                    team_id: teamIdByPlayerId[`p${pIdx + 1}`] || null,
-                    last_updated_by: stateStore.get("currentUser").id,
-                });
-            }
-
-            // Invitees (pIdx >= MAX_WEIGHTED_PLAYERS) don't get weighted stats tracked.
-            if (pIdx >= MAX_WEIGHTED_PLAYERS) return;
-
-            const wasPicked = playerChoice === char.name;
-            const newWeight = wasPicked
-                ? PICKED_HERO_WEIGHT
-                : (char.weights[pIdx] || DEFAULT_HERO_WEIGHT) + WEIGHT_INCREMENT;
-
-            statsUpdates.push({
-                hero_id: char.id,
-                player_id: `p${pIdx + 1}`,
-                weight: newWeight,
-                last_updated_by: stateStore.get("currentUser").id,
-            });
-        });
-    });
+    const { gameParticipants, statsUpdates } = buildGameResultsPayload(
+        characters,
+        activePicks,
+        teamIdByPlayerId,
+        game.id,
+        stateStore.get("currentUser").id,
+    );
 
     const { error: gpError } = await apiService.insertGamePlayers(gameParticipants);
     if (gpError) {

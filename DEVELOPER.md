@@ -84,6 +84,21 @@ npm run build
 
 Output goes to `/docs` (configured in `vite.config.js`) for GitHub Pages compatibility.
 
+### Automated Build & Deploy (GitHub Actions)
+
+Instead of running `npm run build` locally and committing `/docs` yourself, trigger the
+**Build and Deploy** workflow (`.github/workflows/build-and-deploy.yml`) from the repo's
+**Actions** tab → *Run workflow*. It's manual-trigger only (no automatic run on push, since
+it touches the live production deploy path). It will:
+
+1. Run the test suite (`npm test`) — stops here if anything fails, so a broken build never gets committed.
+2. Run `npm run build`.
+3. Commit the resulting `/docs` changes (as `github-actions[bot]`) and push back to the branch you triggered it from — skipped if the build produced no changes.
+
+You still `git push` your own source changes as normal; this workflow only replaces the
+build-and-commit step. Once the commit lands, GitHub Pages and Cloudflare (which watches the
+repo directly) both pick up the new `/docs` automatically, same as if you'd committed it by hand.
+
 ### Preview Production Build
 
 ```bash

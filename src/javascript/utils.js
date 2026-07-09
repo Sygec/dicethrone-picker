@@ -130,6 +130,54 @@ export function getSoftWeight(hero, userIndex) {
     return baseWeight / penalty;
 }
 /**
+ * Builds the game_players and player_hero_stats payloads for a completed roll:
+ * for each character/player pairing, records the game participant row (if picked)
+ * and the updated weight (reset to PICKED_HERO_WEIGHT if picked, else incremented).
+ * @function buildGameResultsPayload
+ * @param {Array<Object>} characters - All hero configs.
+ * @param {Map<number, string>} activePicks - Map of player index to picked hero name.
+ * @param {Object<string, string>} teamIdByPlayerId - Map of player_id (e.g. "p1") to team id.
+ * @param {string} gameId - The id of the created game.
+ * @param {string} userId - The id of the user performing the update.
+ * @returns {{gameParticipants: Array<Object>, statsUpdates: Array<Object>}}
+ */
+export function buildGameResultsPayload(characters, activePicks, teamIdByPlayerId, gameId, userId) {
+    const gameParticipants = [];
+    const statsUpdates = [];
+
+    characters.forEach((char) => {
+        activePicks.forEach((playerChoice, pIdx) => {
+            if (playerChoice === char.name) {
+                gameParticipants.push({
+                    game_id: gameId,
+                    player_id: `p${pIdx + 1}`,
+                    hero_id: char.id,
+                    is_winner: null,
+                    team_id: teamIdByPlayerId[`p${pIdx + 1}`] || null,
+                    last_updated_by: userId,
+                });
+            }
+
+            // Invitees (pIdx >= MAX_WEIGHTED_PLAYERS) don't get weighted stats tracked.
+            if (pIdx >= MAX_WEIGHTED_PLAYERS) return;
+
+            const wasPicked = playerChoice === char.name;
+            const newWeight = wasPicked
+                ? PICKED_HERO_WEIGHT
+                : (char.weights[pIdx] || DEFAULT_HERO_WEIGHT) + WEIGHT_INCREMENT;
+
+            statsUpdates.push({
+                hero_id: char.id,
+                player_id: `p${pIdx + 1}`,
+                weight: newWeight,
+                last_updated_by: userId,
+            });
+        });
+    });
+
+    return { gameParticipants, statsUpdates };
+}
+/**
  * Formats the roll probability of a character as a user-friendly percentage string.
  * @function getHeroProbabilityText
  * @param {Object} charData - The hero object.
