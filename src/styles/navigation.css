@@ -142,14 +142,13 @@ body.loaded .bottom-nav {
     transition: color 0.2s ease;
 }
 
-.nav-item:active,
-.nav-item:focus {
-    color: var(--accent);
+.nav-item.active {
+    color: var(--gold-metallic);
 }
 
 .icon {
     display: flex;
-    color: var(--accent);
+    color: var(--gold-metallic);
     margin-bottom: 2px;
 }
 

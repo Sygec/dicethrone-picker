@@ -231,6 +231,10 @@ export function showSection(sectionName) {
 
     updateHeaderSection(sectionName);
 
+    document.querySelectorAll(".bottom-nav .nav-item").forEach((el) => {
+        el.classList.toggle("active", el.getAttribute("data-section") === sectionName);
+    });
+
     if (sectionName === "database") {
         setTimeout(updateSegmentedHighlights, 50);
     } else if (sectionName === "history") {
