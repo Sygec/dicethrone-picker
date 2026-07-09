@@ -15,9 +15,9 @@ export function openChangelog() {
 export function closeChangelog() {
     adminView.closeChangelog();
 }
-export function showWhatsNew(entry) {
-    adminView.showWhatsNew(entry);
-    localStorage.setItem("lastSeenVersion", entry.version);
+export function showWhatsNew(entries) {
+    adminView.showWhatsNew(entries);
+    localStorage.setItem("lastSeenVersion", entries[0].version);
 }
 export function closeWhatsNew() {
     adminView.closeWhatsNew();
@@ -522,12 +522,21 @@ export async function submitWinner(gameId) {
     btn.disabled = true;
     btn.innerText = "Saving...";
 
+    const game = stateStore.get("games").find((g) => g.id === gameId);
+    const isTeamsGame = game?.game_type === "2v2" || game?.game_type === "3v3";
+
     try {
-        const { error } = await apiService.updateGameWinner(
-            gameId,
-            winnerPlayerId,
-            stateStore.get("currentUser").id,
-        );
+        const { error } = isTeamsGame
+            ? await apiService.updateTeamWinner(
+                  gameId,
+                  winnerPlayerId,
+                  stateStore.get("currentUser").id,
+              )
+            : await apiService.updateGameWinner(
+                  gameId,
+                  winnerPlayerId,
+                  stateStore.get("currentUser").id,
+              );
         if (error) throw error;
 
         closeWinnerModal();

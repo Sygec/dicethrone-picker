@@ -251,6 +251,40 @@
     grid-template-columns: repeat(2, 105px);
 }
 
+.winner-select-grid.team-mode {
+    grid-template-columns: repeat(2, 160px);
+}
+
+.winner-team-members {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.winner-team-member {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
+}
+
+.winner-team-member-img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(var(--white-rgb), 0.1);
+    background: var(--bg-panel-light);
+    flex-shrink: 0;
+}
+
+.winner-team-member-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+}
+
 .winner-card {
     position: relative;
     background: rgba(var(--white-rgb), 0.03);

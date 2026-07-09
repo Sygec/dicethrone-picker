@@ -4,25 +4,24 @@
  */
 
 import * as stateStore from '../stateStore.js';
-import { 
-    getImgUrl, 
-    getHeroLink, 
-    getHeroProbabilityText, 
-    isHeroOwned, 
+import {
+    getImgUrl,
+    getHeroLink,
+    getHeroProbabilityText,
+    isHeroOwned,
     getSoftWeight,
     escapeHtml,
     parseDateString,
     getDaysAgoClean,
     MAX_WEIGHTED_PLAYERS,
-    getRecencyDot
+    getRecencyDot,
+    getRollParticipant
 } from '../utils.js';
 import { updateSegmentedHighlights } from './filterView.js';
 
 // DOM Element references cache helper
 const getElements = () => ({
     resultsDiv: document.getElementById("results"),
-    rollBtnContainer: document.getElementById("rollBtnContainer"),
-    rollBtn: document.getElementById("rollBtn"),
     actionButtons: document.getElementById("action-buttons"),
     heroSelectModal: document.getElementById("hero-select-modal"),
     heroSelectModalTitle: document.getElementById("hero-select-modal-title"),
@@ -38,19 +37,43 @@ const getElements = () => ({
 });
 
 /**
+ * Builds a single complexity die icon (same "d1.png"-"d6.png" assets as the Heroes Database
+ * bar, but showing only the die matching the hero's level) to save horizontal space next to
+ * the player/hero name.
+ * @param {number} complexity
+ * @returns {string}
+ */
+function renderComplexityDiceHtml(complexity) {
+    const complexityVal = Number(complexity) || 1;
+    return `<img src="images/dice/d${complexityVal}.png" class="complexity-die-solo" alt="Complexity ${complexityVal}">`;
+}
+
+/**
  * Appends a player row placeholder with animatable text inside the results container.
  */
 export function renderPlayerRowSkeleton(pIdx) {
     const el = getElements();
     if (!el.resultsDiv) return;
 
-    const names = stateStore.get("NAMES");
-    const playerName = names[pIdx] || `Player ${pIdx + 1}`;
+    const participant = getRollParticipant(pIdx);
+    const playerName = participant?.name || `Player ${pIdx + 1}`;
+    const colorVar = participant?.colorVar || `p${pIdx + 1}`;
+    const statsRowHtml =
+        pIdx < MAX_WEIGHTED_PLAYERS
+            ? `
+                    <div class="hero-stats-row scramble-hidden opacity-0" id="stats-row-${pIdx}">
+                        <span>Plays: --</span>
+                        <span class="stats-divider">|</span>
+                        <span>Last: --</span>
+                        <span class="stats-divider">|</span>
+                        <span id="hero-prob-${pIdx}">Prob: --</span>
+                    </div>`
+            : `<div class="hero-stats-row" id="stats-row-${pIdx}"></div>`;
 
     el.resultsDiv.innerHTML += `
-        <div class="player-row randomizing" id="player-row-${pIdx}" style="--player-color: var(--p${pIdx + 1}); border-color: var(--p${pIdx + 1});">
+        <div class="hero-card player-row randomizing" id="player-row-${pIdx}" style="--player-color: var(--${colorVar}); border-color: var(--${colorVar});">
             <img src="" class="char-bg-img scramble-img" id="bg-img-${pIdx}" alt="Randomizing">
-            
+
             <div class="player-row-content">
                 <div class="hero-info-container" id="info-container-${pIdx}">
                     <div class="hero-header-row">
@@ -59,27 +82,19 @@ export function renderPlayerRowSkeleton(pIdx) {
                             <span class="hero-name-divider">:</span>
                             <a href="#" target="_blank" class="hero-name hero-name-link scramble-text" id="hero-name-title-${pIdx}">ROLLING...</a>
                         </div>
+                        <div class="complexity-dice-bar player-row-dice-bar scramble-hidden opacity-0" id="complexity-dice-${pIdx}"></div>
                     </div>
-                    
+
                     <span class="expanded-group scramble-hidden opacity-0" id="hero-group-${pIdx}">Group</span>
-                    
-                    <div class="hero-stats-row scramble-hidden opacity-0" id="stats-row-${pIdx}">
-                        <span>Plays: --</span>
-                        <span class="stats-divider">|</span>
-                        <span>Last: --</span>
-                        <span class="stats-divider">|</span>
-                        <span id="hero-prob-${pIdx}">Prob: --</span>
+
+                    <div class="hero-footer-row">
+                        ${statsRowHtml}
+                        <button class="edit-icon-btn scramble-hidden opacity-0" id="edit-btn-${pIdx}" type="button" data-action="open-hero-select" data-player-idx="${pIdx}" aria-label="Select hero">CHANGE</button>
                     </div>
                 </div>
-                
-                <div class="hero-select-container scramble-hidden opacity-0" id="select-container-${pIdx}">
+
+                <div class="hero-select-container" id="select-container-${pIdx}">
                     <input type="hidden" class="char-select" data-player="${pIdx}" id="select-${pIdx}">
-                    <button class="edit-icon-btn" type="button" data-action="open-hero-select" data-player-idx="${pIdx}" aria-label="Select hero">
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                            <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                        </svg>
-                    </button>
                 </div>
             </div>
         </div>
@@ -96,9 +111,9 @@ export function openHeroSelectModal(pIdx) {
     el.heroSelectModal.style.display = "flex";
     document.body.style.overflow = "hidden";
 
-    const names = stateStore.get("NAMES");
-    if (el.heroSelectModalTitle && names[pIdx]) {
-        el.heroSelectModalTitle.innerText = `Select Hero for ${names[pIdx]}`;
+    const participant = getRollParticipant(pIdx);
+    if (el.heroSelectModalTitle && participant?.name) {
+        el.heroSelectModalTitle.innerText = `Select Hero for ${participant.name}`;
     }
 
     if (el.heroSelectSearch) {
@@ -203,7 +218,7 @@ export function updatePlayerCardUI(pIdx, finalHero) {
     const nameTitle = document.getElementById(`hero-name-title-${pIdx}`);
     const groupEl = document.getElementById(`hero-group-${pIdx}`);
     const statsDiv = document.getElementById(`stats-row-${pIdx}`);
-    const names = stateStore.get("NAMES");
+    const diceEl = document.getElementById(`complexity-dice-${pIdx}`);
 
     if (selectEl) selectEl.value = finalHero.name;
     if (bgImgEl) {
@@ -215,14 +230,18 @@ export function updatePlayerCardUI(pIdx, finalHero) {
         nameTitle.innerText = finalHero.name;
         nameTitle.href = getHeroLink(finalHero.slug);
         nameTitle.classList.remove("scramble-text");
+        nameTitle.classList.add("resolved");
     }
     if (groupEl) {
         groupEl.innerText = finalHero.group || "Unknown";
     }
+    if (diceEl) {
+        diceEl.innerHTML = renderComplexityDiceHtml(finalHero.complexity);
+    }
 
     if (statsDiv) {
-        const probText = `Prob: <b>${getHeroProbabilityText(finalHero, pIdx)}</b>`;
         if (pIdx < MAX_WEIGHTED_PLAYERS) {
+            const probText = `Prob: <b>${getHeroProbabilityText(finalHero, pIdx)}</b>`;
             const plays = finalHero.playCount[pIdx] || 0;
             const last = finalHero.lastPlayed[pIdx] || "Never";
             statsDiv.innerHTML = `
@@ -233,7 +252,7 @@ export function updatePlayerCardUI(pIdx, finalHero) {
                 <span>${probText}</span>
             `;
         } else {
-            statsDiv.innerHTML = `<span>${probText}</span>`;
+            statsDiv.innerHTML = "";
         }
     }
 
@@ -248,10 +267,14 @@ export function updatePlayerCardUI(pIdx, finalHero) {
             statsDiv.classList.remove("scramble-hidden", "opacity-0");
             statsDiv.classList.add("fade-in-resolve");
         }
-        const selectContainer = document.getElementById(`select-container-${pIdx}`);
-        if (selectContainer) {
-            selectContainer.classList.remove("scramble-hidden", "opacity-0");
-            selectContainer.classList.add("fade-in-resolve");
+        if (diceEl) {
+            diceEl.classList.remove("scramble-hidden", "opacity-0");
+            diceEl.classList.add("fade-in-resolve");
+        }
+        const editBtn = document.getElementById(`edit-btn-${pIdx}`);
+        if (editBtn) {
+            editBtn.classList.remove("scramble-hidden", "opacity-0");
+            editBtn.classList.add("fade-in-resolve");
         }
     }
 }
@@ -262,14 +285,21 @@ export function updatePlayerCardUI(pIdx, finalHero) {
  * Collapses the draft row view to show the final selected character's stats and edit triggers.
  */
 export function collapsePlayerRowToResolved(pIdx, finalHero) {
-    const rowEl = document.getElementById(`player-row-${pIdx}`);
-    if (!rowEl) return;
+    const el = getElements();
+    let rowEl = document.getElementById(`player-row-${pIdx}`);
+    if (!rowEl) {
+        if (!el.resultsDiv) return;
+        rowEl = document.createElement("div");
+        rowEl.id = `player-row-${pIdx}`;
+        el.resultsDiv.appendChild(rowEl);
+    }
 
-    const names = stateStore.get("NAMES");
-    const playerName = names[pIdx] || `Player ${pIdx + 1}`;
+    const participant = getRollParticipant(pIdx);
+    const playerName = participant?.name || `Player ${pIdx + 1}`;
+    const colorVar = participant?.colorVar || `p${pIdx + 1}`;
 
-    rowEl.className = "player-row revealed";
-    rowEl.style.cssText = `--player-color: var(--p${pIdx + 1}); border-color: var(--p${pIdx + 1});`;
+    rowEl.className = "hero-card player-row revealed";
+    rowEl.style.cssText = `--player-color: var(--${colorVar}); border-color: var(--${colorVar});`;
 
     rowEl.innerHTML = `
         <img src="${getImgUrl(finalHero.slug)}" class="char-bg-img" id="bg-img-${pIdx}" alt="${finalHero.name}" style="opacity: 0.25;">
@@ -281,27 +311,24 @@ export function collapsePlayerRowToResolved(pIdx, finalHero) {
                         <span class="hero-name-divider">:</span>
                         <a href="${getHeroLink(finalHero.slug)}" target="_blank" class="hero-name hero-name-link resolved" id="hero-name-title-${pIdx}">${finalHero.name}</a>
                     </div>
+                    <div class="complexity-dice-bar player-row-dice-bar" id="complexity-dice-${pIdx}">${renderComplexityDiceHtml(finalHero.complexity)}</div>
                 </div>
                 <span class="expanded-group" id="hero-group-${pIdx}">${finalHero.group || "Unknown"}</span>
-                <div class="hero-stats-row" id="stats-row-${pIdx}">
+                <div class="hero-footer-row">
+                    <div class="hero-stats-row" id="stats-row-${pIdx}"></div>
+                    <button class="edit-icon-btn" id="edit-btn-${pIdx}" type="button" data-action="open-hero-select" data-player-idx="${pIdx}" aria-label="Select hero">CHANGE</button>
                 </div>
             </div>
             <div class="hero-select-container" id="select-container-${pIdx}">
                 <input type="hidden" class="char-select" data-player="${pIdx}" id="select-${pIdx}" value="${finalHero.name}">
-                <button class="edit-icon-btn" type="button" data-action="open-hero-select" data-player-idx="${pIdx}" aria-label="Select hero">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                        <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
-                </button>
             </div>
         </div>
     `;
 
     const statsRow = document.getElementById(`stats-row-${pIdx}`);
     if (statsRow) {
-        const probText = `Prob: <b>${getHeroProbabilityText(finalHero, pIdx)}</b>`;
         if (pIdx < MAX_WEIGHTED_PLAYERS) {
+            const probText = `Prob: <b>${getHeroProbabilityText(finalHero, pIdx)}</b>`;
             const plays = finalHero.playCount[pIdx] || 0;
             const last = finalHero.lastPlayed[pIdx] || "Never";
             statsRow.innerHTML = `
@@ -312,127 +339,144 @@ export function collapsePlayerRowToResolved(pIdx, finalHero) {
                 <span>${probText}</span>
             `;
         } else {
-            statsRow.innerHTML = `<span>${probText}</span>`;
+            statsRow.innerHTML = "";
         }
     }
 }
 
 /**
- * Renders the placeholder view for a player waiting for their turn to draft.
+ * Renders the single-player drafting turn view: a pip row across the top showing draft order
+ * (current player highlighted, others dimmed), an instruction line, and an empty card-list
+ * container ready to be filled by renderDraftCardListScramble/revealDraftCandidates.
  */
-export function renderPlayerRowWaiting(pIdx, activePlayerName) {
+export function renderDraftTurn(order, activeStep) {
     const el = getElements();
     if (!el.resultsDiv) return;
 
-    let rowEl = document.getElementById(`player-row-${pIdx}`);
-    if (!rowEl) {
-        rowEl = document.createElement("div");
-        rowEl.id = `player-row-${pIdx}`;
-        el.resultsDiv.appendChild(rowEl);
-    }
+    const activePIdx = order[activeStep];
+    const activeName = getRollParticipant(activePIdx)?.name || `Player ${activePIdx + 1}`;
 
-    const names = stateStore.get("NAMES");
-    const playerName = names[pIdx] || `Player ${pIdx + 1}`;
+    const pipsHtml = order
+        .map((pIdx, stepIdx) => {
+            const participant = getRollParticipant(pIdx);
+            const name = participant?.name || `Player ${pIdx + 1}`;
+            const colorVar = participant?.colorVar || `p${pIdx + 1}`;
+            const isActive = stepIdx === activeStep;
+            const isDone = stepIdx < activeStep;
+            return `
+                <span class="draft-pip${isActive ? " active" : ""}${isDone ? " done" : ""}" style="--player-color: var(--${colorVar})">
+                    ${name}${isActive ? ' <em class="draft-pip-status">picking...</em>' : ""}
+                </span>`;
+        })
+        .join("");
 
-    rowEl.className = "player-row waiting-draft";
-    rowEl.style.cssText = `--player-color: var(--p${pIdx + 1}); border-color: var(--p${pIdx + 1});`;
-    rowEl.innerHTML = `
-        <div class="player-row-content">
-            <span class="player-name-caps" style="color: var(--player-color);">${playerName.toUpperCase()}</span>
-            <span class="draft-waiting-status">Waiting for ${activePlayerName}...</span>
+    el.resultsDiv.innerHTML = `
+        <div class="draft-pip-row">${pipsHtml}</div>
+        <div class="draft-instruction-row">
+            <p class="draft-instruction"><strong>${activeName}</strong>, pick your hero</p>
+            <button class="btn-cancel-roll" type="button" data-action="cancel-roll" aria-label="Cancel roll">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
         </div>
+        <p class="draft-instruction-sub">Tap a card to select</p>
+        <div class="draft-card-list" id="draft-card-list"></div>
+        <button type="button" class="btn-confirm-draft" id="draft-confirm-btn" data-action="confirm-draft" data-player-idx="${activePIdx}" disabled>
+            SELECT A HERO
+        </button>
     `;
 }
 
 /**
- * Renders the active drafting interface (complete with 3D carousel and controls) for a player.
+ * Fills the draft card list with N scrambling placeholder cards while candidates are "rolling".
  */
-export function renderPlayerRowDraftingActive(pIdx) {
-    const el = getElements();
-    if (!el.resultsDiv) return;
+export function renderDraftCardListScramble(pIdx, draftCount) {
+    const list = document.getElementById("draft-card-list");
+    if (!list) return;
 
-    let rowEl = document.getElementById(`player-row-${pIdx}`);
-    if (!rowEl) {
-        rowEl = document.createElement("div");
-        rowEl.id = `player-row-${pIdx}`;
-        el.resultsDiv.appendChild(rowEl);
+    let html = "";
+    for (let i = 0; i < draftCount; i++) {
+        html += `
+            <div class="hero-card draft-card" id="draft-card-${pIdx}-${i}">
+                <img src="" class="char-bg-img scramble-img" id="draft-card-img-${pIdx}-${i}" style="opacity: 0.15;">
+                <div class="draft-card-content">
+                    <div class="draft-card-header">
+                        <span class="draft-hero-name scramble-text" id="draft-card-name-${pIdx}-${i}">ROLLING...</span>
+                    </div>
+                    <span class="draft-card-group" id="draft-card-group-${pIdx}-${i}">Group</span>
+                </div>
+            </div>`;
     }
+    list.innerHTML = html;
+}
 
-    const names = stateStore.get("NAMES");
-    const playerName = names[pIdx] || `Player ${pIdx + 1}`;
-    const draftCount = stateStore.get("draftCount");
+/**
+ * Replaces the scrambling placeholders with the real, tap-to-select candidate cards.
+ */
+export function renderDraftCandidateCards(pIdx, candidates) {
+    const list = document.getElementById("draft-card-list");
+    if (!list) return;
 
-    rowEl.className = "player-row active-draft";
-    rowEl.style.cssText = `--player-color: var(--p${pIdx + 1}); border-color: var(--p${pIdx + 1});`;
+    list.innerHTML = candidates
+        .map((hero, i) => {
+            const statsHtml =
+                pIdx < MAX_WEIGHTED_PLAYERS
+                    ? `
+                <div class="hero-stats-row">
+                    <span>Plays: <b>${hero.playCount[pIdx] || 0}</b></span>
+                    <span class="stats-divider">|</span>
+                    <span>Last: <b>${hero.lastPlayed[pIdx] || "Never"}</b></span>
+                    <span class="stats-divider">|</span>
+                    <span>Prob: <b>${getHeroProbabilityText(hero, pIdx)}</b></span>
+                </div>`
+                    : "<span></span>";
 
-    rowEl.innerHTML = `
-        <style>
-            .btn-cancel-roll {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 30px;
-                height: 30px;
-                border-radius: 50%;
-                background: rgba(255, 77, 77, 0.12);
-                border: 1px solid rgba(255, 77, 77, 0.25);
-                color: #ff4d4d;
-                cursor: pointer;
-                transition: all 0.2s ease;
-                padding: 0;
-            }
-            @media (hover: hover) {
-                .btn-cancel-roll:hover {
-                    background: rgba(255, 77, 77, 0.25);
-                    border-color: #ff4d4d;
-                    color: #fff;
-                    transform: scale(1.08);
-                    box-shadow: 0 0 10px rgba(255, 77, 77, 0.3);
-                }
-            }
-            .btn-cancel-roll:active {
-                transform: scale(0.95);
-            }
-        </style>
-        <img src="" class="char-bg-img scramble-img" id="bg-img-${pIdx}" style="opacity: 0; transition: opacity 0.5s ease;">
-        <input type="hidden" class="char-select" data-player="${pIdx}" id="select-${pIdx}">
-        <div class="player-row-content draft-flow-content">
-            <div class="hero-header-row" style="width: 100%; display: flex; align-items: center; justify-content: space-between;">
-                <div>
-                    <span class="player-name-caps" style="color: var(--player-color);">${playerName.toUpperCase()}</span>
-                    <span class="hero-name-divider">:</span>
-                    <span class="draft-title" style="font-weight: 700; color: #ffd700;">CHOOSE YOUR HERO</span>
+            return `
+            <div class="hero-card draft-card" id="draft-card-${pIdx}-${i}" data-action="select-draft-candidate" data-player-idx="${pIdx}" data-hero-id="${hero.id}">
+                <img src="${getImgUrl(hero.slug)}" alt="${hero.name}" class="char-bg-img" style="opacity: 0.2;">
+                <div class="draft-card-content">
+                    <div class="draft-card-header">
+                        <span class="hero-name draft-hero-name">${hero.name}</span>
+                        <div class="complexity-dice-bar player-row-dice-bar">${renderComplexityDiceHtml(hero.complexity)}</div>
+                    </div>
+                    <span class="draft-card-group">${hero.group || "Unknown"}</span>
+                    <div class="hero-footer-row">
+                        ${statsHtml}
+                        <span class="draft-selected-badge">SELECTED</span>
+                    </div>
                 </div>
-                <button class="btn-cancel-roll" type="button" data-action="cancel-roll" aria-label="Cancel roll">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
-            </div>
-            <div class="draft-wheel-container" id="draft-wheel-container-${pIdx}">
-                <button type="button" class="draft-arrow left-arrow" data-action="rotate-draft" data-player-idx="${pIdx}" data-direction="-1" data-draft-count="${draftCount}" aria-label="Previous hero">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="15 18 9 12 15 6"></polyline>
-                    </svg>
-                </button>
+            </div>`;
+        })
+        .join("");
+}
 
-                <div class="draft-wheel" id="draft-wheel-${pIdx}">
-                </div>
+/**
+ * Marks the tapped candidate card as selected (and un-marks any other) without confirming the pick.
+ */
+export function markDraftCandidateSelected(pIdx, heroId) {
+    document.querySelectorAll(`.draft-card[data-player-idx="${pIdx}"]`).forEach((card) => {
+        card.classList.toggle("selected", card.dataset.heroId === String(heroId));
+    });
+}
 
-                <button type="button" class="draft-arrow right-arrow" data-action="rotate-draft" data-player-idx="${pIdx}" data-direction="1" data-draft-count="${draftCount}" aria-label="Next hero">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="9 18 15 12 9 6"></polyline>
-                    </svg>
-                </button>
-            </div>
-            <div class="draft-actions">
-                <button type="button" class="btn-confirm-draft" id="confirm-draft-btn-${pIdx}" data-action="confirm-draft" data-player-idx="${pIdx}" disabled>
-                    CONFIRM PICK
-                </button>
-            </div>
-        </div>
-    `;
+/**
+ * Updates the per-turn confirm button: disabled "SELECT A HERO" with no pick yet,
+ * or enabled "PICK <hero> →" once a candidate card has been tapped.
+ */
+export function updateDraftConfirmButton(pIdx, hero) {
+    const btn = document.getElementById("draft-confirm-btn");
+    if (!btn) return;
+
+    if (!hero) {
+        btn.disabled = true;
+        btn.innerText = "SELECT A HERO";
+    } else {
+        const playerName = getRollParticipant(pIdx)?.name || `Player ${pIdx + 1}`;
+        btn.disabled = false;
+        btn.innerHTML = `${escapeHtml(playerName.toUpperCase())} picks ${escapeHtml(hero.name.toUpperCase())} &rarr;`;
+    }
 }
 
 /**

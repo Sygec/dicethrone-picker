@@ -1,5 +1,42 @@
 [
     {
+        "version": "2.3.3.20260708",
+        "changes": [
+            "Roll Randomizer: Invitees are now saved to Game History and can be selected as the winner",
+            "Roll Randomizer: Up to 6 invitees can now be added to a single game (previously limited to 2)",
+            "Game History: In Progress games now stand out with an accent-colored border",
+            "Game History: Game Type icons enlarged and recolored, with more spacing next to the date",
+            "Game History: Fixed the header wrapping awkwardly on games with many players",
+            "Navigation: Updated bottom nav and Game Type icons with a new icon set"
+        ]
+    },
+    {
+        "version": "2.3.2.20260706",
+        "changes": [
+            "Roll Randomizer: Draft Roll options-per-player no longer defaults to the last-used value; must be explicitly selected each time before rolling"
+        ]
+    },
+    {
+        "version": "2.3.1.20260706",
+        "changes": [
+            "Roll Randomizer: further UI and functionality improvements to Game Type and Roll Mode selection",
+            "Roll section: complexity die now shown each player row",
+            "Collection: groups with only some heroes owned now show a partial (indeterminate) checkbox instead of appearing unchecked"
+        ]
+    },
+    {
+        "version": "2.3.0.20260705",
+        "changes": [
+            "New account panel: login/logout and version/changelog access moved into a dedicated account menu",
+            "Roll Randomizer: new Game Type selection",
+            "Roll Randomizer: new team assignment for Team 2v2/3v3 games",
+            "Roll Randomizer: new Roll Mode selection",
+            "Roll Randomizer: refactored roll button and roll flow for a smoother experience",
+            "Password reset: improved email validation, error messages and field highlighting",
+            "New preloader banner image and styling"
+        ]
+    },
+    {
         "version": "2.2.0.20260627",
         "changes": [
             "Maintenance update: Mostly bug fixes and minor tweaks to improve performance and stability"

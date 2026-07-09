@@ -13,9 +13,8 @@ const getElements = () => {
             adminNav: document.querySelector(".bottom-nav .admin-only"),
             authBtn: document.getElementById("auth-btn"),
             actionButtons: document.getElementById("action-buttons"),
-            rollBtnContainer: document.getElementById("rollBtnContainer"),
-            rollBtn: document.getElementById("rollBtn"),
-            rollDraftBtn: document.getElementById("rollDraftBtn"),
+            avatarBtn: document.getElementById("header-avatar-btn"),
+            accountModal: document.getElementById("account-modal"),
             loginModal: document.getElementById("login-modal"),
             loginError: document.getElementById("login-error"),
             loginEmailInput: document.getElementById("login-email"),
@@ -38,6 +37,7 @@ export function updateAuthUI() {
     const currentUser = stateStore.get("currentUser");
     const loggedInPlayerIndex = stateStore.get("loggedInPlayerIndex");
     const names = stateStore.get("NAMES");
+    const players = stateStore.get("players");
 
     if (currentUser) {
         if (loggedInPlayerIndex !== -1 && names[loggedInPlayerIndex]) {
@@ -47,18 +47,49 @@ export function updateAuthUI() {
             if (el.authBtn) el.authBtn.innerText = `Logout (${username})`;
         }
         if (el.adminNav) el.adminNav.style.display = isAdmin() ? "flex" : "none";
+
+        const loggedInPlayer = loggedInPlayerIndex !== -1 ? players[loggedInPlayerIndex] : null;
+        if (el.avatarBtn) {
+            if (loggedInPlayer) {
+                el.avatarBtn.classList.add("logged-in");
+                el.avatarBtn.style.setProperty("--avatar-color", `var(--${loggedInPlayer.id})`);
+            } else {
+                el.avatarBtn.classList.remove("logged-in");
+                el.avatarBtn.style.removeProperty("--avatar-color");
+            }
+        }
     } else {
         if (el.authBtn) el.authBtn.innerText = "Login";
         if (el.adminNav) el.adminNav.style.display = "none";
-        
+
         const adminSection = document.getElementById("adminSection");
         if (adminSection) adminSection.classList.add("hidden");
-        
+
         if (el.actionButtons) el.actionButtons.style.display = "none";
-        if (el.rollBtnContainer) el.rollBtnContainer.style.display = "flex";
-        if (el.rollBtn) el.rollBtn.style.display = "block";
-        if (el.rollDraftBtn) el.rollDraftBtn.style.display = "block";
+
+        if (el.avatarBtn) {
+            el.avatarBtn.classList.remove("logged-in");
+            el.avatarBtn.style.removeProperty("--avatar-color");
+        }
     }
+}
+
+/**
+ * Opens the Account modal (login/logout + version/changelog).
+ */
+export function openAccountModal() {
+    const el = getElements();
+    if (el.accountModal) el.accountModal.style.display = "flex";
+    document.body.style.overflow = "hidden";
+}
+
+/**
+ * Closes the Account modal.
+ */
+export function closeAccountModal() {
+    const el = getElements();
+    if (el.accountModal) el.accountModal.style.display = "none";
+    document.body.style.overflow = "auto";
 }
 
 /**
@@ -70,11 +101,11 @@ export function renderPlayerToggles() {
     if (!el.playerTogglesContainer || !players || players.length === 0) return;
 
     el.playerTogglesContainer.innerHTML = players
+        .slice(0, 4)
         .map((p, i) => {
-            const isChecked = i < 4 ? "checked" : "";
             return `
             <label class="player-card" style="--player-color: var(--${p.id})">
-                <input type="checkbox" id="use${i}" ${isChecked} data-action="toggle-player-slot" data-player-idx="${i}">
+                <input type="checkbox" id="use${i}" data-action="toggle-player-slot" data-player-idx="${i}">
                 <span class="player-card-name">${p.name}</span>
             </label>`;
         })

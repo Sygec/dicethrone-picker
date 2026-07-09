@@ -2,37 +2,127 @@
 <!-- SECTION: Roll Randomizer                   -->
 <!-- ========================================== -->
 <section id="rollSection">
-    <!-- Player Selection Toggles -->
+    <!-- Randomizer Setup: Step 1 (Players & Invitees), Step 2 (Game Type) -->
+    <div class="randomizer-setup" id="randomizer-setup">
+        <h2 class="roll-screen-title">ROLL &middot; OPTIONS</h2>
+
+        <div class="setup-step" id="setup-step-players">
+            <div class="step-header">
+                <span class="step-badge">1</span>
+                <span class="step-title">Who's Playing</span>
+            </div>
+            <div class="step-subtitle">Tracked Players</div>
+            <div
+                class="player-toggle-zone-top"
+                id="player-toggle-zone-top"></div>
+            <div class="step-subtitle">Invitees</div>
+            <div
+                class="invitee-zone"
+                id="invitee-zone"></div>
+            <p class="setup-hint">
+                <svg class="setup-hint-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span>Invitees get a random hero — no weighting, no history saved.</span>
+            </p>
+        </div>
+
+        <div
+            class="setup-step"
+            id="setup-step-gametype">
+            <div class="step-header">
+                <span class="step-badge">2</span>
+                <span class="step-title">Choose a Game Type</span>
+            </div>
+            <div
+                class="game-type-grid"
+                id="game-type-grid"></div>
+            <p
+                class="setup-hint"
+                id="game-type-hint"
+                style="display: none"></p>
+        </div>
+
+        <div
+            class="setup-step teams-subsection"
+            id="setup-step-teams"
+            style="display: none">
+            <div class="step-subtitle teams-label">Teams</div>
+            <div class="step-subtitle">Tap a player's arrow to swap teams</div>
+            <div
+                class="teams-grid"
+                id="teams-grid"></div>
+            <button
+                type="button"
+                class="randomize-teams-btn"
+                id="randomize-teams-btn"
+                data-action="randomize-teams">
+                Randomize Teams
+            </button>
+            <p
+                class="team-swap-question"
+                id="team-swap-question"
+                style="display: none">
+                Swap with which player?
+            </p>
+        </div>
+
+        <div
+            class="setup-step"
+            id="setup-step-rollmode">
+            <div class="step-header">
+                <span class="step-badge">3</span>
+                <span class="step-title">Choose a Roll Mode</span>
+            </div>
+            <div
+                class="roll-mode-grid"
+                id="roll-mode-grid"></div>
+            <div
+                class="draft-count-section"
+                id="draft-count-section"
+                style="display: none">
+                <div class="draft-count-header">
+                    <span class="draft-count-title">Options per player</span>
+                    <span class="draft-count-subtitle">How many heroes to pick from</span>
+                </div>
+                <div
+                    class="draft-count-grid"
+                    id="draft-count-grid"></div>
+            </div>
+        </div>
+
+        <div
+            class="setup-step"
+            id="setup-step-roll">
+            <div class="step-header">
+                <span class="step-badge">4</span>
+                <span class="step-title">Roll</span>
+            </div>
+            <button
+                type="button"
+                class="roll-final-btn"
+                id="roll-final-btn"
+                data-action="trigger-roll"></button>
+        </div>
+    </div>
+
     <div
-        class="player-toggle-zone-top"
-        id="player-toggle-zone-top"></div>
+        class="team-swap-scrim"
+        id="team-swap-scrim"
+        style="display: none"></div>
+
+    <h2
+        class="roll-screen-title"
+        id="results-title"
+        style="display: none"></h2>
+
+    <!-- Randomizer Results Area -->
+    <section id="results" class="results" aria-live="polite"></section>
 
     <!-- Action Controls Wrapper -->
     <div class="roll-controls-wrapper">
-        <div id="rollBtnContainer" class="roll-btn-container">
-            <button
-                id="rollBtn"
-                type="button">
-                SINGLE ROLL
-            </button>
-            <button
-                id="rollDraftBtn"
-                type="button">
-                DRAFT ROLL
-            </button>
-            <button
-                id="rollSettingsBtn"
-                type="button"
-                class="roll-settings-btn"
-                aria-label="Roll settings"
-                style="display: none;">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                </svg>
-                <span id="roll-settings-badge" class="settings-badge" style="display: none;"></span>
-            </button>
-        </div>
         <div id="action-buttons" style="display: none; gap: 10px">
             <button
                 id="cancelBtn"
@@ -50,13 +140,6 @@
             </button>
         </div>
     </div>
-
-    <!-- Randomizer Results Area -->
-    <section id="results" class="results" aria-live="polite">
-        <p class="picker-hint">
-            Select players and roll.
-        </p>
-    </section>
 
     <!-- Validation Error Message -->
     <div id="error-msg" role="alert">

@@ -6,6 +6,95 @@
 
 /* Navigation bar styles */
 
+/* 1. Fixed App Header (section icon/title + account avatar) */
+.app-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: calc(52px + env(safe-area-inset-top));
+    padding-top: env(safe-area-inset-top);
+    padding-left: 16px;
+    padding-right: 16px;
+    box-sizing: border-box;
+    background-image: linear-gradient(90deg, var(--bg-highlight) 0%, var(--gray-700) 45%, var(--gray-700) 100%);
+    border-bottom: 1px solid var(--gold-metallic);
+    box-shadow: 0 2px 8px rgba(var(--black-rgb), 0.4);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    z-index: 1000;
+}
+
+.app-header-brand {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    justify-self: start;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--gold-metallic);
+}
+
+.app-header-crest {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+.app-header-brand-text {
+    font-family: "Cinzel", serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.app-header-title {
+    font-family: "Cinzel", serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    justify-self: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.app-header-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    justify-self: end;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: rgba(var(--white-rgb), 0.05);
+    border: 1.5px solid rgba(var(--white-rgb), 0.15);
+    color: rgba(var(--white-rgb), 0.4);
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.2s ease;
+}
+
+@media (hover: hover) {
+    .app-header-avatar:hover {
+        background: rgba(var(--white-rgb), 0.1);
+        border-color: rgba(var(--white-rgb), 0.3);
+    }
+}
+
+.app-header-avatar.logged-in {
+    color: var(--avatar-color, var(--accent));
+    border-color: var(--avatar-color, var(--accent));
+    box-shadow: 0 0 10px color-mix(in srgb, var(--avatar-color, var(--accent)) 40%, transparent);
+}
+
 /* 2. The Navigation Bar Container */
 .bottom-nav {
     position: fixed;
@@ -53,14 +142,19 @@ body.loaded .bottom-nav {
     transition: color 0.2s ease;
 }
 
-.nav-item:active,
-.nav-item:focus {
-    color: var(--accent);
+.nav-item.active {
+    color: var(--gold-metallic);
 }
 
 .icon {
-    font-size: 1.5rem;
+    display: flex;
+    color: var(--gold-metallic);
     margin-bottom: 2px;
+}
+
+.icon svg {
+    width: 22px;
+    height: 22px;
 }
 
 /* 4. Desktop Adaptation */
@@ -80,5 +174,9 @@ body.loaded .bottom-nav {
     .content {
         padding-bottom: 0;
         margin-left: 80px; /* Push content right to make room for sidebar */
+    }
+
+    .app-header {
+        left: 80px; /* Don't overlap the sidebar nav */
     }
 }

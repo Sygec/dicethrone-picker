@@ -9,6 +9,11 @@ const state = {
     characters: [],
     games: [],
     players: [],
+    invitees: [], // [{ id, name }] — max 2, session-only, no weighting/history
+    selectedGameType: null, // 'duel' | '2v2' | '3v3' | 'ffa' | 'koth'
+    rollModeChosen: false, // whether the user has explicitly picked Quick/Draft this session (no default)
+    teamAssignments: null, // { teamA: [participantId], teamB: [participantId] } | null
+    teamSwapSource: null, // { id: participantId, team: 'A' | 'B' } | null
     groups: [],
     authUsers: [],
     cachedChangelog: null,
@@ -61,20 +66,17 @@ const state = {
     // Draft & Ban Mode State
     draftModeEnabled: false,
     draftCount: 3,
+    draftCountChosen: false, // whether the user has explicitly picked an options count this session (no default)
     bannedHeroIds: new Set(),
 
-    stagedDraftModeEnabled: false,
-    stagedDraftCount: 3,
     stagedBannedHeroIds: new Set(),
     stagedBanSearchQuery: "",
-    stagedRollSettingsTab: "draft",
 
     activeDraftOrder: [],
     activeDraftStep: 0,
     selectedDraftHeroes: {}, // pIdx -> hero object
     activeDraftCandidates: {}, // pIdx -> array of candidate heroes
-    draftWheelAngles: {}, // pIdx -> cumulative rotation angle
-    draftWheelFrontCardIndices: {}, // pIdx -> index of the card physically in front
+    activeRollParticipants: [], // [{ pIdx, name, colorVar, isInvitee }] snapshotted at roll start
     gamesHistoryStyle: "gorgeous",
 };
 

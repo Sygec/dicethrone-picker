@@ -17,6 +17,41 @@ import {
 } from '../utils.js';
 import { isProd } from '../config.js';
 import { updateSegmentedHighlights } from './filterView.js';
+import { ICONS as GAME_TYPE_ICONS, GAME_TYPE_SHORT_LABEL } from './randomizerSetupView.js';
+
+const GAME_TYPE_FULL_LABEL = {
+    duel: "1v1 Duel",
+    "2v2": "Teams 2v2",
+    "3v3": "Teams 3v3",
+    ffa: "Free For All",
+    koth: "King of the Hill",
+};
+
+/**
+ * Returns the small game-type icon (crossed pistols/users/swords/crown) used in the
+ * collapsed history card header, or an empty string for games logged before `game_type`
+ * existed.
+ * @param {string|null} gameType - 'duel' | '2v2' | '3v3' | 'ffa' | 'koth' | null.
+ * @returns {string} Icon markup.
+ */
+function getGameTypeIconHtml(gameType) {
+    if (!gameType) return "";
+    const iconKey = gameType === "2v2" || gameType === "3v3" ? "teams" : gameType;
+    const svg = GAME_TYPE_ICONS[iconKey];
+    if (!svg) return "";
+    const label = GAME_TYPE_SHORT_LABEL[gameType] || gameType;
+    return `<span class="game-card-type-icon" title="${label}">${svg}</span>`;
+}
+
+/**
+ * Returns the invitee slot number (1 through 6, backed by the `p5`-`p10` placeholder rows
+ * in the `players` table) for a given virtual player index.
+ * @param {number} pIdx - Virtual player index (>= MAX_WEIGHTED_PLAYERS for invitees).
+ * @returns {number}
+ */
+function getInviteeNumber(pIdx) {
+    return pIdx - MAX_WEIGHTED_PLAYERS + 1;
+}
 
 let elementsCache = null;
 const getElements = () => {
@@ -111,21 +146,26 @@ export function closeChangelog() {
 }
 
 /**
- * Displays the "What's New" modal with release updates for a specific version entry.
- * @param {Object} entry - Version changelog entry.
+ * Displays the "What's New" modal with release updates for one or more version entries,
+ * newest first.
+ * @param {Object[]} entries - Version changelog entries.
  */
-export function showWhatsNew(entry) {
+export function showWhatsNew(entries) {
     const el = getElements();
     if (!el.whatsNewContainer || !el.whatsNewModal) return;
 
-    el.whatsNewContainer.innerHTML = `
+    el.whatsNewContainer.innerHTML = entries
+        .map(
+            (entry) => `
         <div>
             <h3>v${entry.version}</h3>
             <ul style="text-align: left;">
                 ${entry.changes.map((change) => `<li>${change}</li>`).join("")}
             </ul>
         </div>
-    `;
+    `,
+        )
+        .join("");
     el.whatsNewModal.style.display = "flex";
     document.body.style.overflow = "hidden";
 }
@@ -137,6 +177,27 @@ export function closeWhatsNew() {
     const el = getElements();
     if (el.whatsNewModal) el.whatsNewModal.style.display = "none";
     document.body.style.overflow = "auto";
+}
+
+// Title shown in the fixed app header per section
+const SECTION_HEADER_META = {
+    roll: { title: "Randomizer" },
+    database: { title: "Heroes" },
+    history: { title: "History" },
+    collection: { title: "Collection" },
+    admin: { title: "Admin" },
+};
+
+/**
+ * Updates the fixed app header's title to match the currently shown section.
+ * @param {string} sectionName - Section identifier.
+ */
+function updateHeaderSection(sectionName) {
+    const meta = SECTION_HEADER_META[sectionName];
+    if (!meta) return;
+
+    const titleEl = document.getElementById("header-section-title");
+    if (titleEl) titleEl.innerText = meta.title;
 }
 
 /**
@@ -166,6 +227,12 @@ export function showSection(sectionName) {
                 el.classList.add("hidden");
             }
         }
+    });
+
+    updateHeaderSection(sectionName);
+
+    document.querySelectorAll(".bottom-nav .nav-item").forEach((el) => {
+        el.classList.toggle("active", el.getAttribute("data-section") === sectionName);
     });
 
     if (sectionName === "database") {
@@ -234,6 +301,7 @@ export function renderCollectionView() {
     });
 
     const isDisabled = currentUser ? "" : "disabled";
+    const partialGroupIds = [];
 
     el.collectionContainer.innerHTML = sortedGroups
         .map((group) => {
@@ -261,6 +329,10 @@ export function renderCollectionView() {
             const totalGroup = groupHeroes.length;
             const ownedGroup = groupHeroes.filter(c => c.is_owned).length;
 
+            if (ownedGroup > 0 && ownedGroup < totalGroup) {
+                partialGroupIds.push(group.id);
+            }
+
             return `
             <div class="collection-group${isExpanded ? "" : " collapsed"}">
                 <div class="collection-group-header" data-action="toggle-collection-group" data-group-id="${group.id}" style="cursor: pointer;">
@@ -280,6 +352,12 @@ export function renderCollectionView() {
         `;
         })
         .join("");
+
+    // `indeterminate` has no HTML attribute equivalent; it must be set as a DOM property post-render.
+    partialGroupIds.forEach((groupId) => {
+        const checkbox = document.getElementById(`owned-group-${groupId}`);
+        if (checkbox) checkbox.indeterminate = true;
+    });
 }
 
 /**
@@ -695,13 +773,97 @@ export function renderCollectionsListUI(userProfiles, userHeroes) {
 }
 
 /**
+ * Renders one winner-select card per player/hero (non-Teams games).
+ * @param {Object} game - Game record with its `game_players`.
+ * @param {string[]} names - Tracked-player display names, indexed by pIdx.
+ * @returns {string} Card markup (no wrapping grid element).
+ */
+function renderPlayerWinnerCards(game, names) {
+    return game.game_players
+        .map((gp) => {
+            const pIdx = parseInt(gp.player_id.substring(1)) - 1;
+            const displayName = gp.heroes?.name || "Unknown";
+            const heroSlug = gp.heroes?.slug || "";
+            const isSelected = gp.is_winner === true;
+            const isChecked = isSelected ? "checked" : "";
+            const selectedClass = isSelected ? "selected" : "";
+
+            let playerLabelName = names[pIdx] || "Invitee";
+            if (pIdx >= MAX_WEIGHTED_PLAYERS) {
+                playerLabelName = `Invitee (${getInviteeNumber(pIdx)})`;
+            }
+
+            return `
+            <div class="winner-card ${selectedClass}" data-action="winner-card-click" data-value="${gp.player_id}">
+                <input type="radio" name="winner-selection" value="${gp.player_id}" ${isChecked} style="display: none;">
+                <img src="${getImgUrl(heroSlug)}" class="winner-card-img" alt="${displayName}">
+                <div class="winner-card-player-name">${playerLabelName}</div>
+                <div class="winner-card-hero-name">${displayName}</div>
+            </div>
+        `;
+        })
+        .join("");
+}
+
+/**
+ * Renders one winner-select card per team (Teams-type games): Team A / Team B, each
+ * listing its member players/heroes. Selecting a team marks every member as the winner.
+ * @param {Object} game - Game record with its `game_players` (each carrying `teams.team_label`).
+ * @param {string[]} names - Tracked-player display names, indexed by pIdx.
+ * @returns {string} Card markup (no wrapping grid element).
+ */
+function renderTeamWinnerCards(game, names) {
+    const teamGroups = { A: [], B: [] };
+    game.game_players.forEach((gp) => {
+        const label = gp.teams?.team_label;
+        if (label && teamGroups[label]) teamGroups[label].push(gp);
+    });
+
+    return ["A", "B"]
+        .filter((label) => teamGroups[label].length > 0)
+        .map((label) => {
+            const members = teamGroups[label];
+            const isSelected = members.some((gp) => gp.is_winner === true);
+            const isChecked = isSelected ? "checked" : "";
+            const selectedClass = isSelected ? "selected" : "";
+
+            const membersHtml = members
+                .map((gp) => {
+                    const pIdx = parseInt(gp.player_id.substring(1)) - 1;
+                    const displayName = gp.heroes?.name || "Unknown";
+                    const heroSlug = gp.heroes?.slug || "";
+                    const playerLabelName = names[pIdx] || "Invitee";
+
+                    return `
+                    <div class="winner-team-member">
+                        <img src="${getImgUrl(heroSlug)}" class="winner-team-member-img" alt="${displayName}">
+                        <div class="winner-team-member-text">
+                            <span class="winner-card-player-name">${playerLabelName}</span>
+                            <span class="winner-card-hero-name">${displayName}</span>
+                        </div>
+                    </div>
+                `;
+                })
+                .join("");
+
+            return `
+            <div class="winner-card team-card ${selectedClass}" data-action="winner-card-click" data-value="${label}">
+                <input type="radio" name="winner-selection" value="${label}" ${isChecked} style="display: none;">
+                <div class="winner-card-player-name">Team ${label}</div>
+                <div class="winner-team-members">${membersHtml}</div>
+            </div>
+        `;
+        })
+        .join("");
+}
+
+/**
  * Displays the modal for picking a winner for a game session.
  * @param {string} gameId - Match UUID.
  */
 export function openWinnerModal(gameId) {
     const el = getElements();
     const games = stateStore.get("games");
-    const players = stateStore.get("players");
     const names = stateStore.get("NAMES");
 
     if (!el.winnerModal || !el.winnerContainer || !el.confirmWinnerBtn) return;
@@ -712,43 +874,30 @@ export function openWinnerModal(gameId) {
     el.confirmWinnerBtn.setAttribute("data-game-id", gameId);
     el.confirmWinnerBtn.disabled = true;
 
+    const isTeamsGame = game.game_type === "2v2" || game.game_type === "3v3";
+
     // Check if game was a draw in its previous state
     const winners = game.game_players.filter((p) => p.is_winner === true);
     const explicitLosers = game.game_players.filter((p) => p.is_winner === false);
     const isDraw = winners.length === 0 && explicitLosers.length > 0 && explicitLosers.length === game.game_players.length;
 
-    const isTwoRows = game.game_players.length > 3;
-    const gridClass = isTwoRows ? "winner-select-grid two-rows" : "winner-select-grid";
-
-    let playersHtml = `<div class="${gridClass}">`;
-
-    game.game_players.forEach((gp) => {
-        const pIdx = parseInt(gp.player_id.substring(1)) - 1;
-        const displayName = gp.heroes?.name || "Unknown";
-        const heroSlug = gp.heroes?.slug || "";
-        const isSelected = gp.is_winner === true;
-        const isChecked = isSelected ? "checked" : "";
-        const selectedClass = isSelected ? "selected" : "";
-
-        let playerLabelName = names[pIdx] || "Invitee";
-        if (pIdx >= MAX_WEIGHTED_PLAYERS) {
-            playerLabelName = `Invitee (${gp.player_id === "p5" ? "1" : "2"})`;
-        }
-
-        playersHtml += `
-            <div class="winner-card ${selectedClass}" data-action="winner-card-click" data-value="${gp.player_id}">
-                <input type="radio" name="winner-selection" value="${gp.player_id}" ${isChecked} style="display: none;">
-                <img src="${getImgUrl(heroSlug)}" class="winner-card-img" alt="${displayName}">
-                <div class="winner-card-player-name">${playerLabelName}</div>
-                <div class="winner-card-hero-name">${displayName}</div>
-            </div>
-        `;
-    });
+    let gridClass;
+    let cardsHtml;
+    if (isTeamsGame) {
+        gridClass = "winner-select-grid team-mode";
+        cardsHtml = renderTeamWinnerCards(game, names);
+    } else {
+        const isTwoRows = game.game_players.length > 3;
+        gridClass = isTwoRows ? "winner-select-grid two-rows" : "winner-select-grid";
+        cardsHtml = renderPlayerWinnerCards(game, names);
+    }
 
     const isDrawChecked = isDraw ? "checked" : "";
     const drawSelectedClass = isDraw ? "selected" : "";
 
-    playersHtml += `
+    el.winnerContainer.innerHTML = `
+        <div class="${gridClass}">
+            ${cardsHtml}
             <div class="winner-draw-card ${drawSelectedClass}" data-action="winner-card-click" data-value="draw">
                 <input type="radio" name="winner-selection" value="draw" ${isDrawChecked} style="display: none;">
                 <span style="font-size: 1.5rem; line-height: 1;">🤝</span>
@@ -759,8 +908,6 @@ export function openWinnerModal(gameId) {
             </div>
         </div>
     `;
-
-    el.winnerContainer.innerHTML = playersHtml;
     el.winnerModal.style.display = "flex";
     document.body.style.overflow = "hidden";
 }
@@ -838,7 +985,7 @@ export function renderGamesList() {
                 if (selectedGamePlayerIndex >= 0 && selectedGamePlayerIndex < MAX_WEIGHTED_PLAYERS) {
                     match = pIdx === selectedGamePlayerIndex;
                 } else if (selectedGamePlayerIndex === MAX_WEIGHTED_PLAYERS) {
-                    match = pIdx === MAX_WEIGHTED_PLAYERS || pIdx === MAX_WEIGHTED_PLAYERS + 1;
+                    match = pIdx >= MAX_WEIGHTED_PLAYERS;
                 }
                 if (match && gamesWinnerOnly) return gp.is_winner === true;
                 return match;
@@ -871,10 +1018,14 @@ export function renderGamesList() {
                 if (rawDate && !rawDate.includes("Z") && !rawDate.includes("+"))
                     rawDate += "Z";
 
-                const dateStr = new Date(rawDate).toLocaleString(undefined, {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                });
+                const dateOnlyStr = new Date(rawDate).toLocaleDateString(undefined, { dateStyle: "medium" });
+                const timeOnlyStr = new Date(rawDate).toLocaleTimeString(undefined, { timeStyle: "short" });
+
+                const isTeamsGame = game.game_type === "2v2" || game.game_type === "3v3";
+                const gameTypeIconHtml = getGameTypeIconHtml(game.game_type);
+                const gameTypeBadgeHtml = game.game_type
+                    ? `<div class="game-card-type-badge">${GAME_TYPE_FULL_LABEL[game.game_type] || game.game_type}</div>`
+                    : "";
 
                 const winners = game.game_players.filter((p) => p.is_winner === true);
                 const explicitLosers = game.game_players.filter((p) => p.is_winner === false);
@@ -882,6 +1033,7 @@ export function renderGamesList() {
                 const isInProgress = winners.length === 0 && !isDraw;
                 const isExpanded = expandedGameIds.has(game.id);
                 const expandedClass = isExpanded ? "expanded" : "";
+                const inProgressClass = isInProgress ? "in-progress" : "";
 
                 let bgImgHtml = "";
                 if (winners.length > 0 && winners[0].heroes?.slug) {
@@ -891,9 +1043,14 @@ export function renderGamesList() {
                 const playerNamesMap = {};
                 game.game_players.forEach((gp) => {
                     const pIdx = parseInt(gp.player_id.substring(1)) - 1;
-                    let rawName = names[pIdx] || "Unknown";
-                    if (rawName.toLowerCase().startsWith("player ") && rawName.length > 7) {
-                        rawName = "P" + rawName.substring(7);
+                    let rawName;
+                    if (pIdx >= MAX_WEIGHTED_PLAYERS) {
+                        rawName = `Invitee ${getInviteeNumber(pIdx)}`;
+                    } else {
+                        rawName = names[pIdx] || "Unknown";
+                        if (rawName.toLowerCase().startsWith("player ") && rawName.length > 7) {
+                            rawName = "P" + rawName.substring(7);
+                        }
                     }
                     playerNamesMap[gp.player_id] = rawName;
                 });
@@ -943,7 +1100,13 @@ export function renderGamesList() {
                 const headerHtml = `
                 <div class="game-card-header" data-action="toggle-game-expansion" data-game-id="${game.id}">
                     <div class="game-card-title-group">
-                        <span class="game-card-date">${dateStr}</span>
+                        <div class="game-card-title-row">
+                            ${gameTypeIconHtml}
+                            <div class="game-card-date-time">
+                                <span class="game-card-date">${dateOnlyStr}</span>
+                                <span class="game-card-time">${timeOnlyStr}</span>
+                            </div>
+                        </div>
                         ${statusLabel}
                     </div>
                     <div class="game-card-collapsed-summary">
@@ -965,8 +1128,11 @@ export function renderGamesList() {
                 `
                     : "";
 
-                const platesArray = game.game_players.map((gp) => {
+                const renderPlate = (gp) => {
                     const pIdx = parseInt(gp.player_id.substring(1)) - 1;
+                    const playerTagName = pIdx >= MAX_WEIGHTED_PLAYERS
+                        ? `Invitee ${getInviteeNumber(pIdx)}`
+                        : names[pIdx];
                     const heroName = gp.heroes?.name || "Unknown";
                     const heroSlug = gp.heroes?.slug || "";
                     const isSearchMatch = Boolean(searchTerm && heroName.toLowerCase().includes(searchTerm));
@@ -976,7 +1142,7 @@ export function renderGamesList() {
                         if (selectedGamePlayerIndex >= 0 && selectedGamePlayerIndex < MAX_WEIGHTED_PLAYERS) {
                             isPlayerFilterMatch = pIdx === selectedGamePlayerIndex;
                         } else if (selectedGamePlayerIndex === MAX_WEIGHTED_PLAYERS) {
-                            isPlayerFilterMatch = pIdx === MAX_WEIGHTED_PLAYERS || pIdx === MAX_WEIGHTED_PLAYERS + 1;
+                            isPlayerFilterMatch = pIdx >= MAX_WEIGHTED_PLAYERS;
                         }
                     }
 
@@ -999,54 +1165,67 @@ export function renderGamesList() {
                     const trophyHtml = gp.is_winner ? '<div class="player-plate-trophy">🏆</div>' : "";
                     const drawBadgeHtml = isDraw ? '<div class="player-plate-draw-badge">DRAW</div>' : "";
 
-                    let statsHtml = "";
-                    if (gp.is_winner) {
-                        let heroPlayCount = 0;
-                        let heroWinCount = 0;
-                        const useHistorical = stateStore.get("gamesUseHistorical");
-                        games.forEach((g) => {
-                            if (!useHistorical && g.is_historical) return;
-                            g.game_players.forEach((otherGp) => {
-                                if (otherGp.player_id === gp.player_id && otherGp.hero_id === gp.hero_id) {
-                                    heroPlayCount++;
-                                    if (otherGp.is_winner) {
-                                        heroWinCount++;
-                                    }
+                    let heroPlayCount = 0;
+                    let heroWinCount = 0;
+                    const useHistorical = stateStore.get("gamesUseHistorical");
+                    games.forEach((g) => {
+                        if (!useHistorical && g.is_historical) return;
+                        g.game_players.forEach((otherGp) => {
+                            if (otherGp.player_id === gp.player_id && otherGp.hero_id === gp.hero_id) {
+                                heroPlayCount++;
+                                if (otherGp.is_winner) {
+                                    heroWinCount++;
                                 }
-                            });
+                            }
                         });
-                        const pct = heroPlayCount > 0 ? (heroWinCount / heroPlayCount).toFixed(3) : ".000";
-                        const pctStr = pct.startsWith("0") ? pct.substring(1) : pct;
-                        statsHtml = `
-                                <div class="player-plate-winner-stats">${heroWinCount}🏆 / ${heroPlayCount}🎲</div>
-                                <div class="player-plate-winner-pct">( ${pctStr})</div>
-                            `;
-                    }
+                    });
+                    const pct = heroPlayCount > 0 ? (heroWinCount / heroPlayCount).toFixed(3) : ".000";
+                    const pctStr = pct.startsWith("0") ? pct.substring(1) : pct;
 
                     return `
-                        <a href="${getHeroLink(heroSlug)}" target="_blank" class="player-plate ${plateClass}" style="${borderStyle}">
-                            <img src="${getImgUrl(heroSlug)}" class="player-plate-bg-art" alt="${heroName}">
-                            <div class="player-plate-overlay"></div>
-                            ${trophyHtml}
-                            ${drawBadgeHtml}
-                            <div class="player-plate-tag" style="background-color: var(--p${pIdx + 1});">${names[pIdx]}</div>
-                            <div class="player-plate-info">
-                                <div class="player-plate-hero-name">${heroName}</div>
-                                ${statsHtml}
+                        <div class="player-plate-wrapper">
+                            <a href="${getHeroLink(heroSlug)}" target="_blank" class="player-plate ${plateClass}" style="${borderStyle}">
+                                <img src="${getImgUrl(heroSlug)}" class="player-plate-bg-art" alt="${heroName}">
+                                <div class="player-plate-overlay"></div>
+                                ${trophyHtml}
+                                ${drawBadgeHtml}
+                                <div class="player-plate-tag" style="background-color: var(--p${pIdx + 1});">${playerTagName}</div>
+                                <div class="player-plate-info">
+                                    <div class="player-plate-hero-name">${heroName}</div>
+                                </div>
+                            </a>
+                            <div class="player-plate-stats-below">
+                                <span class="player-plate-winner-stats">${heroWinCount}🏆 / ${heroPlayCount}🎲</span>
+                                <span class="player-plate-winner-pct">( ${pctStr})</span>
                             </div>
-                        </a>`;
-                });
+                        </div>`;
+                };
 
-                const playerPlatesHtml = platesArray.join("");
+                let playerPlatesHtml;
+                if (isTeamsGame) {
+                    const teamA = game.game_players.filter((gp) => gp.teams?.team_label === "A");
+                    const teamB = game.game_players.filter((gp) => gp.teams?.team_label === "B");
+                    playerPlatesHtml = `
+                        <div class="team-block">
+                            <div class="team-block-label">Team A</div>
+                            <div class="player-responsive-grid">${teamA.map(renderPlate).join("")}</div>
+                        </div>
+                        <div class="team-block">
+                            <div class="team-block-label">Team B</div>
+                            <div class="player-responsive-grid">${teamB.map(renderPlate).join("")}</div>
+                        </div>
+                    `;
+                } else {
+                    playerPlatesHtml = `<div class="player-responsive-grid">${game.game_players.map(renderPlate).join("")}</div>`;
+                }
 
                 return `
-                <div class="game-history-card ${expandedClass}">
+                <div class="game-history-card ${expandedClass} ${inProgressClass}">
                     ${bgImgHtml}
                     ${headerHtml}
                     <div class="game-card-body">
-                        <div class="player-responsive-grid">
-                            ${playerPlatesHtml}
-                        </div>
+                        ${gameTypeBadgeHtml}
+                        ${playerPlatesHtml}
                         ${gameActions}
                     </div>
                 </div>`;
@@ -1082,7 +1261,7 @@ export function renderGamesList() {
                             const pIdx = parseInt(gp.player_id.substring(1)) - 1;
                             let playerLabel = names[pIdx] || "Invitee";
                             if (pIdx >= MAX_WEIGHTED_PLAYERS) {
-                                playerLabel = `Invitee (${gp.player_id === "p5" ? "1" : "2"})`;
+                                playerLabel = `Invitee (${getInviteeNumber(pIdx)})`;
                             }
                             return `<span style="color: var(--p${pIdx + 1}); font-weight: bold;">${playerLabel}</span>`;
                         })
@@ -1093,10 +1272,9 @@ export function renderGamesList() {
                     const pIdx = parseInt(gp.player_id.substring(1)) - 1;
                     let colorVar = `--p${pIdx + 1}`;
                     let playerLabel = names[pIdx] || "Invitee";
-                    
+
                     if (pIdx >= MAX_WEIGHTED_PLAYERS) {
-                        colorVar = "--p5";
-                        playerLabel = `Invitee (${gp.player_id === "p5" ? "1" : "2"})`;
+                        playerLabel = `Invitee (${getInviteeNumber(pIdx)})`;
                     }
 
                     let winStatus = "";

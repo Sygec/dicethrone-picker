@@ -4,13 +4,21 @@
  * @requires style
  */
 
-/* Hearthstone Card Player Plate */
+/* Wraps a plate + its stats line so they move/wrap together as one unit */
+.player-plate-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 0 0 auto;
+}
+
+/* Hearthstone Card Player Plate. Fixed width so size never depends on player count
+   (see .player-responsive-grid, which wraps rather than shrinking plates to fit). */
 .player-plate {
     position: relative;
     aspect-ratio: 2 / 3;
-    flex: 1 1 0;
-    min-width: 65px;
-    max-width: 130px;
+    flex: 0 0 auto;
+    width: 108px;
     background: var(--bg-solid-dark);
     border: 1.5px solid rgba(var(--white-rgb), 0.15);
     border-radius: 10px;
@@ -50,8 +58,8 @@
     transition:
         opacity 0.3s ease,
         transform 0.3s ease;
-    mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 78%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent 100%);
 }
 
 @media (hover: hover) {
@@ -71,8 +79,8 @@
     background: linear-gradient(
         to top,
         rgba(var(--black-rgb), 0.95) 0%,
-        rgba(var(--black-rgb), 0.4) 60%,
-        rgba(var(--black-rgb), 0) 100%
+        rgba(var(--black-rgb), 0.35) 30%,
+        rgba(var(--black-rgb), 0) 55%
     );
     z-index: 2;
     border-radius: inherit;
@@ -151,8 +159,8 @@
         linear-gradient(
             to top,
             rgba(var(--black-rgb), 0.95) 0%,
-            rgba(var(--black-rgb), 0.4) 60%,
-            rgba(var(--black-rgb), 0) 100%
+            rgba(var(--black-rgb), 0.35) 30%,
+            rgba(var(--black-rgb), 0) 55%
         ),
         linear-gradient(
             135deg,
@@ -382,12 +390,19 @@
     }
 }
 
+/* Wins/plays record, shown below the plate rather than overlaid on the art */
+.player-plate-stats-below {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 4px;
+    max-width: 108px;
+}
+
 .player-plate-winner-stats {
     font-size: 0.72rem;
     font-weight: 700;
     color: var(--gold);
-    text-shadow: 0 1px 3px rgba(var(--black-rgb), 0.9);
-    margin-top: 2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -397,27 +412,30 @@
 .player-plate-winner-pct {
     font-size: 0.68rem;
     font-weight: 800;
-    color: rgba(var(--white-rgb), 0.85);
-    text-shadow: 0 1px 3px rgba(var(--black-rgb), 0.9);
-    margin-top: 1px;
+    color: rgba(var(--white-rgb), 0.7);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    text-align: center;
 }
 
-/* Responsive adjustments for fitting all players on a single row in mobile viewports */
+/* Smaller fixed plate size on narrow viewports. Still count-independent -- rows just
+   wrap onto multiple lines instead of shrinking plates to squeeze everyone in. */
 @media (max-width: 480px) {
     .game-card-body {
         padding: 8px;
     }
 
     .player-responsive-grid {
-        gap: 4px;
+        gap: 8px 4px;
+    }
+
+    .player-plate-wrapper,
+    .player-plate-stats-below {
+        max-width: 76px;
     }
 
     .player-plate {
-        min-width: 50px; /* Allow cards to shrink down on very narrow screens */
+        width: 76px; /* Fixed mobile size, matches .player-plate-wrapper max-width */
         border-width: 1px; /* Thinner border to conserve space */
         border-radius: 6px; /* Slightly smaller radius for smaller cards */
     }
@@ -482,62 +500,8 @@
    RANDOMIZER DRAFT WHEEL & BAN LIST STYLES
    ========================================================================== */
 
-.roll-btn-container {
-    display: flex;
-    gap: 12px;
-    width: 100%;
-}
-
-#rollBtn,
-#rollDraftBtn {
-    flex: 1;
-}
-
-.roll-settings-btn {
-    position: relative;
-    background: var(--btn-secondary-bg, rgba(var(--white-rgb), 0.08));
-    border: 1px solid var(--glass-border);
-    border-radius: 12px;
-    color: var(--text, var(--text));
-    width: 44px;
-    height: 100%;
-    min-height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
+.roll-final-btn svg {
     flex-shrink: 0;
-}
-
-.roll-settings-btn:hover {
-    background: rgba(var(--white-rgb), 0.15);
-    border-color: rgba(var(--white-rgb), 0.25);
-    transform: translateY(-1px);
-}
-
-.roll-settings-btn.has-settings {
-    border-color: var(--warning);
-    color: var(--warning);
-    box-shadow: 0 0 12px rgba(255, 215, 0, 0.25);
-}
-
-.settings-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: var(--warning);
-    color: #000;
-    font-size: 0.65rem;
-    font-weight: 800;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 6px rgba(var(--black-rgb), 0.5);
-    border: 1px solid #000;
 }
 
 /* Toggle Switch Styles */
@@ -588,120 +552,129 @@ input:checked + .toggle-slider:before {
     transform: translateX(22px);
 }
 
-/* Waiting / Active Draft Player Row Styles */
-.player-row.waiting-draft {
-    opacity: 0.45;
-    background: rgba(var(--black-rgb), 0.25);
-    border-color: rgba(var(--white-rgb), 0.03);
-    box-shadow: none;
-    pointer-events: none;
-    transition: all 0.5s ease;
+/* Draft turn: top pip row of draft order (active player highlighted, rest dimmed) */
+.draft-pip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
 }
 
-.draft-waiting-status {
-    font-size: 0.85em;
-    opacity: 0.6;
-    font-style: italic;
+.draft-pip {
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    background: rgba(var(--white-rgb), 0.03);
+    border: 1.5px solid rgba(var(--white-rgb), 0.1);
+    color: rgba(var(--white-rgb), 0.35);
+    transition: all 0.3s ease;
 }
 
-.player-row.active-draft {
-    display: block;
-    /* min-height: 280px; */
-    background: rgba(var(--white-rgb), 0.02);
+.draft-pip.done {
+    color: var(--player-color);
     border-color: var(--player-color);
-    box-shadow: 0 0 15px rgba(var(--white-rgb), 0.05);
-    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
-    overflow: visible !important;
 }
 
-.player-row.active-draft .draft-flow-content {
-    flex-direction: column;
+.draft-pip.active {
+    background: color-mix(in srgb, var(--player-color) 22%, rgba(var(--white-rgb), 0.02));
+    border-color: var(--player-color);
+    color: var(--text);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--player-color) 50%, transparent);
+}
+
+.draft-pip-status {
+    font-style: italic;
+    opacity: 0.8;
+    font-weight: 600;
+}
+
+.draft-instruction-row {
+    display: flex;
     align-items: center;
-    /* gap: 12px; */
-    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
 }
 
-/* 3D Wheel Layout */
-.draft-wheel-container {
-    perspective: 600px;
-    height: 150px;
-    width: 100%;
-    position: relative;
-    cursor: grab;
+.draft-instruction {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
 }
 
-.draft-wheel-container:active {
-    cursor: grabbing;
+.draft-instruction-sub {
+    font-size: 0.75rem;
+    color: var(--gray-300);
+    margin: 2px 0 12px;
 }
 
-.draft-wheel {
-    width: 200px;
-    height: 90px;
-    position: absolute;
-    left: calc(50% - 100px);
-    top: 35px;
-    transform: rotateY(0deg);
-    transform-style: preserve-3d;
-    transform-origin: 50% 50% 0;
-    transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-
-.draft-card-wrapper {
-    position: absolute;
-    width: 100%;
-    height: 90px;
-    left: 0;
-    top: 0;
-    transform-style: preserve-3d;
-    transform-origin: 50% 50% 0;
-    backface-visibility: visible;
+.btn-cancel-roll {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(255, 77, 77, 0.12);
+    border: 1px solid rgba(255, 77, 77, 0.25);
+    color: #ff4d4d;
     cursor: pointer;
-    transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition: all 0.2s ease;
+    padding: 0;
+    flex-shrink: 0;
 }
 
-.draft-card-wrapper:not(.selected) .draft-card {
-    opacity: 1;
-    transform: scale(0.85);
-    border-color: rgba(var(--white-rgb), 0.04);
-    box-shadow: none;
+@media (hover: hover) {
+    .btn-cancel-roll:hover {
+        background: rgba(255, 77, 77, 0.25);
+        border-color: #ff4d4d;
+        color: #fff;
+        transform: scale(1.08);
+        box-shadow: 0 0 10px rgba(255, 77, 77, 0.3);
+    }
 }
 
-.draft-card-wrapper.selected .draft-card {
-    opacity: 1;
-    transform: scale(1.05);
-    border-color: var(--warning);
-    box-shadow:
-        0 0 20px rgba(255, 215, 0, 0.6),
-        inset 0 0 8px rgba(255, 215, 0, 0.3);
+.btn-cancel-roll:active {
+    transform: scale(0.95);
+}
+
+/* Draft candidate card list (tap to select, scrollable) */
+.draft-card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 14px;
 }
 
 .draft-card {
-    box-sizing: border-box;
     width: 100%;
-    height: 100%;
-    position: relative;
-    background: var(--card-bg, rgba(var(--white-rgb), 0.05));
-    backdrop-filter: blur(var(--glass-blur, 16px));
-    -webkit-backdrop-filter: blur(var(--glass-blur, 16px));
-    border: 1.5px solid rgba(var(--white-rgb), 0.08);
-    border-radius: 14px;
-    overflow: hidden;
-    box-shadow: var(--glass-shadow);
-    display: flex;
-    align-items: center;
-    padding: 12px 16px;
+    cursor: pointer;
     transition:
-        transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
-        opacity 0.4s ease,
         border-color 0.3s ease,
-        box-shadow 0.3s ease;
-    backface-visibility: visible;
+        box-shadow 0.3s ease,
+        background 0.3s ease;
+}
+
+@media (hover: hover) {
+    .draft-card:not([data-action]):hover {
+        cursor: default;
+    }
+    .draft-card[data-action]:hover {
+        border-color: rgba(var(--white-rgb), 0.25);
+    }
+}
+
+.draft-card.selected {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, rgba(var(--white-rgb), 0.05));
+    box-shadow: 0 0 16px rgba(233, 69, 96, 0.35);
 }
 
 .draft-card-content {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
     width: 100%;
     z-index: 2;
     text-align: left;
@@ -710,21 +683,29 @@ input:checked + .toggle-slider:before {
 .draft-card-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: 8px;
     font-size: 0.9em;
 }
 
 .draft-hero-name {
-    font-size: 0.85rem;
-    font-weight: bold;
     color: var(--accent);
-    text-shadow: 0 1px 3px rgba(var(--black-rgb), 0.8);
-    /* margin-left: 4px; */
 }
 
-.draft-card-body {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+.draft-selected-badge {
+    display: none;
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    padding: 2px 6px;
+    flex-shrink: 0;
+}
+
+.draft-card.selected .draft-selected-badge {
+    display: inline-block;
 }
 
 .draft-card-group {
@@ -734,27 +715,21 @@ input:checked + .toggle-slider:before {
 }
 
 .draft-card .hero-stats-row {
-    font-size: 0.6rem;
     gap: 6px;
-}
-
-.draft-actions {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    /* margin-top: 8px; */
+    margin-top: 2px;
 }
 
 .btn-confirm-draft {
-    background: linear-gradient(135deg, var(--warning) 0%, var(--gold-metallic) 100%);
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
     border: none;
     border-radius: 8px;
-    color: #111;
+    color: var(--text);
     font-weight: 700;
-    padding: 10px 24px;
-    font-size: 0.85em;
+    padding: 14px 24px;
+    font-size: 0.95em;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+    box-shadow: 0 4px 12px var(--accent-glow);
     transition: all 0.2s ease;
 }
 
@@ -767,7 +742,7 @@ input:checked + .toggle-slider:before {
 
 .btn-confirm-draft:not(:disabled):hover {
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(255, 215, 0, 0.5);
+    box-shadow: 0 6px 16px var(--accent-glow);
 }
 
 /* Ban List Grouping Layout */
@@ -872,90 +847,6 @@ input:checked + .toggle-slider:before {
     box-shadow: 0 0 12px rgba(255, 77, 77, 0.45) !important;
 }
 
-/* Clickable Navigation Arrows */
-.draft-arrow {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(var(--black-rgb), 0.45);
-    border: 1px solid rgba(var(--white-rgb), 0.15);
-    border-radius: 50%;
-    color: var(--text);
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 10;
-    transition: all 0.2s ease;
-}
-
-.draft-arrow:hover {
-    background: rgba(var(--white-rgb), 0.18);
-    border-color: rgba(var(--white-rgb), 0.35);
-    color: var(--warning);
-    box-shadow: 0 0 8px rgba(var(--white-rgb), 0.15);
-}
-
-.left-arrow {
-    left: 10px;
-}
-
-.right-arrow {
-    right: 10px;
-}
-
-/* Roll Settings Drawer Tabs Styling */
-.drawer-tabs-container {
-    margin: -10px -20px 10px -20px;
-    border-bottom: 1px solid rgba(var(--white-rgb), 0.08);
-    background: rgba(var(--black-rgb), 0.15);
-}
-
-.drawer-tabs {
-    display: flex;
-    position: relative;
-    width: 100%;
-}
-
-.drawer-tab-btn {
-    flex: 1;
-    background: none;
-    border: none;
-    padding: 14px 16px;
-    color: rgba(var(--white-rgb), 0.6);
-    font-family: "Outfit", sans-serif;
-    font-size: 0.95rem;
-    font-weight: 700;
-    cursor: pointer;
-    text-align: center;
-    transition: color 0.3s ease;
-    outline: none;
-    position: relative;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    z-index: 2;
-}
-
-.drawer-tab-btn:hover {
-    color: var(--text);
-}
-
-.drawer-tab-btn.active {
-    color: var(--accent);
-}
-
-.drawer-tab-underline {
-    position: absolute;
-    bottom: 0;
-    height: 3px;
-    width: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 10px var(--accent);
-    transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    z-index: 3;
-}
 
 /* --- Phase 4 Extracted Inline Styles --- */
 
@@ -963,7 +854,490 @@ input:checked + .toggle-slider:before {
     margin-bottom: 15px;
 }
 
-.picker-hint {
+/* --- Randomizer Setup: Step 1 (Players & Invitees), Step 2 (Game Type) --- */
+
+.randomizer-setup {
+    margin-bottom: 15px;
+}
+
+.roll-screen-title {
+    font-family: "Outfit", sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 16px;
+}
+
+.setup-step {
+    margin-bottom: 18px;
+    transition: opacity 0.25s ease;
+}
+
+.setup-step.step-locked {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.step-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.step-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--accent);
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.step-title {
+    font-family: "Outfit", sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text);
+}
+
+.step-subtitle {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    color: var(--gray-200);
+    margin: 10px 0 6px;
+}
+
+.invitee-zone {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.setup-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.7rem;
+    color: var(--gray-300);
+    margin-top: 8px;
+    line-height: 1.4;
+}
+
+.setup-hint-icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: var(--gray-300);
+}
+
+.invitee-add-btn {
+    border-style: dashed;
+    border-color: rgba(var(--white-rgb), 0.15);
+    color: rgba(var(--white-rgb), 0.4);
+}
+
+.invitee-add-icon {
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+@media (hover: hover) {
+    .invitee-add-btn:hover {
+        background: rgba(var(--white-rgb), 0.05);
+        border-color: rgba(var(--white-rgb), 0.3);
+        color: rgba(var(--white-rgb), 0.7);
+    }
+}
+
+/* Game Type option buttons */
+.game-type-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.game-type-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 6px;
+    background: rgba(var(--white-rgb), 0.02);
+    border: 1.5px solid rgba(var(--white-rgb), 0.08);
+    border-radius: 10px;
+    color: rgba(var(--white-rgb), 0.35);
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.game-type-icon {
+    display: flex;
+}
+
+.game-type-label {
+    font-family: "Outfit", sans-serif;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    line-height: 1.15;
     text-align: center;
-    opacity: 0.6;
+}
+
+@media (hover: hover) {
+    .game-type-btn:not(:disabled):hover {
+        background: rgba(var(--white-rgb), 0.05);
+        border-color: rgba(var(--white-rgb), 0.25);
+        color: var(--text);
+        transform: translateY(-1px);
+    }
+}
+
+.game-type-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+}
+
+.game-type-btn.active {
+    background: color-mix(in srgb, var(--accent) 20%, rgba(var(--white-rgb), 0.02));
+    border: 2px solid var(--accent);
+    color: var(--text);
+    box-shadow:
+        0 0 15px rgba(var(--black-rgb), 0.4),
+        0 0 18px rgba(233, 69, 96, 0.4),
+        inset 0 0 10px rgba(233, 69, 96, 0.25);
+    transform: scale(1.02);
+}
+
+/* --- Randomizer Setup: Teams (continuation of Step 2, Teams game types only) --- */
+
+.teams-subsection {
+    margin-top: -8px;
+}
+
+.teams-label {
+    color: var(--accent);
+}
+
+.teams-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.team-panel {
+    background: rgba(var(--white-rgb), 0.02);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 10px;
+}
+
+.team-panel-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--gray-200);
+    margin-bottom: 8px;
+}
+
+.team-panel[data-team="A"] .team-panel-title {
+    color: var(--p2);
+}
+
+.team-panel[data-team="B"] .team-panel-title {
+    color: var(--accent);
+}
+
+.team-player-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    background: rgba(var(--white-rgb), 0.03);
+    border: 1px solid rgba(var(--white-rgb), 0.08);
+    border-radius: 8px;
+    margin-bottom: 6px;
+    text-align: left;
+    font-family: "Outfit", sans-serif;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+@media (hover: hover) {
+    .team-player-row:not(.swap-candidate):hover {
+        border-color: rgba(var(--white-rgb), 0.25);
+        background: rgba(var(--white-rgb), 0.06);
+    }
+}
+
+.team-player-row:last-child {
+    margin-bottom: 0;
+}
+
+.team-player-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--player-color);
+    flex-shrink: 0;
+}
+
+.team-player-name {
+    flex: 1;
+    font-size: 0.8rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.team-player-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: rgba(var(--white-rgb), 0.4);
+    transition: color 0.2s ease;
+}
+
+@media (hover: hover) {
+    .team-player-row:hover .team-player-arrow {
+        color: var(--accent);
+    }
+}
+
+.team-player-row.reversed .team-player-arrow svg {
+    transform: scaleX(-1);
+}
+
+.team-player-row.swap-source {
+    border-color: var(--accent);
+    box-shadow: 0 0 10px rgba(233, 69, 96, 0.25);
+}
+
+.team-player-row.swap-candidate {
+    cursor: pointer;
+}
+
+@media (hover: hover) {
+    .team-player-row.swap-candidate:hover {
+        border-color: var(--accent);
+        background: rgba(233, 69, 96, 0.08);
+    }
+}
+
+.randomize-teams-btn {
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    border: 1px solid rgba(var(--white-rgb), 0.15);
+    border-radius: 8px;
+    color: rgba(var(--white-rgb), 0.7);
+    font-family: "Outfit", sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+@media (hover: hover) {
+    .randomize-teams-btn:hover {
+        background: rgba(var(--white-rgb), 0.06);
+        border-color: rgba(var(--white-rgb), 0.3);
+    }
+}
+
+.team-swap-question {
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-top: 10px;
+}
+
+.team-swap-question.swap-active {
+    position: relative;
+    z-index: 1001;
+}
+
+.team-swap-scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 1000;
+}
+
+.team-panel.swap-target {
+    position: relative;
+    z-index: 1001;
+    border-color: var(--accent);
+    box-shadow: 0 0 20px rgba(233, 69, 96, 0.25);
+}
+
+/* --- Randomizer Setup: Step 3 (Roll Mode) --- */
+
+.roll-mode-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0;
+}
+
+.roll-mode-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 14px 10px;
+    background: rgba(var(--white-rgb), 0.02);
+    border: 1.5px solid rgba(var(--white-rgb), 0.08);
+    border-radius: 0;
+    color: rgba(var(--white-rgb), 0.5);
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.roll-mode-btn:not(:last-child) {
+    border-right: none;
+}
+
+.roll-mode-btn:first-child {
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+
+.roll-mode-btn:last-child {
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+@media (hover: hover) {
+    .roll-mode-btn:not(:disabled):hover {
+        background: rgba(var(--white-rgb), 0.05);
+        border-color: rgba(var(--white-rgb), 0.25);
+        color: var(--text);
+    }
+}
+
+.roll-mode-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+}
+
+.roll-mode-title {
+    font-family: "Outfit", sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.roll-mode-subtitle {
+    font-family: "Outfit", sans-serif;
+    font-size: 0.65rem;
+    color: rgba(var(--white-rgb), 0.4);
+}
+
+.roll-mode-btn.active {
+    background: color-mix(in srgb, var(--accent) 20%, rgba(var(--white-rgb), 0.02));
+    border: 2px solid var(--accent);
+    color: var(--text);
+    box-shadow:
+        0 0 15px rgba(var(--black-rgb), 0.4),
+        0 0 18px rgba(233, 69, 96, 0.4),
+        inset 0 0 10px rgba(233, 69, 96, 0.25);
+}
+
+.roll-mode-btn.active .roll-mode-subtitle {
+    color: rgba(var(--white-rgb), 0.6);
+}
+
+.draft-count-section {
+    margin-top: 14px;
+}
+
+.draft-count-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.draft-count-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.draft-count-subtitle {
+    font-size: 0.65rem;
+    font-style: italic;
+    color: var(--gray-300);
+}
+
+.draft-count-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+}
+
+.draft-count-btn {
+    padding: 10px 6px;
+    background: rgba(var(--white-rgb), 0.02);
+    border: 1.5px solid rgba(var(--white-rgb), 0.08);
+    border-radius: 0;
+    color: rgba(var(--white-rgb), 0.5);
+    font-family: "Outfit", sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.draft-count-btn:not(:last-child) {
+    border-right: none;
+}
+
+.draft-count-btn:first-child {
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+
+.draft-count-btn:last-child {
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+@media (hover: hover) {
+    .draft-count-btn:hover {
+        background: rgba(var(--white-rgb), 0.05);
+        border-color: rgba(var(--white-rgb), 0.25);
+        color: var(--text);
+    }
+}
+
+.draft-count-btn.active {
+    background: color-mix(in srgb, var(--accent) 20%, rgba(var(--white-rgb), 0.02));
+    border: 2px solid var(--accent);
+    color: var(--text);
+    box-shadow:
+        0 0 15px rgba(var(--black-rgb), 0.4),
+        0 0 18px rgba(233, 69, 96, 0.4),
+        inset 0 0 10px rgba(233, 69, 96, 0.25);
 }

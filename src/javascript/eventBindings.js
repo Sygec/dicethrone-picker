@@ -4,6 +4,7 @@
  */
 
 import * as randomizer from './randomizer.js';
+import * as randomizerSetup from './randomizerSetup.js';
 import * as filters from './filters.js';
 import * as admin from './admin.js';
 import * as auth from './auth.js';
@@ -18,9 +19,7 @@ export function setupAllEventBindings() {
     };
 
     // 1. Static Button Clicks
-    bindClick("rollBtn", randomizer.pickCharactersNormal);
-    bindClick("rollDraftBtn", randomizer.pickCharactersDraft);
-    bindClick("rollSettingsBtn", randomizer.openRollSettingsDrawer);
+    bindClick("roll-final-btn", randomizer.pickCharacters);
     bindClick("cancelBtn", randomizer.cancelRoll);
     bindClick("confirmBtn", randomizer.applyResults);
     bindClick("clear-search", filters.clearSearch);
@@ -29,6 +28,50 @@ export function setupAllEventBindings() {
     bindClick("btn-trigger-filter", filters.openFilterDrawer);
     bindClick("clear-games-search", admin.clearGamesSearch);
     bindClick("btn-trigger-games-filter", filters.openHistoryFilterDrawer);
+
+    // Randomizer setup: player/invitee toggles & game type selection
+    const setupZone = document.getElementById("randomizer-setup");
+    if (setupZone) {
+        setupZone.addEventListener("change", (e) => {
+            const inviteeCheckbox = e.target.closest("#invitee-zone input[data-invitee-id]");
+            if (inviteeCheckbox && !inviteeCheckbox.checked) {
+                return randomizerSetup.removeInvitee(inviteeCheckbox.dataset.inviteeId);
+            }
+            if (e.target.closest("#player-toggle-zone-top, #invitee-zone")) {
+                randomizerSetup.onSetupChange();
+            }
+        });
+        setupZone.addEventListener("click", (e) => {
+            const addBtn = e.target.closest('[data-action="add-invitee"]');
+            if (addBtn) return randomizerSetup.addInvitee();
+
+            const typeBtn = e.target.closest('[data-action="select-game-type"]');
+            if (typeBtn && !typeBtn.disabled) return randomizerSetup.selectGameType(typeBtn.dataset.type);
+
+            const randomizeBtn = e.target.closest('[data-action="randomize-teams"]');
+            if (randomizeBtn) return randomizerSetup.randomizeTeams();
+
+            const initiateSwapBtn = e.target.closest('[data-action="initiate-team-swap"]');
+            if (initiateSwapBtn) {
+                return randomizerSetup.startTeamSwap(initiateSwapBtn.dataset.participantId, initiateSwapBtn.dataset.team);
+            }
+
+            const completeSwapBtn = e.target.closest('[data-action="complete-team-swap"]');
+            if (completeSwapBtn) return randomizerSetup.completeTeamSwap(completeSwapBtn.dataset.participantId);
+
+            const rollModeBtn = e.target.closest('[data-action="select-roll-mode"]');
+            if (rollModeBtn && !rollModeBtn.disabled) return randomizerSetup.selectRollMode(rollModeBtn.dataset.mode);
+
+            const draftCountBtn = e.target.closest('[data-action="select-draft-count"]');
+            if (draftCountBtn) return randomizerSetup.selectDraftCount(parseInt(draftCountBtn.dataset.count, 10));
+        });
+    }
+
+    // Team swap scrim: clicking outside the opposing team panel cancels the in-progress swap
+    const teamSwapScrim = document.getElementById("team-swap-scrim");
+    if (teamSwapScrim) {
+        teamSwapScrim.addEventListener("click", () => randomizerSetup.cancelTeamSwap());
+    }
 
     // Bottom tab navigation
     document.querySelectorAll(".bottom-nav .nav-item").forEach(el => {
@@ -41,7 +84,10 @@ export function setupAllEventBindings() {
 
     // Version label and changelog
     const versionNum = document.getElementById("version-number");
-    if (versionNum) versionNum.addEventListener("click", admin.openChangelog);
+    if (versionNum) versionNum.addEventListener("click", () => {
+        auth.closeAccountModal();
+        admin.openChangelog();
+    });
 
     const closeBtn = document.querySelector(".close-button");
     if (closeBtn) closeBtn.addEventListener("click", admin.closeChangelog);
@@ -55,6 +101,8 @@ export function setupAllEventBindings() {
     bindClick("forgot-password-btn", auth.handlePasswordReset);
     bindClick("update-password-close", auth.closeUpdatePasswordModal);
     bindClick("hero-select-close", randomizer.closeHeroSelectModal);
+    bindClick("header-avatar-btn", auth.openAccountModal);
+    bindClick("account-close", auth.closeAccountModal);
 
     // Inputs & Keyboard event handlers
     const heroSearch = document.getElementById("hero-search");
@@ -166,6 +214,7 @@ export function setupAllEventBindings() {
             if (stateStore.get("currentUser")) {
                 auth.handleLogout();
             } else {
+                auth.closeAccountModal();
                 auth.openLoginModal();
             }
         });
@@ -229,22 +278,6 @@ export function setupAllEventBindings() {
                 return;
             }
 
-            // Staged draft count candidate pills
-            const draftCount = target.closest('[data-action="set-staged-draft-count"]');
-            if (draftCount) {
-                const count = parseInt(draftCount.getAttribute("data-count"), 10);
-                randomizer.setStagedDraftCount(count);
-                return;
-            }
-
-            // Switch settings tabs
-            const settingsTab = target.closest('[data-action="switch-roll-settings-tab"]');
-            if (settingsTab) {
-                const tab = settingsTab.getAttribute("data-tab");
-                randomizer.switchRollSettingsTab(tab);
-                return;
-            }
-
             // Sort player change
             const sortPlayer = target.closest('[data-action="drawer-sort-player-change"]');
             if (sortPlayer) {
@@ -280,13 +313,6 @@ export function setupAllEventBindings() {
             const histCheckbox = target.closest('[data-action="toggle-use-historical"]');
             if (histCheckbox) {
                 filters.toggleStagedGamesHistorical(histCheckbox.checked);
-                return;
-            }
-
-            // Staged draft mode switch checkbox
-            const draftSwitch = target.closest('[data-action="toggle-staged-draft-mode"]');
-            if (draftSwitch) {
-                randomizer.toggleStagedDraftMode(draftSwitch.checked);
                 return;
             }
 
@@ -344,7 +370,7 @@ export function setupAllEventBindings() {
         });
     }
 
-    // Randomizer results slots (edit icons, cancel, rotation, draft pick confirmation)
+    // Randomizer results slots (edit icons, cancel, draft candidate selection/confirmation)
     const results = document.getElementById("results");
     if (results) {
         results.addEventListener("click", (e) => {
@@ -358,16 +384,12 @@ export function setupAllEventBindings() {
                 return;
             }
 
-            // Select draft hero from card click
-            const draftCard = target.closest('[data-action="select-draft-hero"]');
+            // Tap a draft candidate card to (un)mark it as the tentative pick
+            const draftCard = target.closest('[data-action="select-draft-candidate"]');
             if (draftCard) {
                 const pIdx = parseInt(draftCard.getAttribute("data-player-idx"), 10);
-                const heroName = draftCard.getAttribute("data-hero-name");
-                const heroSlug = draftCard.getAttribute("data-hero-slug");
                 const heroId = draftCard.getAttribute("data-hero-id");
-                const cardAngle = parseFloat(draftCard.getAttribute("data-angle"));
-                const cardIdx = parseInt(draftCard.getAttribute("data-card-idx"), 10);
-                randomizer.selectDraftHero(pIdx, heroName, heroSlug, heroId, cardAngle, cardIdx);
+                randomizer.selectDraftCandidate(pIdx, heroId);
                 return;
             }
 
@@ -375,16 +397,6 @@ export function setupAllEventBindings() {
             const cancelRoll = target.closest('[data-action="cancel-roll"]');
             if (cancelRoll) {
                 randomizer.cancelRoll();
-                return;
-            }
-
-            // Rotate draft candidate wheel
-            const rotateBtn = target.closest('[data-action="rotate-draft"]');
-            if (rotateBtn) {
-                const pIdx = parseInt(rotateBtn.getAttribute("data-player-idx"), 10);
-                const dir = parseInt(rotateBtn.getAttribute("data-direction"), 10);
-                const count = parseInt(rotateBtn.getAttribute("data-draft-count"), 10);
-                randomizer.rotateDraftWheelDirection(pIdx, dir, count);
                 return;
             }
 
@@ -620,12 +632,14 @@ export function setupAllEventBindings() {
         const modalWhatsNew = document.getElementById("whats-new-modal");
         const modalUpdatePassword = document.getElementById("update-password-modal");
         const modalHeroSelect = document.getElementById("hero-select-modal");
+        const modalAccount = document.getElementById("account-modal");
 
         if (event.target === modalChangelog) admin.closeChangelog();
         if (event.target === modalLogin) auth.closeLoginModal();
         if (event.target === modalWhatsNew) admin.closeWhatsNew();
         if (event.target === modalUpdatePassword) auth.closeUpdatePasswordModal();
         if (event.target === modalHeroSelect) randomizer.closeHeroSelectModal();
+        if (event.target === modalAccount) auth.closeAccountModal();
 
         const sortDropdown = document.getElementById("sort-dropdown-menu");
         const sortContainer = document.getElementById("sort-dropdown-container");

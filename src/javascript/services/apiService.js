@@ -94,10 +94,13 @@ export async function getGroups() {
  * @returns {Promise<Object>} Supabase response with players data or error.
  */
 export async function getPlayers() {
-    return db
-        .from("players")
-        .select("*")
-        .order("id", { ascending: true });
+    // Sorted numerically in JS rather than via `.order("id")`: player ids are text (p1, p2,
+    // ..., p10), and a DB-level string sort would put "p10" before "p2".
+    const result = await db.from("players").select("*");
+    if (result.data) {
+        result.data.sort((a, b) => parseInt(a.id.slice(1), 10) - parseInt(b.id.slice(1), 10));
+    }
+    return result;
 }
 
 /**
@@ -130,10 +133,15 @@ export async function getGames() {
             played_at,
             last_updated_by,
             is_historical,
+            game_type,
             game_players (
                 hero_id,
                 player_id,
                 is_winner,
+                team_id,
+                teams (
+                    team_label
+                ),
                 heroes (
                     name,
                     slug,
@@ -282,14 +290,25 @@ export async function deleteGroup(groupId) {
  * Creates a new game log entry.
  * @async
  * @param {string} userId - ID of the creating user.
+ * @param {string} [gameType] - One of 'duel' | '2v2' | '3v3' | 'ffa' | 'koth'.
  * @returns {Promise<Object>} Supabase response.
  */
-export async function insertGame(userId) {
+export async function insertGame(userId, gameType) {
     return db
         .from("games")
-        .insert({ last_updated_by: userId })
+        .insert({ last_updated_by: userId, game_type: gameType })
         .select()
         .single();
+}
+
+/**
+ * Creates the Team A / Team B rows for a Teams-type game.
+ * @async
+ * @param {Array<Object>} teamsData - Team rows to insert (game_id, team_label, last_updated_by).
+ * @returns {Promise<Object>} Supabase response with the inserted rows (including ids).
+ */
+export async function insertTeams(teamsData) {
+    return db.from("teams").insert(teamsData).select();
 }
 
 /**
@@ -354,6 +373,68 @@ export async function updateGameWinner(gameId, winnerPlayerId, userId) {
             .eq("game_id", gameId)
             .neq("player_id", winnerPlayerId);
     }
+}
+
+/**
+ * Sets the winning team or a draw status for a logged Teams-type game. Propagates the
+ * result to both the `teams` row (for future team-level stats) and each member's
+ * `game_players.is_winner` (so existing per-player stats/history keep working unchanged).
+ * @async
+ * @param {string} gameId - Match UUID.
+ * @param {string} winningTeamLabel - 'A' | 'B', or 'draw'.
+ * @param {string} userId - User modifying the results.
+ * @returns {Promise<Object>} Supabase response.
+ */
+export async function updateTeamWinner(gameId, winningTeamLabel, userId) {
+    if (winningTeamLabel === "draw") {
+        const teamsRes = await db
+            .from("teams")
+            .update({ is_winner: false, last_updated_by: userId })
+            .eq("game_id", gameId);
+        if (teamsRes.error) return teamsRes;
+
+        return db
+            .from("game_players")
+            .update({ is_winner: false, last_updated_by: userId })
+            .eq("game_id", gameId);
+    }
+
+    const { data: teams, error: teamsFetchError } = await db
+        .from("teams")
+        .select("id, team_label")
+        .eq("game_id", gameId);
+    if (teamsFetchError) return { error: teamsFetchError };
+
+    const winningTeam = teams.find((t) => t.team_label === winningTeamLabel);
+    const losingTeam = teams.find((t) => t.team_label !== winningTeamLabel);
+    if (!winningTeam || !losingTeam) {
+        return { error: new Error("Could not resolve both teams for this game.") };
+    }
+
+    const winTeamRes = await db
+        .from("teams")
+        .update({ is_winner: true, last_updated_by: userId })
+        .eq("id", winningTeam.id);
+    if (winTeamRes.error) return winTeamRes;
+
+    const loseTeamRes = await db
+        .from("teams")
+        .update({ is_winner: false, last_updated_by: userId })
+        .eq("id", losingTeam.id);
+    if (loseTeamRes.error) return loseTeamRes;
+
+    const winPlayersRes = await db
+        .from("game_players")
+        .update({ is_winner: true, last_updated_by: userId })
+        .eq("game_id", gameId)
+        .eq("team_id", winningTeam.id);
+    if (winPlayersRes.error) return winPlayersRes;
+
+    return db
+        .from("game_players")
+        .update({ is_winner: false, last_updated_by: userId })
+        .eq("game_id", gameId)
+        .eq("team_id", losingTeam.id);
 }
 
 /**

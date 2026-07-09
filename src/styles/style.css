@@ -95,6 +95,10 @@
     --p4: #f1c40f;
     --p5: #a2a2a2;
     --p6: #a2a2a2;
+    --p7: #a2a2a2;
+    --p8: #a2a2a2;
+    --p9: #a2a2a2;
+    --p10: #a2a2a2;
 
     /* --- Glassmorphic Overlays & Blurs --- */
     --glass-border: rgba(var(--white-rgb), 0.14);

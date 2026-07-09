@@ -2,10 +2,13 @@
  * @fileoverview Logic for hero picker rolls, randomizer animations, manual hero overrides, drafts, bans, and result logging.
  * @module randomizer
  */
-import { isHeroOwned, getSoftWeight, isUser, DEFAULT_HERO_WEIGHT, PICKED_HERO_WEIGHT, WEIGHT_INCREMENT, getHeroProbabilityText, getImgUrl, showConfirm, MAX_WEIGHTED_PLAYERS } from './utils.js';
+import { isHeroOwned, getSoftWeight, isUser, getHeroProbabilityText, getImgUrl, showConfirm, MAX_WEIGHTED_PLAYERS, buildGameResultsPayload } from './utils.js';
 import { showSection } from './admin.js';
 import { init } from './main.js';
+import { renderPlayerToggles } from './auth.js';
 import { renderDrawerBody } from './filters.js';
+import * as randomizerSetup from './randomizerSetup.js';
+import * as randomizerSetupView from './views/randomizerSetupView.js';
 
 
 import * as apiService from './services/apiService.js';
@@ -13,25 +16,26 @@ import * as stateStore from './stateStore.js';
 import * as rollView from './views/rollView.js';
 import * as filterView from './views/filterView.js';
 
+const LOCK_ICON = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>';
+
 /**
  * Executes a hero roll for all active players, selecting unique characters.
  * Triggers draft wheels if draft mode is enabled.
  * @function pickCharacters
  */
 export function pickCharacters() {
-    const NAMES = stateStore.get("NAMES");
     const characters = stateStore.get("characters");
     const bannedHeroIds = stateStore.get("bannedHeroIds");
 
-    const active = NAMES.map((_, i) => i).filter(
-        (i) => document.getElementById(`use${i}`)?.checked,
-    );
-
-    console.log("[randomizer] pickCharacters active players:", active);
+    const participants = randomizerSetup.getRollParticipants();
+    console.log("[randomizer] pickCharacters participants:", participants);
     console.log("[randomizer] draftModeEnabled:", stateStore.get("draftModeEnabled"));
 
-    if (active.length === 0) return alert("Select players!");
+    if (participants.length === 0) return alert("Select players!");
 
+    stateStore.set("activeRollParticipants", participants);
+
+    const active = participants.map((p) => p.pIdx);
     const selectionOrder = [...active].sort(() => Math.random() - 0.5);
     const resultsDiv = document.getElementById("results");
     if (resultsDiv) resultsDiv.innerHTML = "";
@@ -48,10 +52,9 @@ export function pickCharacters() {
         );
     }
 
-    if (stateStore.get("draftModeEnabled")) {
-        const rollBtnContainer = document.getElementById("rollBtnContainer");
-        if (rollBtnContainer) rollBtnContainer.style.display = "none";
+    randomizerSetupView.hideSetupPanels();
 
+    if (stateStore.get("draftModeEnabled")) {
         const actionButtons = document.getElementById("action-buttons");
         if (actionButtons) actionButtons.style.display = "none";
 
@@ -59,15 +62,9 @@ export function pickCharacters() {
         stateStore.set("activeDraftStep", 0);
         stateStore.set("selectedDraftHeroes", {});
         stateStore.set("activeDraftCandidates", {});
-        stateStore.set("draftWheelAngles", {});
-        stateStore.set("draftWheelFrontCardIndices", {});
-
-        const sortedActive = [...active].sort((a, b) => a - b);
-        sortedActive.forEach((pIdx) => {
-            rollView.renderPlayerRowWaiting(pIdx, NAMES[selectionOrder[0]]);
-        });
 
         showSection("roll");
+        randomizerSetupView.showResultsTitle("draft");
         if (resultsDiv) resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
 
         startDraftStep();
@@ -115,25 +112,6 @@ export function pickCharacters() {
         rollResults[pIdx] = selectedHero;
     });
 
-    const rollBtnContainer = document.getElementById("rollBtnContainer");
-    if (rollBtnContainer) {
-        rollBtnContainer.style.display = "none";
-    }
-
-    const rollBtn = document.getElementById("rollBtn");
-    if (rollBtn) {
-        rollBtn.disabled = true;
-        rollBtn.style.opacity = "0.6";
-        rollBtn.style.cursor = "not-allowed";
-    }
-
-    const rollDraftBtn = document.getElementById("rollDraftBtn");
-    if (rollDraftBtn) {
-        rollDraftBtn.disabled = true;
-        rollDraftBtn.style.opacity = "0.6";
-        rollDraftBtn.style.cursor = "not-allowed";
-    }
-
     const actionButtons = document.getElementById("action-buttons");
     if (actionButtons) actionButtons.style.display = "none";
 
@@ -145,6 +123,7 @@ export function pickCharacters() {
     });
 
     showSection("roll");
+    randomizerSetupView.showResultsTitle("confirmation");
     if (resultsDiv) resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
 
     const ownedHeroes = characters.filter(
@@ -162,21 +141,9 @@ export function pickCharacters() {
             validateSelection();
             if (isUser()) {
                 if (actionButtons) actionButtons.style.display = "flex";
-                if (rollBtnContainer) rollBtnContainer.style.display = "none";
             } else {
-                if (rollBtnContainer) {
-                    rollBtnContainer.style.display = "flex";
-                }
-                if (rollBtn) {
-                    rollBtn.disabled = false;
-                    rollBtn.style.opacity = "1";
-                    rollBtn.style.cursor = "pointer";
-                }
-                if (rollDraftBtn) {
-                    rollDraftBtn.disabled = false;
-                    rollDraftBtn.style.opacity = "1";
-                    rollDraftBtn.style.cursor = "pointer";
-                }
+                randomizerSetupView.showSetupPanels();
+                randomizerSetup.resetInvitees();
             }
             stateStore.set("isRollActive", true);
             return;
@@ -194,19 +161,6 @@ export function pickCharacters() {
     }
 
     revealNext();
-}
-
-export function pickCharactersNormal() {
-    console.log("[randomizer] pickCharactersNormal called. Setting draftModeEnabled to false.");
-    stateStore.set("draftModeEnabled", false);
-    pickCharacters();
-}
-
-export function pickCharactersDraft() {
-    console.log("[randomizer] pickCharactersDraft called. Setting draftModeEnabled to true, draftCount to 3.");
-    stateStore.set("draftModeEnabled", true);
-    stateStore.set("draftCount", 3);
-    pickCharacters();
 }
 
 export function updateDropdownSort() {
@@ -303,7 +257,7 @@ export function validateSelection() {
 
     confirmBtn.classList.remove("disabled", "warning");
     confirmBtn.disabled = false;
-    confirmBtn.innerHTML = "LOCK IN SESSION";
+    confirmBtn.innerHTML = `${LOCK_ICON} LOCK IN SESSION`;
     errorMsg.style.display = "none";
 
     if (hasDupes) {
@@ -328,7 +282,7 @@ export function validateSelection() {
 }
 export async function applyResults() {
     const confirmBtn = document.getElementById("confirmBtn");
-    const originalText = confirmBtn ? confirmBtn.innerText : "Lock In";
+    const originalHtml = confirmBtn ? confirmBtn.innerHTML : "Lock In";
     if (confirmBtn) {
         confirmBtn.disabled = true;
         confirmBtn.innerText = "Saving...";
@@ -352,68 +306,69 @@ export async function applyResults() {
         if (!confirmation) {
             if (confirmBtn) {
                 confirmBtn.disabled = false;
-                confirmBtn.innerText = originalText;
+                confirmBtn.innerHTML = originalHtml;
             }
             return;
         }
     }
 
     const dropdowns = document.querySelectorAll(".char-select");
-    const statsUpdates = [];
-    const gameParticipants = [];
 
+    // Invitees (pIdx >= MAX_WEIGHTED_PLAYERS) map to the placeholder `p5`/`p6` players rows:
+    // they're saved to game_players like anyone else, but never get weighted stats.
     const activePicks = new Map(
-        Array.from(dropdowns).map((sel) => [
-            parseInt(sel.dataset.player),
-            sel.value,
-        ]),
+        Array.from(dropdowns).map((sel) => [parseInt(sel.dataset.player), sel.value]),
     );
 
-    const { data: game, error: gameError } = await apiService.insertGame(stateStore.get("currentUser").id);
+    const gameType = stateStore.get("selectedGameType");
+    const { data: game, error: gameError } = await apiService.insertGame(stateStore.get("currentUser").id, gameType);
     if (gameError) {
         if (confirmBtn) {
             confirmBtn.disabled = false;
-            confirmBtn.innerText = originalText;
+            confirmBtn.innerHTML = originalHtml;
         }
         return alert("Error creating game: " + gameError.message);
     }
 
-    characters.forEach((char) => {
-        [0, 1, 2, 3, 4, 5].forEach((pIdx) => {
-            const playerChoice = activePicks.get(pIdx);
-
-            if (playerChoice === char.name) {
-                gameParticipants.push({
-                    game_id: game.id,
-                    player_id: `p${pIdx + 1}`,
-                    hero_id: char.id,
-                    is_winner: null,
-                    last_updated_by: stateStore.get("currentUser").id,
-                });
+    const teamIdByPlayerId = {};
+    const teamAssignments = stateStore.get("teamAssignments");
+    if (randomizerSetup.isTeamsType(gameType) && teamAssignments) {
+        const userId = stateStore.get("currentUser").id;
+        const { data: teams, error: teamsError } = await apiService.insertTeams([
+            { game_id: game.id, team_label: "A", last_updated_by: userId },
+            { game_id: game.id, team_label: "B", last_updated_by: userId },
+        ]);
+        if (teamsError) {
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = originalHtml;
             }
+            return alert("Error creating teams: " + teamsError.message);
+        }
 
-            if (pIdx < MAX_WEIGHTED_PLAYERS && playerChoice !== undefined) {
-                const wasPicked = playerChoice === char.name;
-                const newWeight = wasPicked
-                    ? PICKED_HERO_WEIGHT
-                    : (char.weights[pIdx] || DEFAULT_HERO_WEIGHT) +
-                      WEIGHT_INCREMENT;
-
-                statsUpdates.push({
-                    hero_id: char.id,
-                    player_id: `p${pIdx + 1}`,
-                    weight: newWeight,
-                    last_updated_by: stateStore.get("currentUser").id,
-                });
-            }
+        const participantIdToPlayerId = randomizerSetup.getParticipantIdToPlayerIdMap();
+        const teamIdByLabel = Object.fromEntries(teams.map((t) => [t.team_label, t.id]));
+        teamAssignments.teamA.forEach((participantId) => {
+            teamIdByPlayerId[participantIdToPlayerId[participantId] || participantId] = teamIdByLabel.A;
         });
-    });
+        teamAssignments.teamB.forEach((participantId) => {
+            teamIdByPlayerId[participantIdToPlayerId[participantId] || participantId] = teamIdByLabel.B;
+        });
+    }
+
+    const { gameParticipants, statsUpdates } = buildGameResultsPayload(
+        characters,
+        activePicks,
+        teamIdByPlayerId,
+        game.id,
+        stateStore.get("currentUser").id,
+    );
 
     const { error: gpError } = await apiService.insertGamePlayers(gameParticipants);
     if (gpError) {
         if (confirmBtn) {
             confirmBtn.disabled = false;
-            confirmBtn.innerText = originalText;
+            confirmBtn.innerHTML = originalHtml;
         }
         return alert("Error logging game participants: " + gpError.message);
     }
@@ -423,7 +378,7 @@ export async function applyResults() {
     if (error) {
         if (confirmBtn) {
             confirmBtn.disabled = false;
-            confirmBtn.innerText = originalText;
+            confirmBtn.innerHTML = originalHtml;
         }
         return alert("Error saving results: " + error.message);
     }
@@ -432,24 +387,10 @@ export async function applyResults() {
 
     const actionButtons = document.getElementById("action-buttons");
     if (actionButtons) actionButtons.style.display = "none";
-    const rollBtnContainer = document.getElementById("rollBtnContainer");
-    if (rollBtnContainer) {
-        rollBtnContainer.style.display = "flex";
-    }
-    const rollBtnEl = document.getElementById("rollBtn");
-    if (rollBtnEl) {
-        rollBtnEl.style.display = "block";
-        rollBtnEl.disabled = false;
-        rollBtnEl.style.opacity = "1";
-        rollBtnEl.style.cursor = "pointer";
-    }
-    const rollDraftBtnEl = document.getElementById("rollDraftBtn");
-    if (rollDraftBtnEl) {
-        rollDraftBtnEl.style.display = "block";
-        rollDraftBtnEl.disabled = false;
-        rollDraftBtnEl.style.opacity = "1";
-        rollDraftBtnEl.style.cursor = "pointer";
-    }
+
+    randomizerSetupView.showSetupPanels();
+    randomizerSetup.resetInvitees();
+
     const resultsDiv = document.getElementById("results");
     if (resultsDiv) {
         resultsDiv.innerHTML = `
@@ -462,7 +403,7 @@ export async function applyResults() {
 export function cancelRoll() {
     const resultsDiv = document.getElementById("results");
     if (resultsDiv) {
-        resultsDiv.innerHTML = '<p style="text-align: center; opacity: 0.6;">Select players and roll.</p>';
+        resultsDiv.innerHTML = "";
     }
     const actionButtons = document.getElementById("action-buttons");
     if (actionButtons) actionButtons.style.display = "none";
@@ -477,35 +418,22 @@ export function cancelRoll() {
         stateStore.set("scrambleIntervals", {});
     }
 
-    const rollBtnContainer = document.getElementById("rollBtnContainer");
-    if (rollBtnContainer) {
-        rollBtnContainer.style.display = "flex";
-    }
-    const rollBtnEl = document.getElementById("rollBtn");
-    if (rollBtnEl) {
-        rollBtnEl.style.display = "block";
-        rollBtnEl.disabled = false;
-        rollBtnEl.style.opacity = "1";
-        rollBtnEl.style.cursor = "pointer";
-    }
-    const rollDraftBtnEl = document.getElementById("rollDraftBtn");
-    if (rollDraftBtnEl) {
-        rollDraftBtnEl.style.display = "block";
-        rollDraftBtnEl.disabled = false;
-        rollDraftBtnEl.style.opacity = "1";
-        rollDraftBtnEl.style.cursor = "pointer";
-    }
+    stateStore.set("activeDraftOrder", []);
+    stateStore.set("activeDraftStep", 0);
+    stateStore.set("selectedDraftHeroes", {});
+    stateStore.set("activeDraftCandidates", {});
+
+    randomizerSetupView.showSetupPanels();
+    renderPlayerToggles();
+    randomizerSetup.resetSetup();
     stateStore.set("isRollActive", false);
 }
 export function openRollSettingsDrawer() {
     stateStore.set("currentDrawerMode", "roll-settings");
 
     // Stage current configuration
-    stateStore.set("stagedDraftModeEnabled", stateStore.get("draftModeEnabled"));
-    stateStore.set("stagedDraftCount", stateStore.get("draftCount"));
     stateStore.set("stagedBannedHeroIds", new Set(stateStore.get("bannedHeroIds")));
     stateStore.set("stagedBanSearchQuery", "");
-    stateStore.set("stagedRollSettingsTab", "draft");
 
     const drawer = document.getElementById("sort-filter-drawer");
     const title = document.getElementById("drawer-title-text");
@@ -519,21 +447,6 @@ export function openRollSettingsDrawer() {
         drawer.classList.add("open");
         document.body.style.overflow = "hidden"; // Prevent background scroll
     }
-}
-export function switchRollSettingsTab(tabName) {
-    stateStore.set("stagedRollSettingsTab", tabName);
-    renderDrawerBody();
-}
-export function toggleStagedDraftMode(enabled) {
-    stateStore.set("stagedDraftModeEnabled", enabled);
-    const section = document.getElementById("drawer-draft-count-section");
-    if (section) {
-        section.style.display = enabled ? "block" : "none";
-    }
-}
-export function setStagedDraftCount(count) {
-    stateStore.set("stagedDraftCount", count);
-    renderDrawerBody();
 }
 export function toggleStagedBan(heroId) {
     stateStore.updateSet("stagedBannedHeroIds", "toggle", heroId);
@@ -549,39 +462,53 @@ export function renderDrawerBanList() {
 export function updateRollSettingsBadge() {
     rollView.updateRollSettingsBadge();
 }
+/**
+ * Renders the final "locked in" results screen (one resolved row per drafted participant),
+ * matching the Quick Roll layout.
+ */
+function renderDraftFinalResults() {
+    const resultsDiv = document.getElementById("results");
+    if (resultsDiv) resultsDiv.innerHTML = "";
+
+    const selectedDraftHeroes = stateStore.get("selectedDraftHeroes");
+    const order = stateStore.get("activeDraftOrder");
+
+    [...order]
+        .sort((a, b) => a - b)
+        .forEach((pIdx) => {
+            const hero = selectedDraftHeroes[pIdx];
+            if (hero) rollView.collapsePlayerRowToResolved(pIdx, hero);
+        });
+}
+
 export function startDraftStep() {
     const activeDraftStep = stateStore.get("activeDraftStep");
     const activeDraftOrder = stateStore.get("activeDraftOrder");
-    const NAMES = stateStore.get("NAMES");
     const characters = stateStore.get("characters");
     const bannedHeroIds = stateStore.get("bannedHeroIds");
     const selectedDraftHeroes = stateStore.get("selectedDraftHeroes");
 
     if (activeDraftStep >= activeDraftOrder.length) {
+        renderDraftFinalResults();
+        randomizerSetupView.showResultsTitle("confirmation");
         validateSelection();
-        const actionButtons = document.getElementById("action-buttons");
-        if (actionButtons) actionButtons.style.display = "flex";
 
-        const rollBtnContainer = document.getElementById("rollBtnContainer");
-        if (rollBtnContainer) rollBtnContainer.style.display = "none";
+        const actionButtons = document.getElementById("action-buttons");
+        if (isUser()) {
+            if (actionButtons) actionButtons.style.display = "flex";
+        } else {
+            randomizerSetupView.showSetupPanels();
+            randomizerSetup.resetInvitees();
+        }
 
         stateStore.set("isRollActive", true);
         return;
     }
 
     const pIdx = activeDraftOrder[activeDraftStep];
-    const activePlayerName = NAMES[pIdx];
 
-    activeDraftOrder.forEach((tempIdx) => {
-        const stepIdx = activeDraftOrder.indexOf(tempIdx);
-        if (stepIdx < activeDraftStep) {
-            // drafted and collapsed
-        } else if (stepIdx === activeDraftStep) {
-            rollView.renderPlayerRowDraftingActive(tempIdx);
-        } else {
-            rollView.renderPlayerRowWaiting(tempIdx, activePlayerName);
-        }
-    });
+    rollView.renderDraftTurn(activeDraftOrder, activeDraftStep);
+    rollView.updateDraftConfirmButton(pIdx, null);
 
     const chosenHeroNames = Object.values(selectedDraftHeroes).map(
         (h) => h?.name,
@@ -593,12 +520,16 @@ export function startDraftStep() {
             !chosenHeroNames.includes(c.name),
     );
 
-    startDraftWheelScramble(pIdx, pool);
+    const draftCount = stateStore.get("draftCount");
+    const cardCount = Math.min(draftCount, pool.length);
+    rollView.renderDraftCardListScramble(pIdx, cardCount);
+    startDraftCardScramble(pIdx, pool, cardCount);
 
     setTimeout(() => {
         const candidates = generateDraftCandidates(pIdx, pool);
         stateStore.get("activeDraftCandidates")[pIdx] = candidates;
-        stopDraftWheelScramble(pIdx, candidates);
+        stopDraftCardScramble(pIdx);
+        rollView.renderDraftCandidateCards(pIdx, candidates);
     }, 1000);
 }
 export function generateDraftCandidates(pIdx, pool) {
@@ -647,61 +578,25 @@ export function generateDraftCandidates(pIdx, pool) {
     }
     return candidates;
 }
-export function startDraftWheelScramble(pIdx, pool) {
-    const wheel = document.getElementById(`draft-wheel-${pIdx}`);
-    if (!wheel) return;
-
-    let html = "";
-    const draftCount = stateStore.get("draftCount");
-    const angleStep = 360 / draftCount;
-    for (let i = 0; i < draftCount; i++) {
-        const angle = i * angleStep;
-        const radius = 150;
-        html += `
-            <div class="draft-card-wrapper" id="draft-card-wrapper-${pIdx}-${i}" style="transform: rotateY(${angle}deg) translateZ(${radius}px);">
-                <div class="draft-card">
-                    <img src="" class="char-bg-img scramble-img" id="draft-card-img-${pIdx}-${i}" style="opacity: 0.08;">
-                    <div class="draft-card-content">
-                        <div class="draft-card-header">
-                            <span class="draft-hero-name scramble-text" id="draft-card-name-${pIdx}-${i}">ROLLING...</span>
-                        </div>
-                        <div class="draft-card-body">
-                            <span class="draft-card-group" id="draft-card-group-${pIdx}-${i}">Group</span>
-                            <div class="hero-stats-row" id="draft-card-stats-${pIdx}-${i}">
-                                <span>Plays: --</span>
-                                <span class="stats-divider">|</span>
-                                <span>Last: --</span>
-                                <span class="stats-divider">|</span>
-                                <span>Prob: --</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-    wheel.innerHTML = html;
+/**
+ * Scrambles the N draft candidate card placeholders (image/name/group) while candidates "roll".
+ */
+export function startDraftCardScramble(pIdx, pool, cardCount) {
+    if (pool.length === 0 || cardCount === 0) return;
 
     const intervalId = setInterval(() => {
-        for (let i = 0; i < draftCount; i++) {
+        for (let i = 0; i < cardCount; i++) {
             const randomHero = pool[Math.floor(Math.random() * pool.length)];
             if (!randomHero) continue;
-            const imgEl = document.getElementById(
-                `draft-card-img-${pIdx}-${i}`,
-            );
-            const nameEl = document.getElementById(
-                `draft-card-name-${pIdx}-${i}`,
-            );
-            const groupEl = document.getElementById(
-                `draft-card-group-${pIdx}-${i}`,
-            );
+            const imgEl = document.getElementById(`draft-card-img-${pIdx}-${i}`);
+            const nameEl = document.getElementById(`draft-card-name-${pIdx}-${i}`);
+            const groupEl = document.getElementById(`draft-card-group-${pIdx}-${i}`);
             if (imgEl) imgEl.src = getImgUrl(randomHero.slug);
             if (nameEl) {
                 const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
                 let scrambleStr = "";
                 for (let k = 0; k < 6; k++) {
-                    scrambleStr +=
-                        chars[Math.floor(Math.random() * chars.length)];
+                    scrambleStr += chars[Math.floor(Math.random() * chars.length)];
                 }
                 nameEl.innerText = scrambleStr;
             }
@@ -710,273 +605,41 @@ export function startDraftWheelScramble(pIdx, pool) {
     }, 70);
     stateStore.updateObject("scrambleIntervals", pIdx, intervalId);
 }
-export function stopDraftWheelScramble(pIdx, candidates) {
+export function stopDraftCardScramble(pIdx) {
     const intervals = stateStore.get("scrambleIntervals");
     if (intervals[pIdx]) {
         clearInterval(intervals[pIdx]);
         stateStore.updateObject("scrambleIntervals", pIdx, undefined);
     }
-
-    const wheel = document.getElementById(`draft-wheel-${pIdx}`);
-    if (!wheel) return;
-
-    let html = "";
-    const count = candidates.length;
-    wheel.style.transform = "rotateY(0deg)";
-    stateStore.get("draftWheelFrontCardIndices")[pIdx] = 0;
-    stateStore.get("draftWheelAngles")[pIdx] = 0;
-
-    const angleStep = 360 / count;
-    candidates.forEach((hero, i) => {
-        const angle = i * angleStep;
-        const radius = 150;
-
-        const statsHtml =
-            pIdx < MAX_WEIGHTED_PLAYERS
-                ? `
-            <span>Plays: <b>${hero.playCount[pIdx] || 0}</b></span>
-            <span class="stats-divider">|</span>
-            <span>Last: <b>${hero.lastPlayed[pIdx] || "Never"}</b></span>
-            <span class="stats-divider">|</span>
-            <span>Prob: <b>${getHeroProbabilityText(hero, pIdx)}</b></span>
-        `
-                : `
-            <span>Prob: <b>${getHeroProbabilityText(hero, pIdx)}</b></span>
-        `;
-
-        html += `
-            <div class="draft-card-wrapper" id="draft-card-wrapper-${pIdx}-${i}" style="transform: rotateY(${angle}deg) translateZ(${radius}px);" data-action="select-draft-hero" data-player-idx="${pIdx}" data-hero-name="${hero.name.replace(/"/g, "&quot;")}" data-hero-slug="${hero.slug}" data-hero-id="${hero.id}" data-angle="${angle}" data-card-idx="${i}">
-                <div class="draft-card">
-                    <img src="${getImgUrl(hero.slug)}" alt="${hero.name}" class="char-bg-img" style="opacity: 0.25;">
-                    <div class="draft-card-content">
-                        <div class="draft-card-header">
-                            <span class="draft-hero-name">${hero.name}</span>
-                        </div>
-                        <div class="draft-card-body">
-                            <span class="draft-card-group">${hero.group || "Unknown"}</span>
-                            <div class="hero-stats-row">
-                                ${statsHtml}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-    wheel.innerHTML = html;
-
-    const container = document.getElementById(`draft-wheel-container-${pIdx}`);
-    if (container) {
-        setupDraftWheelSwipe(pIdx, container, count);
-    }
 }
-export function setupDraftWheelSwipe(pIdx, container, count) {
-    let startX = 0;
-    let isSwiping = false;
-    let clickPrevented = false;
+/**
+ * Marks (or un-marks, if tapped again) a candidate card as the player's tentative pick.
+ * The pick isn't finalized until confirmDraftPick is called via the "PICK X ->" button.
+ */
+export function selectDraftCandidate(pIdx, heroId) {
+    const candidates = stateStore.get("activeDraftCandidates")[pIdx] || [];
+    const hero = candidates.find((c) => String(c.id) === String(heroId));
+    if (!hero) return;
 
-    const clickHandler = (e) => {
-        if (clickPrevented) {
-            e.stopPropagation();
-            e.preventDefault();
-            clickPrevented = false;
-        }
-    };
-    container.addEventListener("click", clickHandler, true);
-
-    container.addEventListener(
-        "touchstart",
-        (e) => {
-            startX = e.touches[0].clientX;
-            isSwiping = true;
-        },
-        { passive: true },
-    );
-
-    container.addEventListener(
-        "touchend",
-        (e) => {
-            if (!isSwiping) return;
-            isSwiping = false;
-            const endX = e.changedTouches[0].clientX;
-            const diffX = endX - startX;
-
-            if (Math.abs(diffX) > 10) {
-                clickPrevented = true;
-            }
-
-            if (diffX > 50) {
-                rotateDraftWheelDirection(pIdx, -1, count);
-            } else if (diffX < -50) {
-                rotateDraftWheelDirection(pIdx, 1, count);
-            }
-        },
-        { passive: true },
-    );
-
-    container.addEventListener("mousedown", (e) => {
-        startX = e.clientX;
-        isSwiping = true;
-
-        const onMouseMove = () => {};
-
-        const onMouseUp = (upEvt) => {
-            if (isSwiping) {
-                isSwiping = false;
-                const diffX = upEvt.clientX - startX;
-
-                if (Math.abs(diffX) > 10) {
-                    clickPrevented = true;
-                }
-
-                if (diffX > 50) {
-                    rotateDraftWheelDirection(pIdx, -1, count);
-                } else if (diffX < -50) {
-                    rotateDraftWheelDirection(pIdx, 1, count);
-                }
-                document.removeEventListener("mousemove", onMouseMove);
-                document.removeEventListener("mouseup", onMouseUp);
-            }
-        };
-
-        document.addEventListener("mousemove", onMouseMove);
-        document.addEventListener("mouseup", onMouseUp);
-    });
-}
-export function rotateDraftWheelDirection(pIdx, dir, count) {
-    const candidates = stateStore.get("activeDraftCandidates")[pIdx];
-    if (!candidates || candidates.length === 0) return;
-
-    const draftWheelFrontCardIndices = stateStore.get("draftWheelFrontCardIndices");
-    if (draftWheelFrontCardIndices[pIdx] === undefined) {
-        draftWheelFrontCardIndices[pIdx] = 0;
-    }
-    let currentIdx = draftWheelFrontCardIndices[pIdx];
-
-    let newIdx = (currentIdx + dir) % count;
-    if (newIdx < 0) newIdx += count;
-    draftWheelFrontCardIndices[pIdx] = newIdx;
-
-    const angleStep = 360 / count;
-
-    const draftWheelAngles = stateStore.get("draftWheelAngles");
-    if (draftWheelAngles[pIdx] === undefined) {
-        draftWheelAngles[pIdx] = 0;
-    }
-    const currentAngle = draftWheelAngles[pIdx];
-    const targetAngle = currentAngle + dir * angleStep;
-    draftWheelAngles[pIdx] = targetAngle;
-
-    const wheel = document.getElementById(`draft-wheel-${pIdx}`);
-    if (wheel) {
-        wheel.style.transform = `rotateY(${-targetAngle}deg)`;
-    }
-
-    deselectDraftHero(pIdx);
-}
-export function getShortestRotationAngle(currentAngle, targetBaseAngle) {
-    let diff = (targetBaseAngle - currentAngle) % 360;
-    if (diff < -180) {
-        diff += 360;
-    } else if (diff > 180) {
-        diff -= 360;
-    }
-    return currentAngle + diff;
-}
-export function deselectDraftHero(pIdx) {
-    const selectEl = document.getElementById(`select-${pIdx}`);
-    const confirmBtn = document.getElementById(`confirm-draft-btn-${pIdx}`);
-    const bgImgEl = document.getElementById(`bg-img-${pIdx}`);
-    const wrappers = document.querySelectorAll(
-        `[id^="draft-card-wrapper-${pIdx}-"]`,
-    );
-
-    if (selectEl) selectEl.value = "";
-
-    wrappers.forEach((w) => {
-        w.classList.remove("selected");
-    });
-
-    if (bgImgEl) {
-        bgImgEl.style.opacity = "0";
-    }
-
-    if (confirmBtn) {
-        confirmBtn.disabled = true;
-    }
-
-    stateStore.get("selectedDraftHeroes")[pIdx] = null;
-}
-export function selectDraftHero(pIdx, heroName, heroSlug, heroId, cardAngle, cardIdx) {
     const selectedDraftHeroes = stateStore.get("selectedDraftHeroes");
-    const isAlreadySelected =
-        selectedDraftHeroes[pIdx] && selectedDraftHeroes[pIdx].id === heroId;
+    const isAlreadySelected = selectedDraftHeroes[pIdx]?.id === hero.id;
 
     if (isAlreadySelected) {
-        deselectDraftHero(pIdx);
+        selectedDraftHeroes[pIdx] = null;
+        rollView.markDraftCandidateSelected(pIdx, null);
+        rollView.updateDraftConfirmButton(pIdx, null);
         return;
     }
 
-    const selectEl = document.getElementById(`select-${pIdx}`);
-    const confirmBtn = document.getElementById(`confirm-draft-btn-${pIdx}`);
-    const bgImgEl = document.getElementById(`bg-img-${pIdx}`);
-    const wrappers = document.querySelectorAll(
-        `[id^="draft-card-wrapper-${pIdx}-"]`,
-    );
-
-    if (selectEl) selectEl.value = heroName;
-
-    stateStore.get("draftWheelFrontCardIndices")[pIdx] = cardIdx;
-
-    const draftWheelAngles = stateStore.get("draftWheelAngles");
-    if (draftWheelAngles[pIdx] === undefined) {
-        draftWheelAngles[pIdx] = 0;
-    }
-    const currentAngle = draftWheelAngles[pIdx];
-    const shortestAngle = getShortestRotationAngle(currentAngle, cardAngle);
-    draftWheelAngles[pIdx] = shortestAngle;
-
-    const wheel = document.getElementById(`draft-wheel-${pIdx}`);
-    if (wheel) {
-        wheel.style.transform = `rotateY(${-shortestAngle}deg)`;
-    }
-
-    wrappers.forEach((w, idx) => {
-        if (idx === cardIdx) {
-            w.classList.add("selected");
-        } else {
-            w.classList.remove("selected");
-        }
-    });
-
-    if (bgImgEl) {
-        bgImgEl.src = getImgUrl(heroSlug);
-        bgImgEl.style.opacity = "0.25";
-    }
-
-    if (confirmBtn) {
-        confirmBtn.disabled = false;
-    }
-
-    const characters = stateStore.get("characters");
-    selectedDraftHeroes[pIdx] = characters.find((c) => c.id === heroId);
-}
-export function collapsePlayerRowToResolved(pIdx, finalHero) {
-    rollView.collapsePlayerRowToResolved(pIdx, finalHero);
+    selectedDraftHeroes[pIdx] = hero;
+    rollView.markDraftCandidateSelected(pIdx, hero.id);
+    rollView.updateDraftConfirmButton(pIdx, hero);
 }
 export function confirmDraftPick(pIdx) {
     const selectedDraftHeroes = stateStore.get("selectedDraftHeroes");
     const chosenHero = selectedDraftHeroes[pIdx];
     if (!chosenHero) return;
 
-    collapsePlayerRowToResolved(pIdx, chosenHero);
-
     stateStore.set("activeDraftStep", stateStore.get("activeDraftStep") + 1);
     startDraftStep();
-}
-export function renderPlayerRowWaiting(pIdx, activePlayerName) {
-    rollView.renderPlayerRowWaiting(pIdx, activePlayerName);
-}
-export function renderPlayerRowDraftingActive(pIdx) {
-    rollView.renderPlayerRowDraftingActive(pIdx);
 }

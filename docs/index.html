@@ -7,7 +7,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Cinzel:wght@700;900&display=swap" rel="stylesheet" />
         <title>Dice Throne</title>
 
         <script>
@@ -15,71 +15,185 @@
                 window.location.hostname === "sygec.github.io" ||
                 window.location.hostname === "dicethrone-prod.sygec.workers.dev";
         </script>
-      <script type="module" crossorigin src="/assets/index-DVPQJVCi.js"></script>
-      <link rel="stylesheet" crossorigin href="/assets/index-BtGnbLEr.css">
+      <script type="module" crossorigin src="/assets/index-oxAy-uHc.js"></script>
+      <link rel="stylesheet" crossorigin href="/assets/index-Bya1ckQP.css">
     </head>
 
     <body>
         <!-- Preloader component -->
         <!-- Component: Dice Roll preloader animation screen -->
 <div id="preloader">
-    <div class="dice-container">
-        <div class="dice">
-            <div class="dice-face front">1</div>
-            <div class="dice-face back">6</div>
-            <div class="dice-face right">3</div>
-            <div class="dice-face left">4</div>
-            <div class="dice-face top">5</div>
-            <div class="dice-face bottom">2</div>
+    <div class="preloader-banner">
+        <img src="images/banner.png" alt="Dice Throne Logo" class="banner-image" />
+    </div>
+    <div class="preloader-dice-section">
+        <div class="dice-container">
+            <div class="dice">
+                <div class="dice-face front">1</div>
+                <div class="dice-face back">6</div>
+                <div class="dice-face right">3</div>
+                <div class="dice-face left">4</div>
+                <div class="dice-face top">5</div>
+                <div class="dice-face bottom">2</div>
+            </div>
         </div>
     </div>
 </div> <!-- /#preloader -->
 
 
-        <main class="content">
-            <img src="images/banner.png" alt="Dice Throne Logo" class="banner-image" />
-            <div class="small-text">
-                v<button id="version-number" aria-label="View changelog" class="btn-link">...</button>
-                |
-                <button id="auth-btn" class="btn-link">Login</button>
-            </div>
+        <!-- Fixed App Header -->
+        <!-- Component: Fixed App Header (section icon/title + account avatar) -->
+<header class="app-header" id="app-header">
+    <div class="app-header-brand">
+        <svg class="app-header-crest" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 20h20l-1.5-8-5 3.5-3.5-7-3.5 7-5-3.5L2 20z"></path>
+            <circle cx="2" cy="10" r="1.4" fill="currentColor" stroke="none"></circle>
+            <circle cx="12" cy="6" r="1.4" fill="currentColor" stroke="none"></circle>
+            <circle cx="22" cy="10" r="1.4" fill="currentColor" stroke="none"></circle>
+        </svg>
+        <span class="app-header-brand-text">Companion</span>
+    </div>
+    <span class="app-header-title" id="header-section-title">Randomizer</span>
+    <button
+        type="button"
+        class="app-header-avatar"
+        id="header-avatar-btn"
+        aria-label="Account">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+    </button>
+</header>
 
+
+        <main class="content">
             <!-- Page Sections -->
             <!-- ========================================== -->
 <!-- SECTION: Roll Randomizer                   -->
 <!-- ========================================== -->
 <section id="rollSection">
-    <!-- Player Selection Toggles -->
+    <!-- Randomizer Setup: Step 1 (Players & Invitees), Step 2 (Game Type) -->
+    <div class="randomizer-setup" id="randomizer-setup">
+        <h2 class="roll-screen-title">ROLL &middot; OPTIONS</h2>
+
+        <div class="setup-step" id="setup-step-players">
+            <div class="step-header">
+                <span class="step-badge">1</span>
+                <span class="step-title">Who's Playing</span>
+            </div>
+            <div class="step-subtitle">Tracked Players</div>
+            <div
+                class="player-toggle-zone-top"
+                id="player-toggle-zone-top"></div>
+            <div class="step-subtitle">Invitees</div>
+            <div
+                class="invitee-zone"
+                id="invitee-zone"></div>
+            <p class="setup-hint">
+                <svg class="setup-hint-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span>Invitees get a random hero — no weighting, no history saved.</span>
+            </p>
+        </div>
+
+        <div
+            class="setup-step"
+            id="setup-step-gametype">
+            <div class="step-header">
+                <span class="step-badge">2</span>
+                <span class="step-title">Choose a Game Type</span>
+            </div>
+            <div
+                class="game-type-grid"
+                id="game-type-grid"></div>
+            <p
+                class="setup-hint"
+                id="game-type-hint"
+                style="display: none"></p>
+        </div>
+
+        <div
+            class="setup-step teams-subsection"
+            id="setup-step-teams"
+            style="display: none">
+            <div class="step-subtitle teams-label">Teams</div>
+            <div class="step-subtitle">Tap a player's arrow to swap teams</div>
+            <div
+                class="teams-grid"
+                id="teams-grid"></div>
+            <button
+                type="button"
+                class="randomize-teams-btn"
+                id="randomize-teams-btn"
+                data-action="randomize-teams">
+                Randomize Teams
+            </button>
+            <p
+                class="team-swap-question"
+                id="team-swap-question"
+                style="display: none">
+                Swap with which player?
+            </p>
+        </div>
+
+        <div
+            class="setup-step"
+            id="setup-step-rollmode">
+            <div class="step-header">
+                <span class="step-badge">3</span>
+                <span class="step-title">Choose a Roll Mode</span>
+            </div>
+            <div
+                class="roll-mode-grid"
+                id="roll-mode-grid"></div>
+            <div
+                class="draft-count-section"
+                id="draft-count-section"
+                style="display: none">
+                <div class="draft-count-header">
+                    <span class="draft-count-title">Options per player</span>
+                    <span class="draft-count-subtitle">How many heroes to pick from</span>
+                </div>
+                <div
+                    class="draft-count-grid"
+                    id="draft-count-grid"></div>
+            </div>
+        </div>
+
+        <div
+            class="setup-step"
+            id="setup-step-roll">
+            <div class="step-header">
+                <span class="step-badge">4</span>
+                <span class="step-title">Roll</span>
+            </div>
+            <button
+                type="button"
+                class="roll-final-btn"
+                id="roll-final-btn"
+                data-action="trigger-roll"></button>
+        </div>
+    </div>
+
     <div
-        class="player-toggle-zone-top"
-        id="player-toggle-zone-top"></div>
+        class="team-swap-scrim"
+        id="team-swap-scrim"
+        style="display: none"></div>
+
+    <h2
+        class="roll-screen-title"
+        id="results-title"
+        style="display: none"></h2>
+
+    <!-- Randomizer Results Area -->
+    <section id="results" class="results" aria-live="polite"></section>
 
     <!-- Action Controls Wrapper -->
     <div class="roll-controls-wrapper">
-        <div id="rollBtnContainer" class="roll-btn-container">
-            <button
-                id="rollBtn"
-                type="button">
-                SINGLE ROLL
-            </button>
-            <button
-                id="rollDraftBtn"
-                type="button">
-                DRAFT ROLL
-            </button>
-            <button
-                id="rollSettingsBtn"
-                type="button"
-                class="roll-settings-btn"
-                aria-label="Roll settings"
-                style="display: none;">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                </svg>
-                <span id="roll-settings-badge" class="settings-badge" style="display: none;"></span>
-            </button>
-        </div>
         <div id="action-buttons" style="display: none; gap: 10px">
             <button
                 id="cancelBtn"
@@ -97,13 +211,6 @@
             </button>
         </div>
     </div>
-
-    <!-- Randomizer Results Area -->
-    <section id="results" class="results" aria-live="polite">
-        <p class="picker-hint">
-            Select players and roll.
-        </p>
-    </section>
 
     <!-- Validation Error Message -->
     <div id="error-msg" role="alert">
@@ -532,30 +639,38 @@
 <nav class="bottom-nav">
     <a
         href="#randomizer"
-        class="nav-item"
+        class="nav-item active"
         data-section="roll">
-        <span class="icon">🎲</span>
+        <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor"><path d="M335.5-264.62q14.5-14.62 14.5-35.5 0-20.88-14.62-35.38-14.62-14.5-35.5-14.5-20.88 0-35.38 14.62-14.5 14.62-14.5 35.5 0 20.88 14.62 35.38 14.62 14.5 35.5 14.5 20.88 0 35.38-14.62Zm0-360q14.5-14.62 14.5-35.5 0-20.88-14.62-35.38-14.62-14.5-35.5-14.5-20.88 0-35.38 14.62-14.5 14.62-14.5 35.5 0 20.88 14.62 35.38 14.62 14.5 35.5 14.5 20.88 0 35.38-14.62Zm180 180q14.5-14.62 14.5-35.5 0-20.88-14.62-35.38-14.62-14.5-35.5-14.5-20.88 0-35.38 14.62-14.5 14.62-14.5 35.5 0 20.88 14.62 35.38 14.62 14.5 35.5 14.5 20.88 0 35.38-14.62Zm180 180q14.5-14.62 14.5-35.5 0-20.88-14.62-35.38-14.62-14.5-35.5-14.5-20.88 0-35.38 14.62-14.5 14.62-14.5 35.5 0 20.88 14.62 35.38 14.62 14.5 35.5 14.5 20.88 0 35.38-14.62Zm0-360q14.5-14.62 14.5-35.5 0-20.88-14.62-35.38-14.62-14.5-35.5-14.5-20.88 0-35.38 14.62-14.5 14.62-14.5 35.5 0 20.88 14.62 35.38 14.62 14.5 35.5 14.5 20.88 0 35.38-14.62ZM180-120q-24 0-42-18t-18-42v-600q0-24 18-42t42-18h600q24 0 42 18t18 42v600q0 24-18 42t-42 18H180Z"/></svg>
+        </span>
         <span class="label">Randomizer</span>
     </a>
     <a
         href="#database"
         class="nav-item"
         data-section="database">
-        <span class="icon">🛡️</span>
+        <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor"><path d="M577-490.17q40-40.17 40-97T576.83-684q-40.17-40-97-40T383-683.83q-40 40.17-40 97T383.17-490q40.17 40 97 40T577-490.17ZM480-81q-148-38-234-162.54Q160-368.08 160-523v-238l320-120 320 120v238q0 154.92-86 279.46Q628-119 480-81Zm0-62q60-20 108-59.5t83-90.5q-44.67-21.02-92.97-32.01Q529.72-336 479.86-336t-98.07 10.99Q333.58-314.02 289-293q35 51 83 90.5T480-143Z"/></svg>
+        </span>
         <span class="label">Heroes</span>
     </a>
     <a
         href="#history"
         class="nav-item"
         data-section="history">
-        <span class="icon">📜</span>
+        <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor"><path d="M280-420v-60h400v60H280Zm0 180v-60h279v60H280ZM180-80q-24 0-42-18t-18-42v-620q0-24 18-42t42-18h65v-60h65v60h340v-60h65v60h65q24 0 42 18t18 42v620q0 24-18 42t-42 18H180Zm0-60h600v-430H180v430Z"/></svg>
+        </span>
         <span class="label">History</span>
     </a>
     <a
         href="#collection"
         class="nav-item"
         data-section="collection">
-        <span class="icon">📦</span>
+        <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor"><path d="M450-85v-378L120-654v344q0 16 8 30t22 22L450-85Zm60 0 300-173q14-8 22-22t8-30v-345L510-463v378Zm164-542 133-77-297-171q-14-8-30-8t-30 8l-104 60 328 188ZM480-514l133-78-328-188-132 77 327 189Z"/></svg>
+        </span>
         <span class="label">Collection</span>
     </a>
     <!-- Conditional Admin Icon -->
@@ -563,7 +678,9 @@
         href="#admin"
         class="nav-item admin-only"
         data-section="admin">
-        <span class="icon">⚙️</span>
+        <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor"><path d="m388-80-20-126q-19-7-40-19t-37-25l-118 54-93-164 108-79q-2-9-2.5-20.5T185-480q0-9 .5-20.5T188-521L80-600l93-164 118 54q16-13 37-25t40-18l20-127h184l20 126q19 7 40.5 18.5T669-710l118-54 93 164-108 77q2 10 2.5 21.5t.5 21.5q0 10-.5 21t-2.5 21l108 78-93 164-118-54q-16 13-36.5 25.5T592-206L572-80H388Zm92-270q54 0 92-38t38-92q0-54-38-92t-92-38q-54 0-92 38t-38 92q0 54 38 92t92 38Z"/></svg>
+        </span>
         <span class="label">Admin</span>
     </a>
 </nav>
@@ -684,6 +801,20 @@
                 Forgot Password?
             </button>
         </form>
+    </div>
+</div>
+
+        <!-- Account Modal: login/logout + version/changelog -->
+<div id="account-modal" class="modal">
+    <div class="modal-content account-modal-content">
+        <span class="close-button" id="account-close">&times;</span>
+        <h2>Account</h2>
+        <div class="account-modal-body">
+            <button id="auth-btn" class="btn-save">Login</button>
+        </div>
+        <p class="account-version-row small-text">
+            v<button id="version-number" aria-label="View changelog" class="btn-link">...</button>
+        </p>
     </div>
 </div>
 

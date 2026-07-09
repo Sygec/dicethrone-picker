@@ -24,6 +24,7 @@ import {
 } from './admin.js';
 import { updateActiveFilterBadge, updateActiveFilterChips, setSort } from './filters.js';
 import { updateRollSettingsBadge } from './randomizer.js';
+import { renderRandomizerSetup } from './views/randomizerSetupView.js';
 import { setupAllEventBindings } from './eventBindings.js';
 
 
@@ -38,7 +39,7 @@ import { setupAllEventBindings } from './eventBindings.js';
 export async function init() {
     stateStore.set("draftModeEnabled", localStorage.getItem("draftModeEnabled") === "true");
     let dCount = parseInt(localStorage.getItem("draftCount") || "3", 10);
-    if (dCount !== 2 && dCount !== 3) {
+    if (![2, 3, 4, 5].includes(dCount)) {
         dCount = 3;
     }
     stateStore.set("draftCount", dCount);
@@ -92,6 +93,7 @@ export async function init() {
         stateStore.set("loggedInPlayerIndex", loggedInIdx);
         updateAuthUI();
         renderPlayerToggles();
+        renderRandomizerSetup();
     }
 
     const { data, error } = await apiService.getHeroes();
@@ -189,8 +191,11 @@ export async function initializeApp() {
                 versionLabel.innerText = latestEntry.version;
             }
 
-            if (localStorage.getItem("lastSeenVersion") !== latestEntry.version) {
-                showWhatsNew(latestEntry);
+            const lastSeenVersion = localStorage.getItem("lastSeenVersion");
+            if (lastSeenVersion !== latestEntry.version) {
+                const lastSeenIndex = changelog.findIndex((entry) => entry.version === lastSeenVersion);
+                const newEntries = lastSeenIndex !== -1 ? changelog.slice(0, lastSeenIndex) : [latestEntry];
+                showWhatsNew(newEntries);
             }
         }
 

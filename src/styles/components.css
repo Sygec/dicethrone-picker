@@ -16,6 +16,8 @@
         filter 1.2s cubic-bezier(0.16, 1, 0.3, 1);
     /* Prevent content from being hidden behind the bottom nav bar */
     padding-bottom: calc(66px + env(safe-area-inset-bottom));
+    /* Prevent content from being hidden behind the fixed app header */
+    padding-top: calc(52px + env(safe-area-inset-top) + 16px);
 }
 
 body.loaded .content {
@@ -31,6 +33,10 @@ h3,
     font-family: "Outfit", sans-serif;
     letter-spacing: 0.5px;
     font-weight: 700;
+}
+
+.hero-name {
+    font-size: 1.1rem;
 }
 
 .hero-name-link {
@@ -114,15 +120,10 @@ h1 {
 }
 
 .player-toggle-zone-top {
-    background: var(--card-bg);
-    padding: 15px;
-    border-radius: 12px;
     margin-bottom: 15px;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow);
 }
 
 .player-toggle-zone {
@@ -223,19 +224,28 @@ h1 {
     box-shadow: var(--glass-shadow);
 }
 
-.player-row {
+.results:empty {
+    display: none;
+}
+
+/* Shared shell for hero cards (roll results, draft candidates) */
+.hero-card {
+    box-sizing: border-box;
+    position: relative;
     display: flex;
     align-items: center;
     background: var(--card-bg);
     border: 1.5px solid rgba(var(--white-rgb), 0.08);
     border-radius: 14px;
     padding: 12px 16px;
+    overflow: hidden;
+    box-shadow: var(--glass-shadow);
+}
+
+.player-row {
     gap: 16px;
     margin-bottom: 12px;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    position: relative;
-    overflow: hidden;
-    box-shadow: var(--glass-shadow);
 }
 
 @media (hover: hover) {
@@ -354,38 +364,55 @@ h1 {
     font-weight: 300;
 }
 
-.hero-select-container {
+.hero-footer-row {
     display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    width: 45px;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
 }
 
-/* Edit Icon Button styles */
+.hero-select-container {
+    /* Now just holds the hidden char-select input; the visible button lives in .hero-footer-row. */
+    display: none;
+}
+
+.player-row-dice-bar {
+    margin-left: auto;
+    margin-right: 0;
+    flex-shrink: 0;
+}
+
+.complexity-die-solo {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    opacity: 1;
+}
+
+/* Edit ("Change hero") badge button styles */
 .edit-icon-btn {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    background: rgba(var(--white-rgb), 0.06);
-    border: 1px solid rgba(var(--white-rgb), 0.12);
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
     color: rgba(var(--white-rgb), 0.85);
+    background: transparent;
+    border: 1px solid rgba(var(--white-rgb), 0.85);
+    border-radius: 4px;
+    padding: 2px 6px;
     cursor: pointer;
+    flex-shrink: 0;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    padding: 0;
 }
 
 @media (hover: hover) {
     .edit-icon-btn:hover {
         background: rgba(var(--white-rgb), 0.12);
-        border-color: var(--accent);
-        color: var(--accent);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(255, 204, 0, 0.2);
+        color: var(--text);
+        transform: translateY(-1px);
     }
 }
 
@@ -507,13 +534,6 @@ h1 {
         flex: 1;
         min-width: 0;
     }
-
-    .hero-select-container {
-        width: 40px;
-        flex-shrink: 0;
-        display: flex;
-        justify-content: flex-end;
-    }
 }
 
 /* Scramble & Staggered Reveal Animations */
@@ -624,29 +644,50 @@ h1 {
     border: 1px solid var(--danger);
 }
 
-#rollBtn,
-#rollDraftBtn {
-    background: var(--accent);
+.roll-final-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
     width: 100%;
     padding: 15px;
     font-size: 1.1rem;
+    font-family: "Outfit", sans-serif;
     border: none;
     border-radius: 8px;
-    color: white;
+    color: var(--text);
     font-weight: bold;
+    letter-spacing: 0.3px;
     cursor: pointer;
     position: relative;
     overflow: hidden;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     box-shadow:
-        0 4px 15px var(--shadow-base),
+        0 4px 15px var(--accent-glow),
         0 0 0 1px rgba(var(--white-rgb), 0.05);
     animation: breathingGlow 3s infinite ease-in-out;
 }
 
+.roll-final-btn:disabled {
+    background: var(--gray-400);
+    color: var(--gray-200);
+    cursor: not-allowed;
+    box-shadow: none;
+    animation: none;
+    font-size: 0.9rem;
+}
+
+.roll-final-btn:disabled::after {
+    display: none;
+}
+
 .btn-confirm {
     background: var(--success);
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     padding: 15px;
     border: 3px solid rgba(var(--white-rgb), 0.05);
     border-radius: 8px;
@@ -754,8 +795,7 @@ main > section:not(.hidden) {
 }
 
 /* 6. Touch-active pressed states (Tactile feedback) */
-#rollBtn:active,
-#rollDraftBtn:active,
+.roll-final-btn:active,
 .btn-confirm:active,
 .btn-save:active {
     transform: translateY(1px) scale(0.95);
@@ -764,8 +804,7 @@ main > section:not(.hidden) {
     transition: all 0.05s ease;
 }
 
-#rollBtn::after,
-#rollDraftBtn::after,
+.roll-final-btn::after,
 .btn-confirm::after,
 .btn-save::after {
     content: "";

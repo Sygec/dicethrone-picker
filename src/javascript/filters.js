@@ -309,8 +309,6 @@ export function resetFilters() {
         stateStore.set("stagedGamesUseHistorical", true);
         renderDrawerBody();
     } else if (currentDrawerMode === "roll-settings") {
-        stateStore.set("stagedDraftModeEnabled", false);
-        stateStore.set("stagedDraftCount", 3);
         stateStore.set("stagedBannedHeroIds", new Set());
         stateStore.set("stagedBanSearchQuery", "");
         renderDrawerBody();
@@ -341,12 +339,8 @@ export function applyAndCloseDrawer() {
         closeDrawer(null, true);
         renderGamesList();
     } else if (currentDrawerMode === "roll-settings") {
-        stateStore.set("draftModeEnabled", stateStore.get("stagedDraftModeEnabled"));
-        stateStore.set("draftCount", stateStore.get("stagedDraftCount"));
         stateStore.set("bannedHeroIds", new Set(stateStore.get("stagedBannedHeroIds")));
 
-        localStorage.setItem("draftModeEnabled", stateStore.get("draftModeEnabled"));
-        localStorage.setItem("draftCount", stateStore.get("draftCount"));
         localStorage.setItem(
             "bannedHeroIds",
             JSON.stringify(Array.from(stateStore.get("bannedHeroIds"))),

@@ -27,6 +27,11 @@
     }
 }
 
+.game-history-card.in-progress {
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(233, 69, 96, 0.35), var(--glass-shadow);
+}
+
 /* 22% opacity background artwork of the winning character (more visible) */
 .game-card-bg-img {
     position: absolute;
@@ -55,9 +60,11 @@
 /* Accordion Header */
 .game-card-header {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
-    padding: 14px 20px;
+    row-gap: 8px;
+    padding: 14px 16px;
     cursor: pointer;
     user-select: none;
     position: relative;
@@ -75,7 +82,35 @@
 .game-card-title-group {
     display: flex;
     flex-direction: column;
+    flex-shrink: 0;
     gap: 3px;
+}
+
+.game-card-title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.game-card-type-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text);
+    opacity: 0.85;
+    flex-shrink: 0;
+}
+
+.game-card-type-icon svg {
+    width: 22px;
+    height: 22px;
+    display: block;
+}
+
+.game-card-date-time {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
 }
 
 .game-card-date {
@@ -83,6 +118,15 @@
     font-weight: 700;
     color: var(--text);
     letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.game-card-time {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text);
+    opacity: 0.6;
+    white-space: nowrap;
 }
 
 .game-card-status-badge {
@@ -103,7 +147,6 @@
     align-items: center;
     gap: 12px;
     margin-left: auto;
-    margin-right: 15px;
 }
 
 .mini-portrait-strip {
@@ -225,12 +268,42 @@
     }
 }
 
-/* Responsive Player Grid (holds Hearthstone cards in a row) */
+/* Responsive Player Grid (holds Hearthstone cards). Plates are fixed-width (see
+   .player-plate), so this wraps onto additional rows rather than shrinking them. */
 .player-responsive-grid {
     display: flex;
     justify-content: center;
-    align-items: center;
-    gap: 6px;
+    align-items: flex-start;
+    gap: 10px 8px;
     width: 100%;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+}
+
+/* One team's block (label + its own wrapping row of plates), for Teams-type games.
+   Each team is a separate block so its members never split across a row boundary
+   shared with the other team. */
+.team-block + .team-block {
+    margin-top: 16px;
+}
+
+.team-block-label {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--accent);
+    opacity: 0.85;
+    margin-bottom: 8px;
+}
+
+/* Full game type name shown at the top of the expanded body */
+.game-card-type-badge {
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: rgba(var(--white-rgb), 0.6);
+    text-transform: uppercase;
+    margin-bottom: 12px;
 }
