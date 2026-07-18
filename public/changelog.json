@@ -1,5 +1,12 @@
 [
     {
+        "version": "2.3.4.20260717",
+        "changes": [
+            "Roll Randomizer/History: Update to KotH ico",
+            "Navigation: Add badge to History tab when there are in-progress games"
+        ]
+    },
+    {
         "version": "2.3.3.20260708",
         "changes": [
             "Roll Randomizer: Invitees are now saved to Game History and can be selected as the winner",
