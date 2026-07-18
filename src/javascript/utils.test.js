@@ -12,6 +12,8 @@ import {
     normalizeColorValue,
     parseDateString,
     buildGameResultsPayload,
+    isGameAwaitingResult,
+    countGamesAwaitingResult,
     PICKED_HERO_WEIGHT,
     DEFAULT_HERO_WEIGHT,
     WEIGHT_INCREMENT,
@@ -202,5 +204,38 @@ describe('buildGameResultsPayload', () => {
         );
 
         expect(gameParticipants[0].team_id).toBe('team-a');
+    });
+});
+
+describe('isGameAwaitingResult', () => {
+    it('is true when no player has a winner/loser result yet', () => {
+        const game = { game_players: [{ is_winner: null }, { is_winner: null }] };
+        expect(isGameAwaitingResult(game)).toBe(true);
+    });
+
+    it('is false once a winner has been recorded', () => {
+        const game = { game_players: [{ is_winner: true }, { is_winner: false }] };
+        expect(isGameAwaitingResult(game)).toBe(false);
+    });
+
+    it('is false for a draw (all players explicitly marked non-winners)', () => {
+        const game = { game_players: [{ is_winner: false }, { is_winner: false }] };
+        expect(isGameAwaitingResult(game)).toBe(false);
+    });
+});
+
+describe('countGamesAwaitingResult', () => {
+    it('counts only non-historical games with no result yet', () => {
+        const games = [
+            { is_historical: false, game_players: [{ is_winner: null }] },
+            { is_historical: false, game_players: [{ is_winner: true }] },
+            { is_historical: true, game_players: [{ is_winner: null }] },
+        ];
+        expect(countGamesAwaitingResult(games)).toBe(1);
+    });
+
+    it('returns 0 for an empty or missing games list', () => {
+        expect(countGamesAwaitingResult([])).toBe(0);
+        expect(countGamesAwaitingResult(undefined)).toBe(0);
     });
 });

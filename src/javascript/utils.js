@@ -178,6 +178,27 @@ export function buildGameResultsPayload(characters, activePicks, teamIdByPlayerI
     return { gameParticipants, statsUpdates };
 }
 /**
+ * Determines whether a logged game still has no winner recorded and isn't a draw.
+ * @param {Object} game - Game record with a `game_players` array of `{is_winner}`.
+ * @returns {boolean} True if the game is in progress and awaiting a result.
+ */
+export function isGameAwaitingResult(game) {
+    const players = game.game_players || [];
+    const winners = players.filter((p) => p.is_winner === true);
+    if (winners.length > 0) return false;
+    const explicitLosers = players.filter((p) => p.is_winner === false);
+    const isDraw = explicitLosers.length > 0 && explicitLosers.length === players.length;
+    return !isDraw;
+}
+/**
+ * Counts non-historical games that are logged but still awaiting a result.
+ * @param {Object[]} games - Game records.
+ * @returns {number} Count of games in progress.
+ */
+export function countGamesAwaitingResult(games) {
+    return (games || []).filter((g) => !g.is_historical && isGameAwaitingResult(g)).length;
+}
+/**
  * Formats the roll probability of a character as a user-friendly percentage string.
  * @function getHeroProbabilityText
  * @param {Object} charData - The hero object.

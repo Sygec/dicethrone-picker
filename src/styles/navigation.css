@@ -147,6 +147,7 @@ body.loaded .bottom-nav {
 }
 
 .icon {
+    position: relative;
     display: flex;
     color: var(--gold-metallic);
     margin-bottom: 2px;
@@ -155,6 +156,23 @@ body.loaded .bottom-nav {
 .icon svg {
     width: 22px;
     height: 22px;
+}
+
+.nav-badge {
+    position: absolute;
+    top: -4px;
+    right: -8px;
+    min-width: 15px;
+    height: 15px;
+    padding: 0 3px;
+    border-radius: 999px;
+    background-color: var(--danger-hover);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 15px;
+    text-align: center;
+    box-sizing: border-box;
 }
 
 /* 4. Desktop Adaptation */

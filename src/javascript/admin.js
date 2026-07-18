@@ -479,6 +479,9 @@ export async function deleteGroup(groupId) {
 export function renderGamesList() {
     adminView.renderGamesList();
 }
+export function updateHistoryNavBadge() {
+    adminView.updateHistoryNavBadge();
+}
 export function handleGamesSearchInput() {
     const searchInput = document.getElementById("games-search");
     const clearBtn = document.getElementById("clear-games-search");
