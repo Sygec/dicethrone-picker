@@ -13,7 +13,8 @@ import {
     getHeroProbabilityText,
     isAdmin,
     isUser,
-    MAX_WEIGHTED_PLAYERS
+    MAX_WEIGHTED_PLAYERS,
+    countGamesAwaitingResult
 } from '../utils.js';
 import { isProd } from '../config.js';
 import { updateSegmentedHighlights } from './filterView.js';
@@ -81,7 +82,8 @@ const getElements = () => {
             winnerContainer: document.getElementById("winner-selection-container"),
             confirmWinnerBtn: document.getElementById("confirm-winner-btn"),
             groupForm: document.getElementById("groupForm"),
-            addGroupBtn: document.getElementById("addGroupBtn")
+            addGroupBtn: document.getElementById("addGroupBtn"),
+            historyNavBadge: document.getElementById("history-nav-badge")
         };
     }
     return elementsCache;
@@ -198,6 +200,25 @@ function updateHeaderSection(sectionName) {
 
     const titleEl = document.getElementById("header-section-title");
     if (titleEl) titleEl.innerText = meta.title;
+}
+
+/**
+ * Updates the notification circle on the History nav icon with the count of
+ * non-historical games that are logged but still awaiting a result. Hides the
+ * badge entirely when the count is zero.
+ */
+export function updateHistoryNavBadge() {
+    const el = getElements();
+    if (!el.historyNavBadge) return;
+
+    const count = countGamesAwaitingResult(stateStore.get("games"));
+
+    if (count > 0) {
+        el.historyNavBadge.innerText = count > 99 ? "99+" : String(count);
+        el.historyNavBadge.classList.remove("hidden");
+    } else {
+        el.historyNavBadge.classList.add("hidden");
+    }
 }
 
 /**

@@ -16,8 +16,9 @@ import {
     renderHeroesList, 
     renderPlayersList, 
     renderUsersList, 
-    renderCollectionsList, 
-    renderCollectionView, 
+    renderCollectionsList,
+    renderCollectionView,
+    updateHistoryNavBadge,
     showWhatsNew,
     openChangelog,
     closeChangelog
@@ -146,6 +147,7 @@ export async function init() {
         }));
         stateStore.set("games", games);
     }
+    updateHistoryNavBadge();
 
     renderAdminBuildInfo();
     renderGroupsList();
