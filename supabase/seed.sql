@@ -27,7 +27,14 @@ insert into auth.users (
     created_at,
     updated_at,
     raw_app_meta_data,
-    raw_user_meta_data
+    raw_user_meta_data,
+    -- These four are nullable with no default, but GoTrue scans them into non-nullable Go
+    -- strings. Leaving them NULL makes every sign-in fail with "Database error querying
+    -- schema", so they must be seeded as empty strings.
+    confirmation_token,
+    recovery_token,
+    email_change_token_new,
+    email_change
 ) values (
     '00000000-0000-0000-0000-000000000000',
     '00000000-0000-0000-0000-000000000001',
@@ -39,7 +46,11 @@ insert into auth.users (
     now(),
     now(),
     '{"provider": "email", "providers": ["email"], "role": "admin"}',
-    '{}'
+    '{}',
+    '',
+    '',
+    '',
+    ''
 );
 
 -- GoTrue requires a matching identity row before email/password sign-in will work.
