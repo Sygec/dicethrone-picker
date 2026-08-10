@@ -19,7 +19,6 @@ const state = {
     cachedChangelog: null,
     activeLevels: new Set([1, 2, 3, 4, 5, 6]),
     activeGroups: new Set(),
-    selectedGamePlayerIndex: null,
     expandedGameIds: new Set(),
     currentSort: "name",
     sortAsc: true,
@@ -50,11 +49,21 @@ const state = {
     stagedOwnershipFilter: "owned",
 
     // Games History Filters State
-    gamesWinnerOnly: false,
+    // Player buckets are 0..3 for tracked players, MAX_WEIGHTED_PLAYERS for the Invitee bucket.
+    activeGamesPlayers: new Set(),
+    activeGamesResults: new Set(), // 'win' | 'loss' | 'draw' | 'pending'
+    activeGamesTypes: new Set(), // 'duel' | '2v2' | '3v3' | 'ffa' | 'koth' | 'legacy'
+    activeGamesDateRange: "all", // 'all' | '30d' | '90d' | 'year'
     gamesUseHistorical: true,
-    stagedSelectedGamePlayerIndex: null,
-    stagedGamesWinnerOnly: false,
+
+    stagedGamesPlayers: new Set(),
+    stagedGamesResults: new Set(),
+    stagedGamesTypes: new Set(),
+    stagedGamesDateRange: "all",
     stagedGamesUseHistorical: true,
+
+    gamesSort: "date",
+    gamesSortAsc: false,
     currentUser: null,
     loggedInPlayerIndex: -1,
     isRollActive: false,

@@ -15,9 +15,12 @@ import {
     parseDateString,
     MAX_WEIGHTED_PLAYERS,
     getDaysAgoClean,
-    getRecencyDot
+    getRecencyDot,
+    getPlayerBucket,
+    GAME_TYPE_FULL_LABEL,
+    LEGACY_GAME_TYPE
 } from '../utils.js';
-import { getFilterDrawerMatchingCount } from '../filters.js';
+import { getFilterDrawerMatchingCount, getGamesFilterDrawerMatchingCount } from '../filters.js';
 import { updateHeroStatsFromHistory } from '../admin.js';
 import { renderDrawerBanList } from './rollView.js';
 
@@ -46,6 +49,20 @@ const getElements = () => {
             sortTriggerBtn: document.getElementById("btn-trigger-sort"),
             sortDropdownMenu: document.getElementById("sort-dropdown-menu"),
             activeFiltersContainer: document.getElementById("active-filters-container"),
+            gamesFilterDrawer: document.getElementById("filter-drawer-games"),
+            gamesPlayersContainer: document.getElementById("games-filter-options-players"),
+            gamesCountLabel: document.getElementById("games-filter-drawer-count"),
+            gamesDataHistorySection: document.getElementById("games-data-history-section"),
+            gamesDataHistoryDivider: document.getElementById("games-data-history-divider"),
+            gamesResultHint: document.getElementById("games-result-hint"),
+            gamesTitleDate: document.getElementById("games-title-date"),
+            gamesTitleResult: document.getElementById("games-title-result"),
+            gamesTitlePlayers: document.getElementById("games-title-players"),
+            gamesTitleTypes: document.getElementById("games-title-types"),
+            gamesSortTriggerBtn: document.getElementById("btn-trigger-games-sort"),
+            gamesSortDropdownMenu: document.getElementById("games-sort-dropdown-menu"),
+            gamesActiveFiltersContainer: document.getElementById("games-active-filters-container"),
+            gamesSearchInput: document.getElementById("games-search"),
             heroContainer: document.getElementById("heroContainer"),
             countStatsLabel: document.getElementById("count-stats"),
             heroSearchInput: document.getElementById("hero-search"),
@@ -113,18 +130,46 @@ export function openColumnsDrawer() {
 }
 
 /**
- * Opens the Game History filter settings drawer.
+ * Opens the Game History Filters drawer.
  */
-export function openHistoryFilterDrawer() {
+export function openGamesFilterDrawer() {
+    renderGamesFilterDrawerDynamicSections();
+    updateGamesDateRangePillsUI();
+    updateGamesFilterDrawerCountUI();
+    updateGamesFilterDrawerSectionTitlesUI();
+
     const el = getElements();
-    if (!el.sortFilterDrawer) return;
+    if (el.gamesFilterDrawer) {
+        el.gamesFilterDrawer.classList.add("open");
+        document.body.style.overflow = "hidden"; // Prevent background scroll
+    }
+}
 
-    if (el.drawerTitle) el.drawerTitle.innerText = "Filter History";
-    if (el.drawerFooter) el.drawerFooter.style.display = "flex";
+/**
+ * Closes the Game History Filters drawer.
+ * @param {Event|null} [event=null] - The triggered event context.
+ * @param {boolean} [force=false] - If true, bypasses target mismatch checks.
+ */
+export function closeGamesFilterDrawer(event = null, force = false) {
+    if (event && event.target !== event.currentTarget && !force) return;
+    const el = getElements();
+    if (el.gamesFilterDrawer) {
+        el.gamesFilterDrawer.classList.remove("open");
+        document.body.style.overflow = "auto"; // Restore background scroll
+    }
+}
 
-    renderDrawerBody();
-    el.sortFilterDrawer.classList.add("open");
-    document.body.style.overflow = "hidden"; // Prevent background scroll
+/**
+ * Updates the active pill in the date range segmented control inside the games filter drawer.
+ */
+export function updateGamesDateRangePillsUI() {
+    const staged = stateStore.get("stagedGamesDateRange");
+    document
+        .querySelectorAll('#filter-drawer-games .segmented-pill[data-range]')
+        .forEach((pill) => {
+            pill.classList.toggle("active", pill.getAttribute("data-range") === staged);
+        });
+    updateSegmentedHighlights();
 }
 
 /**
@@ -237,6 +282,126 @@ export function renderFilterDrawerDynamicSections() {
 }
 
 /**
+ * Returns the label for a games player filter bucket.
+ * @param {number} bucket - 0..MAX_WEIGHTED_PLAYERS-1 for tracked players, MAX_WEIGHTED_PLAYERS for invitees.
+ * @returns {string}
+ */
+export function getGamesPlayerLabel(bucket) {
+    if (bucket >= MAX_WEIGHTED_PLAYERS) return "Invitee";
+    const names = stateStore.get("NAMES");
+    return names[bucket] || `Player ${bucket + 1}`;
+}
+
+/**
+ * Re-renders the dynamic content regions inside the Game History Filters drawer: the player
+ * checkbox list with per-player played/won counts, and the staged state of the static
+ * checkboxes. Historical games only render in the admin list view, so the Data History
+ * section is hidden (and its counts ignored) in the gorgeous view.
+ */
+export function renderGamesFilterDrawerDynamicSections() {
+    const el = getElements();
+    const games = stateStore.get("games");
+    const stagedGamesPlayers = stateStore.get("stagedGamesPlayers");
+    const stagedGamesResults = stateStore.get("stagedGamesResults");
+    const stagedGamesTypes = stateStore.get("stagedGamesTypes");
+    const isGorgeous = (stateStore.get("gamesHistoryStyle") || "gorgeous") === "gorgeous";
+    const useHistorical = isGorgeous ? false : stateStore.get("stagedGamesUseHistorical");
+
+    // Historical rows only record which hero a player used, so the toggle is meaningless in
+    // the gorgeous view, where those games never render at all.
+    el.gamesDataHistorySection?.classList.toggle("hidden", isGorgeous);
+    el.gamesDataHistoryDivider?.classList.toggle("hidden", isGorgeous);
+
+    if (el.gamesPlayersContainer) {
+        const stats = Array.from({ length: MAX_WEIGHTED_PLAYERS + 1 }, () => ({ played: 0, won: 0 }));
+        (games || []).forEach((game) => {
+            if (!useHistorical && game.is_historical) return;
+            (game.game_players || []).forEach((gp) => {
+                const bucket = getPlayerBucket(gp);
+                stats[bucket].played++;
+                if (gp.is_winner) stats[bucket].won++;
+            });
+        });
+
+        el.gamesPlayersContainer.innerHTML = stats
+            .map((stat, bucket) => {
+                const isChecked = stagedGamesPlayers.has(bucket) ? "checked" : "";
+                return `
+                <label class="filter-checkbox-label">
+                    <input type="checkbox" value="${bucket}" data-type="games-player" ${isChecked} />
+                    ${escapeHtml(getGamesPlayerLabel(bucket))}
+                    <span class="filter-label-meta">P: ${stat.played} / W: ${stat.won}</span>
+                </label>
+            `;
+            })
+            .join("");
+    }
+
+    document.querySelectorAll('#filter-drawer-games input[data-type="games-result"]').forEach((cb) => {
+        cb.checked = stagedGamesResults.has(cb.value);
+    });
+
+    document.querySelectorAll('#filter-drawer-games input[data-type="games-type"]').forEach((cb) => {
+        cb.checked = stagedGamesTypes.has(cb.value);
+    });
+
+    const historicalCb = document.querySelector('#filter-drawer-games input[data-type="games-historical"]');
+    if (historicalCb) historicalCb.checked = stateStore.get("stagedGamesUseHistorical");
+
+    updateGamesResultAvailabilityUI();
+}
+
+/**
+ * Enables the Win / Loss checkboxes only while at least one player is selected — outside of a
+ * player context they would match every completed game and mean nothing.
+ */
+export function updateGamesResultAvailabilityUI() {
+    const el = getElements();
+    const hasPlayer = stateStore.get("stagedGamesPlayers").size > 0;
+
+    ["win", "loss"].forEach((value) => {
+        const cb = document.querySelector(`#filter-drawer-games input[data-type="games-result"][value="${value}"]`);
+        if (!cb) return;
+        cb.disabled = !hasPlayer;
+        cb.closest(".filter-checkbox-label")?.classList.toggle("is-disabled", !hasPlayer);
+    });
+
+    el.gamesResultHint?.classList.toggle("hidden", hasPlayer);
+}
+
+/**
+ * Updates the matching count display inside the Game History Filters drawer.
+ */
+export function updateGamesFilterDrawerCountUI() {
+    const el = getElements();
+    if (!el.gamesCountLabel) return;
+    el.gamesCountLabel.innerText = `${getGamesFilterDrawerMatchingCount()} games match`;
+}
+
+/**
+ * Updates section titles on the Game History Filters drawer, adding count indicator bubbles
+ * where selections are made.
+ */
+export function updateGamesFilterDrawerSectionTitlesUI() {
+    const el = getElements();
+    const bubble = (count) => (count > 0 ? `<span class="filter-count-bubble">${count}</span>` : "");
+
+    if (el.gamesTitleDate) {
+        const isFiltered = stateStore.get("stagedGamesDateRange") !== "all";
+        el.gamesTitleDate.innerHTML = `Date Range ${bubble(isFiltered ? 1 : 0)}`;
+    }
+    if (el.gamesTitleResult) {
+        el.gamesTitleResult.innerHTML = `Result ${bubble(stateStore.get("stagedGamesResults").size)}`;
+    }
+    if (el.gamesTitlePlayers) {
+        el.gamesTitlePlayers.innerHTML = `By Player ${bubble(stateStore.get("stagedGamesPlayers").size)}`;
+    }
+    if (el.gamesTitleTypes) {
+        el.gamesTitleTypes.innerHTML = `By Game Type ${bubble(stateStore.get("stagedGamesTypes").size)}`;
+    }
+}
+
+/**
  * Updates the quantity badge displaying active filters counts.
  */
 export function updateActiveFilterBadge() {
@@ -272,14 +437,14 @@ export function updateGamesActiveFilterBadge() {
     const el = getElements();
     if (!el.gamesFilterActiveBadge) return;
 
-    const selectedGamePlayerIndex = stateStore.get("selectedGamePlayerIndex");
-    const gamesWinnerOnly = stateStore.get("gamesWinnerOnly");
-    const gamesUseHistorical = stateStore.get("gamesUseHistorical");
+    const isGorgeous = (stateStore.get("gamesHistoryStyle") || "gorgeous") === "gorgeous";
 
     let activeCount = 0;
-    if (selectedGamePlayerIndex !== null) activeCount++;
-    if (gamesWinnerOnly) activeCount++;
-    if (!gamesUseHistorical) activeCount++;
+    activeCount += stateStore.get("activeGamesPlayers").size;
+    activeCount += stateStore.get("activeGamesResults").size;
+    activeCount += stateStore.get("activeGamesTypes").size;
+    if (stateStore.get("activeGamesDateRange") !== "all") activeCount++;
+    if (!isGorgeous && !stateStore.get("gamesUseHistorical")) activeCount++;
 
     if (activeCount > 0) {
         el.gamesFilterActiveBadge.innerText = activeCount;
@@ -426,6 +591,112 @@ export function closeSortDropdown() {
 }
 
 /**
+ * Updates the text displayed on the game history sort triggering button.
+ */
+export function updateGamesSortButtonText() {
+    const el = getElements();
+    if (!el.gamesSortTriggerBtn) return;
+
+    const gamesSort = stateStore.get("gamesSort");
+    const asc = stateStore.get("gamesSortAsc");
+
+    let text = "Date (Newest)";
+    if (gamesSort === "date") {
+        text = asc ? "Date (Oldest)" : "Date (Newest)";
+    } else if (gamesSort === "type") {
+        text = asc ? "Game Type (A-Z)" : "Game Type (Z-A)";
+    } else if (gamesSort === "status") {
+        text = asc ? "Status (Completed first)" : "Status (Pending first)";
+    } else if (gamesSort.startsWith("w")) {
+        text = `${getGamesPlayerLabel(parseInt(gamesSort.substring(1), 10))} (Wins first)`;
+    } else if (gamesSort.startsWith("g")) {
+        text = `${getGamesPlayerLabel(parseInt(gamesSort.substring(1), 10))} (Games first)`;
+    }
+
+    el.gamesSortTriggerBtn.innerHTML = `<span class="action-icon">⇅</span> <strong style="font-weight: 700;">SORT:</strong> <span style="font-weight: 400; text-transform: none; margin-left: 2px;">${escapeHtml(text)}</span>`;
+}
+
+/**
+ * Renders options inside the game history Sort Dropdown list element.
+ */
+export function renderGamesSortDropdownOptions() {
+    const el = getElements();
+    if (!el.gamesSortDropdownMenu) return;
+
+    const gamesSort = stateStore.get("gamesSort");
+    const asc = stateStore.get("gamesSortAsc");
+    const isActive = (key, wantAsc) => (gamesSort === key && asc === wantAsc ? "active" : "");
+
+    let html = `
+        <div class="sort-dropdown-section-title">General</div>
+        <button type="button" class="sort-dropdown-item ${isActive("date", false)}" data-action="select-games-sort" data-sort-key="date" data-sort-asc="false">
+            Date (Newest first)
+        </button>
+        <button type="button" class="sort-dropdown-item ${isActive("date", true)}" data-action="select-games-sort" data-sort-key="date" data-sort-asc="true">
+            Date (Oldest first)
+        </button>
+        <button type="button" class="sort-dropdown-item ${isActive("type", true)}" data-action="select-games-sort" data-sort-key="type" data-sort-asc="true">
+            Game Type (A-Z)
+        </button>
+        <button type="button" class="sort-dropdown-item ${isActive("type", false)}" data-action="select-games-sort" data-sort-key="type" data-sort-asc="false">
+            Game Type (Z-A)
+        </button>
+        <button type="button" class="sort-dropdown-item ${isActive("status", false)}" data-action="select-games-sort" data-sort-key="status" data-sort-asc="false">
+            Status (Pending first)
+        </button>
+        <button type="button" class="sort-dropdown-item ${isActive("status", true)}" data-action="select-games-sort" data-sort-key="status" data-sort-asc="true">
+            Status (Completed first)
+        </button>
+    `;
+
+    for (let bucket = 0; bucket <= MAX_WEIGHTED_PLAYERS; bucket++) {
+        const label = escapeHtml(getGamesPlayerLabel(bucket));
+        html += `
+            <div class="sort-dropdown-divider"></div>
+            <div class="sort-dropdown-section-title" style="color: var(--p${bucket + 1}, #fff);">${label}</div>
+            <button type="button" class="sort-dropdown-item ${isActive(`w${bucket}`, false)}" data-action="select-games-sort" data-sort-key="w${bucket}" data-sort-asc="false">
+                Their wins first
+            </button>
+            <button type="button" class="sort-dropdown-item ${isActive(`g${bucket}`, false)}" data-action="select-games-sort" data-sort-key="g${bucket}" data-sort-asc="false">
+                Their games first
+            </button>
+        `;
+    }
+
+    el.gamesSortDropdownMenu.innerHTML = html;
+}
+
+/**
+ * Toggles the visibility of the game history sort dropdown menu.
+ */
+export function toggleGamesSortDropdown(event) {
+    const el = getElements();
+    if (!el.gamesSortDropdownMenu) return;
+
+    event.stopPropagation();
+    const isOpen = el.gamesSortDropdownMenu.classList.toggle("show");
+    if (isOpen) {
+        if (el.gamesSortTriggerBtn) el.gamesSortTriggerBtn.classList.add("active");
+        renderGamesSortDropdownOptions();
+    } else {
+        if (el.gamesSortTriggerBtn) el.gamesSortTriggerBtn.classList.remove("active");
+    }
+}
+
+/**
+ * Closes the game history sort dropdown menu.
+ */
+export function closeGamesSortDropdown() {
+    const el = getElements();
+    if (el.gamesSortDropdownMenu) {
+        el.gamesSortDropdownMenu.classList.remove("show");
+    }
+    if (el.gamesSortTriggerBtn) {
+        el.gamesSortTriggerBtn.classList.remove("active");
+    }
+}
+
+/**
  * Updates the matching count display inside the Left Filter drawer.
  */
 export function updateFilterDrawerHeroCountUI() {
@@ -461,124 +732,6 @@ export function updateFilterDrawerSectionTitlesUI() {
         const count = stagedFilterGroups.size;
         el.leftTitleGroups.innerHTML = `Group / Season ${count > 0 ? `<span class="filter-count-bubble">${count}</span>` : ""}`;
     }
-}
-
-/**
- * Generates the game history filters inside the history drawer, calculating played/won stats.
- * @param {HTMLElement} body - The container element to append the filter controls to.
- */
-export function renderHistoryFilterDrawerBody(body) {
-    const players = stateStore.get("players");
-    const games = stateStore.get("games");
-    const NAMES = stateStore.get("NAMES");
-    const stagedGamesUseHistorical = stateStore.get("stagedGamesUseHistorical");
-    const stagedSelectedGamePlayerIndex = stateStore.get("stagedSelectedGamePlayerIndex");
-    const stagedGamesWinnerOnly = stateStore.get("stagedGamesWinnerOnly");
-
-    const useHistorical = stagedGamesUseHistorical;
-    const playerStats = players.map(() => ({ played: 0, won: 0 }));
-    let inviteePlayed = 0;
-    let inviteeWon = 0;
-
-    if (games) {
-        games.forEach((game) => {
-            if (!useHistorical && game.is_historical) return;
-
-            game.game_players.forEach((gp) => {
-                const pIdx = parseInt(gp.player_id.substring(1)) - 1;
-                if (pIdx >= 0 && pIdx < MAX_WEIGHTED_PLAYERS) {
-                    playerStats[pIdx].played++;
-                    if (gp.is_winner) playerStats[pIdx].won++;
-                } else if (pIdx >= MAX_WEIGHTED_PLAYERS) {
-                    inviteePlayed++;
-                    if (gp.is_winner) inviteeWon++;
-                }
-            });
-        });
-    }
-
-    let playersHtml = "";
-    for (let i = 0; i < MAX_WEIGHTED_PLAYERS; i++) {
-        const p = players[i];
-        if (!p) continue;
-        const isActive = stagedSelectedGamePlayerIndex === i;
-        playersHtml += `
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 1;">
-                <button type="button" class="player-filter-btn ${isActive ? "active" : ""}" 
-                        style="background-color: var(--p${i + 1}); width: 100%; min-width: 60px; padding: 8px 4px; font-size: 0.8rem; font-weight: bold; border-radius: 6px;" 
-                        data-action="toggle-staged-player-game-filter" data-player-idx="${i}">
-                    ${p.name}
-                </button>
-                <div style="font-size: 0.75rem; opacity: 0.8; text-align: center; line-height: 1.2;">
-                     P: ${playerStats[i].played}<br>
-                     W: ${playerStats[i].won}
-                </div>
-            </div>
-        `;
-    }
-
-    const isInviteeActive = stagedSelectedGamePlayerIndex === MAX_WEIGHTED_PLAYERS;
-    playersHtml += `
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 1;">
-            <button type="button" class="player-filter-btn ${isInviteeActive ? "active" : ""}" 
-                    style="background-color: var(--p5); width: 100%; min-width: 60px; padding: 8px 4px; font-size: 0.8rem; font-weight: bold; border-radius: 6px;" 
-                    data-action="toggle-staged-player-game-filter" data-player-idx="${MAX_WEIGHTED_PLAYERS}">
-                Invitee
-            </button>
-            <div style="font-size: 0.75rem; opacity: 0.8; text-align: center; line-height: 1.2;">
-                P: ${inviteePlayed}<br>
-                W: ${inviteeWon}
-            </div>
-        </div>
-    `;
-
-    const showWinnerOnlyCheckbox = stagedSelectedGamePlayerIndex !== null;
-
-    body.innerHTML = `
-        <div class="panel-row-new">
-            <div class="dropdown-sort-options" style="margin: 0; justify-content: flex-start;">
-                <label style="cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px; font-size: 0.9rem;">
-                    <input
-                        type="checkbox"
-                        id="drawer-games-use-historical"
-                        ${useHistorical ? "checked" : ""}
-                        data-action="toggle-use-historical"
-                        style="width: 18px; height: 18px;" />
-                    Include Historical Data (before May 8th 2026)
-                </label>
-            </div>
-        </div>
-
-        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 10px 0;">
-
-        <div class="panel-row-new">
-            <span class="panel-row-title" style="font-weight: 700; margin-bottom: 10px; display: block;">Filter by Player:</span>
-            <div style="display: flex; justify-content: space-between; gap: 8px; width: 100%;">
-                ${playersHtml}
-            </div>
-        </div>
-
-        <div id="drawer-winner-filter-wrapper" class="panel-row-new ${showWinnerOnlyCheckbox ? "" : "hidden"}" style="margin-top: 10px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <input
-                    type="checkbox"
-                    id="drawer-games-winner-only"
-                    ${stagedGamesWinnerOnly ? "checked" : ""}
-                    data-action="toggle-staged-winner-only"
-                    style="
-                        width: 18px;
-                        height: 18px;
-                        cursor: pointer;
-                        accent-color: var(--accent);
-                    " />
-                <label
-                    for="drawer-games-winner-only"
-                    style="cursor: pointer; user-select: none; font-size: 0.9rem;"
-                    >Wins Only</label
-                >
-            </div>
-        </div>
-    `;
 }
 
 /**
@@ -692,8 +845,6 @@ export function renderDrawerBody() {
                 </div>
             </div>
         `;
-    } else if (currentDrawerMode === "history-filter") {
-        renderHistoryFilterDrawerBody(el.drawerBody);
     } else if (currentDrawerMode === "roll-settings") {
         el.drawerBody.style.overflowY = "hidden";
 
@@ -1072,6 +1223,66 @@ export function updateActiveFilterChips() {
 
     el.activeFiltersContainer.innerHTML = html;
     el.activeFiltersContainer.classList.toggle("has-chips", !!html.trim());
+}
+
+/**
+ * Re-renders the History page filter chips from the active search term, date range, historical
+ * toggle, player, result, and game type selections.
+ */
+export function updateGamesActiveFilterChips() {
+    const el = getElements();
+    if (!el.gamesActiveFiltersContainer) return;
+
+    const searchTerm = el.gamesSearchInput ? el.gamesSearchInput.value.trim() : "";
+    const activeGamesDateRange = stateStore.get("activeGamesDateRange");
+    const activeGamesPlayers = stateStore.get("activeGamesPlayers");
+    const activeGamesResults = stateStore.get("activeGamesResults");
+    const activeGamesTypes = stateStore.get("activeGamesTypes");
+    const isGorgeous = (stateStore.get("gamesHistoryStyle") || "gorgeous") === "gorgeous";
+
+    const chip = (label, action, attrs = "") => `
+        <div class="filter-chip" title="Active Filter">
+            <span class="filter-chip-remove" data-action="${action}" ${attrs} title="Remove filter">✖</span>
+            <span class="filter-chip-label">${label}</span>
+        </div>
+    `;
+    const removeChip = (type, value, label) =>
+        chip(label, "remove-games-filter-chip", `data-type="${type}" data-value="${escapeHtml(String(value))}"`);
+
+    const DATE_RANGE_LABEL = { "30d": "Last 30 days", "90d": "Last 90 days", year: "Last year" };
+    const RESULT_LABEL = { win: "Win", loss: "Loss", draw: "Draw", pending: "In Progress" };
+    const RESULT_ORDER = ["win", "loss", "draw", "pending"];
+    const TYPE_ORDER = ["duel", "2v2", "3v3", "ffa", "koth", LEGACY_GAME_TYPE];
+
+    let html = "";
+    if (searchTerm) {
+        html += chip(`Search: "${escapeHtml(searchTerm)}"`, "clear-games-search-filter");
+    }
+
+    if (activeGamesDateRange !== "all") {
+        html += removeChip("date-range", activeGamesDateRange, DATE_RANGE_LABEL[activeGamesDateRange] || activeGamesDateRange);
+    }
+
+    if (!isGorgeous && !stateStore.get("gamesUseHistorical")) {
+        html += removeChip("historical", "exclude", "Historical hidden");
+    }
+
+    Array.from(activeGamesPlayers)
+        .sort((a, b) => a - b)
+        .forEach((bucket) => {
+            html += removeChip("player", bucket, escapeHtml(getGamesPlayerLabel(bucket)));
+        });
+
+    RESULT_ORDER.filter((r) => activeGamesResults.has(r)).forEach((result) => {
+        html += removeChip("result", result, RESULT_LABEL[result]);
+    });
+
+    TYPE_ORDER.filter((t) => activeGamesTypes.has(t)).forEach((type) => {
+        html += removeChip("type", type, GAME_TYPE_FULL_LABEL[type] || "Legacy (no type)");
+    });
+
+    el.gamesActiveFiltersContainer.innerHTML = html;
+    el.gamesActiveFiltersContainer.classList.toggle("has-chips", !!html.trim());
 }
 
 /**

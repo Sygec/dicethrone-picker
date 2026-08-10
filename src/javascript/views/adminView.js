@@ -14,19 +14,19 @@ import {
     isAdmin,
     isUser,
     MAX_WEIGHTED_PLAYERS,
-    countGamesAwaitingResult
+    countGamesAwaitingResult,
+    matchesGameFilters,
+    sortGames,
+    GAME_TYPE_FULL_LABEL
 } from '../utils.js';
 import { isProd } from '../config.js';
-import { updateSegmentedHighlights } from './filterView.js';
+import {
+    updateSegmentedHighlights,
+    updateGamesActiveFilterBadge,
+    updateGamesActiveFilterChips,
+    updateGamesSortButtonText
+} from './filterView.js';
 import { ICONS as GAME_TYPE_ICONS, GAME_TYPE_SHORT_LABEL } from './randomizerSetupView.js';
-
-const GAME_TYPE_FULL_LABEL = {
-    duel: "1v1 Duel",
-    "2v2": "Teams 2v2",
-    "3v3": "Teams 3v3",
-    ffa: "Free For All",
-    koth: "King of the Hill",
-};
 
 /**
  * Returns the small game-type icon (crossed pistols/users/swords/crown) used in the
@@ -953,8 +953,7 @@ export function renderGamesList() {
     const players = stateStore.get("players");
     const names = stateStore.get("NAMES");
     const expandedGameIds = stateStore.get("expandedGameIds");
-    const selectedGamePlayerIndex = stateStore.get("selectedGamePlayerIndex");
-    const gamesWinnerOnly = stateStore.get("gamesWinnerOnly");
+    const activeGamesPlayers = stateStore.get("activeGamesPlayers");
     const gamesUseHistorical = stateStore.get("gamesUseHistorical");
     const gamesHistoryStyle = stateStore.get("gamesHistoryStyle") || "gorgeous";
 
@@ -962,6 +961,10 @@ export function renderGamesList() {
     const searchTerm = gamesSearchInput ? gamesSearchInput.value.toLowerCase().trim() : "";
 
     const isGorgeous = gamesHistoryStyle === "gorgeous";
+
+    updateGamesSortButtonText();
+    updateGamesActiveFilterBadge();
+    updateGamesActiveFilterChips();
 
     const updateCountLabel = (filteredCount) => {
         const gamesCountLabel = document.getElementById("game-count-stats");
@@ -991,36 +994,25 @@ export function renderGamesList() {
         return;
     }
 
-    const filteredGames = games.filter((game) => {
-        // If in gorgeous view style, historical games are completely hidden
-        if (isGorgeous && game.is_historical) return false;
+    const filterCriteria = {
+        searchTerm,
+        useHistorical: gamesUseHistorical,
+        playerIndices: activeGamesPlayers,
+        results: stateStore.get("activeGamesResults"),
+        gameTypes: stateStore.get("activeGamesTypes"),
+        dateRange: stateStore.get("activeGamesDateRange"),
+        names,
+    };
 
-        // Otherwise, respect the historical filter checkbox/setting (if show is not enabled)
-        if (!isGorgeous && !gamesUseHistorical && game.is_historical) return false;
-
-        let playerMatches = true;
-        if (selectedGamePlayerIndex !== null) {
-            playerMatches = game.game_players.some((gp) => {
-                const pIdx = parseInt(gp.player_id.substring(1)) - 1;
-                let match = false;
-                if (selectedGamePlayerIndex >= 0 && selectedGamePlayerIndex < MAX_WEIGHTED_PLAYERS) {
-                    match = pIdx === selectedGamePlayerIndex;
-                } else if (selectedGamePlayerIndex === MAX_WEIGHTED_PLAYERS) {
-                    match = pIdx >= MAX_WEIGHTED_PLAYERS;
-                }
-                if (match && gamesWinnerOnly) return gp.is_winner === true;
-                return match;
-            });
-        }
-        if (!playerMatches) return false;
-
-        if (searchTerm) {
-            const heroes = (game.game_players || []).map((gp) => gp.heroes?.name || "").join(" ");
-            if (!heroes.toLowerCase().includes(searchTerm)) return false;
-        }
-
-        return true;
-    });
+    const filteredGames = sortGames(
+        games.filter((game) => {
+            // In the gorgeous view style, historical games are completely hidden
+            if (isGorgeous && game.is_historical) return false;
+            return matchesGameFilters(game, filterCriteria);
+        }),
+        stateStore.get("gamesSort"),
+        stateStore.get("gamesSortAsc"),
+    );
 
     if (filteredGames.length === 0) {
         el.gamesListContainer.innerHTML = toggleHtml + '<p style="opacity: 0.7; font-style: italic; text-align: center; padding: 20px;">No matches found matching filter criteria.</p>';
@@ -1158,14 +1150,9 @@ export function renderGamesList() {
                     const heroSlug = gp.heroes?.slug || "";
                     const isSearchMatch = Boolean(searchTerm && heroName.toLowerCase().includes(searchTerm));
 
-                    let isPlayerFilterMatch = false;
-                    if (selectedGamePlayerIndex !== null) {
-                        if (selectedGamePlayerIndex >= 0 && selectedGamePlayerIndex < MAX_WEIGHTED_PLAYERS) {
-                            isPlayerFilterMatch = pIdx === selectedGamePlayerIndex;
-                        } else if (selectedGamePlayerIndex === MAX_WEIGHTED_PLAYERS) {
-                            isPlayerFilterMatch = pIdx >= MAX_WEIGHTED_PLAYERS;
-                        }
-                    }
+                    const isPlayerFilterMatch = activeGamesPlayers.has(
+                        pIdx < MAX_WEIGHTED_PLAYERS ? pIdx : MAX_WEIGHTED_PLAYERS,
+                    );
 
                     let plateClass = "draw";
                     if (winners.length > 0) {

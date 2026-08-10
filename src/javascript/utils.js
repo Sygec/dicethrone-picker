@@ -178,6 +178,167 @@ export function buildGameResultsPayload(characters, activePicks, teamIdByPlayerI
     return { gameParticipants, statsUpdates };
 }
 /**
+ * Full display labels for the game types, keyed by the `games.game_type` column.
+ * Games logged before the column existed carry `null` and are labelled "Legacy".
+ */
+export const GAME_TYPE_FULL_LABEL = {
+    duel: "1v1 Duel",
+    "2v2": "Teams 2v2",
+    "3v3": "Teams 3v3",
+    ffa: "Free For All",
+    koth: "King of the Hill",
+};
+
+/** Sentinel used by the game-type filter for rows with a null `game_type`. */
+export const LEGACY_GAME_TYPE = "legacy";
+
+/** Trailing windows, in days, backing the History date-range filter. */
+const GAME_DATE_RANGE_DAYS = { "30d": 30, "90d": 90, year: 365 };
+
+/**
+ * Maps a `game_players.player_id` ('p1'..'p10') to its filter bucket: 0..3 for the four
+ * tracked players, and MAX_WEIGHTED_PLAYERS for every invitee slot, which share one bucket.
+ * @param {Object} gp - A `game_players` row.
+ * @returns {number} Bucket index.
+ */
+export function getPlayerBucket(gp) {
+    const pIdx = parseInt(gp.player_id.substring(1), 10) - 1;
+    return pIdx >= MAX_WEIGHTED_PLAYERS ? MAX_WEIGHTED_PLAYERS : pIdx;
+}
+
+/**
+ * Derives the outcome of a game from its per-player `is_winner` flags, using the same rules
+ * the history cards render with: any explicit winner means completed, every row explicitly
+ * `false` means a draw, and anything else is still awaiting a result.
+ * @param {Object} game - Game record with a `game_players` array.
+ * @returns {'completed'|'draw'|'pending'}
+ */
+export function getGameOutcome(game) {
+    const rows = game.game_players || [];
+    if (rows.some((gp) => gp.is_winner === true)) return "completed";
+    const explicitLosers = rows.filter((gp) => gp.is_winner === false);
+    if (explicitLosers.length > 0 && explicitLosers.length === rows.length) return "draw";
+    return "pending";
+}
+
+/**
+ * Tests a game record against the History page's search, filter, and date-range criteria.
+ * Every Set is treated as "no constraint" when empty, matching the Heroes page convention.
+ *
+ * Win/Loss are evaluated relative to the selected players and match nothing when no player
+ * is selected — the drawer disables those checkboxes in that state. Historical games carry
+ * no reliable outcome data, so they never match an active result filter.
+ *
+ * @param {Object} game - Game record with `game_players`, `game_type`, `played_at`, `is_historical`.
+ * @param {Object} [criteria] - Filter criteria.
+ * @param {string} [criteria.searchTerm] - Matched against hero names, player names, and the game-type label.
+ * @param {boolean} [criteria.useHistorical] - When false, historical games are excluded outright.
+ * @param {Set<number>} [criteria.playerIndices] - Player buckets, see getPlayerBucket.
+ * @param {Set<string>} [criteria.results] - Any of 'win' | 'loss' | 'draw' | 'pending'.
+ * @param {Set<string>} [criteria.gameTypes] - Game type keys, plus LEGACY_GAME_TYPE for null types.
+ * @param {string} [criteria.dateRange] - 'all' | '30d' | '90d' | 'year' (trailing windows).
+ * @param {string[]} [criteria.names] - Tracked player display names, indexed by player bucket.
+ * @param {Date} [criteria.now] - Reference point for date ranges; defaults to the current time.
+ * @returns {boolean} True when the game satisfies every criterion.
+ */
+export function matchesGameFilters(game, criteria = {}) {
+    const {
+        searchTerm = "",
+        useHistorical = true,
+        playerIndices = new Set(),
+        results = new Set(),
+        gameTypes = new Set(),
+        dateRange = "all",
+        names = [],
+        now = new Date(),
+    } = criteria;
+
+    if (!useHistorical && game.is_historical) return false;
+
+    const rows = game.game_players || [];
+
+    const term = searchTerm.trim().toLowerCase();
+    if (term) {
+        const haystack = [GAME_TYPE_FULL_LABEL[game.game_type] || ""];
+        rows.forEach((gp) => {
+            haystack.push(gp.heroes?.name || "");
+            const pIdx = parseInt(gp.player_id.substring(1), 10) - 1;
+            haystack.push(
+                pIdx >= MAX_WEIGHTED_PLAYERS
+                    ? `Invitee ${pIdx - MAX_WEIGHTED_PLAYERS + 1}`
+                    : names[pIdx] || "",
+            );
+        });
+        if (!haystack.some((value) => value.toLowerCase().includes(term))) return false;
+    }
+
+    if (playerIndices.size > 0 && !rows.some((gp) => playerIndices.has(getPlayerBucket(gp)))) {
+        return false;
+    }
+
+    if (gameTypes.size > 0 && !gameTypes.has(game.game_type || LEGACY_GAME_TYPE)) return false;
+
+    if (dateRange !== "all") {
+        const days = GAME_DATE_RANGE_DAYS[dateRange];
+        const playedAt = parseDateString(game.played_at);
+        if (!days || !playedAt) return false;
+        if (now.getTime() - playedAt.getTime() > days * 24 * 60 * 60 * 1000) return false;
+    }
+
+    if (results.size > 0) {
+        if (game.is_historical) return false;
+
+        const outcome = getGameOutcome(game);
+        const selectedRows = rows.filter((gp) => playerIndices.has(getPlayerBucket(gp)));
+        const matchesResult =
+            (results.has("draw") && outcome === "draw") ||
+            (results.has("pending") && outcome === "pending") ||
+            (results.has("win") && selectedRows.some((gp) => gp.is_winner === true)) ||
+            (results.has("loss") && selectedRows.some((gp) => gp.is_winner === false));
+        if (!matchesResult) return false;
+    }
+
+    return true;
+}
+
+/**
+ * Returns a sorted copy of the games list. `played_at` descending is always the tiebreaker.
+ * @param {Object[]} games - Game records.
+ * @param {string} [sortKey] - 'date' | 'type' | 'status' | `w<bucket>` (wins first) | `g<bucket>` (games played first).
+ * @param {boolean} [asc] - Sort direction; per key: oldest first, Z-A, completed first, or the rank inverted.
+ * @returns {Object[]} A new, sorted array.
+ */
+export function sortGames(games, sortKey = "date", asc = false) {
+    const time = (game) => parseDateString(game.played_at)?.getTime() ?? 0;
+
+    // Every comparator below is written in its ascending orientation, so a descending sort
+    // (asc: false) is a plain negation: newest first, Z-A, pending first, wins first.
+    const rank = (game) => {
+        if (sortKey === "status") return getGameOutcome(game) === "pending" ? 1 : 0;
+        const bucket = parseInt(sortKey.substring(1), 10);
+        const rows = (game.game_players || []).filter((gp) => getPlayerBucket(gp) === bucket);
+        if (sortKey.startsWith("w")) return rows.some((gp) => gp.is_winner === true) ? 1 : 0;
+        return rows.length > 0 ? 1 : 0;
+    };
+
+    const compareAscending = (a, b) => {
+        if (sortKey === "date") return time(a) - time(b);
+        if (sortKey === "type") {
+            const labelA = GAME_TYPE_FULL_LABEL[a.game_type] || "Legacy";
+            const labelB = GAME_TYPE_FULL_LABEL[b.game_type] || "Legacy";
+            return labelA.localeCompare(labelB);
+        }
+        return rank(a) - rank(b);
+    };
+
+    return [...games].sort((a, b) => {
+        const comparison = compareAscending(a, b);
+        if (comparison !== 0) return asc ? comparison : -comparison;
+        return time(b) - time(a);
+    });
+}
+
+/**
  * Determines whether a logged game still has no winner recorded and isn't a draw.
  * @param {Object} game - Game record with a `game_players` array of `{is_winner}`.
  * @returns {boolean} True if the game is in progress and awaiting a result.

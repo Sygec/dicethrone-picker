@@ -841,12 +841,6 @@ main > section:not(.hidden) {
     text-align: center;
 }
 
-#gamesSection .search-container {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
 .search-wrapper {
     position: relative;
     display: flex;
@@ -855,7 +849,8 @@ main > section:not(.hidden) {
     flex: 1;
 }
 
-#dbSection .search-wrapper {
+#dbSection .search-wrapper,
+#gamesSection .search-wrapper {
     background: rgba(var(--white-rgb), 0.03);
     border: 1px solid rgba(var(--white-rgb), 0.06);
     border-radius: 8px;
@@ -864,12 +859,15 @@ main > section:not(.hidden) {
 }
 
 #dbSection .search-wrapper:hover,
-#dbSection .search-wrapper:focus-within {
+#dbSection .search-wrapper:focus-within,
+#gamesSection .search-wrapper:hover,
+#gamesSection .search-wrapper:focus-within {
     background: rgba(var(--white-rgb), 0.05);
     border-color: var(--accent);
 }
 
-#hero-search {
+#hero-search,
+#games-search {
     flex: 1;
     background: transparent;
     border: none;
@@ -882,7 +880,8 @@ main > section:not(.hidden) {
     box-sizing: border-box;
 }
 
-#hero-search::placeholder {
+#hero-search::placeholder,
+#games-search::placeholder {
     color: rgba(var(--white-rgb), 0.4);
     font-weight: 400;
 }
@@ -896,7 +895,8 @@ main > section:not(.hidden) {
     z-index: 5;
 }
 
-#dbSection .search-actions {
+#dbSection .search-actions,
+#gamesSection .search-actions {
     right: 60px; /* Positioned to the left of the vertical separator line */
     gap: 0;
 }
@@ -916,7 +916,8 @@ main > section:not(.hidden) {
     }
 }
 
-#dbSection .search-btn {
+#dbSection .search-btn,
+#gamesSection .search-btn {
     position: absolute;
     right: 0;
     top: 0;
@@ -935,7 +936,8 @@ main > section:not(.hidden) {
     border-bottom-right-radius: 7px;
 }
 
-#dbSection .search-btn:hover {
+#dbSection .search-btn:hover,
+#gamesSection .search-btn:hover {
     color: var(--accent);
     background-color: rgba(var(--white-rgb), 0.05);
 }
