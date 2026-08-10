@@ -2,9 +2,16 @@ import { defineConfig } from 'vite';
 import injectHTML from 'vite-plugin-html-inject';
 export default defineConfig({
     plugins:[injectHTML()],
+// Dedicated ports (Vite's defaults + 100) so this app never lands on a port another local
+// project is already serving. strictPort makes a clash fail loudly instead of silently
+// drifting to the next free port and leaving you looking at someone else's app.
     server: {
-        port: process.env.PORT ? Number(process.env.PORT) : 5173,
-        strictPort: !!process.env.PORT,
+        port: process.env.PORT ? Number(process.env.PORT) : 5273,
+        strictPort: true,
+    },
+    preview: {
+        port: 4273,
+        strictPort: true,
     },
 // Force the build output to go to /docs (for GitHub Pages compatibility)
     build:{

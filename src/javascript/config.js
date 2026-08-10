@@ -21,7 +21,7 @@ export const PROD_SUPABASE_KEY = "sb_publishable_AT9BZrEkq1IDrZmP1Y_pDQ_Qwnh57ZH
 /**
  * Local Supabase API URL, served by the Docker stack started with `supabase start`.
  * The host is taken from the page rather than hardcoded to 127.0.0.1 so that browsing the Vite
- * dev server from another device on the LAN (e.g. testing on a phone at http://192.168.1.20:5173)
+ * dev server from another device on the LAN (e.g. testing on a phone at http://192.168.1.20:5273)
  * reaches the Supabase stack on that same machine instead of the device's own loopback.
  * @type {string}
  */

@@ -81,7 +81,9 @@ supabase db reset
 npm run dev
 ```
 
-Vite starts a dev server at `http://localhost:5173`. The app auto-detects dev vs. prod via `window.location.hostname` in `config.js`: any hostname other than the two production ones connects to the local Supabase stack on port `54321` of whatever host is serving the page.
+Vite starts a dev server at `http://localhost:5273`. The app auto-detects dev vs. prod via `window.location.hostname` in `config.js`: any hostname other than the two production ones connects to the local Supabase stack on port `54321` of whatever host is serving the page.
+
+The dev (`5273`) and preview (`4273`) ports are pinned in `vite.config.js` with `strictPort`, so this app never collides with another local project — if the port is taken, Vite fails with an error instead of quietly moving to the next free one and leaving you looking at a different app. Override the dev port for a single run with `PORT=xxxx npm run dev`.
 
 Useful local endpoints:
 
@@ -102,7 +104,7 @@ Expose the dev server on the LAN and open it from the device:
 npm run dev -- --host
 ```
 
-Browse to `http://<your-machine-ip>:5173`. `LOCAL_SUPABASE_URL` is built from the page's own hostname, so the device reaches Supabase at `http://<your-machine-ip>:54321` rather than its own loopback — no config change needed. Password sign-in works as-is; only email-link flows (password reset, signup confirmation) would additionally need that origin added to `additional_redirect_urls` in `supabase/config.toml`.
+Browse to `http://<your-machine-ip>:5273`. `LOCAL_SUPABASE_URL` is built from the page's own hostname, so the device reaches Supabase at `http://<your-machine-ip>:54321` rather than its own loopback — no config change needed. Password sign-in works as-is; only email-link flows (password reset, signup confirmation) would additionally need that origin added to `additional_redirect_urls` in `supabase/config.toml`.
 
 #### Seed data
 

@@ -151,13 +151,13 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "http://localhost:5173"
+site_url = "http://localhost:5273"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-# `npm run dev` serves on 5173 and `npm run preview` on 4173; both 127.0.0.1 and localhost are
+# `npm run dev` serves on 5273 and `npm run preview` on 4273; both 127.0.0.1 and localhost are
 # listed because apiService passes `window.location.origin` as the redirect target verbatim.
-additional_redirect_urls = ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:4173", "http://127.0.0.1:4173"]
+additional_redirect_urls = ["http://localhost:5273", "http://127.0.0.1:5273", "http://localhost:4273", "http://127.0.0.1:4273"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to auth.external_url.
