@@ -109,6 +109,7 @@ export function renderAdminBuildInfo() {
         <div><b>Platform:</b> ${platform} (${host})</div>
         <div><b>Environment:</b> ${env} (Targeting: ${branchHint})</div>
         <div><b>Database:</b> ${dbName}</div>
+        ${!isProd ? '<div style="margin-top:5px; color:var(--danger); font-style:italic;">Note: Local heroes are prefixed with "LOC-" in this database.</div>' : ""}
     `;
 }
 

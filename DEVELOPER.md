@@ -112,6 +112,8 @@ Browse to `http://<your-machine-ip>:5173`. `LOCAL_SUPABASE_URL` is built from th
 admin@local.test / password123
 ```
 
+Seeded hero names are prefixed with `LOC-` (e.g. `LOC-Barbarian`), so a glance at the hero list tells you the app is on the local database rather than production. Slugs are left unprefixed so hero artwork still resolves.
+
 The admin role lives in Supabase Auth `app_metadata` and cannot be set from the client, so seeding it is the only way to reach the Admin tab locally. Signups made through the app work too (local email confirmation is disabled), but land as non-admin users.
 
 Local data is disposable — `supabase db reset` wipes it and reloads the seed. Nothing here is copied from production game history.
