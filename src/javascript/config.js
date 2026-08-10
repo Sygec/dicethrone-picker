@@ -18,15 +18,26 @@ export const PROD_SUPABASE_URL = "https://ojqkkixtvdtccuixishh.supabase.co";
 /** @type {string} Production Supabase anonymous publishable API key */
 export const PROD_SUPABASE_KEY = "sb_publishable_AT9BZrEkq1IDrZmP1Y_pDQ_Qwnh57ZH";
 
-/** @type {string} Development Supabase project URL */
-export const DEV_SUPABASE_URL = "https://wmxrzjmadvivvpzbslgj.supabase.co";
+/**
+ * Local Supabase API URL, served by the Docker stack started with `supabase start`.
+ * The host is taken from the page rather than hardcoded to 127.0.0.1 so that browsing the Vite
+ * dev server from another device on the LAN (e.g. testing on a phone at http://192.168.1.20:5273)
+ * reaches the Supabase stack on that same machine instead of the device's own loopback.
+ * @type {string}
+ */
+export const LOCAL_SUPABASE_URL = `http://${window.location.hostname}:54321`;
 
-/** @type {string} Development Supabase anonymous publishable API key */
-export const DEV_SUPABASE_KEY = "sb_publishable_Hohs2ojpVd5nmRJoi0upNg_PJv8M7x6";
+/**
+ * Local Supabase anonymous key. This is the fixed demo key the Supabase CLI issues for every
+ * local stack — it is not a secret and only ever grants access to your own machine. If
+ * `supabase status` prints a different anon key, replace this value with that one.
+ * @type {string}
+ */
+export const LOCAL_SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0";
 
 /** @type {string} Active Supabase URL determined by the current environment */
-export const SUPABASE_URL = isProd ? PROD_SUPABASE_URL : DEV_SUPABASE_URL;
+export const SUPABASE_URL = isProd ? PROD_SUPABASE_URL : LOCAL_SUPABASE_URL;
 
 /** @type {string} Active Supabase API key determined by the current environment */
-export const SUPABASE_KEY = isProd ? PROD_SUPABASE_KEY : DEV_SUPABASE_KEY;
+export const SUPABASE_KEY = isProd ? PROD_SUPABASE_KEY : LOCAL_SUPABASE_KEY;
 

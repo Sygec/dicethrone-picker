@@ -4,11 +4,10 @@
     "directory": "./docs"
   },
   
-  // Explicit environments configuration
+  // Explicit environments configuration.
+  // Non-production development happens against a local Supabase stack, which a deployed
+  // Worker cannot reach, so there is no hosted dev environment.
   "env": {
-    "development": {
-      "name": "dicethrone-dev"
-    },
     "production": {
       "name": "dicethrone-prod"
     }

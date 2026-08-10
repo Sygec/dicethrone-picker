@@ -96,7 +96,8 @@ openai_api_key = "env(OPENAI_API_KEY)"
 
 # Email testing server. Emails sent with the local dev setup are not actually sent - rather, they
 # are monitored, and you can view the emails that would have been sent from the web interface.
-[inbucket]
+# Renamed from [inbucket] by the Supabase CLI; the old section name is deprecated.
+[local_smtp]
 enabled = true
 # Port to use for the email testing server web interface.
 port = 54324
@@ -151,11 +152,13 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "http://127.0.0.1:3000"
+site_url = "http://localhost:5273"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+# `npm run dev` serves on 5273 and `npm run preview` on 4273; both 127.0.0.1 and localhost are
+# listed because apiService passes `window.location.origin` as the redirect target verbatim.
+additional_redirect_urls = ["http://localhost:5273", "http://127.0.0.1:5273", "http://localhost:4273", "http://127.0.0.1:4273"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to auth.external_url.
@@ -380,8 +383,12 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# Disabled: the local analytics stack needs the Docker daemon exposed on tcp://localhost:2375,
+# which on Windows means running the Docker API unauthenticated. Turning this off only removes
+# the Logs Explorer from local Studio; the rest of the stack is unaffected. Re-enable if you
+# ever need local log analytics and are willing to expose the daemon.
 [analytics]
-enabled = true
+enabled = false
 port = 54327
 # Configure one of the supported backends: `postgres`, `bigquery`.
 backend = "postgres"

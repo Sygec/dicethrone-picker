@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(supabase start*)",
+      "Bash(supabase stop*)",
+      "Bash(supabase status*)",
+      "Bash(supabase db reset*)",
+      "Bash(supabase db diff*)",
+      "Bash(supabase db dump --local*)",
+      "Bash(supabase migration new*)",
+      "Bash(supabase migration up*)",
+      "Bash(supabase migration list --local*)",
+      "Bash(supabase gen types*)",
+      "Bash(psql postgresql://postgres:postgres@127.0.0.1:54322/postgres*)"
+    ],
+    "deny": [
+      "Bash(supabase link*)",
+      "Bash(supabase db push*)",
+      "Bash(supabase db pull*)",
+      "Bash(supabase projects*)",
+      "Bash(supabase secrets*)",
+      "Bash(supabase functions deploy*)"
+    ]
+  }
+}
