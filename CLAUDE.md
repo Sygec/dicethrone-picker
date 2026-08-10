@@ -86,4 +86,4 @@ Seeded admin is `admin@local.test` / `password123`. Seeded hero names carry a `L
 
 - Never run `supabase link`, `db push`, `db pull`, `secrets`, or `functions deploy`. Those reach production and are the user's to run; `.claude/settings.json` denies them.
 - Schema changes go in `supabase/migrations/` and must replay cleanly against an **empty** database — verify with `supabase db reset`, not just by reading the SQL. A migration that depends on rows already existing will break local bootstrap.
-- `docs/` is generated build output deployed from `main`. Never hand-edit it; it is rebuilt by the Build and Deploy workflow.
+- `docs/` is generated build output — never hand-edit it. Deployment is automatic: GitHub Pages serves `docs/` from `main` and Cloudflare watches the repo, so pushing to `main` updates the live site with no further action. The **build** is not automatic: `docs/` only changes when someone runs `npm run build` and commits the result, or manually triggers the Build and Deploy workflow (`workflow_dispatch` only). Merging to `main` without rebuilding leaves the live site on the previous bundle.

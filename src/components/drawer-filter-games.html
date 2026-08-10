@@ -1,0 +1,93 @@
+<!-- Component: Left Side Drawer for Game History Filtering -->
+<div id="filter-drawer-games" class="filter-drawer-overlay">
+    <div class="filter-drawer-sheet">
+        <div class="filter-drawer-header">
+            <span class="filter-drawer-count" id="games-filter-drawer-count">0 games match</span>
+            <button type="button" class="filter-drawer-close-btn" id="games-filter-drawer-close-btn">
+                Close &times;
+            </button>
+        </div>
+
+        <div class="filter-drawer-body">
+            <!-- Date Range -->
+            <div class="filter-section">
+                <span class="filter-section-title" id="games-title-date">Date Range</span>
+                <div class="ownership-segmented-control">
+                    <button type="button" class="segmented-pill" data-range="all">All</button>
+                    <button type="button" class="segmented-pill" data-range="30d">30d</button>
+                    <button type="button" class="segmented-pill" data-range="90d">90d</button>
+                    <button type="button" class="segmented-pill" data-range="year">1y</button>
+                </div>
+            </div>
+
+            <hr class="filter-divider" />
+
+            <!-- Data History (only meaningful in the admin list view, where historical games render) -->
+            <div class="filter-section hidden" id="games-data-history-section">
+                <span class="filter-section-title" id="games-title-data-history">Data History</span>
+                <div class="filter-options">
+                    <label class="filter-checkbox-label">
+                        <input type="checkbox" value="include" data-type="games-historical" checked />
+                        Include Historical Data (before May 8th 2026)
+                    </label>
+                </div>
+            </div>
+
+            <hr class="filter-divider hidden" id="games-data-history-divider" />
+
+            <!-- Result -->
+            <div class="filter-section">
+                <span class="filter-section-title" id="games-title-result">Result</span>
+                <div class="filter-options">
+                    <label class="filter-checkbox-label" id="games-result-win-label">
+                        <input type="checkbox" value="win" data-type="games-result" />
+                        Win
+                    </label>
+                    <label class="filter-checkbox-label" id="games-result-loss-label">
+                        <input type="checkbox" value="loss" data-type="games-result" />
+                        Loss
+                    </label>
+                    <label class="filter-checkbox-label">
+                        <input type="checkbox" value="draw" data-type="games-result" />
+                        Draw
+                    </label>
+                    <label class="filter-checkbox-label">
+                        <input type="checkbox" value="pending" data-type="games-result" />
+                        In Progress
+                    </label>
+                </div>
+                <span class="filter-section-hint" id="games-result-hint">Pick a player below to filter by Win / Loss.</span>
+            </div>
+
+            <hr class="filter-divider" />
+
+            <!-- By Player -->
+            <div class="filter-section">
+                <span class="filter-section-title" id="games-title-players">By Player</span>
+                <div class="filter-options" id="games-filter-options-players">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+
+            <hr class="filter-divider" />
+
+            <!-- By Game Type -->
+            <div class="filter-section">
+                <span class="filter-section-title" id="games-title-types">By Game Type</span>
+                <div class="filter-options">
+                    <label class="filter-checkbox-label"><input type="checkbox" value="duel" data-type="games-type" /> 1v1 Duel</label>
+                    <label class="filter-checkbox-label"><input type="checkbox" value="2v2" data-type="games-type" /> Teams 2v2</label>
+                    <label class="filter-checkbox-label"><input type="checkbox" value="3v3" data-type="games-type" /> Teams 3v3</label>
+                    <label class="filter-checkbox-label"><input type="checkbox" value="ffa" data-type="games-type" /> Free For All</label>
+                    <label class="filter-checkbox-label"><input type="checkbox" value="koth" data-type="games-type" /> King of the Hill</label>
+                    <label class="filter-checkbox-label"><input type="checkbox" value="legacy" data-type="games-type" /> Legacy (no type)</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-drawer-footer">
+            <button type="button" class="btn-filter-reset" id="games-filter-drawer-reset">RESET</button>
+            <button type="button" class="btn-filter-apply" id="games-filter-drawer-apply">APPLY FILTERS</button>
+        </div>
+    </div>
+</div>

@@ -521,6 +521,31 @@
     letter-spacing: 0.5px;
 }
 
+/* Selection counter shown beside a section title */
+.filter-count-bubble {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    margin-left: 4px;
+    border-radius: 9px;
+    background: var(--accent);
+    color: var(--gray-800);
+    font-size: 0.7rem;
+    font-weight: 800;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+.filter-section-hint {
+    font-size: 0.75rem;
+    color: rgba(var(--white-rgb), 0.45);
+    font-style: italic;
+    padding-top: 2px;
+}
+
 .filter-options {
     display: flex;
     flex-direction: column;
@@ -542,6 +567,23 @@
 
 .filter-checkbox-label:hover {
     color: var(--text);
+}
+
+.filter-checkbox-label.is-disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.filter-checkbox-label.is-disabled input[type="checkbox"] {
+    cursor: not-allowed;
+}
+
+/* Secondary stats (played / won counts) trailing a checkbox label */
+.filter-label-meta {
+    margin-left: auto;
+    font-size: 0.72rem;
+    color: rgba(var(--white-rgb), 0.45);
+    font-variant-numeric: tabular-nums;
 }
 
 .filter-checkbox-label input[type="checkbox"] {

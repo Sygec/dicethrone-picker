@@ -27,7 +27,9 @@ export function setupAllEventBindings() {
     bindClick("btn-trigger-sort", filters.toggleSortDropdown);
     bindClick("btn-trigger-filter", filters.openFilterDrawer);
     bindClick("clear-games-search", admin.clearGamesSearch);
-    bindClick("btn-trigger-games-filter", filters.openHistoryFilterDrawer);
+    bindClick("games-search-btn", admin.renderGamesList);
+    bindClick("btn-trigger-games-sort", filters.toggleGamesSortDropdown);
+    bindClick("btn-trigger-games-filter", filters.openGamesFilterDrawer);
 
     // Randomizer setup: player/invitee toggles & game type selection
     const setupZone = document.getElementById("randomizer-setup");
@@ -154,6 +156,25 @@ export function setupAllEventBindings() {
             filters.closeFilterDrawer(e);
         });
     }
+    const filterDrawerGames = document.getElementById("filter-drawer-games");
+    if (filterDrawerGames) {
+        filterDrawerGames.addEventListener("click", (e) => {
+            const pill = e.target.closest(".segmented-pill[data-range]");
+            if (pill) {
+                const range = pill.getAttribute("data-range");
+                if (range) filters.handleGamesDateRangePillClick(range);
+                return;
+            }
+            filters.closeGamesFilterDrawer(e);
+        });
+
+        filterDrawerGames.addEventListener("change", (e) => {
+            const cb = e.target.closest('input[type="checkbox"][data-type]');
+            if (cb) {
+                filters.handleGamesFilterDrawerCheckboxChange(cb);
+            }
+        });
+    }
 
     // Drawer action buttons
     bindClick("drawer-close", () => filters.closeDrawer(null, true));
@@ -162,6 +183,9 @@ export function setupAllEventBindings() {
     bindClick("filter-drawer-close-btn", filters.applyFilterPanelSelections);
     bindClick("filter-drawer-reset", filters.resetFilterPanelSelections);
     bindClick("filter-drawer-apply", filters.applyFilterPanelSelections);
+    bindClick("games-filter-drawer-close-btn", filters.applyGamesFilterPanelSelections);
+    bindClick("games-filter-drawer-reset", filters.resetGamesFilterPanelSelections);
+    bindClick("games-filter-drawer-apply", filters.applyGamesFilterPanelSelections);
 
     // Admin Group CRUD toggles
     bindClick("addGroupBtn", admin.toggleGroupForm);
@@ -245,6 +269,19 @@ export function setupAllEventBindings() {
         });
     }
 
+    // Game history sort dropdown menu clicks
+    const gamesSortMenu = document.getElementById("games-sort-dropdown-menu");
+    if (gamesSortMenu) {
+        gamesSortMenu.addEventListener("click", (e) => {
+            const item = e.target.closest('[data-action="select-games-sort"]');
+            if (item) {
+                const key = item.getAttribute("data-sort-key");
+                const asc = item.getAttribute("data-sort-asc") === "true";
+                filters.selectGamesSortOption(key, asc);
+            }
+        });
+    }
+
     // Left filter drawer checkboxes
     const leftDrawer = document.getElementById("filter-drawer-left");
     if (leftDrawer) {
@@ -267,14 +304,6 @@ export function setupAllEventBindings() {
             if (playerFilter) {
                 const idx = parseInt(playerFilter.getAttribute("data-player-idx"), 10);
                 filters.toggleDrawerPlayerFilter(idx);
-                return;
-            }
-
-            // Staged player game filter toggle (game history)
-            const gamePlayerFilter = target.closest('[data-action="toggle-staged-player-game-filter"]');
-            if (gamePlayerFilter) {
-                const idx = parseInt(gamePlayerFilter.getAttribute("data-player-idx"), 10);
-                filters.toggleStagedPlayerGameFilter(idx);
                 return;
             }
 
@@ -313,13 +342,6 @@ export function setupAllEventBindings() {
             const histCheckbox = target.closest('[data-action="toggle-use-historical"]');
             if (histCheckbox) {
                 filters.toggleStagedGamesHistorical(histCheckbox.checked);
-                return;
-            }
-
-            // Toggle staged winner only checkbox
-            const winnerOnlyCheckbox = target.closest('[data-action="toggle-staged-winner-only"]');
-            if (winnerOnlyCheckbox) {
-                filters.toggleStagedGamesWinnerOnly(winnerOnlyCheckbox.checked);
                 return;
             }
 
@@ -365,6 +387,28 @@ export function setupAllEventBindings() {
                 let val = removeChip.getAttribute("data-value");
                 if (type === "complexity") val = parseInt(val, 10);
                 filters.removeFilterChip(type, val);
+                return;
+            }
+        });
+    }
+
+    // Game history active filters breadcrumbs chips
+    const gamesActiveFilters = document.getElementById("games-active-filters-container");
+    if (gamesActiveFilters) {
+        gamesActiveFilters.addEventListener("click", (e) => {
+            const target = e.target;
+            const clearSearch = target.closest('[data-action="clear-games-search-filter"]');
+            if (clearSearch) {
+                filters.clearGamesSearchFilter();
+                return;
+            }
+
+            const removeChip = target.closest('[data-action="remove-games-filter-chip"]');
+            if (removeChip) {
+                filters.removeGamesFilterChip(
+                    removeChip.getAttribute("data-type"),
+                    removeChip.getAttribute("data-value"),
+                );
                 return;
             }
         });
@@ -650,6 +694,17 @@ export function setupAllEventBindings() {
             !sortContainer.contains(event.target)
         ) {
             filters.closeSortDropdown();
+        }
+
+        const gamesSortDropdown = document.getElementById("games-sort-dropdown-menu");
+        const gamesSortContainer = document.getElementById("games-sort-dropdown-container");
+        if (
+            gamesSortDropdown &&
+            gamesSortDropdown.classList.contains("show") &&
+            gamesSortContainer &&
+            !gamesSortContainer.contains(event.target)
+        ) {
+            filters.closeGamesSortDropdown();
         }
     });
 

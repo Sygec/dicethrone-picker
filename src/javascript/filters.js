@@ -2,10 +2,9 @@
  * @fileoverview Logic for hero listing layout rendering, table sort columns, sidebar drawers, active filter chips, search queries, and recency calculations.
  * @module filters
  */
-import { isHeroOwned, parseDateString, getDaysAgoClean, getRecencyDot } from './utils.js';
+import { isHeroOwned, parseDateString, getDaysAgoClean, getRecencyDot, matchesGameFilters } from './utils.js';
 import { renderGamesList, setOwnershipFilter as adminSetOwnershipFilter } from './admin.js';
 import { updateRollSettingsBadge } from './randomizer.js';
-export function toggleStagedGamesWinnerOnly(checked) { stateStore.set("stagedGamesWinnerOnly", checked); renderDrawerBody(); }
 
 
 import * as stateStore from './stateStore.js';
@@ -37,16 +36,6 @@ export function openColumnsDrawer() {
     stateStore.set("stagedUseHistorical", stateStore.get("dbUseHistorical"));
 
     filterView.openColumnsDrawer();
-}
-export function openHistoryFilterDrawer() {
-    stateStore.set("currentDrawerMode", "history-filter");
-
-    // Stage current states
-    stateStore.set("stagedSelectedGamePlayerIndex", stateStore.get("selectedGamePlayerIndex"));
-    stateStore.set("stagedGamesWinnerOnly", stateStore.get("gamesWinnerOnly"));
-    stateStore.set("stagedGamesUseHistorical", stateStore.get("gamesUseHistorical"));
-
-    filterView.openHistoryFilterDrawer();
 }
 export function openFilterDrawer() {
     stateStore.set("stagedFilterDataHistories", new Set(stateStore.get("activeFilterDataHistories")));
@@ -193,22 +182,192 @@ export function closeDrawer(event = null, force = false) {
 export function renderDrawerBody() {
     filterView.renderDrawerBody();
 }
-export function renderHistoryFilterDrawerBody(body) {
-    filterView.renderHistoryFilterDrawerBody(body);
+
+// ============================================================
+// Game History filters (left drawer, sort dropdown, chips)
+// ============================================================
+
+/**
+ * Opens the Game History Filters drawer, staging the currently applied selections.
+ */
+export function openGamesFilterDrawer() {
+    stateStore.set("stagedGamesPlayers", new Set(stateStore.get("activeGamesPlayers")));
+    stateStore.set("stagedGamesResults", new Set(stateStore.get("activeGamesResults")));
+    stateStore.set("stagedGamesTypes", new Set(stateStore.get("activeGamesTypes")));
+    stateStore.set("stagedGamesDateRange", stateStore.get("activeGamesDateRange"));
+    stateStore.set("stagedGamesUseHistorical", stateStore.get("gamesUseHistorical"));
+
+    filterView.openGamesFilterDrawer();
 }
-export function toggleStagedPlayerGameFilter(idx) {
-    const stagedSelectedGamePlayerIndex = stateStore.get("stagedSelectedGamePlayerIndex");
-    if (stagedSelectedGamePlayerIndex === idx) {
-        stateStore.set("stagedSelectedGamePlayerIndex", null);
-    } else {
-        stateStore.set("stagedSelectedGamePlayerIndex", idx);
+export function closeGamesFilterDrawer(event = null, force = false) {
+    filterView.closeGamesFilterDrawer(event, force);
+}
+
+/**
+ * Applies a checkbox change inside the Game History Filters drawer to the staged selections.
+ * @param {HTMLInputElement} checkbox - The checkbox that changed.
+ */
+export function handleGamesFilterDrawerCheckboxChange(checkbox) {
+    const type = checkbox.getAttribute("data-type");
+    const checked = checkbox.checked;
+    const action = checked ? "add" : "delete";
+
+    if (type === "games-player") {
+        stateStore.updateSet("stagedGamesPlayers", action, Number(checkbox.value));
+        // Win / Loss are only meaningful in a player context, so drop them when the last
+        // player is unticked, mirroring how the drawer disables those checkboxes.
+        if (stateStore.get("stagedGamesPlayers").size === 0) {
+            stateStore.updateSet("stagedGamesResults", "delete", "win");
+            stateStore.updateSet("stagedGamesResults", "delete", "loss");
+            filterView.renderGamesFilterDrawerDynamicSections();
+        } else {
+            filterView.updateGamesResultAvailabilityUI();
+        }
+    } else if (type === "games-result") {
+        stateStore.updateSet("stagedGamesResults", action, checkbox.value);
+    } else if (type === "games-type") {
+        stateStore.updateSet("stagedGamesTypes", action, checkbox.value);
+    } else if (type === "games-historical") {
+        stateStore.set("stagedGamesUseHistorical", checked);
+        filterView.renderGamesFilterDrawerDynamicSections();
     }
 
-    if (stateStore.get("stagedSelectedGamePlayerIndex") === null) {
-        stateStore.set("stagedGamesWinnerOnly", false);
+    filterView.updateGamesFilterDrawerCountUI();
+    filterView.updateGamesFilterDrawerSectionTitlesUI();
+}
+
+/**
+ * Stages a date range selection from the drawer's segmented control.
+ * @param {string} range - 'all' | '30d' | '90d' | 'year'.
+ */
+export function handleGamesDateRangePillClick(range) {
+    stateStore.set("stagedGamesDateRange", range);
+    filterView.updateGamesDateRangePillsUI();
+    filterView.updateGamesFilterDrawerCountUI();
+    filterView.updateGamesFilterDrawerSectionTitlesUI();
+}
+
+/**
+ * Clears every staged selection in the Game History Filters drawer.
+ */
+export function resetGamesFilterPanelSelections() {
+    stateStore.get("stagedGamesPlayers").clear();
+    stateStore.get("stagedGamesResults").clear();
+    stateStore.get("stagedGamesTypes").clear();
+    stateStore.set("stagedGamesDateRange", "all");
+    stateStore.set("stagedGamesUseHistorical", true);
+
+    filterView.renderGamesFilterDrawerDynamicSections();
+    filterView.updateGamesDateRangePillsUI();
+    filterView.updateGamesFilterDrawerCountUI();
+    filterView.updateGamesFilterDrawerSectionTitlesUI();
+}
+
+/**
+ * Commits the staged selections, closes the drawer, and re-renders the history list.
+ */
+export function applyGamesFilterPanelSelections() {
+    stateStore.set("activeGamesPlayers", new Set(stateStore.get("stagedGamesPlayers")));
+    stateStore.set("activeGamesResults", new Set(stateStore.get("stagedGamesResults")));
+    stateStore.set("activeGamesTypes", new Set(stateStore.get("stagedGamesTypes")));
+    stateStore.set("activeGamesDateRange", stateStore.get("stagedGamesDateRange"));
+    stateStore.set("gamesUseHistorical", stateStore.get("stagedGamesUseHistorical"));
+
+    closeGamesFilterDrawer(null, true);
+
+    renderGamesList();
+}
+
+/**
+ * Counts the games matching the drawer's staged selections, for its live header count.
+ * @returns {number}
+ */
+export function getGamesFilterDrawerMatchingCount() {
+    const games = stateStore.get("games") || [];
+    const isGorgeous = (stateStore.get("gamesHistoryStyle") || "gorgeous") === "gorgeous";
+    const searchInput = document.getElementById("games-search");
+
+    const criteria = {
+        searchTerm: searchInput ? searchInput.value : "",
+        useHistorical: stateStore.get("stagedGamesUseHistorical"),
+        playerIndices: stateStore.get("stagedGamesPlayers"),
+        results: stateStore.get("stagedGamesResults"),
+        gameTypes: stateStore.get("stagedGamesTypes"),
+        dateRange: stateStore.get("stagedGamesDateRange"),
+        names: stateStore.get("NAMES"),
+    };
+
+    return games.filter((game) => {
+        if (isGorgeous && game.is_historical) return false;
+        return matchesGameFilters(game, criteria);
+    }).length;
+}
+
+/**
+ * Applies a sort selection from the history sort dropdown.
+ * @param {string} key - Sort key.
+ * @param {boolean} asc - Sort direction.
+ */
+export function selectGamesSortOption(key, asc) {
+    stateStore.set("gamesSort", key);
+    stateStore.set("gamesSortAsc", asc);
+
+    closeGamesSortDropdown();
+    renderGamesList();
+}
+export function toggleGamesSortDropdown(event) {
+    filterView.toggleGamesSortDropdown(event);
+}
+export function closeGamesSortDropdown() {
+    filterView.closeGamesSortDropdown();
+}
+
+/**
+ * Removes a single active History filter from its breadcrumb chip.
+ * @param {string} type - 'date-range' | 'historical' | 'player' | 'result' | 'type'.
+ * @param {string} val - The chip's value.
+ */
+export function removeGamesFilterChip(type, val) {
+    if (type === "date-range") {
+        stateStore.set("activeGamesDateRange", "all");
+        stateStore.set("stagedGamesDateRange", "all");
+    } else if (type === "historical") {
+        stateStore.set("gamesUseHistorical", true);
+        stateStore.set("stagedGamesUseHistorical", true);
+    } else if (type === "player") {
+        stateStore.updateSet("activeGamesPlayers", "delete", Number(val));
+        stateStore.updateSet("stagedGamesPlayers", "delete", Number(val));
+        // Win / Loss lose their meaning once the last player is gone.
+        if (stateStore.get("activeGamesPlayers").size === 0) {
+            ["win", "loss"].forEach((result) => {
+                stateStore.updateSet("activeGamesResults", "delete", result);
+                stateStore.updateSet("stagedGamesResults", "delete", result);
+            });
+        }
+    } else if (type === "result") {
+        stateStore.updateSet("activeGamesResults", "delete", val);
+        stateStore.updateSet("stagedGamesResults", "delete", val);
+    } else if (type === "type") {
+        stateStore.updateSet("activeGamesTypes", "delete", val);
+        stateStore.updateSet("stagedGamesTypes", "delete", val);
     }
 
-    renderDrawerBody();
+    filterView.renderGamesFilterDrawerDynamicSections();
+    filterView.updateGamesDateRangePillsUI();
+    renderGamesList();
+}
+
+/**
+ * Clears the History search box from its breadcrumb chip.
+ */
+export function clearGamesSearchFilter() {
+    const searchInput = document.getElementById("games-search");
+    if (searchInput) {
+        searchInput.value = "";
+        searchInput.focus();
+    }
+    document.getElementById("clear-games-search")?.classList.add("hidden");
+    renderGamesList();
 }
 export function toggleStagedGamesHistorical(checked) {
     stateStore.set("stagedGamesUseHistorical", checked);
@@ -303,11 +462,6 @@ export function resetFilters() {
         stateStore.set("stagedPlayerIndices", [0, 1, 2, 3]);
         stateStore.set("stagedUseHistorical", true);
         renderDrawerBody();
-    } else if (currentDrawerMode === "history-filter") {
-        stateStore.set("stagedSelectedGamePlayerIndex", null);
-        stateStore.set("stagedGamesWinnerOnly", false);
-        stateStore.set("stagedGamesUseHistorical", true);
-        renderDrawerBody();
     } else if (currentDrawerMode === "roll-settings") {
         stateStore.set("stagedBannedHeroIds", new Set());
         stateStore.set("stagedBanSearchQuery", "");
@@ -331,13 +485,6 @@ export function applyAndCloseDrawer() {
         updateActiveFilterBadge();
         closeDrawer(null, true);
         renderList();
-    } else if (currentDrawerMode === "history-filter") {
-        stateStore.set("selectedGamePlayerIndex", stateStore.get("stagedSelectedGamePlayerIndex"));
-        stateStore.set("gamesWinnerOnly", stateStore.get("stagedGamesWinnerOnly"));
-        stateStore.set("gamesUseHistorical", stateStore.get("stagedGamesUseHistorical"));
-        updateGamesActiveFilterBadge();
-        closeDrawer(null, true);
-        renderGamesList();
     } else if (currentDrawerMode === "roll-settings") {
         stateStore.set("bannedHeroIds", new Set(stateStore.get("stagedBannedHeroIds")));
 
@@ -352,9 +499,6 @@ export function applyAndCloseDrawer() {
 }
 export function updateActiveFilterBadge() {
     filterView.updateActiveFilterBadge();
-}
-export function updateGamesActiveFilterBadge() {
-    filterView.updateGamesActiveFilterBadge();
 }
 export function updateSegmentedHighlights() {
     filterView.updateSegmentedHighlights();
