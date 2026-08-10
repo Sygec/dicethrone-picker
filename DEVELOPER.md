@@ -116,6 +116,17 @@ admin@local.test / password123
 
 Seeded hero names are prefixed with `LOC-` (e.g. `LOC-Barbarian`), so a glance at the hero list tells you the app is on the local database rather than production. Slugs are left unprefixed so hero artwork still resolves.
 
+It also seeds nine games so the History tab has something to render. Between them they cover every `game_type` (`duel`, `ffa`, `koth`, `2v2`, `3v3`) and every result state the UI distinguishes:
+
+| State | How it's encoded | Seeded example |
+| --- | --- | --- |
+| Completed | one `game_players.is_winner` true, rest false | most games |
+| Awaiting result | every `is_winner` NULL | the most recent duel — drives the nav badge |
+| Draw | every `is_winner` false | the duel 5 days back |
+| Historical | `games.is_historical` true | the duel 120 days back |
+
+`played_at` is spread over four months so date ordering and the history filters have real data to work with, and `player_hero_stats` is seeded consistently with those games. When adding history scenarios, extend `seed.sql` rather than inserting rows by hand — anything not in the seed is lost on the next `supabase db reset`.
+
 The admin role lives in Supabase Auth `app_metadata` and cannot be set from the client, so seeding it is the only way to reach the Admin tab locally. Signups made through the app work too (local email confirmation is disabled), but land as non-admin users.
 
 Local data is disposable — `supabase db reset` wipes it and reloads the seed. Nothing here is copied from production game history.
