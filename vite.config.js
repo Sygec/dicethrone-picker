@@ -8,6 +8,10 @@ export default defineConfig({
     server: {
         port: process.env.PORT ? Number(process.env.PORT) : 5273,
         strictPort: true,
+// Listen on every interface, not just loopback, so the dev server can be opened from another
+// device on the LAN (e.g. a phone at http://192.168.1.20:5273). config.js derives the local
+// Supabase URL from the page hostname, so that device reaches this machine's stack too.
+        host: true,
     },
     preview: {
         port: 4273,
