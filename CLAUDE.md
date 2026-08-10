@@ -63,3 +63,27 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+---
+
+## 5. Project Setup
+
+Vanilla JS + Vite SPA with a Supabase backend. `DEVELOPER.md` is the source of truth for architecture, data model, and workflows — read it before non-trivial work. The essentials:
+
+**Environments.** One hosted Supabase project (production, ref `ojqkkixtvdtccuixishh`), selected only on the hostnames `sygec.github.io` and `dicethrone-prod.sygec.workers.dev`. Every other hostname — localhost included — uses a local Supabase stack running in Docker on port `54321`. There is no hosted dev project and no hosted dev deployment.
+
+**Local loop:**
+
+```bash
+supabase start        # requires Docker Desktop to be running
+supabase db reset     # replays migrations, then loads supabase/seed.sql
+npm run dev           # http://localhost:5273 (preview: 4273; both strictPort)
+```
+
+Seeded admin is `admin@local.test` / `password123`. Seeded hero names carry a `LOC-` prefix, so seeing `LOC-` in the UI confirms the app is on the local database.
+
+**Guardrails:**
+
+- Never run `supabase link`, `db push`, `db pull`, `secrets`, or `functions deploy`. Those reach production and are the user's to run; `.claude/settings.json` denies them.
+- Schema changes go in `supabase/migrations/` and must replay cleanly against an **empty** database — verify with `supabase db reset`, not just by reading the SQL. A migration that depends on rows already existing will break local bootstrap.
+- `docs/` is generated build output deployed from `main`. Never hand-edit it; it is rebuilt by the Build and Deploy workflow.
