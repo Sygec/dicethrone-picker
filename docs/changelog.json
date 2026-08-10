@@ -1,5 +1,16 @@
 [
     {
+        "version": "2.4.0.20260810",
+        "changes": [
+            "Game History: New sort options — by date, game type, status, or a player's wins and games played",
+            "Game History: New filter drawer with date range, result, player and game type filters",
+            "Game History: Filter chips for quick filtering, matching the Hero Database",
+            "Game History: Search now also matches player names and game types, not just heroes",
+            "Game History: 'Wins Only' is replaced by a Result filter (Win / Loss / Draw / In Progress)",
+            "Game History: Multiple players can now be selected in the filter at once"
+        ]
+    },
+    {
         "version": "2.3.4.20260717",
         "changes": [
             "Roll Randomizer/History: Update to KotH ico",
