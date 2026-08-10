@@ -92,7 +92,7 @@ Useful local endpoints:
 | API | `http://127.0.0.1:54321` |
 | Postgres | `postgresql://postgres:postgres@127.0.0.1:54322/postgres` |
 | Studio | `http://127.0.0.1:54323` |
-| Inbucket (captures all outgoing mail) | `http://127.0.0.1:54324` |
+| Mail catcher (captures all outgoing mail) | `http://127.0.0.1:54324` |
 
 Run `supabase status` to confirm the anon key matches `LOCAL_SUPABASE_KEY` in `config.js`, and `supabase stop` when you're done.
 
