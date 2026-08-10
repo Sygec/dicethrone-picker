@@ -10,7 +10,8 @@
       "Bash(supabase migration new*)",
       "Bash(supabase migration up*)",
       "Bash(supabase migration list --local*)",
-      "Bash(supabase gen types*)"
+      "Bash(supabase gen types*)",
+      "Bash(psql postgresql://postgres:postgres@127.0.0.1:54322/postgres*)"
     ],
     "deny": [
       "Bash(supabase link*)",
