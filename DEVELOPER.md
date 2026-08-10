@@ -81,7 +81,7 @@ supabase db reset
 npm run dev
 ```
 
-Vite starts a dev server at `http://localhost:5173`. The app auto-detects dev vs. prod via `window.location.hostname` in `config.js`: any hostname other than the two production ones connects to the local stack at `http://127.0.0.1:54321`.
+Vite starts a dev server at `http://localhost:5173`. The app auto-detects dev vs. prod via `window.location.hostname` in `config.js`: any hostname other than the two production ones connects to the local Supabase stack on port `54321` of whatever host is serving the page.
 
 Useful local endpoints:
 
@@ -93,6 +93,16 @@ Useful local endpoints:
 | Inbucket (captures all outgoing mail) | `http://127.0.0.1:54324` |
 
 Run `supabase status` to confirm the anon key matches `LOCAL_SUPABASE_KEY` in `config.js`, and `supabase stop` when you're done.
+
+#### Testing on a phone or tablet
+
+Expose the dev server on the LAN and open it from the device:
+
+```bash
+npm run dev -- --host
+```
+
+Browse to `http://<your-machine-ip>:5173`. `LOCAL_SUPABASE_URL` is built from the page's own hostname, so the device reaches Supabase at `http://<your-machine-ip>:54321` rather than its own loopback — no config change needed. Password sign-in works as-is; only email-link flows (password reset, signup confirmation) would additionally need that origin added to `additional_redirect_urls` in `supabase/config.toml`.
 
 #### Seed data
 
