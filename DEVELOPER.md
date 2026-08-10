@@ -54,7 +54,7 @@ Supabase (PostgreSQL) is the data store. Key tables:
 | `games` | Game session log with timestamp |
 | `game_players` | Join table: which players/heroes were in a game and winner flag |
 
-Schema migrations are in `supabase/migrations/`. The project uses two Supabase projects — one for dev, one for production — selected automatically by hostname.
+Schema migrations are in `supabase/migrations/`. There is one hosted Supabase project (production). All development runs against a local Supabase stack in Docker; the two are selected automatically by hostname.
 
 ---
 
@@ -63,7 +63,7 @@ Schema migrations are in `supabase/migrations/`. The project uses two Supabase p
 ### Prerequisites
 
 - Node.js 18+
-- A Supabase project (or use the existing dev project credentials in `config.js`)
+- Docker Desktop (running) and the [Supabase CLI](https://supabase.com/docs/guides/local-development) — development runs against a local Supabase stack, not a hosted project
 
 ### Local Development
 
@@ -71,10 +71,52 @@ Schema migrations are in `supabase/migrations/`. The project uses two Supabase p
 git clone https://github.com/Sygec/dicethrone-picker.git
 cd dicethrone-picker
 npm install
+
+# Start the local Supabase stack (Postgres, Auth, PostgREST, Realtime, Studio)
+supabase start
+
+# Apply all migrations and load supabase/seed.sql into a clean database
+supabase db reset
+
 npm run dev
 ```
 
-Vite starts a dev server at `http://localhost:5173`. The app auto-detects dev vs. prod via `window.location.hostname` in `config.js` and connects to the development Supabase project.
+Vite starts a dev server at `http://localhost:5173`. The app auto-detects dev vs. prod via `window.location.hostname` in `config.js`: any hostname other than the two production ones connects to the local stack at `http://127.0.0.1:54321`.
+
+Useful local endpoints:
+
+| Service | URL |
+| --- | --- |
+| API | `http://127.0.0.1:54321` |
+| Postgres | `postgresql://postgres:postgres@127.0.0.1:54322/postgres` |
+| Studio | `http://127.0.0.1:54323` |
+| Inbucket (captures all outgoing mail) | `http://127.0.0.1:54324` |
+
+Run `supabase status` to confirm the anon key matches `LOCAL_SUPABASE_KEY` in `config.js`, and `supabase stop` when you're done.
+
+#### Seed data
+
+`supabase/seed.sql` runs automatically at the end of every `supabase db reset`. It loads the hero/group catalogue, placeholder players `p1`-`p10`, and a confirmed admin account:
+
+```
+admin@local.test / password123
+```
+
+The admin role lives in Supabase Auth `app_metadata` and cannot be set from the client, so seeding it is the only way to reach the Admin tab locally. Signups made through the app work too (local email confirmation is disabled), but land as non-admin users.
+
+Local data is disposable — `supabase db reset` wipes it and reloads the seed. Nothing here is copied from production game history.
+
+#### Promoting changes
+
+Schema changes are developed locally and land in production through a PR:
+
+```bash
+# after editing the schema locally
+supabase db diff -f describe_your_change   # writes a new file to supabase/migrations/
+supabase db reset                          # verify it replays cleanly from scratch
+```
+
+Commit the migration, open a PR, and merge to `main`. Apply the merged migrations to production with `supabase db push` against the production project.
 
 ### Build
 
@@ -110,16 +152,14 @@ npm run preview
 The `wrangler.jsonc` config serves the `/docs` directory as a static asset site.
 
 ```bash
-# Deploy to dev
-npx wrangler deploy --env development
-
 # Deploy to production
 npx wrangler deploy --env production
 ```
 
 Environments defined in `wrangler.jsonc`:
-- `development` → worker name `dicethrone-dev`
 - `production` → worker name `dicethrone-prod`
+
+There is no hosted development environment: a deployed Worker cannot reach a Supabase stack running on `127.0.0.1`, so non-production work happens on `localhost` only.
 
 ---
 
@@ -264,10 +304,10 @@ Each hero stores a `weights` array (one entry per player slot). When a hero is p
 "sygec.github.io"
 "dicethrone-prod.sygec.workers.dev"
 
-// All other hostnames → development
+// All other hostnames → local Supabase stack
 ```
 
-No `.env` files or build-time environment variables are needed. Both Supabase projects' anonymous keys are safe to expose (they are publishable/anon keys restricted by Row Level Security policies in Supabase).
+No `.env` files or build-time environment variables are needed. Both keys in `config.js` are safe to commit: the production key is a publishable/anon key restricted by Row Level Security policies, and the local key is the Supabase CLI's fixed demo key, which only grants access to your own machine.
 
 ---
 
@@ -299,8 +339,8 @@ Admin users can access hero/group CRUD in the admin section, view all user colle
 
 ### Heroes Not Loading
 
-- Check the Console for `Error fetching heroes`. This usually means the Supabase dev project is paused (free-tier projects pause after inactivity). Go to the Supabase dashboard and resume it.
-- Verify `SUPABASE_URL` and `SUPABASE_KEY` in `config.js` match your project.
+- Locally, this usually means the Supabase stack isn't running or the database is empty. Run `supabase status` to confirm it's up, then `supabase db reset` to reapply migrations and the seed.
+- Verify `SUPABASE_URL` and `SUPABASE_KEY` in `config.js` match what `supabase status` prints.
 
 ### Realtime Not Updating
 

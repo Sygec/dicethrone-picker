@@ -102,14 +102,13 @@ export function renderAdminBuildInfo() {
     else if (host.includes("workers.dev")) platform = "Cloudflare Workers";
 
     const env = isProd ? "Production" : "Development";
-    const dbName = isProd ? "Supabase PROD" : "Supabase DEV";
-    const branchHint = isProd ? "main" : "dev/local";
+    const dbName = isProd ? "Supabase PROD" : "Supabase LOCAL";
+    const branchHint = isProd ? "main" : "local";
 
     el.buildInfoDiv.innerHTML = `
         <div><b>Platform:</b> ${platform} (${host})</div>
         <div><b>Environment:</b> ${env} (Targeting: ${branchHint})</div>
         <div><b>Database:</b> ${dbName}</div>
-        ${!isProd ? '<div style="margin-top:5px; color:var(--danger); font-style:italic;">Note: Dev heroes are prefixed with "DEV-" in this database.</div>' : ""}
     `;
 }
 
