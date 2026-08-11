@@ -65,8 +65,6 @@ const state = {
     draftModeEnabled: false,
     draftCount: 3,
     draftCountChosen: false, // whether the user has explicitly picked an options count this session (no default)
-    bannedHeroIds: new Set(),
-
     activeDraftOrder: [],
     activeDraftStep: 0,
     selectedDraftHeroes: {}, // pIdx -> hero object

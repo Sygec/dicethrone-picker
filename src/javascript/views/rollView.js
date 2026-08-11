@@ -157,11 +157,10 @@ export function renderHeroSelectOptions() {
     const searchInput = el.heroSelectSearch;
     const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
     const characters = stateStore.get("characters");
-    const bannedHeroIds = stateStore.get("bannedHeroIds");
 
     if (pIdx === null) return;
 
-    let pool = characters.filter((c) => isHeroOwned(c) && !bannedHeroIds.has(c.id));
+    let pool = characters.filter(isHeroOwned);
 
     if (query) {
         pool = pool.filter((c) =>

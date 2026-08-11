@@ -24,7 +24,6 @@ const LOCK_ICON = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" s
  */
 export function pickCharacters() {
     const characters = stateStore.get("characters");
-    const bannedHeroIds = stateStore.get("bannedHeroIds");
 
     const participants = randomizerSetup.getRollParticipants();
     console.log("[randomizer] pickCharacters participants:", participants);
@@ -40,14 +39,14 @@ export function pickCharacters() {
     if (resultsDiv) resultsDiv.innerHTML = "";
 
     let pool = characters
-        .filter((c) => isHeroOwned(c) && !bannedHeroIds.has(c.id))
+        .filter(isHeroOwned)
         .map((c) => structuredClone(c));
 
-    console.log("[randomizer] Owned/non-banned heroes pool count:", pool.length);
+    console.log("[randomizer] Owned heroes pool count:", pool.length);
 
     if (pool.length < active.length) {
         return alert(
-            `Not enough available (owned & non-banned) heroes (${pool.length}) in your collection for ${active.length} players!`,
+            `Not enough owned heroes (${pool.length}) in your collection for ${active.length} players!`,
         );
     }
 
@@ -125,9 +124,7 @@ export function pickCharacters() {
     randomizerSetupView.showResultsTitle("confirmation");
     if (resultsDiv) resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
 
-    const ownedHeroes = characters.filter(
-        (c) => isHeroOwned(c) && !bannedHeroIds.has(c.id),
-    );
+    const ownedHeroes = characters.filter(isHeroOwned);
 
     sortedActive.forEach((pIdx) => {
         startPanelScramble(pIdx, ownedHeroes);
@@ -450,7 +447,6 @@ export function startDraftStep() {
     const activeDraftStep = stateStore.get("activeDraftStep");
     const activeDraftOrder = stateStore.get("activeDraftOrder");
     const characters = stateStore.get("characters");
-    const bannedHeroIds = stateStore.get("bannedHeroIds");
     const selectedDraftHeroes = stateStore.get("selectedDraftHeroes");
 
     if (activeDraftStep >= activeDraftOrder.length) {
@@ -479,10 +475,7 @@ export function startDraftStep() {
         (h) => h?.name,
     );
     const pool = characters.filter(
-        (c) =>
-            isHeroOwned(c) &&
-            !bannedHeroIds.has(c.id) &&
-            !chosenHeroNames.includes(c.name),
+        (c) => isHeroOwned(c) && !chosenHeroNames.includes(c.name),
     );
 
     const draftCount = stateStore.get("draftCount");

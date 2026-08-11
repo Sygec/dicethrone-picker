@@ -43,8 +43,6 @@ export async function init() {
         dCount = 3;
     }
     stateStore.set("draftCount", dCount);
-    const banned = localStorage.getItem("bannedHeroIds");
-    stateStore.set("bannedHeroIds", banned ? new Set(JSON.parse(banned)) : new Set());
 
     const { data: groupsData, error: groupsError } = await apiService.getGroups();
 
