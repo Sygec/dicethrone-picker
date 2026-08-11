@@ -30,10 +30,7 @@ const getElements = () => ({
     modalSortWeight: document.getElementById("modal-sort-weight"),
     heroSelectOptionsContainer: document.getElementById("hero-select-options-container"),
     confirmBtn: document.getElementById("confirmBtn"),
-    errorMsg: document.getElementById("error-msg"),
-    rollSettingsBadge: document.getElementById("roll-settings-badge"),
-    rollSettingsBtn: document.getElementById("rollSettingsBtn"),
-    drawerBanListContainer: document.getElementById("drawer-ban-list-container")
+    errorMsg: document.getElementById("error-msg")
 });
 
 /**
@@ -160,11 +157,10 @@ export function renderHeroSelectOptions() {
     const searchInput = el.heroSelectSearch;
     const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
     const characters = stateStore.get("characters");
-    const bannedHeroIds = stateStore.get("bannedHeroIds");
 
     if (pIdx === null) return;
 
-    let pool = characters.filter((c) => isHeroOwned(c) && !bannedHeroIds.has(c.id));
+    let pool = characters.filter(isHeroOwned);
 
     if (query) {
         pool = pool.filter((c) =>
@@ -477,71 +473,4 @@ export function updateDraftConfirmButton(pIdx, hero) {
         btn.disabled = false;
         btn.innerHTML = `${escapeHtml(playerName.toUpperCase())} picks ${escapeHtml(hero.name.toUpperCase())} &rarr;`;
     }
-}
-
-/**
- * Updates the roll settings badge and button styling.
- */
-export function updateRollSettingsBadge() {
-    const el = getElements();
-    if (!el.rollSettingsBadge || !el.rollSettingsBtn) return;
-
-    const draftModeEnabled = stateStore.get("draftModeEnabled");
-    const bannedHeroIds = stateStore.get("bannedHeroIds");
-
-    let activeCount = 0;
-    if (draftModeEnabled) activeCount++;
-    if (bannedHeroIds && bannedHeroIds.size > 0) activeCount += bannedHeroIds.size;
-
-    if (activeCount > 0) {
-        el.rollSettingsBadge.innerText = activeCount;
-        el.rollSettingsBadge.style.display = "inline-block";
-        el.rollSettingsBtn.classList.add("has-settings");
-    } else {
-        el.rollSettingsBadge.style.display = "none";
-        el.rollSettingsBtn.classList.remove("has-settings");
-    }
-}
-
-/**
- * Draws the interactive admin ban list checkbox configurations in the settings drawer.
- */
-export function renderDrawerBanList() {
-    const el = getElements();
-    if (!el.drawerBanListContainer) return;
-
-    const characters = stateStore.get("characters");
-    const stagedBannedHeroIds = stateStore.get("stagedBannedHeroIds");
-    const stagedBanSearchQuery = stateStore.get("stagedBanSearchQuery") || "";
-
-    const query = stagedBanSearchQuery.toLowerCase().trim();
-    let pool = characters;
-    if (query) {
-        pool = characters.filter((c) =>
-            c.name.toLowerCase().includes(query) ||
-            (c.group && c.group.toLowerCase().includes(query))
-        );
-    }
-
-    const sortedPool = [...pool].sort((a, b) => a.name.localeCompare(b.name));
-
-    if (sortedPool.length === 0) {
-        el.drawerBanListContainer.innerHTML = `<p style="opacity: 0.6; font-style: italic; text-align: center; padding: 20px;">No heroes found matching "${stagedBanSearchQuery}"</p>`;
-        return;
-    }
-
-    el.drawerBanListContainer.innerHTML = sortedPool
-        .map((hero) => {
-            const isBanned = stagedBannedHeroIds.has(hero.id);
-            return `
-            <label class="ban-list-item ${isBanned ? "banned" : ""}">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <input type="checkbox" ${isBanned ? "checked" : ""} data-action="toggle-staged-ban" data-hero-id="${hero.id}" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--danger);">
-                    <span>${hero.name}</span>
-                </div>
-                <span class="ban-item-group">${hero.group || "Unknown"}</span>
-            </label>
-        `;
-        })
-        .join("");
 }

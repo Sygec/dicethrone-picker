@@ -4,39 +4,11 @@
  */
 import { isHeroOwned, parseDateString, getDaysAgoClean, getRecencyDot, matchesGameFilters } from './utils.js';
 import { renderGamesList, setOwnershipFilter as adminSetOwnershipFilter } from './admin.js';
-import { updateRollSettingsBadge } from './randomizer.js';
 
 
 import * as stateStore from './stateStore.js';
 import * as filterView from './views/filterView.js';
 
-export function toggleSortSection() {
-    filterView.toggleSortSection();
-}
-export function toggleFilterSection() {
-    filterView.toggleFilterSection();
-}
-export function openSortFilterDrawer() {
-    stateStore.set("currentDrawerMode", "sort-filter");
-
-    // Stage current states
-    stateStore.set("stagedSort", stateStore.get("currentSort"));
-    stateStore.set("stagedSortAsc", stateStore.get("sortAsc"));
-    stateStore.set("stagedSortPlayerIndex", stateStore.get("currentSortPlayerIndex"));
-    stateStore.set("stagedLevels", new Set(stateStore.get("activeLevels")));
-    stateStore.set("stagedGroups", new Set(stateStore.get("activeGroups")));
-
-    filterView.openSortFilterDrawer();
-}
-export function openColumnsDrawer() {
-    stateStore.set("currentDrawerMode", "columns");
-
-    // Stage current states
-    stateStore.set("stagedPlayerIndices", [...stateStore.get("activePlayerIndices")]);
-    stateStore.set("stagedUseHistorical", stateStore.get("dbUseHistorical"));
-
-    filterView.openColumnsDrawer();
-}
 export function openFilterDrawer() {
     stateStore.set("stagedFilterDataHistories", new Set(stateStore.get("activeFilterDataHistories")));
     stateStore.set("stagedFilterPlayers", new Set(stateStore.get("activeFilterPlayers")));
@@ -97,8 +69,6 @@ export function applyFilterPanelSelections() {
     stateStore.set("activeFilterPlayers", new Set(stateStore.get("stagedFilterPlayers")));
     stateStore.set("activeFilterComplexities", new Set(stateStore.get("stagedFilterComplexities")));
     stateStore.set("activeFilterGroups", new Set(stateStore.get("stagedFilterGroups")));
-
-    stateStore.set("dbUseHistorical", !stateStore.get("activeFilterDataHistories").has("Normal only") || stateStore.get("activeFilterDataHistories").has("Historical only"));
 
     const stagedOwnership = stateStore.get("stagedOwnershipFilter");
     stateStore.set("activeOwnershipFilter", stagedOwnership);
@@ -176,13 +146,6 @@ export function updateFilterDrawerHeroCountUI() {
 export function updateFilterDrawerSectionTitlesUI() {
     filterView.updateFilterDrawerSectionTitlesUI();
 }
-export function closeDrawer(event = null, force = false) {
-    filterView.closeDrawer(event, force);
-}
-export function renderDrawerBody() {
-    filterView.renderDrawerBody();
-}
-
 // ============================================================
 // Game History filters (left drawer, sort dropdown, chips)
 // ============================================================
@@ -369,134 +332,6 @@ export function clearGamesSearchFilter() {
     document.getElementById("clear-games-search")?.classList.add("hidden");
     renderGamesList();
 }
-export function toggleStagedGamesHistorical(checked) {
-    stateStore.set("stagedGamesUseHistorical", checked);
-    renderDrawerBody();
-}
-export function handleDrawerSortTypeChange(value) {
-    if (value === "name") {
-        stateStore.set("stagedSort", "name");
-    } else if (value === "group") {
-        stateStore.set("stagedSort", "group");
-    } else if (value === "probability") {
-        stateStore.set("stagedSort", `w${stateStore.get("stagedSortPlayerIndex")}`);
-    } else if (value === "lastPlayed") {
-        stateStore.set("stagedSort", `d${stateStore.get("stagedSortPlayerIndex")}`);
-    }
-
-    stateStore.set("stagedSortAsc", value === "name" || value === "group");
-    filterView.updateDrawerSortDirectionUI();
-    filterView.updateDrawerPlayerSortPillsUI();
-}
-export function toggleDrawerSortDirection() {
-    stateStore.set("stagedSortAsc", !stateStore.get("stagedSortAsc"));
-    filterView.updateDrawerSortDirectionUI();
-}
-export function updateDrawerSortDirectionUI() {
-    filterView.updateDrawerSortDirectionUI();
-}
-export function updateDrawerPlayerSortPillsUI() {
-    filterView.updateDrawerPlayerSortPillsUI();
-}
-export function handleDrawerSortPlayerChange(playerIndex) {
-    stateStore.set("stagedSortPlayerIndex", playerIndex);
-    const stagedSort = stateStore.get("stagedSort");
-    if (stagedSort.startsWith("w")) {
-        stateStore.set("stagedSort", `w${playerIndex}`);
-    } else if (stagedSort.startsWith("d")) {
-        stateStore.set("stagedSort", `d${playerIndex}`);
-    }
-    filterView.updateDrawerPlayerSortPillsUI();
-}
-export function toggleDrawerPlayerFilter(playerIndex) {
-    const stagedPlayerIndices = stateStore.get("stagedPlayerIndices");
-    const idx = stagedPlayerIndices.indexOf(playerIndex);
-    if (idx > -1) {
-        stagedPlayerIndices.splice(idx, 1);
-    } else {
-        stagedPlayerIndices.push(playerIndex);
-    }
-    stateStore.set("stagedPlayerIndices", stagedPlayerIndices);
-    renderDrawerBody();
-}
-export function renderDrawerComplexityFilters() {
-    filterView.renderDrawerComplexityFilters();
-}
-export function toggleDrawerLevel(level) {
-    if (level === "all") {
-        stateStore.set("stagedLevels", stateStore.get("stagedLevels").size === 6 ? new Set() : new Set([1, 2, 3, 4, 5, 6]));
-    } else {
-        stateStore.updateSet("stagedLevels", "toggle", level);
-    }
-    filterView.renderDrawerComplexityFilters();
-    filterView.renderDrawerGroupFilters();
-}
-export function renderDrawerGroupFilters() {
-    filterView.renderDrawerGroupFilters();
-}
-export function toggleDrawerGroupFilter(groupId) {
-    const groups = stateStore.get("groups");
-    if (groupId === "all") {
-        if (stateStore.get("stagedGroups").size === groups.length) {
-            stateStore.updateSet("stagedGroups", "clear");
-        } else {
-            groups.forEach((g) => stateStore.updateSet("stagedGroups", "add", g.id));
-        }
-    } else {
-        stateStore.updateSet("stagedGroups", "toggle", groupId);
-    }
-    filterView.renderDrawerComplexityFilters();
-    filterView.renderDrawerGroupFilters();
-}
-export function resetFilters() {
-    const groups = stateStore.get("groups");
-    const currentDrawerMode = stateStore.get("currentDrawerMode");
-    if (currentDrawerMode === "sort-filter") {
-        stateStore.set("stagedSort", "name");
-        stateStore.set("stagedSortAsc", true);
-        stateStore.set("stagedSortPlayerIndex", 0);
-        stateStore.set("stagedLevels", new Set([1, 2, 3, 4, 5, 6]));
-        stateStore.set("stagedGroups", new Set(groups.map((g) => g.id)));
-        renderDrawerBody();
-    } else if (currentDrawerMode === "columns") {
-        stateStore.set("stagedPlayerIndices", [0, 1, 2, 3]);
-        stateStore.set("stagedUseHistorical", true);
-        renderDrawerBody();
-    } else if (currentDrawerMode === "roll-settings") {
-        stateStore.set("stagedBannedHeroIds", new Set());
-        stateStore.set("stagedBanSearchQuery", "");
-        renderDrawerBody();
-    }
-}
-export function applyAndCloseDrawer() {
-    const currentDrawerMode = stateStore.get("currentDrawerMode");
-    if (currentDrawerMode === "sort-filter") {
-        stateStore.set("currentSort", stateStore.get("stagedSort"));
-        stateStore.set("sortAsc", stateStore.get("stagedSortAsc"));
-        stateStore.set("currentSortPlayerIndex", stateStore.get("stagedSortPlayerIndex"));
-        stateStore.set("activeLevels", new Set(stateStore.get("stagedLevels")));
-        stateStore.set("activeGroups", new Set(stateStore.get("stagedGroups")));
-        updateActiveFilterBadge();
-        closeDrawer(null, true);
-        renderList();
-    } else if (currentDrawerMode === "columns") {
-        stateStore.set("activePlayerIndices", [...stateStore.get("stagedPlayerIndices")]);
-        stateStore.set("dbUseHistorical", stateStore.get("stagedUseHistorical"));
-        updateActiveFilterBadge();
-        closeDrawer(null, true);
-        renderList();
-    } else if (currentDrawerMode === "roll-settings") {
-        stateStore.set("bannedHeroIds", new Set(stateStore.get("stagedBannedHeroIds")));
-
-        localStorage.setItem(
-            "bannedHeroIds",
-            JSON.stringify(Array.from(stateStore.get("bannedHeroIds"))),
-        );
-
-        updateRollSettingsBadge();
-        closeDrawer(null, true);
-    }
-}
 export function updateActiveFilterBadge() {
     filterView.updateActiveFilterBadge();
 }
@@ -577,7 +412,6 @@ export function updateActiveFilterChips() {
 export function removeFilterChip(type, val) {
     if (type === 'data-history') {
         stateStore.updateSet("activeFilterDataHistories", "delete", val);
-        stateStore.set("dbUseHistorical", !stateStore.get("activeFilterDataHistories").has("Normal only") || stateStore.get("activeFilterDataHistories").has("Historical only"));
     } else if (type === 'player') {
         stateStore.updateSet("activeFilterPlayers", "delete", val);
     } else if (type === 'complexity') {

@@ -6,7 +6,6 @@ import { isHeroOwned, getSoftWeight, isUser, getHeroProbabilityText, getImgUrl, 
 import { showSection } from './admin.js';
 import { init } from './main.js';
 import { renderPlayerToggles } from './auth.js';
-import { renderDrawerBody } from './filters.js';
 import * as randomizerSetup from './randomizerSetup.js';
 import * as randomizerSetupView from './views/randomizerSetupView.js';
 
@@ -25,7 +24,6 @@ const LOCK_ICON = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" s
  */
 export function pickCharacters() {
     const characters = stateStore.get("characters");
-    const bannedHeroIds = stateStore.get("bannedHeroIds");
 
     const participants = randomizerSetup.getRollParticipants();
     console.log("[randomizer] pickCharacters participants:", participants);
@@ -41,14 +39,14 @@ export function pickCharacters() {
     if (resultsDiv) resultsDiv.innerHTML = "";
 
     let pool = characters
-        .filter((c) => isHeroOwned(c) && !bannedHeroIds.has(c.id))
+        .filter(isHeroOwned)
         .map((c) => structuredClone(c));
 
-    console.log("[randomizer] Owned/non-banned heroes pool count:", pool.length);
+    console.log("[randomizer] Owned heroes pool count:", pool.length);
 
     if (pool.length < active.length) {
         return alert(
-            `Not enough available (owned & non-banned) heroes (${pool.length}) in your collection for ${active.length} players!`,
+            `Not enough owned heroes (${pool.length}) in your collection for ${active.length} players!`,
         );
     }
 
@@ -126,9 +124,7 @@ export function pickCharacters() {
     randomizerSetupView.showResultsTitle("confirmation");
     if (resultsDiv) resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
 
-    const ownedHeroes = characters.filter(
-        (c) => isHeroOwned(c) && !bannedHeroIds.has(c.id),
-    );
+    const ownedHeroes = characters.filter(isHeroOwned);
 
     sortedActive.forEach((pIdx) => {
         startPanelScramble(pIdx, ownedHeroes);
@@ -428,40 +424,6 @@ export function cancelRoll() {
     randomizerSetup.resetSetup();
     stateStore.set("isRollActive", false);
 }
-export function openRollSettingsDrawer() {
-    stateStore.set("currentDrawerMode", "roll-settings");
-
-    // Stage current configuration
-    stateStore.set("stagedBannedHeroIds", new Set(stateStore.get("bannedHeroIds")));
-    stateStore.set("stagedBanSearchQuery", "");
-
-    const drawer = document.getElementById("sort-filter-drawer");
-    const title = document.getElementById("drawer-title-text");
-    const footer = document.getElementById("drawer-footer-content");
-
-    if (title) title.innerText = "Roll Configuration";
-    if (footer) footer.style.display = "flex";
-
-    renderDrawerBody();
-    if (drawer) {
-        drawer.classList.add("open");
-        document.body.style.overflow = "hidden"; // Prevent background scroll
-    }
-}
-export function toggleStagedBan(heroId) {
-    stateStore.updateSet("stagedBannedHeroIds", "toggle", heroId);
-    rollView.renderDrawerBanList();
-}
-export function handleBanSearch(query) {
-    stateStore.set("stagedBanSearchQuery", query);
-    rollView.renderDrawerBanList();
-}
-export function renderDrawerBanList() {
-    rollView.renderDrawerBanList();
-}
-export function updateRollSettingsBadge() {
-    rollView.updateRollSettingsBadge();
-}
 /**
  * Renders the final "locked in" results screen (one resolved row per drafted participant),
  * matching the Quick Roll layout.
@@ -485,7 +447,6 @@ export function startDraftStep() {
     const activeDraftStep = stateStore.get("activeDraftStep");
     const activeDraftOrder = stateStore.get("activeDraftOrder");
     const characters = stateStore.get("characters");
-    const bannedHeroIds = stateStore.get("bannedHeroIds");
     const selectedDraftHeroes = stateStore.get("selectedDraftHeroes");
 
     if (activeDraftStep >= activeDraftOrder.length) {
@@ -514,10 +475,7 @@ export function startDraftStep() {
         (h) => h?.name,
     );
     const pool = characters.filter(
-        (c) =>
-            isHeroOwned(c) &&
-            !bannedHeroIds.has(c.id) &&
-            !chosenHeroNames.includes(c.name),
+        (c) => isHeroOwned(c) && !chosenHeroNames.includes(c.name),
     );
 
     const draftCount = stateStore.get("draftCount");
