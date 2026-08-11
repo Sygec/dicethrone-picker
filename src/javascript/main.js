@@ -24,7 +24,6 @@ import {
     closeChangelog
 } from './admin.js';
 import { updateActiveFilterBadge, updateActiveFilterChips, setSort } from './filters.js';
-import { updateRollSettingsBadge } from './randomizer.js';
 import { renderRandomizerSetup } from './views/randomizerSetupView.js';
 import { setupAllEventBindings } from './eventBindings.js';
 
@@ -46,7 +45,6 @@ export async function init() {
     stateStore.set("draftCount", dCount);
     const banned = localStorage.getItem("bannedHeroIds");
     stateStore.set("bannedHeroIds", banned ? new Set(JSON.parse(banned)) : new Set());
-    updateRollSettingsBadge();
 
     const { data: groupsData, error: groupsError } = await apiService.getGroups();
 
@@ -55,16 +53,6 @@ export async function init() {
         populateGroupDropdown();
         renderGroupsList();
 
-        const currentGroupIds = new Set(groupsData.map((g) => g.id));
-        if (stateStore.get("activeGroups").size === 0) {
-            groupsData.forEach((g) => stateStore.updateSet("activeGroups", "add", g.id));
-        } else {
-            for (let id of stateStore.get("activeGroups")) {
-                if (!currentGroupIds.has(id)) {
-                    stateStore.updateSet("activeGroups", "delete", id);
-                }
-            }
-        }
         updateActiveFilterBadge();
         updateActiveFilterChips();
     }

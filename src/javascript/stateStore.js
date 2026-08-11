@@ -17,20 +17,12 @@ const state = {
     groups: [],
     authUsers: [],
     cachedChangelog: null,
-    activeLevels: new Set([1, 2, 3, 4, 5, 6]),
-    activeGroups: new Set(),
     expandedGameIds: new Set(),
     currentSort: "name",
     sortAsc: true,
     currentSortPlayerIndex: 0,
     editIndex: -1,
     activePlayerIndices: [0, 1, 2, 3],
-    currentDrawerMode: "sort-filter",
-    stagedSort: "",
-    stagedSortAsc: true,
-    stagedSortPlayerIndex: 0,
-    stagedLevels: new Set(),
-    stagedGroups: new Set(),
 
     // Left Filter Drawer States
     activeFilterDataHistories: new Set(),
@@ -74,9 +66,6 @@ const state = {
     draftCount: 3,
     draftCountChosen: false, // whether the user has explicitly picked an options count this session (no default)
     bannedHeroIds: new Set(),
-
-    stagedBannedHeroIds: new Set(),
-    stagedBanSearchQuery: "",
 
     activeDraftOrder: [],
     activeDraftStep: 0,

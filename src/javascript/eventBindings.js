@@ -137,13 +137,6 @@ export function setupAllEventBindings() {
         modalSortWeight.addEventListener("click", () => randomizer.setModalSort("weight"));
     }
 
-    // Drawers close triggers
-    const sortFilterDrawer = document.getElementById("sort-filter-drawer");
-    if (sortFilterDrawer) {
-        sortFilterDrawer.addEventListener("click", (e) => {
-            filters.closeDrawer(e);
-        });
-    }
     const filterDrawerLeft = document.getElementById("filter-drawer-left");
     if (filterDrawerLeft) {
         filterDrawerLeft.addEventListener("click", (e) => {
@@ -177,9 +170,6 @@ export function setupAllEventBindings() {
     }
 
     // Drawer action buttons
-    bindClick("drawer-close", () => filters.closeDrawer(null, true));
-    bindClick("drawer-reset", filters.resetFilters);
-    bindClick("drawer-apply", filters.applyAndCloseDrawer);
     bindClick("filter-drawer-close-btn", filters.applyFilterPanelSelections);
     bindClick("filter-drawer-reset", filters.resetFilterPanelSelections);
     bindClick("filter-drawer-apply", filters.applyFilterPanelSelections);
@@ -289,68 +279,6 @@ export function setupAllEventBindings() {
             const cb = e.target.closest('input[type="checkbox"][data-type]');
             if (cb) {
                 filters.handleFilterDrawerCheckboxChange(cb);
-            }
-        });
-    }
-
-    // Right filter drawer settings clicks and changes
-    const drawerBody = document.getElementById("drawer-body-content");
-    if (drawerBody) {
-        drawerBody.addEventListener("click", (e) => {
-            const target = e.target;
-
-            // Sort player change
-            const sortPlayer = target.closest('[data-action="drawer-sort-player-change"]');
-            if (sortPlayer) {
-                const idx = parseInt(sortPlayer.getAttribute("data-player-idx"), 10);
-                filters.handleDrawerSortPlayerChange(idx);
-                return;
-            }
-
-            // Toggle drawer level (complexity dice)
-            const complexityCard = target.closest('[data-action="toggle-drawer-level"]');
-            if (complexityCard) {
-                if (complexityCard.getAttribute("data-disabled") === "true") return;
-                const levelRaw = complexityCard.getAttribute("data-level");
-                const level = levelRaw === "all" ? "all" : parseInt(levelRaw, 10);
-                filters.toggleDrawerLevel(level);
-                return;
-            }
-
-            // Toggle drawer group (seasons)
-            const groupCard = target.closest('[data-action="toggle-drawer-group"]');
-            if (groupCard) {
-                if (groupCard.getAttribute("data-disabled") === "true") return;
-                const groupId = groupCard.getAttribute("data-group-id");
-                filters.toggleDrawerGroupFilter(groupId);
-                return;
-            }
-        });
-
-        drawerBody.addEventListener("change", (e) => {
-            const target = e.target;
-
-            // Handle drawer sort type change
-            const sortTypeSelect = target.closest('[data-action="drawer-sort-type-change"]');
-            if (sortTypeSelect) {
-                filters.handleDrawerSortTypeChange(sortTypeSelect.value);
-                return;
-            }
-
-            // Staged ban checkbox
-            const banCheckbox = target.closest('[data-action="toggle-staged-ban"]');
-            if (banCheckbox) {
-                const heroId = banCheckbox.getAttribute("data-hero-id");
-                randomizer.toggleStagedBan(heroId);
-                return;
-            }
-        });
-
-        drawerBody.addEventListener("input", (e) => {
-            const target = e.target;
-            const banSearch = target.closest('[data-action="ban-search-input"]');
-            if (banSearch) {
-                randomizer.handleBanSearch(banSearch.value);
             }
         });
     }
