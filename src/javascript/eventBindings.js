@@ -299,14 +299,6 @@ export function setupAllEventBindings() {
         drawerBody.addEventListener("click", (e) => {
             const target = e.target;
 
-            // Player columns toggle
-            const playerFilter = target.closest('[data-action="toggle-drawer-player-filter"]');
-            if (playerFilter) {
-                const idx = parseInt(playerFilter.getAttribute("data-player-idx"), 10);
-                filters.toggleDrawerPlayerFilter(idx);
-                return;
-            }
-
             // Sort player change
             const sortPlayer = target.closest('[data-action="drawer-sort-player-change"]');
             if (sortPlayer) {
@@ -337,13 +329,6 @@ export function setupAllEventBindings() {
 
         drawerBody.addEventListener("change", (e) => {
             const target = e.target;
-
-            // Toggle use historical checkbox
-            const histCheckbox = target.closest('[data-action="toggle-use-historical"]');
-            if (histCheckbox) {
-                filters.toggleStagedGamesHistorical(histCheckbox.checked);
-                return;
-            }
 
             // Handle drawer sort type change
             const sortTypeSelect = target.closest('[data-action="drawer-sort-type-change"]');

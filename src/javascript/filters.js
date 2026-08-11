@@ -28,15 +28,6 @@ export function openSortFilterDrawer() {
 
     filterView.openSortFilterDrawer();
 }
-export function openColumnsDrawer() {
-    stateStore.set("currentDrawerMode", "columns");
-
-    // Stage current states
-    stateStore.set("stagedPlayerIndices", [...stateStore.get("activePlayerIndices")]);
-    stateStore.set("stagedUseHistorical", stateStore.get("dbUseHistorical"));
-
-    filterView.openColumnsDrawer();
-}
 export function openFilterDrawer() {
     stateStore.set("stagedFilterDataHistories", new Set(stateStore.get("activeFilterDataHistories")));
     stateStore.set("stagedFilterPlayers", new Set(stateStore.get("activeFilterPlayers")));
@@ -97,8 +88,6 @@ export function applyFilterPanelSelections() {
     stateStore.set("activeFilterPlayers", new Set(stateStore.get("stagedFilterPlayers")));
     stateStore.set("activeFilterComplexities", new Set(stateStore.get("stagedFilterComplexities")));
     stateStore.set("activeFilterGroups", new Set(stateStore.get("stagedFilterGroups")));
-
-    stateStore.set("dbUseHistorical", !stateStore.get("activeFilterDataHistories").has("Normal only") || stateStore.get("activeFilterDataHistories").has("Historical only"));
 
     const stagedOwnership = stateStore.get("stagedOwnershipFilter");
     stateStore.set("activeOwnershipFilter", stagedOwnership);
@@ -369,10 +358,6 @@ export function clearGamesSearchFilter() {
     document.getElementById("clear-games-search")?.classList.add("hidden");
     renderGamesList();
 }
-export function toggleStagedGamesHistorical(checked) {
-    stateStore.set("stagedGamesUseHistorical", checked);
-    renderDrawerBody();
-}
 export function handleDrawerSortTypeChange(value) {
     if (value === "name") {
         stateStore.set("stagedSort", "name");
@@ -407,17 +392,6 @@ export function handleDrawerSortPlayerChange(playerIndex) {
         stateStore.set("stagedSort", `d${playerIndex}`);
     }
     filterView.updateDrawerPlayerSortPillsUI();
-}
-export function toggleDrawerPlayerFilter(playerIndex) {
-    const stagedPlayerIndices = stateStore.get("stagedPlayerIndices");
-    const idx = stagedPlayerIndices.indexOf(playerIndex);
-    if (idx > -1) {
-        stagedPlayerIndices.splice(idx, 1);
-    } else {
-        stagedPlayerIndices.push(playerIndex);
-    }
-    stateStore.set("stagedPlayerIndices", stagedPlayerIndices);
-    renderDrawerBody();
 }
 export function renderDrawerComplexityFilters() {
     filterView.renderDrawerComplexityFilters();
@@ -458,10 +432,6 @@ export function resetFilters() {
         stateStore.set("stagedLevels", new Set([1, 2, 3, 4, 5, 6]));
         stateStore.set("stagedGroups", new Set(groups.map((g) => g.id)));
         renderDrawerBody();
-    } else if (currentDrawerMode === "columns") {
-        stateStore.set("stagedPlayerIndices", [0, 1, 2, 3]);
-        stateStore.set("stagedUseHistorical", true);
-        renderDrawerBody();
     } else if (currentDrawerMode === "roll-settings") {
         stateStore.set("stagedBannedHeroIds", new Set());
         stateStore.set("stagedBanSearchQuery", "");
@@ -476,12 +446,6 @@ export function applyAndCloseDrawer() {
         stateStore.set("currentSortPlayerIndex", stateStore.get("stagedSortPlayerIndex"));
         stateStore.set("activeLevels", new Set(stateStore.get("stagedLevels")));
         stateStore.set("activeGroups", new Set(stateStore.get("stagedGroups")));
-        updateActiveFilterBadge();
-        closeDrawer(null, true);
-        renderList();
-    } else if (currentDrawerMode === "columns") {
-        stateStore.set("activePlayerIndices", [...stateStore.get("stagedPlayerIndices")]);
-        stateStore.set("dbUseHistorical", stateStore.get("stagedUseHistorical"));
         updateActiveFilterBadge();
         closeDrawer(null, true);
         renderList();
@@ -577,7 +541,6 @@ export function updateActiveFilterChips() {
 export function removeFilterChip(type, val) {
     if (type === 'data-history') {
         stateStore.updateSet("activeFilterDataHistories", "delete", val);
-        stateStore.set("dbUseHistorical", !stateStore.get("activeFilterDataHistories").has("Normal only") || stateStore.get("activeFilterDataHistories").has("Historical only"));
     } else if (type === 'player') {
         stateStore.updateSet("activeFilterPlayers", "delete", val);
     } else if (type === 'complexity') {

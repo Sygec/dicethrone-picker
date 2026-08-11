@@ -31,9 +31,6 @@ const state = {
     stagedSortPlayerIndex: 0,
     stagedLevels: new Set(),
     stagedGroups: new Set(),
-    stagedPlayerIndices: [],
-    stagedUseHistorical: true,
-    dbUseHistorical: true,
 
     // Left Filter Drawer States
     activeFilterDataHistories: new Set(),

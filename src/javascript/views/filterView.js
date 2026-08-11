@@ -115,21 +115,6 @@ export function openSortFilterDrawer() {
 }
 
 /**
- * Opens the Columns & Historical Data configuration drawer.
- */
-export function openColumnsDrawer() {
-    const el = getElements();
-    if (!el.sortFilterDrawer) return;
-
-    if (el.drawerTitle) el.drawerTitle.innerText = "Columns & Historical Data";
-    if (el.drawerFooter) el.drawerFooter.style.display = "flex";
-
-    renderDrawerBody();
-    el.sortFilterDrawer.classList.add("open");
-    document.body.style.overflow = "hidden"; // Prevent background scroll
-}
-
-/**
  * Opens the Game History Filters drawer.
  */
 export function openGamesFilterDrawer() {
@@ -743,11 +728,6 @@ export function renderDrawerBody() {
 
     const currentDrawerMode = stateStore.get("currentDrawerMode");
     const stagedSort = stateStore.get("stagedSort");
-    const stagedSortPlayerIndex = stateStore.get("stagedSortPlayerIndex");
-    const stagedPlayerIndices = stateStore.get("stagedPlayerIndices");
-    const stagedUseHistorical = stateStore.get("stagedUseHistorical");
-    const NAMES = stateStore.get("NAMES");
-    const activePlayerIndices = stateStore.get("activePlayerIndices");
     const stagedBanSearchQuery = stateStore.get("stagedBanSearchQuery");
 
     el.drawerBody.style.overflowY = "auto";
@@ -805,46 +785,6 @@ export function renderDrawerBody() {
         updateDrawerPlayerSortPillsUI();
         renderDrawerComplexityFilters();
         renderDrawerGroupFilters();
-    } else if (currentDrawerMode === "columns") {
-        const mainPlayerNames = NAMES.slice(0, MAX_WEIGHTED_PLAYERS);
-        const visibilityPillsHtml = mainPlayerNames
-            .map((name, i) => {
-                const isActive = stagedPlayerIndices.includes(i);
-                const activeClass = isActive
-                    ? `active p${i + 1}-color`
-                    : "inactive";
-                return `
-                <button type="button" class="pill-toggle ${activeClass}" data-action="toggle-drawer-player-filter" data-player-idx="${i}">
-                    ${name}
-                </button>
-            `;
-            })
-            .join("");
-
-        el.drawerBody.innerHTML = `
-            <div class="panel-row-new">
-                <span class="panel-row-title" style="font-weight: 700; margin-bottom: 10px; display: block;">Show Player Stat Rows:</span>
-                <div class="pill-group">
-                    ${visibilityPillsHtml}
-                </div>
-            </div>
-
-            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 10px 0;">
-
-            <div class="panel-row-new">
-                <div class="dropdown-sort-options" style="margin: 0; justify-content: flex-start;">
-                    <label style="cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px;">
-                        <input
-                            type="checkbox"
-                            id="drawer-use-historical-data"
-                            ${stagedUseHistorical ? "checked" : ""}
-                            data-action="toggle-use-historical"
-                            style="width: 18px; height: 18px;" />
-                        Include Historical Data (before May 8th 2026)
-                    </label>
-                </div>
-            </div>
-        `;
     } else if (currentDrawerMode === "roll-settings") {
         el.drawerBody.style.overflowY = "hidden";
 
