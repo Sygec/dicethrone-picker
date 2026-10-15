@@ -155,6 +155,7 @@ export function updateFilterDrawerSectionTitlesUI() {
  */
 export function openGamesFilterDrawer() {
     stateStore.set("stagedGamesPlayers", new Set(stateStore.get("activeGamesPlayers")));
+    stateStore.set("stagedGamesPlayerMatch", stateStore.get("activeGamesPlayerMatch"));
     stateStore.set("stagedGamesResults", new Set(stateStore.get("activeGamesResults")));
     stateStore.set("stagedGamesTypes", new Set(stateStore.get("activeGamesTypes")));
     stateStore.set("stagedGamesDateRange", stateStore.get("activeGamesDateRange"));
@@ -211,10 +212,31 @@ export function handleGamesDateRangePillClick(range) {
 }
 
 /**
+ * Stages the player match mode from the drawer's segmented control. Win / Loss are ambiguous
+ * when several players must all be present (one of them always wins), so "all" drops them,
+ * mirroring how the drawer disables those checkboxes.
+ * @param {string} mode - 'any' | 'all'.
+ */
+export function handleGamesPlayerMatchPillClick(mode) {
+    stateStore.set("stagedGamesPlayerMatch", mode);
+    if (mode === "all") {
+        stateStore.updateSet("stagedGamesResults", "delete", "win");
+        stateStore.updateSet("stagedGamesResults", "delete", "loss");
+        filterView.renderGamesFilterDrawerDynamicSections();
+    } else {
+        filterView.updateGamesResultAvailabilityUI();
+    }
+    filterView.updateGamesPlayerMatchPillsUI();
+    filterView.updateGamesFilterDrawerCountUI();
+    filterView.updateGamesFilterDrawerSectionTitlesUI();
+}
+
+/**
  * Clears every staged selection in the Game History Filters drawer.
  */
 export function resetGamesFilterPanelSelections() {
     stateStore.get("stagedGamesPlayers").clear();
+    stateStore.set("stagedGamesPlayerMatch", "any");
     stateStore.get("stagedGamesResults").clear();
     stateStore.get("stagedGamesTypes").clear();
     stateStore.set("stagedGamesDateRange", "all");
@@ -222,6 +244,7 @@ export function resetGamesFilterPanelSelections() {
 
     filterView.renderGamesFilterDrawerDynamicSections();
     filterView.updateGamesDateRangePillsUI();
+    filterView.updateGamesPlayerMatchPillsUI();
     filterView.updateGamesFilterDrawerCountUI();
     filterView.updateGamesFilterDrawerSectionTitlesUI();
 }
@@ -231,6 +254,7 @@ export function resetGamesFilterPanelSelections() {
  */
 export function applyGamesFilterPanelSelections() {
     stateStore.set("activeGamesPlayers", new Set(stateStore.get("stagedGamesPlayers")));
+    stateStore.set("activeGamesPlayerMatch", stateStore.get("stagedGamesPlayerMatch"));
     stateStore.set("activeGamesResults", new Set(stateStore.get("stagedGamesResults")));
     stateStore.set("activeGamesTypes", new Set(stateStore.get("stagedGamesTypes")));
     stateStore.set("activeGamesDateRange", stateStore.get("stagedGamesDateRange"));
@@ -254,6 +278,7 @@ export function getGamesFilterDrawerMatchingCount() {
         searchTerm: searchInput ? searchInput.value : "",
         useHistorical: stateStore.get("stagedGamesUseHistorical"),
         playerIndices: stateStore.get("stagedGamesPlayers"),
+        playerMatch: stateStore.get("stagedGamesPlayerMatch"),
         results: stateStore.get("stagedGamesResults"),
         gameTypes: stateStore.get("stagedGamesTypes"),
         dateRange: stateStore.get("stagedGamesDateRange"),
@@ -287,7 +312,7 @@ export function closeGamesSortDropdown() {
 
 /**
  * Removes a single active History filter from its breadcrumb chip.
- * @param {string} type - 'date-range' | 'historical' | 'player' | 'result' | 'type'.
+ * @param {string} type - 'date-range' | 'historical' | 'player-match' | 'player' | 'result' | 'type'.
  * @param {string} val - The chip's value.
  */
 export function removeGamesFilterChip(type, val) {
@@ -297,6 +322,9 @@ export function removeGamesFilterChip(type, val) {
     } else if (type === "historical") {
         stateStore.set("gamesUseHistorical", true);
         stateStore.set("stagedGamesUseHistorical", true);
+    } else if (type === "player-match") {
+        stateStore.set("activeGamesPlayerMatch", "any");
+        stateStore.set("stagedGamesPlayerMatch", "any");
     } else if (type === "player") {
         stateStore.updateSet("activeGamesPlayers", "delete", Number(val));
         stateStore.updateSet("stagedGamesPlayers", "delete", Number(val));

@@ -70,6 +70,7 @@ const getElements = () => {
 export function openGamesFilterDrawer() {
     renderGamesFilterDrawerDynamicSections();
     updateGamesDateRangePillsUI();
+    updateGamesPlayerMatchPillsUI();
     updateGamesFilterDrawerCountUI();
     updateGamesFilterDrawerSectionTitlesUI();
 
@@ -103,6 +104,19 @@ export function updateGamesDateRangePillsUI() {
         .querySelectorAll('#filter-drawer-games .segmented-pill[data-range]')
         .forEach((pill) => {
             pill.classList.toggle("active", pill.getAttribute("data-range") === staged);
+        });
+    updateSegmentedHighlights();
+}
+
+/**
+ * Updates the active pill in the Any / All player match control inside the games filter drawer.
+ */
+export function updateGamesPlayerMatchPillsUI() {
+    const staged = stateStore.get("stagedGamesPlayerMatch");
+    document
+        .querySelectorAll('#filter-drawer-games .segmented-pill[data-player-match]')
+        .forEach((pill) => {
+            pill.classList.toggle("active", pill.getAttribute("data-player-match") === staged);
         });
     updateSegmentedHighlights();
 }
@@ -273,21 +287,29 @@ export function renderGamesFilterDrawerDynamicSections() {
 }
 
 /**
- * Enables the Win / Loss checkboxes only while at least one player is selected — outside of a
- * player context they would match every completed game and mean nothing.
+ * Enables the Win / Loss checkboxes only while at least one player is selected in "Any" mode —
+ * outside of a player context they would match every completed game, and in "All" mode one of
+ * the selected players always wins.
  */
 export function updateGamesResultAvailabilityUI() {
     const el = getElements();
     const hasPlayer = stateStore.get("stagedGamesPlayers").size > 0;
+    const isAllMode = stateStore.get("stagedGamesPlayerMatch") === "all";
+    const enabled = hasPlayer && !isAllMode;
 
     ["win", "loss"].forEach((value) => {
         const cb = document.querySelector(`#filter-drawer-games input[data-type="games-result"][value="${value}"]`);
         if (!cb) return;
-        cb.disabled = !hasPlayer;
-        cb.closest(".filter-checkbox-label")?.classList.toggle("is-disabled", !hasPlayer);
+        cb.disabled = !enabled;
+        cb.closest(".filter-checkbox-label")?.classList.toggle("is-disabled", !enabled);
     });
 
-    el.gamesResultHint?.classList.toggle("hidden", hasPlayer);
+    if (el.gamesResultHint) {
+        el.gamesResultHint.textContent = isAllMode
+            ? "Win / Loss are unavailable while matching All selected players."
+            : "Pick a player below to filter by Win / Loss.";
+        el.gamesResultHint.classList.toggle("hidden", enabled);
+    }
 }
 
 /**
@@ -352,6 +374,15 @@ export function updateActiveFilterBadge() {
 }
 
 /**
+ * "All selected" only changes the results once two or more players are picked, so the badge and
+ * chips only surface it then.
+ * @returns {boolean}
+ */
+function isPlayerMatchAllActive() {
+    return stateStore.get("activeGamesPlayerMatch") === "all" && stateStore.get("activeGamesPlayers").size > 1;
+}
+
+/**
  * Updates the active filter badge on the games history tab.
  */
 export function updateGamesActiveFilterBadge() {
@@ -362,6 +393,7 @@ export function updateGamesActiveFilterBadge() {
 
     let activeCount = 0;
     activeCount += stateStore.get("activeGamesPlayers").size;
+    if (isPlayerMatchAllActive()) activeCount++;
     activeCount += stateStore.get("activeGamesResults").size;
     activeCount += stateStore.get("activeGamesTypes").size;
     if (stateStore.get("activeGamesDateRange") !== "all") activeCount++;
@@ -811,6 +843,10 @@ export function updateGamesActiveFilterChips() {
         .forEach((bucket) => {
             html += removeChip("player", bucket, escapeHtml(getGamesPlayerLabel(bucket)));
         });
+
+    if (isPlayerMatchAllActive()) {
+        html += removeChip("player-match", "all", "All selected players");
+    }
 
     RESULT_ORDER.filter((r) => activeGamesResults.has(r)).forEach((result) => {
         html += removeChip("result", result, RESULT_LABEL[result]);

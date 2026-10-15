@@ -234,6 +234,8 @@ export function getGameOutcome(game) {
  * @param {string} [criteria.searchTerm] - Matched against hero names, player names, and the game-type label.
  * @param {boolean} [criteria.useHistorical] - When false, historical games are excluded outright.
  * @param {Set<number>} [criteria.playerIndices] - Player buckets, see getPlayerBucket.
+ * @param {string} [criteria.playerMatch] - 'any' keeps games with at least one selected player;
+ *   'all' keeps only games every selected player took part in (e.g. head-to-head duels).
  * @param {Set<string>} [criteria.results] - Any of 'win' | 'loss' | 'draw' | 'pending'.
  * @param {Set<string>} [criteria.gameTypes] - Game type keys, plus LEGACY_GAME_TYPE for null types.
  * @param {string} [criteria.dateRange] - 'all' | '30d' | '90d' | 'year' (trailing windows).
@@ -246,6 +248,7 @@ export function matchesGameFilters(game, criteria = {}) {
         searchTerm = "",
         useHistorical = true,
         playerIndices = new Set(),
+        playerMatch = "any",
         results = new Set(),
         gameTypes = new Set(),
         dateRange = "all",
@@ -272,8 +275,14 @@ export function matchesGameFilters(game, criteria = {}) {
         if (!haystack.some((value) => value.toLowerCase().includes(term))) return false;
     }
 
-    if (playerIndices.size > 0 && !rows.some((gp) => playerIndices.has(getPlayerBucket(gp)))) {
-        return false;
+    if (playerIndices.size > 0) {
+        const buckets = new Set(rows.map(getPlayerBucket));
+        const selected = [...playerIndices];
+        const matchesPlayers =
+            playerMatch === "all"
+                ? selected.every((idx) => buckets.has(idx))
+                : selected.some((idx) => buckets.has(idx));
+        if (!matchesPlayers) return false;
     }
 
     if (gameTypes.size > 0 && !gameTypes.has(game.game_type || LEGACY_GAME_TYPE)) return false;

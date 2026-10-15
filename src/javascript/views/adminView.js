@@ -998,6 +998,7 @@ export function renderGamesList() {
         searchTerm,
         useHistorical: gamesUseHistorical,
         playerIndices: activeGamesPlayers,
+        playerMatch: stateStore.get("activeGamesPlayerMatch"),
         results: stateStore.get("activeGamesResults"),
         gameTypes: stateStore.get("activeGamesTypes"),
         dateRange: stateStore.get("activeGamesDateRange"),

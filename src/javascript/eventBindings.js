@@ -158,6 +158,11 @@ export function setupAllEventBindings() {
                 if (range) filters.handleGamesDateRangePillClick(range);
                 return;
             }
+            const matchPill = e.target.closest(".segmented-pill[data-player-match]");
+            if (matchPill) {
+                filters.handleGamesPlayerMatchPillClick(matchPill.getAttribute("data-player-match"));
+                return;
+            }
             filters.closeGamesFilterDrawer(e);
         });
 

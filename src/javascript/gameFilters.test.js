@@ -187,6 +187,21 @@ describe('matchesGameFilters — players', () => {
         const ids = matchIds({ playerIndices: new Set([MAX_WEIGHTED_PLAYERS]) });
         expect(ids).toEqual(['teams', 'invitee']);
     });
+
+    it('requires every selected player in "all" mode', () => {
+        expect(matchIds({ playerIndices: new Set([2, 3]), playerMatch: 'all' })).toEqual(['teams', 'draw']);
+        expect(matchIds({ playerIndices: new Set([0, 1]), playerMatch: 'all' })).toEqual([
+            'duel',
+            'teams',
+            'pending',
+            'historical',
+        ]);
+    });
+
+    it('isolates head-to-head duels when "all" is combined with the duel type', () => {
+        const ids = matchIds({ playerIndices: new Set([0, 1]), playerMatch: 'all', gameTypes: new Set(['duel']) });
+        expect(ids).toEqual(['duel']);
+    });
 });
 
 describe('matchesGameFilters — results', () => {

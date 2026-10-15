@@ -40,12 +40,14 @@ const state = {
     // Games History Filters State
     // Player buckets are 0..3 for tracked players, MAX_WEIGHTED_PLAYERS for the Invitee bucket.
     activeGamesPlayers: new Set(),
+    activeGamesPlayerMatch: "any", // 'any' | 'all'
     activeGamesResults: new Set(), // 'win' | 'loss' | 'draw' | 'pending'
     activeGamesTypes: new Set(), // 'duel' | '2v2' | '3v3' | 'ffa' | 'koth' | 'legacy'
     activeGamesDateRange: "all", // 'all' | '30d' | '90d' | 'year'
     gamesUseHistorical: true,
 
     stagedGamesPlayers: new Set(),
+    stagedGamesPlayerMatch: "any",
     stagedGamesResults: new Set(),
     stagedGamesTypes: new Set(),
     stagedGamesDateRange: "all",
